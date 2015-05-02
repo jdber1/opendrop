@@ -23,10 +23,8 @@ Contents
 1. Installation
 2. Image source selection
 3. Running measurements
-
-Appendix A: preparing Ubuntu for OpenDrop
-
-Appendix B: preparing FlyCap2 for using Point Grey cameras
+4. Appendix A: preparing Ubuntu for OpenDrop
+5. Appendix B: preparing FlyCap2 for using Point Grey cameras
 
 
 
