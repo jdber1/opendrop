@@ -19,12 +19,17 @@ These citations help us not only to understand who is using and developing OpenD
 Contents
 ========
 
-0. Operating system
-1. Installation
-2. Image source selection
-3. Running measurements
-4. Appendix A: preparing Ubuntu for OpenDrop
-5. Appendix B: preparing FlyCap2 for using Point Grey cameras
+0) Operating system
+
+1) Installation
+
+2) Image source selection
+
+3) Running measurements
+
+4) Appendix A: preparing Ubuntu for OpenDrop
+
+5) Appendix B: preparing FlyCap2 for using Point Grey cameras
 
 
 
