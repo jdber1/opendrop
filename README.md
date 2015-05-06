@@ -18,6 +18,8 @@ These citations help us not only to understand who is using and developing OpenD
 If you find any bugs, require assistance, or have implemented improvements/extensions, please email us at:
 <opendrop.dev@gmail.com>
 
+To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ricotabor/opendrop/blob/master/manual/manual.ipynb).
+
 Contents
 ========
 
