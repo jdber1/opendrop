@@ -63,9 +63,9 @@ Make sure these are installed for your operating system before running OpenDrop.
 2. Image source selection:
 --------------------------
 OpenDrop can currently utilise images from three sources:
-a) Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix B. OpenDrop has been tested with Flea3 USB cameras.
-b) USB camera (currently Linux/Mac only). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". Use of a regular USB camera with Windows is no doubt possible, but has not been tested.
-c) Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
+  * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix B. OpenDrop has been tested with Flea3 USB cameras.
+  * USB camera (currently Linux/Mac only). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". Use of a regular USB camera with Windows is no doubt possible, but has not been tested.
+  * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
 
 3. Running measurements:
 ------------------------
