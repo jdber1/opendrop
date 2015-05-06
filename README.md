@@ -15,8 +15,7 @@ Journal of Colloid and Interface Science (2015)
 
 These citations help us not only to understand who is using and developing OpenDrop, and for what purpose, but also to justify continued development of this code and other open source resources.
 
-If you find any bugs, require assistance, or have implemented improvements/extensions, please email us at:
-<opendrop.dev@gmail.com>
+If you find any bugs, require assistance, or have implemented improvements/extensions, please email [email](opendrop.dev@gmail.com) us.
 
 To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ricotabor/opendrop/blob/master/manual/manual.ipynb).
 
