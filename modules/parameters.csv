@@ -1,0 +1,13 @@
+Drop density,1000.0
+Continuous density,0.0
+Needle diameter,0.7176
+Plot residuals,1
+Plot profiles,1
+Plot IFT,1
+Image source,Flea3
+Number of frames,10
+Wait time,10
+Save images,0
+Create new data folder,0
+Filename,Hillary-XylTz-0.2mM
+Directory,/home/smaclab/Dropbox/Opendrop
