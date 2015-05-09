@@ -69,8 +69,10 @@ OpenDrop can currently utilise images from three sources:
 
 3. Running measurements:
 ------------------------
-For Ubuntu, the OpenDrop.py file can be made "double-clickable" by changing the default Nautilus preferences (Edit --> Preferences --> Behaviour). Alternatively, running:
->  ./bashme 
+For Ubuntu, the OpenDrop.py file can be made "double-clickable" by changing the default Nautilus preferences (Edit --> Preferences --> Behaviour). Similarly, so can the more universal "run" file. If your operating system is setup for this behaviour, simply double-click "run" to start the software.
+
+Alternatively, running:
+>  ./run 
 
 in a terminal will provide a verbose terminal and run the program.
 
