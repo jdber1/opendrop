@@ -28,7 +28,7 @@ VERSION='1.0'
 NEEDLE_OPTIONS = ['0.7176', '1.270', '1.651']
 IMAGE_SOURCE_OPTIONS = ["Flea3", "USB camera", "Local images"]
 
-PATH_TO_SCRIPT = os.path.dirname(os.path.realpath(__file__))
+PATH_TO_SCRIPT = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..')
 PATH_TO_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)),"parameters.csv")
 
 # FONT_FRAME_LABEL = ("Helvetica", 16, "BOLD")
