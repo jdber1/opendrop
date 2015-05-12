@@ -12,7 +12,19 @@ If you use this software in your research, please cite the following journal art
 J. D. Berry, M. J. Neeson, R. R. Dagastine, D. Y. C. Chan and R. F. Tabor,
 Measurement of surface and interfacial tension using pendant drop tensiometry.
 Journal of Colloid and Interface Science (2015)
-
+```
+@Article{OpenDrop:2015,
+  Author    = {Berry, J.D. and Neeson, M.J. and Dagastine, R.R. and Chan, D.Y.C. and Tabor, R.F.},
+  Title     = {Measurement of surface and interfacial tension using pendant drop tensiometry},
+  Journal   = {Journal of Colloid and Interface Science},
+  Volume    = {},
+  Number    = {},
+  Pages     = {},
+  month     = may,
+  year      = 2015,
+  doi       = {},
+}
+```
 These citations help us not only to understand who is using and developing OpenDrop, and for what purpose, but also to justify continued development of this code and other open source resources.
 
 If you find any bugs, require assistance, or have implemented improvements/extensions, please [email](mailto:opendrop.dev@gmail.com) us.
