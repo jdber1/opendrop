@@ -22,7 +22,7 @@ Journal of Colloid and Interface Science (2015)
   Pages     = {},
   month     = may,
   year      = 2015,
-  doi       = {},
+  doi       = {10.1016/j.jcis.2015.05.012},
 }
 ```
 These citations help us not only to understand who is using and developing OpenDrop, and for what purpose, but also to justify continued development of this code and other open source resources.
