@@ -165,7 +165,7 @@ Appendix C
 
 Preparing Mac OSX for OpenDrop.
 ------------------------------------
-
+Coming very soon!!
 
 Appendix D
 ==========
