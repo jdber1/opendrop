@@ -12,7 +12,19 @@ If you use this software in your research, please cite the following journal art
 J. D. Berry, M. J. Neeson, R. R. Dagastine, D. Y. C. Chan and R. F. Tabor,
 Measurement of surface and interfacial tension using pendant drop tensiometry.
 Journal of Colloid and Interface Science (2015)
-
+```
+@Article{OpenDrop:2015,
+  Author    = {Berry, J.D. and Neeson, M.J. and Dagastine, R.R. and Chan, D.Y.C. and Tabor, R.F.},
+  Title     = {Measurement of surface and interfacial tension using pendant drop tensiometry},
+  Journal   = {Journal of Colloid and Interface Science},
+  Volume    = {},
+  Number    = {},
+  Pages     = {},
+  month     = may,
+  year      = 2015,
+  doi       = {10.1016/j.jcis.2015.05.012},
+}
+```
 These citations help us not only to understand who is using and developing OpenDrop, and for what purpose, but also to justify continued development of this code and other open source resources.
 
 If you find any bugs, require assistance, or have implemented improvements/extensions, please [email](mailto:opendrop.dev@gmail.com) us.
@@ -30,9 +42,13 @@ Contents
 
 3) Running measurements
 
-4) Appendix A: preparing Ubuntu for OpenDrop
+Appendix A: preparing Ubuntu for OpenDrop
 
-5) Appendix B: preparing FlyCap2 for using Point Grey cameras
+Appendix B: preparing Windows 7 for OpenDrop
+
+Appendix C: preparing Mac OSX for OpenDrop
+
+Appendix D: preparing FlyCap2 for using Point Grey cameras
 
 
 
@@ -41,9 +57,7 @@ Contents
 --------------------
 In the spirit of its open source and free nature, OpenDrop is recommended for use with Linux, and has been extenstively tested on Ubuntu 14.04 LTS.
 
-OpenDrop works well on Mac OSX, provided that Python and OpenCV libraries are successfully installed.
-
-It has not been tested on Windows or other operating systems
+OpenDrop also works on Mac OSX and Windows, provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
 
 1. Installation:
 ----------------
@@ -58,13 +72,13 @@ If not contained within the Python/OpenCV installation method that you choose, a
 - Python-matplotlib
 - Python-numpy
 
-Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop.
+Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX. 
 
 2. Image source selection:
 --------------------------
 OpenDrop can currently utilise images from three sources:
-  * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix B. OpenDrop has been tested with Flea3 USB cameras.
-  * USB camera (currently Linux/Mac only). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". Use of a regular USB camera with Windows is no doubt possible, but has not been tested.
+  * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 USB cameras.
+  * USB camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". a
   * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
 
 3. Running measurements:
@@ -134,8 +148,26 @@ PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 export PKG_CONFIG_PATH
 close the console and open a new one, restart the computer or logout and then login again.
 
-
 Appendix B
+==========
+
+Preparing Windows 7 for OpenDrop.
+------------------------------------
+* Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
+* Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to. 
+* Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
+* Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
+
+If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
+
+Appendix C
+==========
+
+Preparing Mac OSX for OpenDrop.
+------------------------------------
+Coming very soon!!
+
+Appendix D
 ==========
 
 Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
