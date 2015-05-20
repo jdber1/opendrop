@@ -42,13 +42,13 @@ Contents
 
 3) Running measurements
 
-4) Appendix A: preparing Ubuntu for OpenDrop
+Appendix A: preparing Ubuntu for OpenDrop
 
-5) Appendix B: preparing Windows 7 for OpenDrop
+Appendix B: preparing Windows 7 for OpenDrop
 
-6) Appendix C: preparing Mac OSX for OpenDrop
+Appendix C: preparing Mac OSX for OpenDrop
 
-7) Appendix D: preparing FlyCap2 for using Point Grey cameras
+Appendix D: preparing FlyCap2 for using Point Grey cameras
 
 
 
@@ -153,6 +153,10 @@ Appendix B
 
 Preparing Windows 7 for OpenDrop.
 ------------------------------------
+Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
+Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to. Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
+
+Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
 
 Appendix C
 ==========
