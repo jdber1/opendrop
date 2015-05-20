@@ -7,7 +7,7 @@ import cv2
 # import datetime
 
 BLUR_SIZE = 3
-
+VERSION_CV2 = cv2.__version__
 
 def extract_drop_profile(raw_experiment, user_inputs):
     profile_crop = image_crop(raw_experiment.image, user_inputs.drop_region)
@@ -51,7 +51,11 @@ def detect_edges(image, raw_experiment, points, ret, n_contours):
 
     # error in PDT code - shouldn't threshold before Canny - otherwise Canny is useless
     edges = cv2.Canny(blur,0.5*ret,ret) # detect edges using Canny edge detection
-    contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+    if float(VERSION_CV2[0]) > 2: #Version 3 of opencv returns an extra argument
+        _,contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    else:
+        contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
     contour_lengths = [] #list to hold all areas
 

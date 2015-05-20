@@ -8,16 +8,23 @@ import numpy as np
 
 GRAVITY = 9.80035 # gravitational acceleration in Melbourne, Australia
 
+pi = np.pi
 
 def generate_full_data(extracted_data, raw_experiment, fitted_drop_data, user_inputs, i):
     extracted_data.time[i] = raw_experiment.time - extracted_data.initial_image_time
-    extracted_data.gamma_IFT_mN[i] = calculate_IFT(fitted_drop_data, user_inputs)
+    IFT_mN = calculate_IFT(fitted_drop_data, user_inputs)
+    extracted_data.gamma_IFT_mN[i] = IFT_mN
     pix2mm = pixels_to_mm(fitted_drop_data, user_inputs)
     extracted_data.pixels_to_mm[i] = pix2mm
+    needle_diameter = user_inputs.needle_diameter_mm
     vol_sur_pix = fitted_vol_area(fitted_drop_data)
-    extracted_data.volume[i] = vol_sur_pix[0] * pix2mm**3 # volume in uL
+    vol_uL = vol_sur_pix[0] * pix2mm**3 # volume in uL
+    extracted_data.volume[i] = vol_uL
     extracted_data.area[i] = vol_sur_pix[1] * pix2mm**2 # area in mm^2
+    extracted_data.worthington[i] = calculate_Wo(fitted_drop_data,
+                                                 user_inputs,IFT_mN,vol_uL)
     extracted_data.parameters[i] = fitted_drop_data.previous_params
+
 
 
 
@@ -39,6 +46,12 @@ def calculate_IFT(fitted_drop_data, user_inputs):
     # return gamma_IFT
     gamma_IFT_mN = 1000 * gamma_IFT
     return gamma_IFT_mN
+
+def calculate_Wo(fitted_drop_data, user_inputs,ift_mN,vol_uL):
+    Delta_rho = user_inputs.drop_density - user_inputs.continuous_density
+    needle_diameter = user_inputs.needle_diameter_mm
+    Wo =  Delta_rho * GRAVITY * vol_uL*1e-9/(pi*ift_mN*1e-3*needle_diameter*1e-3)
+    return Wo
 
 # returns the pixel to meter conversion
 def pixels_to_mm(fitted_drop_data, user_inputs):

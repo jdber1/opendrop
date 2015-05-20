@@ -59,14 +59,14 @@ class PlotManager(object):
 
         self.volume_plot = self.fig.add_subplot(312)
         # self.volume_plot.axis((0,self.max_time,0,VOL_MAX))
-        self.volume_line, = self.volume_plot.plot(self.time_values, self.volume_values, 'r-')
+        self.volume_line, = self.volume_plot.plot(self.time_values, self.volume_values, 'o-r')
         self.volume_plot.set_xlabel("Time / s")
         self.volume_plot.set_ylabel("Volume / uL")
         # self.volume_plot.set_ylabel("Volume / m^3")
 
         self.area_plot = self.fig.add_subplot(313)
         # self.area_plot.axis((0,self.max_time,0,AREA_MAX))
-        self.area_line, = self.area_plot.plot(self.time_values, self.area_values, 'g-')
+        self.area_line, = self.area_plot.plot(self.time_values, self.area_values, 'o-g')
         self.area_plot.set_xlabel("Time / s")
         # self.area_plot.set_ylabel("Area / m^2")
         self.area_plot.set_ylabel("Area / mm^2")
@@ -120,13 +120,13 @@ class PlotManager(object):
             return False
 
     def check_plot_axes(self, data_vector):
-        bool_time = self.check_time_axis(data_vector[0])
-        bool_IFT = self.check_IFT_axis(data_vector[1])
-        bool_volume = self.check_volume_axis(data_vector[2])
-        bool_area = self.check_area_axis(data_vector[3])
-        if bool_time or bool_IFT or bool_volume or bool_area:
-            # self.update_plot_axes(data_vector)
-            self.axes_update = True
+#        bool_time = self.check_time_axis(data_vector[0])
+#        bool_IFT = self.check_IFT_axis(data_vector[1])
+#        bool_volume = self.check_volume_axis(data_vector[2])
+#        bool_area = self.check_area_axis(data_vector[3])
+#        if bool_time or bool_IFT or bool_volume or bool_area:
+#            # self.update_plot_axes(data_vector)
+        self.axes_update = True
 
 
 

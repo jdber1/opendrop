@@ -2,7 +2,7 @@
 #coding=utf-8
 from __future__ import print_function
 import subprocess
-import cv,cv2
+import cv2
 import time
 import datetime
 import timeit

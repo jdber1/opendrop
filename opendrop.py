@@ -31,7 +31,8 @@ from modules.generate_data import generate_full_data
 
 import os
 import numpy as np
-
+import Tkinter as tk
+import tkFont
 
 import timeit
 import time
@@ -74,7 +75,7 @@ def main():
 
     get_image(raw_experiment, user_inputs, -1)
     set_regions(raw_experiment, user_inputs)
-    
+
     for i in range(n_frames):
         print("\nProcessing frame %d of %d..." % (i+1, n_frames))
         time_start = timeit.default_timer()
@@ -84,7 +85,9 @@ def main():
         extract_drop_profile(raw_experiment, user_inputs)
         if i == 0:
             extracted_data.initial_image_time = raw_experiment.time
-            initialise_parameters(raw_experiment, fitted_drop_data)
+            filename = user_inputs.filename[:-4] + '_' + user_inputs.time_string + ".csv"
+            export_filename = os.path.join(user_inputs.directory_string, filename)
+        initialise_parameters(raw_experiment, fitted_drop_data)
         calculate_needle_diameter(raw_experiment, fitted_drop_data, tolerances)
         # fit_experimental_drop(raw_experiment, fitted_drop_data, tolerances)
         fit_experimental_drop(raw_experiment, fitted_drop_data, user_inputs, tolerances)
@@ -95,10 +98,8 @@ def main():
         if i != (n_frames - 1):
             time_loop = timeit.default_timer() - time_start
             pause_wait_time(time_loop, user_inputs.wait_time)
-    filename = user_inputs.filename[:-4] + '_' + user_inputs.time_string + ".csv"
-    export_filename = os.path.join(user_inputs.directory_string, filename)
-    extracted_data.export_data(export_filename)
-    cheeky_pause()
+        extracted_data.export_data(export_filename,i)
+#    cheeky_pause()
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -110,12 +111,45 @@ def pause_wait_time(elapsed_time, requested_time):
         time.sleep(requested_time - elapsed_time)
 
 def cheeky_pause():
+    import Tkinter
+    import tkMessageBox
     import cv2
-    cv2.namedWindow("Pause")
-    while 1:
-        k = cv2.waitKey(1) & 0xFF
-        if (k==27):
-            break
-    cv2.destroyAllWindows()
+    #    cv2.namedWindow("Pause")
+    #    while 1:
+    #        k = cv2.waitKey(1) & 0xFF
+    #        if (k==27):
+    #            break
+    #root = Tkinter.Tk()
+    #    B = Tkinter.Button(top, text="Exit",command = cv2.destroyAllWindows())
+    #    B = Tkinter.Button(root, text="Exit",command = root.destroy())
+    #    
+    #    B.pack()
+    #    root.mainloop()
+    
+    root = Tkinter.Tk()
+    frame = Tkinter.Frame(root)
+    frame.pack()
+    
+    button = Tkinter.Button(frame)
+    button['text'] ="Good-bye."
+    button['command'] = root.destroy()#close_window(root)
+    button.pack()
+    
+    root.mainloop()
+
+def quit_(root):
+    root.quit()
+
+#def close_window(root):
+#    root.destroy()  
+
+
 if __name__ == '__main__':
     main()
+    root = tk.Tk()
+    # quit button
+    buttonFont = tkFont.Font(family='Helvetica', size=48, weight='bold') #This isn't working for some reason (??)
+    quit_button = tk.Button(master=root, font=buttonFont,text='Quit',height=4,width=15,
+                            command=lambda: quit_(root),bg='blue',fg='white',activeforeground='white',activebackground='red')
+    quit_button.pack()
+    root.mainloop()
