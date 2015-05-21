@@ -184,7 +184,9 @@ Unpack the FlyCap2 zip, and find your way into the directory. Run:
 
 To make the FCGrab script:
 
-Copy the FlyCapture_building directory from Dropbox to somewhere convenient
-Move into /src/FCGrab
+Copy the FlyCapture_building directory from the main directory to somewhere convenient.
+
+Move into /src/FCGrab,
+
 > make
 
