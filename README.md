@@ -43,7 +43,7 @@ Contents
 
 Appendix A: preparing Ubuntu for OpenDrop
 
-Appendix B: preparing Windows 7 & 10 for OpenDrop
+Appendix B: preparing Windows 7 & 8 for OpenDrop
 
 Appendix C: preparing Mac OSX for OpenDrop
 
@@ -159,7 +159,7 @@ Preparing Windows 7 for OpenDrop.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
-Preparing Windows 10 for OpenDrop.
+Preparing Windows 8 for OpenDrop.
 ------------------------------------
 * Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
 * Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0.exe). The folder opencv will be created in the folder you extract to. 
