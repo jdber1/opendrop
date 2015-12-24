@@ -41,6 +41,8 @@ Contents
 
 3) Running measurements
 
+4) Sessile drops
+
 Appendix A: preparing Ubuntu for OpenDrop
 
 Appendix B: preparing Windows 7 & 8 for OpenDrop
@@ -95,7 +97,9 @@ Once the settings have been suitably adjusted, select "Run". This should capture
 
 The automated fitting routine will then commence. A file is created with the specified name and a date-time stamp containing the fitted data.
 
-
+4. Sessile Drops:
+------------------------
+The current distribution cannot process sessile drops. However, we do have a beta version that can, and it will be included in the next release. In the interim, if you would like to process sessile drops please email us at [email](mailto:opendrop.dev@gmail.com) and we will provide you with the code and instructions.
 
 Appendix A
 ==========
@@ -159,12 +163,14 @@ Preparing Windows 7 for OpenDrop.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
-Preparing Windows 8 for OpenDrop.
+Preparing Windows 8 (& 10) for OpenDrop.
 ------------------------------------
 * Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
 * Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0.exe). The folder opencv will be created in the folder you extract to. 
 * Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda2/Lib/site-packages/ folder.
 * Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
+* 
+Windows 10 instructions are forthcoming, but do not differ much from the above instructions.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 Appendix C
