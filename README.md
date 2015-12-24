@@ -97,9 +97,9 @@ Once the settings have been suitably adjusted, select "Run". This should capture
 
 The automated fitting routine will then commence. A file is created with the specified name and a date-time stamp containing the fitted data.
 
-4. Sessile Drops:
+4. Sessile drops:
 ------------------------
-The current distribution cannot process sessile drops. However, we do have a beta version that can, and it will be included in the next release. In the interim, if you would like to process sessile drops please email us at [email](mailto:opendrop.dev@gmail.com) and we will provide you with the code and instructions.
+The current distribution cannot process sessile drops. However, we do have a beta version that can, and it will be included in the next release. In the interim, if you would like to process sessile drops please [email](mailto:opendrop.dev@gmail.com) us and we will provide you with the code and instructions.
 
 Appendix A
 ==========
