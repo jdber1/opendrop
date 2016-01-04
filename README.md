@@ -58,7 +58,7 @@ Appendix D: preparing FlyCap2 for using Point Grey cameras
 --------------------
 In the spirit of its open source and free nature, OpenDrop is recommended for use with Linux, and has been extenstively tested on Ubuntu 14.04 LTS.
 
-OpenDrop also works on Mac OSX and Windows, provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
+OpenDrop also works on most versions of Mac OSX and on Windows (7,8 and 10), provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
 
 1. Installation:
 ----------------
@@ -73,14 +73,14 @@ If not contained within the Python/OpenCV installation method that you choose, a
 - Python-matplotlib
 - Python-numpy
 
-Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX. 
+Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, 8 and 10, and Appendix C for installation on Mac OSX. 
 
 2. Image source selection:
 --------------------------
 OpenDrop can currently utilise images from three sources:
-  * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 USB cameras.
-  * USB camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". a
-  * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
+  * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 and Grasshopper 3 USB cameras.
+  * Any generic USB camera that is regonised by the operating system as a standard functioning camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0".
+  * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting. Use this option if your camera is not supported by one of the protocols above.
 
 3. Running measurements:
 ------------------------
