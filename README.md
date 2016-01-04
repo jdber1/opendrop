@@ -11,7 +11,7 @@ If you use this software in your research, please cite the following journal art
 
 J. D. Berry, M. J. Neeson, R. R. Dagastine, D. Y. C. Chan and R. F. Tabor,
 Measurement of surface and interfacial tension using pendant drop tensiometry.
-Journal of Colloid and Interface Science (2015)
+Journal of Colloid and Interface Science 454 (2015) 226–237.
 ```
 @Article{OpenDrop:2015,
   Author    = {Berry, J.D. and Neeson, M.J. and Dagastine, R.R. and Chan, D.Y.C. and Tabor, R.F.},
@@ -45,7 +45,7 @@ Contents
 
 Appendix A: preparing Ubuntu for OpenDrop
 
-Appendix B: preparing Windows 7 & 8 for OpenDrop
+Appendix B: preparing Windows 7, 8 and 10 for OpenDrop
 
 Appendix C: preparing Mac OSX for OpenDrop
 
@@ -169,10 +169,18 @@ Preparing Windows 8 (& 10) for OpenDrop.
 * Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0.exe). The folder opencv will be created in the folder you extract to. 
 * Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda2/Lib/site-packages/ folder.
 * Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
-* 
-Windows 10 instructions are forthcoming, but do not differ much from the above instructions.
+
+Preparing Windows 10 for OpenDrop.
+------------------------------------
+* Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
+* Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0.exe). The folder opencv will be created in the folder you extract to. 
+* Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda2/Lib/site-packages/ folder. If this doesn't exist, see the point below. 
+* ONLY if you have installed Anaconda/Python for one user only (not for all users) then your "site-packages" folder will be located somewhere within that user directory. You can find it with a simple search, and then copy cv2.pyd into it.
+* Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
+
+
 Appendix C
 ==========
 
