@@ -1,0 +1,9 @@
+drop_region_start_x,247
+drop_region_start_y,106
+drop_region_end_x,589
+drop_region_end_y,451
+needle_region_start_x,300
+needle_region_start_y,494
+needle_region_end_x,518
+needle_region_end_y,527
+test_image,\test_images\sessile.png 

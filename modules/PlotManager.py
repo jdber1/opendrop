@@ -50,7 +50,7 @@ class PlotManager(object):
 
     def initialise_plot(self):
         plt.ion()
-        self.fig = plt.figure()
+        self.fig = plt.figure("figures")
         self.IFT_plot = self.fig.add_subplot(311)
         self.IFT_line, = self.IFT_plot.plot(self.time_values, self.IFT_values, 'o-b')
         # self.IFT_plot.axis((0,self.max_time,0,IFT_MAX))

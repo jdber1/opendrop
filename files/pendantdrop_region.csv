@@ -1,0 +1,9 @@
+drop_region_start_x,151
+drop_region_start_y,123
+drop_region_end_x,419
+drop_region_end_y,390
+needle_region_start_x,196
+needle_region_start_y,40
+needle_region_end_x,356
+"needle_region_end_y	",65
+test_image,/test_images/water_in_air.png

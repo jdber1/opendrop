@@ -49,6 +49,11 @@ class ExperimentalSetup(object):
         self.filename = None
         self.time_string = None
         self.local_files = None
+        self.threshold_val = None
+        self.drop_region = None
+        self.needle_region = None
+        self.auto_test_parameters = None
+        self.conAn_type = None
 
 class ExperimentalDrop(object):
     def __init__(self):
@@ -60,6 +65,8 @@ class ExperimentalDrop(object):
         self.ret = None
         self.time = None
         self.pixels_to_mm = None
+        self.contact_angles = None
+        self.surface_data = None
         # self.time_full = None
         # self.filename = None
         # self.img_src = 2

@@ -66,10 +66,12 @@ def image_from_Flea3(experimental_drop):
     # experimental_drop.filename
 
 def image_from_harddrive(experimental_drop, experimental_setup, frame_number):
+
     import_filename = get_import_filename(experimental_setup, frame_number)
     experimental_drop.image = cv2.imread(import_filename, IMAGE_FLAG)
 
 def get_import_filename(experimental_setup, frame_number):
+
     return experimental_setup.import_files[frame_number*(frame_number>0)] # handles initialisation frame = -1
 
 # Captures a single image from the camera and returns it in IplImage format

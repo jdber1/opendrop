@@ -1,0 +1,9 @@
+drop_region_start_x,190
+drop_region_start_y,362
+drop_region_end_x,536
+drop_region_end_y,566
+test_image,\test_images\RICOneedle.png
+line_start_x,0
+line_start_y,404
+line_end_x,718
+line_end_y,382

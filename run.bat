@@ -1,1 +1,1 @@
-python opendrop.py
+python start.py

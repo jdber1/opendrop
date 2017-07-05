@@ -1,0 +1,14 @@
+Drop density,1000.0
+Continuous density,0.0
+Needle diameter,0.7176
+Plot residuals,1
+Plot profiles,1
+Plot IFT,1
+Image source,Local images
+Number of frames,20
+Wait time,10
+Save images,0
+Create new data folder,0
+Filename,Latex
+Directory,/home/jizheh/Downloads/opendrop2.0
+Threshold value,40.0
