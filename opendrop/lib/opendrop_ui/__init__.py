@@ -89,14 +89,16 @@ def select_regions(context, num_regions, image_source_desc, image_source_type):
 def select_threshold(context, image_source_desc, image_source_type):
     view_manager = context["view_manager"]
 
-    view = yield view_manager.set_view(views.SelectThreshold,
-        image_source_desc=image_source_desc,
-        image_source_type=image_source_type
-    )
+    # view = yield view_manager.set_view(views.SelectThreshold,
+    #     image_source_desc=image_source_desc,
+    #     image_source_type=image_source_type
+    # )
+    #
+    # threshold_val = yield view.events.submit
+    #
+    # yield threshold_val
 
-    threshold_val = yield view.events.submit
-
-    yield threshold_val
+    yield 40
 
 
 # Main UI flow
@@ -146,7 +148,7 @@ def user_input(context):
     image_source_desc = response_form["image_acquisition"]["image_source"]
     image_source_type = response_form["image_acquisition"]["image_source_type"]
 
-    threshold_val = yield select_threshold(context, image_source=image_source,
+    threshold_val = yield select_threshold(context, image_source_desc=image_source_desc,
                                            image_source_type=image_source_type)
 
     if threshold_val is None:
