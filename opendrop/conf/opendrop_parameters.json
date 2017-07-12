@@ -1,0 +1,25 @@
+{
+    "image_acquisition": {
+        "save_images": false, 
+        "image_source": 0, 
+        "num_frames": 4, 
+        "wait_time": 0, 
+        "create_new_dir": false, 
+        "image_source_type": "USB camera"
+    }, 
+    "plotting_checklist": {
+        "profiles_boole": false, 
+        "IFT_boole": false, 
+        "residuals_boole": false
+    }, 
+    "save_location": {
+        "directory": "", 
+        "filename": ""
+    }, 
+    "physical_inputs": {
+        "density_inner": 0.0, 
+        "density_outer": 0.0, 
+        "threshold_val": 0.0, 
+        "needle_diameter": 0.0
+    }
+}
