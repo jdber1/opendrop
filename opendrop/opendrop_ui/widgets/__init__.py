@@ -1,7 +1,7 @@
 import _settings
 
-from opendrop.opendrop_ui.widgets.import_utility.package_loader import load as _load
-from opendrop.opendrop_ui.widgets.import_utility.preconfigure import preconfigure \
+from opendrop.opendrop_ui.widgets.utility.package_loader import load as _load
+from opendrop.opendrop_ui.widgets.utility.preconfigure import preconfigure \
     as _preconfigure
 
 _contents = _load(_settings)
