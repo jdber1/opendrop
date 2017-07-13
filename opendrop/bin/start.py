@@ -4,6 +4,6 @@
 import os, sys
 sys.path.append(os.path.join(sys.path[0], "..", ".."))
 
-from opendrop.lib import opendrop_ui
+from opendrop import opendrop_ui
 
 opendrop_ui.main()
