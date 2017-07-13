@@ -58,12 +58,18 @@ class Vector2(object):
 
     def __mul__(self, other):
         try:
-            return Vector2(self.x * other, self.y * other)
-        except TypeError:
-            raise TypeError(
-                "unsupported operand type(s) for *: '{0}' and '{1}'"
-                .format(type(self).__name__, type(other).__name__)
-            )
+            if len(other) == 2:
+                return Vector2(self.x * other[0], self.y * other[1])
+            else:
+                raise IndexError
+        except (IndexError, TypeError):
+            try:
+                return Vector2(self.x * other, self.y * other)
+            except TypeError:
+                raise TypeError(
+                    "unsupported operand type(s) for *: '{0}' and '{1}'"
+                    .format(type(self).__name__, type(other).__name__)
+                )
 
     def __neg__(self):
         return Vector2(-self.x, -self.y)
@@ -73,12 +79,18 @@ class Vector2(object):
 
     def __div__(self, other):
         try:
-            return Vector2(self.x / other, self.y / other)
-        except TypeError:
-            raise TypeError(
-                "unsupported operand type(s) for /: '{0}' and '{1}'"
-                .format(type(self).__name__, type(other).__name__)
-            )
+            if len(other) == 2:
+                return Vector2(self.x / other[0], self.y / other[1])
+            else:
+                raise IndexError
+        except (IndexError, TypeError):
+            try:
+                return Vector2(self.x / other, self.y / other)
+            except TypeError:
+                raise TypeError(
+                    "unsupported operand type(s) for /: '{0}' and '{1}'"
+                    .format(type(self).__name__, type(other).__name__)
+                )
 
     def __eq__(self, other):
         if isinstance(other, Vector2):
