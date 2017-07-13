@@ -203,7 +203,7 @@ class USBCameraSource(LiveSource):
         self.busy = threading.Lock()
 
         with self.busy:
-            self.vc = cv2.VideoCapture(0)
+            self.vc = cv2.VideoCapture(camera_index)
 
             if not self.vc.isOpened():
                 raise ValueError(
