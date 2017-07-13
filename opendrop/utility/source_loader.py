@@ -11,7 +11,7 @@ from PIL import Image
 from opendrop.constants import ImageSourceOption
 
 from opendrop.utility.vectors import Vector2
-from opendrop.utility.events import WaitLock
+from opendrop.utility.events import Event, PersistentEvent, WaitLock
 
 class Throttler(object):
     """
@@ -56,11 +56,12 @@ class Throttler(object):
             return self.target_avg_lap_time
 
 class FrameIterator(object):
-    def __init__(self, image_source, num_frames = None, interval = None):
+    def __init__(self, image_source, num_frames=None, interval=None, loop=False):
         self.image_source = image_source
 
         self.frames_left = num_frames
         self.interval = interval
+        self.loop = loop
 
         self.start_time = timeit.default_timer()
 
@@ -104,7 +105,9 @@ class FrameIterator(object):
             else:
                 raise StopIteration
 
-        self.wait_lock.lock()
+         # Reset the WaitLock
+        del self.wait_lock
+        self.wait_lock = WaitLock()
 
         return_values = (
             self.queued_image_timestamp + self.timestamp_offset,
@@ -123,9 +126,9 @@ class FrameIterator(object):
         elif isinstance(self.image_source, RecordedSource):
             hold_for = self.interval
             if hold_for is not None:
-                self.image_source.advance(hold_for)
+                self.image_source.advance(hold_for, wrap_around=self.loop)
             else:
-                self.image_source.scrub(timeit.default_timer() - self.start_time)
+                self.image_source.advance_index(1, wrap_around=self.loop)
 
             threading.Thread(target=self.prepare_next).start()
 
@@ -162,6 +165,32 @@ class ImageSource(object):
         else:
             return Vector2(0, 0)
 
+    def playback(self, fps=None, loop=False):
+        frame_duration = fps and 1.0/fps
+
+        playback_event = PersistentEvent()
+        frames_gen = iter(self.frames(interval=frame_duration, loop=loop))
+
+        def update_loop():
+            try:
+                timestamp, image, wait_lock = next(frames_gen)
+                playback_event(image)
+
+                min_wait = 0
+
+                if isinstance(self, LiveSource):
+                    min_wait = frame_duration or 0.0 # 0.0 wait time, as fast as possible updates
+                elif isinstance(self, LocalImages):
+                    min_wait = frame_duration or self.next_frame_interval
+
+                wait_lock(min_wait=min_wait).bind(update_loop)
+            except StopIteration:
+                playback_event(None)
+
+        update_loop()
+
+        return playback_event
+
     @abstractmethod
     def read(self):
         if self.released:
@@ -186,13 +215,11 @@ class RecordedSource(ImageSource):
 
         self.emulated_time = 0
 
-        self.loop = loop
+    @abstractmethod
+    def advance(self, by, wrap_around=False): pass
 
     @abstractmethod
-    def advance(self, by): pass
-
-    @abstractmethod
-    def scrub(self, to): pass
+    def scrub(self, to, wrap_around=False): pass
 
 class USBCameraSource(LiveSource):
     MAX_RETRY_READ_ATTEMPTS = 5
@@ -211,15 +238,6 @@ class USBCameraSource(LiveSource):
                 )
 
         print("[DEBUG] VideoCapture started, {0}x{1}".format(*self.size))
-
-    # @property
-    # def size(self):
-    #     # REMOVE ME IF NOT WORKING (these constants are defined differently sometimes apparently..)
-    #     with self.lock:
-    #         return Vector2(
-    #             self.vc.get(cv2.CAP_PROP_FRAME_WIDTH),
-    #             self.vc.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    #         ).round_to_int()
 
     def read(self):
         with self.busy:
@@ -248,44 +266,73 @@ class USBCameraSource(LiveSource):
             self.vc.release()
 
 class LocalImages(RecordedSource):
-    def __init__(self, filenames, timestamps=None, interval=None, **kwargs):
+    def __init__(self, filenames, timestamps=None, interval=1, **kwargs):
         super(LocalImages, self).__init__(**kwargs)
 
         if not isinstance(filenames, (tuple, list)):
             filenames = (filenames,)
 
-        if timestamps is None:
-            if interval is None:
-                raise ValueError(
-                    "Must specify 'timestamps' or 'interval'"
-                )
+        self.filenames = filenames
 
-            timestamps = list(i*interval for i in range(len(filenames)))
+        if timestamps is None:
+            timestamps = list(i*interval for i in range(self.num_images))
         elif timestamps[0] != 0:
                 raise ValueError(
                     "'timestamps' must be begin with 0"
                 )
 
-        self.filenames = filenames
         self.timestamps = timestamps
 
-    def index_from_timestamp(self, timestamp):
-        if len(self.filenames) == 1:
+    @property
+    def next_frame_interval(self):
+        curr_index = self.curr_index
+        if curr_index >= self.num_images - 1 or curr_index < 0:
+            # Currently at last index (or past index range), there is no next frame, or index is
+            # less than 0
             return 0
         else:
-            if self.loop:
-                timestamp %= self.timestamps[-1]
+            return self.timestamps[curr_index + 1] - self.timestamps[curr_index]
 
-                index = bisect.bisect(self.timestamps, timestamp) - 1
+    @property
+    def curr_index(self):
+        return self.index_from_timestamp(self.emulated_time)
+
+    @property
+    def length_time(self):
+        return self.timestamps[-1]
+
+    @property
+    def num_images(self):
+        return len(self.filenames)
+
+    def index_from_timestamp(self, timestamp):
+        if timestamp < 0 or timestamp > self.length_time:
+            return -1
+
+        if self.num_images == 1:
+            return 0
+        else:
+            index = bisect.bisect(self.timestamps, timestamp) - 1
 
         return index
+
+    def timestamp_from_index(self, index):
+        try:
+            return self.timestamps[index]
+        except IndexError:
+            return -1
 
     def read(self):
         super(LocalImages, self).read()
 
         try:
-            filename = self.filenames[self.index_from_timestamp(self.emulated_time)]
             timestamp = self.emulated_time
+            curr_index = self.curr_index
+
+            if curr_index < 0 or curr_index > self.num_images - 1:
+                raise IndexError
+
+            filename = self.filenames[self.curr_index]
 
             image = Image.open(filename)
             return timestamp, image
@@ -293,11 +340,28 @@ class LocalImages(RecordedSource):
             self.release()
             return None, None
 
-    def advance(self, by):
-        self.emulated_time += by
+    def set_emulated_time(self, t, wrap_around=False):
+        if wrap_around:
+            t %= self.length_time
 
-    def scrub(self, to):
-        self.emulated_time = to
+        self.emulated_time = t
+
+    def advance(self, by, wrap_around=False):
+        self.set_emulated_time(self.emulated_time + by, wrap_around=wrap_around)
+
+    def advance_index(self, by, wrap_around=False):
+        curr_index = self.curr_index
+        new_index = curr_index + by
+
+        if wrap_around:
+            new_index %= self.num_images
+
+        new_time = self.timestamp_from_index(new_index)
+
+        self.scrub(new_time)
+
+    def scrub(self, to, wrap_around=False):
+        self.set_emulated_time(to, wrap_around=wrap_around)
 
     def release(self):
         super(LocalImages, self).release()

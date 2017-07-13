@@ -2,6 +2,7 @@ from opendrop.constants import ImageSourceOption
 
 from opendrop.opendrop_ui import widgets
 from opendrop.opendrop_ui.view_manager import View
+from opendrop.opendrop_ui.views.utility.scale_from_bounds import scale_from_bounds
 
 from opendrop.resources import resources
 
@@ -31,19 +32,6 @@ HEIGHT_MIN, HEIGHT_MAX = 0.4, 0.5
 REL_SIZE_MIN = Vector2(WIDTH_MIN, HEIGHT_MIN)
 REL_SIZE_MAX = Vector2(WIDTH_MAX, HEIGHT_MAX)
 
-def calculate_scale(rel_size, mins, maxs):
-    scale = 1
-
-    if rel_size.x < mins.x or rel_size.y < mins.y:
-        scale *= max(mins.x/rel_size.x, mins.y/rel_size.y)
-
-    rel_size *= scale
-
-    if rel_size.x > maxs.x or rel_size.y > maxs.y:
-        scale *= min(maxs.x/rel_size.x, maxs.y/rel_size.y)
-
-    return scale
-
 class SelectRegion(View):
     def submit(self):
         region = self.selector.value
@@ -57,10 +45,13 @@ class SelectRegion(View):
         self.events.submit(None)
 
     @coroutines.co
-    def image_source_fetch_loop(self):
-        for timestamp, image, wait_lock in self.image_source.frames():
-            with self.busy:
-                if not self.alive: break
+    def update_image(self, image):
+        with self.busy:
+            if not self.alive:
+                self.update_image_bind.unbind()
+                return
+
+            if image:
                 resized_image = image.resize(self.resize_to, resample=Image.BILINEAR)
                 image_tk = ImageTk.PhotoImage(resized_image)
 
@@ -70,34 +61,38 @@ class SelectRegion(View):
 
                 self.selector.configure(image=image_tk)
 
-                yield wait_lock(min_wait = 1.0/24)
 
     def body(self, image_source_desc, image_source_type):
         root = self.root
 
-        if image_source_type == ImageSourceOption.LOCAL_IMAGES:
-            # If just images, then cycle through them at a framerate of 2fps (interval=0.5)
-            self.image_source = source_loader.load(image_source_desc, image_source_type,
-                                                   interval = 0.5, loop=True)
-        elif image_source_type == ImageSourceOption.USB_CAMERA:
-            self.image_source = source_loader.load(image_source_desc, image_source_type)
-        elif image_source_type == ImageSourceOption.FLEA3:
-            raise NotImplementedError
+        with self.busy:
+            image_source_fps = None
 
-        screen_res = self.view_manager.screen_resolution
-        image_source_size = self.image_source.size
-        image_source_rel_size = Vector2(
-            float(image_source_size.x)/screen_res.x,
-            float(image_source_size.y)/screen_res.y
-        )
+            if image_source_type == ImageSourceOption.LOCAL_IMAGES:
+                # If just images, then cycle through them at a framerate of 2fps
+                self.image_source = source_loader.load(image_source_desc, image_source_type)
+                image_source_fps = 2
+            elif image_source_type == ImageSourceOption.USB_CAMERA:
+                self.image_source = source_loader.load(image_source_desc, image_source_type)
+                image_source_fps = None # None specifies as fast as possible
+            elif image_source_type == ImageSourceOption.FLEA3:
+                raise NotImplementedError("Flea3 not supported yet")
 
-        self.scale = calculate_scale(image_source_rel_size, REL_SIZE_MIN, REL_SIZE_MAX)
-        self.resize_to = (image_source_size * self.scale).round_to_int()
+            screen_res = self.view_manager.screen_resolution
+            image_source_size = self.image_source.size
 
-        # Widgets
+            self.scale = scale_from_bounds(
+                image_size=image_source_size,
+                max_size=REL_SIZE_MAX * screen_res,
+                min_size=REL_SIZE_MIN * screen_res
+            )
 
-        self.selector = widgets.forms.RegionSelector(root, size = self.resize_to)
-        self.selector.pack()
+            self.resize_to = (image_source_size * self.scale).round_to_int()
+
+            # Widgets
+
+            self.selector = widgets.forms.RegionSelector(root, size = self.resize_to)
+            self.selector.pack()
 
         # Resizing and recentering root
 
@@ -113,7 +108,10 @@ class SelectRegion(View):
 
         # Background tasks
 
-        self.image_source_fetch_loop()
+        self.update_image_bind = self.image_source.playback(
+            fps=image_source_fps,
+            loop=True
+        ).bind(self.update_image)
 
     def _clear(self):
         self.image_source.release()
