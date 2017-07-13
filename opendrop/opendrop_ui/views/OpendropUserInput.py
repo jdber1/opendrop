@@ -78,6 +78,9 @@ class OpendropUserInput(View):
                 # Cancel operation
                 return
 
+            # Sort the input files in lexicographic order
+            image_source = sorted(image_source)
+
             self.image_source.value = image_source
             self.num_frames.value = len(image_source)
         elif self.image_source_type.value == ImageSourceOption.USB_CAMERA:
