@@ -132,7 +132,8 @@ def user_input(context):
     pref = load_preferences()
     pref_form = parse_preferences(pref)
 
-    view.restore_form(pref_form)
+    if pref_form:
+        view.restore_form(pref_form)
 
     response_form = yield view.events.submit
 
