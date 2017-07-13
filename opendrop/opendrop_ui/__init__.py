@@ -144,8 +144,6 @@ def user_input(context):
     pref = make_preferences(response_form)
     save_preferences(pref)
 
-    num_regions = OPENDROP_OP_REQUIREMENTS[context["operation_mode"]]["regions"]
-
     image_source_desc = response_form["image_acquisition"]["image_source"]
     image_source_type = response_form["image_acquisition"]["image_source_type"]
 
@@ -155,6 +153,8 @@ def user_input(context):
     if threshold_val is None:
         yield user_input(context)
         yield coroutines.EXIT
+
+    num_regions = OPENDROP_OP_REQUIREMENTS[context["operation_mode"]]["regions"]
 
     regions = yield select_regions(context,
         num_regions,
