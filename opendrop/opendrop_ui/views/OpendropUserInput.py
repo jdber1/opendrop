@@ -109,7 +109,7 @@ class OpendropUserInput(View):
         root = self.root
 
         root.geometry("650x550")
-
+        root.minsize(height=1100, width=1200)
         root.configure(background = BACKGROUND_COLOR, padx = 50)
 
         form = widgets.forms.Frame(root)
@@ -126,7 +126,7 @@ class OpendropUserInput(View):
         title_frame.grid(row = 0, columnspan = 2, rowspan = 1, padx = 30, pady = 10)
 
         tk.Label(title_frame,
-            text = "Open drop",
+            text = "OpenDrop",
             background = BACKGROUND_COLOR,
             font = ("Helvetica", 36),
             anchor = "center"
@@ -137,7 +137,7 @@ class OpendropUserInput(View):
         #---- Physical inputs Frame
 
         physical_frame = widgets.forms.LabelFrame(form,
-            text = "Physical inputs",
+            text = "Physical Inputs",
             name = "physical_inputs"
         )
         physical_frame.grid(row = 1, column = 0, columnspan = 1, sticky = "wens", padx = 15,
@@ -145,7 +145,7 @@ class OpendropUserInput(View):
 
         #-------- Drop density FloatEntry
 
-        widgets.Label(physical_frame, text = "Drop density (kg/m"u"\u00b3""):") \
+        widgets.Label(physical_frame, text = "Drop Density (kg/m"u"\u00b3""):") \
             .grid(row = 0, column = 0, sticky = "w")
         widgets.forms.FloatEntry(physical_frame,
             name = "density_inner"
@@ -153,7 +153,7 @@ class OpendropUserInput(View):
 
         #-------- Continuous density FloatEntry
 
-        widgets.Label(physical_frame, text = "Continuous density (kg/m"u"\u00b3""):") \
+        widgets.Label(physical_frame, text = "Continuous Density (kg/m"u"\u00b3""):") \
             .grid(row = 1, column = 0, sticky = "w")
         widgets.forms.FloatEntry(physical_frame,
             name = "density_outer"
@@ -161,7 +161,7 @@ class OpendropUserInput(View):
 
         #-------- Needle diameter FloatCombobox
 
-        widgets.Label(physical_frame, text = "Needle diameter (mm):") \
+        widgets.Label(physical_frame, text = "Needle Diameter (mm):") \
             .grid(row = 2, column = 0, sticky = "w")
         widgets.forms.FloatCombobox(physical_frame,
             values = NEEDLE_OPTIONS,
@@ -170,7 +170,7 @@ class OpendropUserInput(View):
 
         #-------- Threshold value FloatEntry
 
-        widgets.Label(physical_frame, text = "Threshold value:") \
+        widgets.Label(physical_frame, text = "Threshold Value:") \
             .grid(row = 3, column = 0, sticky = "w")
         widgets.forms.FloatEntry(physical_frame,
             name = "threshold_val"
@@ -181,7 +181,7 @@ class OpendropUserInput(View):
         #---- Plotting checklist frame
 
         pclist_frame = widgets.forms.LabelFrame(form,
-            text = "To view during fitting",
+            text = "To View During Fitting",
             name = "plotting_checklist"
         )
         pclist_frame.grid(row = 1, column = 1, columnspan = 1, sticky = "wens", padx = 15,
@@ -201,7 +201,7 @@ class OpendropUserInput(View):
         #---- Save location frame
 
         location_frame = widgets.forms.LabelFrame(form,
-            text = "Output data location",
+            text = "Output Data Location",
             name = "save_location"
         )
         location_frame.grid(row = 2, columnspan = 2, rowspan = 1, sticky = "we", padx = 15, pady = 10)
@@ -233,7 +233,7 @@ class OpendropUserInput(View):
         #---- Image acquisition frame
 
         image_acquisition_frame = widgets.forms.LabelFrame(form,
-            text = "Image acquisition",
+            text = "Image Acquisition",
             name = "image_acquisition"
         )
         image_acquisition_frame.grid(row = 3, columnspan = 3, rowspan = 1, sticky = "we",
@@ -242,7 +242,7 @@ class OpendropUserInput(View):
 
         #-------- Source option menu
 
-        widgets.Label(image_acquisition_frame, text = "Image source:", width = 12) \
+        widgets.Label(image_acquisition_frame, text = "Image Source:", width = 12) \
             .grid(row = 0, column = 0, sticky = "w")
         self.image_source_type = widgets.forms.OptionMenu(image_acquisition_frame,
             name = "image_source_type",
@@ -259,7 +259,7 @@ class OpendropUserInput(View):
 
         #-------- Number of frames
 
-        widgets.Label(image_acquisition_frame, text = "Number of frames:") \
+        widgets.Label(image_acquisition_frame, text = "Number of Frames:") \
             .grid(row = 3, column = 0, sticky = "w")
         self.num_frames = widgets.forms.IntegerEntry(image_acquisition_frame,
             name = "num_frames",
@@ -269,7 +269,7 @@ class OpendropUserInput(View):
 
         #-------- Wait time
 
-        widgets.Label(image_acquisition_frame, text = "Wait time (s):") \
+        widgets.Label(image_acquisition_frame, text = "Wait Time (s):") \
             .grid(row = 4, column = 0, sticky = "w")
         widgets.forms.IntegerEntry(image_acquisition_frame,
             name = "wait_time",
@@ -279,7 +279,7 @@ class OpendropUserInput(View):
         #-------- Checkbuttons, Save image, Create new directory
 
         self.save_images_checkbutton = widgets.forms.Checkbutton(image_acquisition_frame,
-            text = "Save image",
+            text = "Save Image",
             name = "save_images"
         )
         self.save_images_checkbutton.grid(row = 3, column = 3, pady = 2, sticky = "w")
@@ -293,7 +293,7 @@ class OpendropUserInput(View):
         self.save_images_checkbutton.on_change.bind(save_images_checkbutton_change)
 
         self.create_new_dir_checkbutton = widgets.forms.Checkbutton(image_acquisition_frame,
-            text = "Create new directory",
+            text = "Create New Directory",
             name = "create_new_dir"
         )
         self.create_new_dir_checkbutton.grid(row = 4, column = 3, pady = 2, sticky = "w")
@@ -309,14 +309,18 @@ class OpendropUserInput(View):
         run_quit_frame.columnconfigure(0, weight = 1)
         run_quit_frame.columnconfigure(1, weight = 1)
 
-        quit_button = widgets.Button(run_quit_frame,
+        quit_button = tk.Button(run_quit_frame,
             text = "Cancel",
+            font = ("Helvetica", 10),
+            width = 15,
             command = self.cancel
         )
         quit_button.grid(row = 0, column = 0)
 
-        run_button = widgets.Button(run_quit_frame,
+        run_button = tk.Button(run_quit_frame,
             text = "Run",
+            font = ("Helvetica", 10),
+            width = 15,
             command = self.submit
         )
         run_button.grid(row = 0, column = 1)
