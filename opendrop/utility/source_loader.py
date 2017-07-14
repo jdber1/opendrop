@@ -342,7 +342,10 @@ class LocalImages(RecordedSource):
 
     def set_emulated_time(self, t, wrap_around=False):
         if wrap_around:
-            t %= self.length_time
+            if self.length_time == 0:
+                t = 0
+            else:
+                t %= self.length_time
 
         self.emulated_time = t
 
