@@ -1,3 +1,0 @@
-#!/bin/bash
-# rsync script
-python opendrop.py
