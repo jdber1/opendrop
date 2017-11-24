@@ -11,7 +11,7 @@ from functools import partial
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    if item.get_marker('gloop') or item.get_marker('gloop_application'):
+    if item.get_marker('gloop') or item.get_marker('gloop_application') or item.get_marker('asyncio'):
         item.obj = wrap(item)
 
 
@@ -19,7 +19,12 @@ def wrap(item):
     func = item.obj
 
     def wrapper(**kwargs):
+        # Set up the wrapped event loop
+        original_loop_policy = asyncio.get_event_loop_policy()
+        original_loop = asyncio.get_event_loop()
+
         asyncio.set_event_loop_policy(GtkHookLoopPolicy())
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
         loop = asyncio.get_event_loop()
 
@@ -45,8 +50,6 @@ def wrap(item):
             loop.stop()
             stop()
 
-            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
-
         loop.call_soon(setup)
 
         loop.run_forever()
@@ -54,6 +57,10 @@ def wrap(item):
 
         if err:
             raise err
+
+        # Restore the original event loop
+        asyncio.set_event_loop_policy(original_loop_policy)
+        asyncio.set_event_loop(original_loop)
 
     return wrapper
 

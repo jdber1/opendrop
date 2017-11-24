@@ -11,6 +11,13 @@ class GtkHookLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
         return super().set_event_loop(loop)
 
+    def get_event_loop(self):
+        loop = super().get_event_loop()
+
+        assert isinstance(loop, WrappedLoopRunOnGLoop)
+
+        return loop
+
 
 class WrappedLoopRunOnGLoopMethods:
     def run_forever(self):

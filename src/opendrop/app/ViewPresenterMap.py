@@ -18,6 +18,7 @@ class ViewPresenterMap:
         pass
 
     def __init__(self, views, presenters):
+        pass
 
     def presenter_from_view(self, view: BaseView) -> BasePresenter:
         pass
