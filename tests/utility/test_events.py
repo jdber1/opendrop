@@ -1,6 +1,6 @@
 import asyncio
 
-from mock import Mock, call
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -69,14 +69,14 @@ async def test_event_disconnect(event):
 
     await asyncio.sleep(0)
 
-    cb.assert_called_once()
+    cb.assert_called_once_with()
 
     event.disconnect(cb)
     event.fire()
 
     await asyncio.sleep(0)
 
-    cb.assert_called_once()
+    cb.assert_called_once_with()
 
 
 @pytest.mark.asyncio

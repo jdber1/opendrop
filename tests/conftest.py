@@ -11,7 +11,7 @@ from functools import partial
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    if item.get_marker('gloop') or item.get_marker('gloop_application') or item.get_marker('asyncio'):
+    if item.get_marker('gloop') or item.get_marker('gloop_application'):
         item.obj = wrap(item)
 
 
