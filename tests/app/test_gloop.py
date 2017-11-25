@@ -9,7 +9,7 @@ import pytest
 
 @pytest.mark.gloop
 async def test_call_soon():
-    cb = Mock()
+    cb = Mock(spec=[])
 
     cb.assert_not_called()
 
@@ -22,7 +22,7 @@ async def test_call_soon():
 
 @pytest.mark.gloop
 async def test_sleep():
-    EPSILON = 0.01
+    EPSILON = 0.001
     WAIT = 0.5
 
     start = time.time()
