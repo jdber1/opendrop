@@ -5,4 +5,4 @@ import pytest
 
 @pytest.mark.gloop_application
 async def test_quit(app):
-    app.quit()
+    app.close()

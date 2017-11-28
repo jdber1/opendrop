@@ -4,23 +4,27 @@ from typing import Callable
 
 import functools
 
+
 class Event(object):
     def __init__(self):
-        self._listeners = []
+        self._handlers = []
 
-    def connect(self, listener: Callable) -> None:
-        self._listeners.append(listener)
+    def connect(self, handler: Callable[..., None]) -> None:
+        self._handlers.append(handler)
 
-    def disconnect(self, listener: Callable) -> None:
+    def disconnect(self, handler: Callable[..., None]) -> None:
         try:
-            self._listeners.remove(listener)
+            self._handlers.remove(handler)
         except ValueError:
-            raise ListenerNotConnected
+            raise HandlerNotConnected
 
     def fire(self, *args, **kwargs):
-        for listener in self._listeners:
-            asyncio.get_event_loop().call_soon(functools.partial(listener, *args, **kwargs))
+        for handler in self._handlers:
+            if asyncio.iscoroutinefunction(handler):
+                asyncio.get_event_loop().create_task(handler(*args, **kwargs))
+            else:
+                asyncio.get_event_loop().call_soon(functools.partial(handler, *args, **kwargs))
 
 
-class ListenerNotConnected(Exception):
+class HandlerNotConnected(Exception):
     pass

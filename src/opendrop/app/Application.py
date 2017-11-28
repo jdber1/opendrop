@@ -1,145 +1,108 @@
-from gi.repository import GLib, Gio, Gtk
+from typing import Callable, Type, Mapping, List, Optional
+
+from gi.repository import Gtk
+
+from opendrop.app.presenters.BurgerExamplePresenter import BurgerExamplePresenter
+from opendrop.app.presenters.MainPresenter import MainPresenter
+from opendrop.app.presenters.TimerExamplePresenter import TimerExamplePresenter
+from opendrop.app.views.BurgerExampleView import BurgerExampleView
+from opendrop.app.views.MainView import MainView
+from opendrop.app.views.TimerExampleView import TimerExampleView
+
+from opendrop.mvp.Model import Model
+from opendrop.mvp.Presenter import Presenter
+from opendrop.mvp.View import View
+from opendrop.mvp.ViewPresenterMap import ViewPresenterMap
 
 from opendrop.utility.events import Event
 
-# This would typically be its own file
-MENU_XML="""
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <menu id="app-menu">
-    <section>
-      <attribute name="label" translatable="yes">Change label</attribute>
-      <item>
-        <attribute name="action">win.change_label</attribute>
-        <attribute name="target">String 1</attribute>
-        <attribute name="label" translatable="yes">String 1</attribute>
-      </item>
-      <item>
-        <attribute name="action">win.change_label</attribute>
-        <attribute name="target">String 2</attribute>
-        <attribute name="label" translatable="yes">String 2</attribute>
-      </item>
-      <item>
-        <attribute name="action">win.change_label</attribute>
-        <attribute name="target">String 3</attribute>
-        <attribute name="label" translatable="yes">String 3</attribute>
-      </item>
-    </section>
-    <section>
-      <item>
-        <attribute name="action">win.maximize</attribute>
-        <attribute name="label" translatable="yes">Maximize</attribute>
-      </item>
-    </section>
-    <section>
-      <item>
-        <attribute name="action">app.about</attribute>
-        <attribute name="label" translatable="yes">_About</attribute>
-      </item>
-      <item>
-        <attribute name="action">app.quit</attribute>
-        <attribute name="label" translatable="yes">_Quit</attribute>
-        <attribute name="accel">&lt;Primary&gt;q</attribute>
-    </item>
-    </section>
-  </menu>
-</interface>
-"""
 
+class Application:
+    APPLICATION_ID = 'org.example.sampleapp'  # type: str
 
-class AppWindow(Gtk.ApplicationWindow):
+    ENTRY_VIEW = MainView  # type: Type[View]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    VIEWS = [MainView, TimerExampleView, BurgerExampleView]  # type: List[View]
+    PRESENTERS = [MainPresenter, TimerExamplePresenter, BurgerExamplePresenter]  # type: List[Presenter]
 
-        # This will be in the windows group and have the "win" prefix
-        max_action = Gio.SimpleAction.new_stateful("maximize", None,
-                                           GLib.Variant.new_boolean(False))
-        max_action.connect("change-state", self.on_maximize_toggle)
-        self.add_action(max_action)
+    _VPMAP = ViewPresenterMap(views=VIEWS, presenters=PRESENTERS)  # type: ViewPresenterMap
+    assert ENTRY_VIEW in VIEWS
 
-        # Keep it in sync with the actual state
-        self.connect("notify::is-maximized",
-                            lambda obj, pspec: max_action.set_state(
-                                               GLib.Variant.new_boolean(obj.props.is_maximized)))
+    def __init__(self, *args, **kwargs) -> None:
+        self.gtk_app = Gtk.Application(*args, application_id=self.APPLICATION_ID, **kwargs)  # type: Gtk.Application
 
-        lbl_variant = GLib.Variant.new_string("String 1")
-        lbl_action = Gio.SimpleAction.new_stateful("change_label", lbl_variant.get_type(),
-                                               lbl_variant)
-        lbl_action.connect("change-state", self.on_change_label_state)
-        self.add_action(lbl_action)
+        self.gtk_app.connect('startup', self.handle_gtk_app_startup)
+        self.gtk_app.connect('open', self.handle_gtk_app_open)
+        self.gtk_app.connect('activate', self.handle_gtk_app_activate)
+        self.gtk_app.connect('shutdown', self.handle_gtk_app_shutdown)
 
-        self.label = Gtk.Label(label=lbl_variant.get_string(),
-                               margin=30)
-        self.add(self.label)
-        self.label.show()
+        self.active_views = []  # type: List[View]
 
-    def on_change_label_state(self, action, value):
-        action.set_state(value)
-        self.label.set_text(value.get_string())
+        self.events = [
+            "on_quit"
+        ]  # type: List[str]
 
-    def on_maximize_toggle(self, action, value):
-        action.set_state(value)
-        if value.get_boolean():
-            self.maximize()
-        else:
-            self.unmaximize()
+        self.events = {event_name: Event() for event_name in self.events}  # type: Mapping[str, Event]
 
+    def add_active_view(self, view: View) -> None:
+        self.active_views.append(view)
 
-class Application(Gtk.Application):
+    def remove_active_view(self, view: View) -> None:
+        self.active_views.remove(view)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            application_id="org.example.myapp",
-            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
-            **kwargs
-        )
+        if not self.active_views:
+            self.quit()
 
-        self.window = None
+    def new_view(self, view_cls: Type[View]) -> None:
+        model = None  # type: Optional[Model]
+        view = view_cls(gtk_app=self.gtk_app)  # type: View
 
-        self.on_quit = Event()
+        presenter_cls = self.presenter_from_view(view_cls)  # type: Type[Presenter]
 
-    def do_startup(self):
-        Gtk.Application.do_startup(self)
+        # Create and wire up the presenter
+        presenter_cls(model, view)
 
-        action = Gio.SimpleAction.new("about", None)
-        action.connect("activate", self.on_about)
-        self.add_action(action)
+        # Connect view events
+        view.connect('on_close', self.handle_view_close)
 
-        action = Gio.SimpleAction.new("quit", None)
-        action.connect("activate", self.on_quit_button_clicked)
-        self.add_action(action)
+        self.add_active_view(view)
 
-        builder = Gtk.Builder.new_from_string(MENU_XML, -1)
-        self.set_app_menu(builder.get_object("app-menu"))
+    def handle_view_close(self, src_view: View, next_view_cls: Type[View]) -> None:
+        if next_view_cls:
+            self.new_view(next_view_cls)
 
-    def do_activate(self):
-        # We only allow a single window and raise any existing ones
-        if not self.window:
-            # Windows are associated with the application
-            # when the last one is closed the application shuts down
-            self.window = AppWindow(application=self, title="Main Window")
+        self.remove_active_view(src_view)
+        src_view.destroy()
 
-        self.window.present()
+    def presenter_from_view(self, view_cls: Type[View]) -> Type[Presenter]:
+        return self._VPMAP.presenter_from_view(view_cls)
 
-    def do_command_line(self, command_line):
-        options = command_line.get_options_dict()
+    def run(self, *args, **kwargs) -> None:
+        self.gtk_app.run(*args, **kwargs)
 
-        if options.contains("test"):
-            # This is printed on the main instance
-            print("Test argument recieved")
+    def quit(self) -> None:
+        self.gtk_app.quit()
 
-        self.activate()
-        return 0
+        self.fire('on_quit')
 
-    def on_about(self, action, param):
-        about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
-        about_dialog.present()
+    def fire(self, event_name: str, *args, **kwargs) -> None:
+        self.events[event_name].fire(*args, **kwargs)
 
-    def on_quit_button_clicked(self, action, param):
-        self.quit()
+    def connect(self, event_name: str, handler: Callable[..., None]) -> None:
+        self.events[event_name].connect(handler)
 
-    def quit(self):
-        self.on_quit.fire()
-        super().quit()
+    def disconnect(self, event_name: str, handler: Callable[..., None]) -> None:
+        self.events[event_name].disconnect(handler)
+
+    # Handle Gtk.Application events
+    def handle_gtk_app_startup(self, gtk_app: Gtk.Application) -> None:
+        print('Starting up app...')
+
+    def handle_gtk_app_open(self, gkt_app: Gtk.Application) -> None: pass
+
+    def handle_gtk_app_activate(self, gtk_app: Gtk.Application) -> None:
+        print("Activating app...")
+        self.new_view(self.ENTRY_VIEW)
+
+    def handle_gtk_app_shutdown(self, gtk_app: Gtk.Application) -> None:
+        print('Shutting down app...')

@@ -83,7 +83,7 @@ async def test_event_disconnect(event):
 async def test_event_disconnect_not_connected_listener(event):
     cb = Mock()
 
-    with pytest.raises(events.ListenerNotConnected):
+    with pytest.raises(events.HandlerNotConnected):
         event.disconnect(cb)
 
 
@@ -111,3 +111,22 @@ async def test_event_multiple_fire(event, sample_str_args, sample_str_str_kwargs
     await asyncio.sleep(0)
 
     cb.assert_has_calls([call(*sample_str_args), call(**sample_str_str_kwargs)])
+
+
+@pytest.mark.asyncio
+async def test_event_fires_coroutine(event, sample_str_args, sample_str_str_kwargs):
+    cb = Mock()
+
+    async def async_cb(*args, **kwargs):
+        nonlocal cb
+        cb(*args, **kwargs)
+
+    event.connect(async_cb)
+
+    cb.assert_not_called()
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)

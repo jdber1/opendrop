@@ -1,14 +1,12 @@
-from abc import ABCMeta
+from typing import Any
+from unittest.mock import NonCallableMock
 
-import pytest
-
-from opendrop.app.presenters.metadata import controlled_by, handles
-from opendrop.app.presenters.BasePresenter import BasePresenter
-from opendrop.utility.events import Event
+from opendrop.mvp.Presenter import Presenter
+from opendrop.mvp.handler_metadata import is_handler, handles
 
 
-def test_controlled_by_creates_events():
-    class SampleTestPresenter(BasePresenter):
+def test_handler_decorators():
+    class TestPresenter(Presenter):
         @handles("on_event0")
         def handle_event0(self):
             pass
@@ -17,18 +15,15 @@ def test_controlled_by_creates_events():
         def handle_event1(self):
             pass
 
-    class EmptyControllable():
-        pass
+    model = NonCallableMock()
+    view = NonCallableMock()
 
-    Empty = EmptyControllable
+    presenter = TestPresenter(model, view)
 
-    Decorated = controlled_by(SampleTestPresenter)(Empty)
+    assert presenter.get_handlers() == {
+        'on_event0': presenter.handle_event0,
+        'on_event1': presenter.handle_event1,
+    }
 
-    d1 = Decorated()
-    d2 = Decorated()
-
-    assert (
-        d1.on_event0 != d2.on_event0 and
-        d1.on_event1 != d2.on_event1 and
-        all(isinstance(getattr(di, event_name), Event) for event_name in ['on_event0', 'on_event1'] for di in [d1, d2])
-    )
+    for handler in presenter.get_handlers().values():
+        assert is_handler(handler)
