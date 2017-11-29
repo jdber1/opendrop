@@ -191,17 +191,14 @@ def test_presenter_lifecycle(TestModel, TestPresenter, TestView):
         presenter.setup.assert_called_once_with()
 
     # Test teardown
-    teardown_called = False
+    with patch.object(TestPresenter, 'teardown', Mock()):
+        model = TestModel()
+        view = TestView()
+        presenter = TestPresenter(model, view)
 
-    def teardown(self):
-        nonlocal teardown_called
-        teardown_called = True
+        view.destroy()
 
-    with patch.object(TestPresenter, 'teardown', teardown):
-        presenter = TestPresenter(TestModel(), TestView())
-        presenter.destroy()
-
-        assert teardown_called
+        presenter.teardown.assert_called_once_with()
 
 
 def test_view_lifecycle(TestView):

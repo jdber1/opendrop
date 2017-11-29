@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from opendrop.mvp.IView import IView
 
-from opendrop.sample_app.bases.IMaximizable import IMaximizable
+from opendrop.sample_mvp_app.bases.IMaximizable import IMaximizable
 
 
 class IMainView(IView, IMaximizable):

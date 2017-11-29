@@ -1,6 +1,7 @@
 import asyncio
 
 import functools
+
 from typing import Any
 
 from gi.repository import GObject

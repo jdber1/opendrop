@@ -4,12 +4,11 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 
-from opendrop.sample_app.Application import Application
+from opendrop.sample_mvp_app.SampleApplication import SampleApplication
 
 
 def main() -> None:
-    app = Application()
-
+    app = SampleApplication()
     app.run(sys.argv)
 
     print("Done.")

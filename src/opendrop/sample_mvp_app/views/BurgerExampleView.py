@@ -3,9 +3,9 @@ from typing import Mapping, Any
 
 from gi.repository import Gtk
 
-from opendrop.sample_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+from opendrop.sample_mvp_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
 
-from opendrop.sample_app.presenters.IBurgerExampleView import IBurgerExampleView
+from opendrop.sample_mvp_app.presenters.IBurgerExampleView import IBurgerExampleView
 
 
 class BurgerExampleView(GtkApplicationWindowView, IBurgerExampleView):
@@ -63,7 +63,7 @@ class BurgerExampleView(GtkApplicationWindowView, IBurgerExampleView):
         hbox.pack_start(meal_label, True, True, 0)
         hbox.pack_start(meal_input, True, True, 0)
 
-        row = Gtk.ListBoxRow()
+        row = Gtk.ListBoxRow(selectable=False)
         listbox.add(row)
 
         order_button = Gtk.Button(label='Place Order')

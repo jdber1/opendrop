@@ -3,9 +3,9 @@ from typing import Optional
 
 from gi.repository import Gtk
 
-from opendrop.sample_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+from opendrop.sample_mvp_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
 
-from opendrop.sample_app.presenters.ITimerExampleView import ITimerExampleView
+from opendrop.sample_mvp_app.presenters.ITimerExampleView import ITimerExampleView
 
 
 class TimerExampleView(GtkApplicationWindowView, ITimerExampleView):

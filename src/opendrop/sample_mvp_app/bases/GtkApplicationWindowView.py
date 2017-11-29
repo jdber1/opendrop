@@ -31,6 +31,3 @@ class GtkApplicationWindowView(View):
         View.destroy(self)
 
         self.window.destroy()
-
-class B:
-    pass

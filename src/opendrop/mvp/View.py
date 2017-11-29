@@ -3,6 +3,7 @@ from typing import Callable, Mapping, Optional, Type
 from collections import defaultdict
 
 from opendrop.mvp.IView import IView
+
 from opendrop.utility.events import Event
 
 

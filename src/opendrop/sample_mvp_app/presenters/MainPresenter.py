@@ -3,10 +3,10 @@ from typing import Any
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
 
-from opendrop.sample_app.presenters.IMainView import IMainView
+from opendrop.sample_mvp_app.presenters.IMainView import IMainView
 
-from opendrop.sample_app.views.TimerExampleView import TimerExampleView
-from opendrop.sample_app.views.BurgerExampleView import BurgerExampleView
+from opendrop.sample_mvp_app.views.TimerExampleView import TimerExampleView
+from opendrop.sample_mvp_app.views.BurgerExampleView import BurgerExampleView
 
 
 class MainPresenter(Presenter[Any, IMainView]):

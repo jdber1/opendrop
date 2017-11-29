@@ -1,16 +1,18 @@
 import asyncio
-from functools import partial
 
 import pytest
 
+import gi
+
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import Gtk
 
-from opendrop.sample_app.GtkHookLoopPolicy import GtkHookLoopPolicy
-from opendrop.sample_app.Application import Application
+from opendrop.sample_mvp_app.bases.GtkHookLoopPolicy import GtkHookLoopPolicy
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    if item.get_marker('gloop') or item.get_marker('gloop_application'):
+    if item.get_marker('gloop'):
         item.obj = wrap(item)
 
 
@@ -27,16 +29,10 @@ def wrap(item):
 
         loop = asyncio.get_event_loop()
 
+        start = Gtk.main
+        stop = Gtk.main_quit
+
         err = None
-
-        if item.get_marker('gloop_application'):
-            app = item.funcargs['app']
-
-            start = app.run
-            stop = partial(Gtk.Application.quit, app)
-        else:
-            start = Gtk.main
-            stop = Gtk.main_quit
 
         def setup():
             loop.create_task(func(**kwargs)).add_done_callback(teardown)
@@ -62,8 +58,3 @@ def wrap(item):
         asyncio.set_event_loop(original_loop)
 
     return wrapper
-
-
-@pytest.fixture
-def app():
-    return Application()

@@ -1,4 +1,6 @@
-from typing import Any, Callable, TypeVar, NewType, Mapping
+from collections import namedtuple
+
+from typing import Any, Callable, NewType, Optional, TypeVar
 
 # Originally imported `Presenter` to use with type hints, but because this causes a circular dependency with no easy
 # solution using python's import machinery, we have to use a workaround.
@@ -15,6 +17,8 @@ PRESENTER_TAG_NAME = '_presenter_iview_tag'
 
 T = TypeVar('T')
 
+HandlerMetadata = namedtuple('HandlerMetadata', ['event_name', 'immediate'])
+
 
 def is_handler(method: Callable) -> bool:
     if hasattr(method, HANDLER_TAG_NAME):
@@ -23,17 +27,21 @@ def is_handler(method: Callable) -> bool:
     return False
 
 
-def handles(event_name: str) -> Callable[[T], T]:
+def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
     def decorator(method: T) -> T:
-        setattr(method, HANDLER_TAG_NAME, event_name)
+        setattr(method, HANDLER_TAG_NAME, HandlerMetadata(event_name, immediate))
 
         return method
 
     return decorator
 
 
-def handles_what(method: Callable) -> str:
+def get_handler_metadata(method: Callable) -> HandlerMetadata:
     if not is_handler(method):
         raise TypeError("{} has not been tagged as a handler".format(method))
 
     return getattr(method, HANDLER_TAG_NAME)
+
+
+def handles_what(method: Callable) -> str:
+    return get_handler_metadata(method).event_name
