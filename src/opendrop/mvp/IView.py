@@ -14,7 +14,10 @@ class IView:
     def fire(self, event_name: str, *args, **kwargs) -> None: pass
 
     @abstractmethod
-    def connect(self, event_name: str, handler: Callable[..., None]) -> None: pass
+    def fire_ignore_args(self, event_name: str, *args, **kwargs) -> None: pass
+
+    @abstractmethod
+    def connect(self, event_name: str, handler: Callable[..., None], *args, **kwargs) -> None: pass
 
     @abstractmethod
     def disconnect(self, event_name: str, handler: Callable[..., None]) -> None: pass

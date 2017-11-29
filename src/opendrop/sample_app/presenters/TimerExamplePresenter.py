@@ -1,9 +1,10 @@
 import asyncio
 from typing import Any
 
-from opendrop.app.presenters.ITimerExampleView import ITimerExampleView
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
+
+from opendrop.sample_app.presenters.ITimerExampleView import ITimerExampleView
 
 
 class TimerExamplePresenter(Presenter[Any, ITimerExampleView]):

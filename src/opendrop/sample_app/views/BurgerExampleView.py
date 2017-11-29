@@ -1,14 +1,16 @@
+from functools import partial
 from typing import Mapping, Any
 
 from gi.repository import Gtk
 
-from opendrop.app.bases.GtkApplicationWindowView import GtkApplicationWindowView
-from opendrop.app.presenters.IBurgerExampleView import IBurgerExampleView
+from opendrop.sample_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+
+from opendrop.sample_app.presenters.IBurgerExampleView import IBurgerExampleView
 
 
 class BurgerExampleView(GtkApplicationWindowView, IBurgerExampleView):
     def setup(self) -> None:
-        # Build the ui
+        # -- Build the UI --
         listbox = Gtk.ListBox()
         self.window.add(listbox)
 
@@ -70,48 +72,45 @@ class BurgerExampleView(GtkApplicationWindowView, IBurgerExampleView):
         self.window.show_all()
 
         # Order confirmation dialog
-        self.order_confirmation_dialog = Gtk.MessageDialog(
-            self.window,
-            0,
+        order_confirmation_dialog = Gtk.MessageDialog(
+            self.window, 0,
             Gtk.MessageType.INFO,
             Gtk.ButtonsType.OK,
             'Burger order confirmation',
             modal=True
         )
 
-        # Attach events
-        cheese_input.connect('value-changed', self.on_order_changed)
-        bacon_input.connect('toggled', self.on_order_changed)
-        meal_input.connect('changed', self.on_order_changed)
+        # -- Attach events --
+        cheese_input.connect('value-changed', partial(self.fire_ignore_args, 'on_order_changed'))
+        bacon_input .connect('toggled'      , partial(self.fire_ignore_args, 'on_order_changed'))
+        meal_input  .connect('changed'      , partial(self.fire_ignore_args, 'on_order_changed'))
 
-        order_button.connect('clicked', self.on_order_button_clicked)
+        order_button.connect('clicked', partial(self.fire_ignore_args, 'on_order_button_clicked'))
 
-        # Keep these widgets accessible
+        # -- Keep these widgets accessible --
         self.cheese_input = cheese_input
-        self.bacon_input = bacon_input
-        self.meal_input = meal_input
+        self.bacon_input  = bacon_input
+        self.meal_input   = meal_input
 
         self.order_button = order_button
 
-    def on_order_changed(self, w: Gtk.Widget) -> None:
-        self.fire('on_order_changed')
-
-    def on_order_button_clicked(self, btn: Gtk.Button) -> None:
-        self.fire('on_order_button_clicked')
+        self.order_confirmation_dialog = order_confirmation_dialog
 
     def get_order(self) -> Mapping[str, Any]:
-        order = {}
-
-        order['cheese_slices'] = self.cheese_input.get_value_as_int()
-        order['bacon'] = self.bacon_input.get_active()
-        order['meal_size'] = self.meal_input.get_active_text()
+        order = {
+            'cheese_slices': self.cheese_input.get_value_as_int(),
+            'bacon'        : self.bacon_input .get_active(),
+            'meal_size'    : self.meal_input  .get_active_text()
+        }
 
         return order
 
-    def set_display_cost(self, cost: float) -> None:
+    def update_display_cost(self, cost: float) -> None:
         self.order_button.props.label = 'Place order (${0:.2f})'.format(cost)
 
     def show_order_confirmation(self, total_cost: float) -> None:
-        self.order_confirmation_dialog.format_secondary_markup('Total cost: <b>(${0:.2f})</b>'.format(total_cost))
-        self.order_confirmation_dialog.run()
+        self.order_confirmation_dialog.format_secondary_markup('Total cost: ${0:.2f}'.format(total_cost))
+
+        resp = self.order_confirmation_dialog.run()
+
         self.order_confirmation_dialog.hide()

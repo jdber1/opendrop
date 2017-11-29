@@ -166,6 +166,23 @@ async def test_view_methods_that_fire_events(TestView, OtherView):
     handle_spawn.assert_has_calls([call(view, other_view1, False), call(view, other_view2, True)])
 
 
+@pytest.mark.asyncio
+async def test_view_fire_ignore_args(TestView):
+    view = TestView()
+
+    cb = Mock()
+
+    view.connect('event0', cb)
+
+    cb.assert_not_called()
+
+    view.fire_ignore_args('event0', *('arg0', 'arg1'), **{'kwarg0': 'val0', 'kwarg1': 'val1'})
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with()
+
+
 def test_presenter_lifecycle(TestModel, TestPresenter, TestView):
     # Test setup
     with patch.object(TestPresenter, 'setup', Mock()):

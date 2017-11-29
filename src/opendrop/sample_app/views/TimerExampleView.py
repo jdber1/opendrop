@@ -1,21 +1,24 @@
+from functools import partial
 from typing import Optional
 
 from gi.repository import Gtk
 
-from opendrop.app.bases.GtkApplicationWindowView import GtkApplicationWindowView
-from opendrop.app.presenters.ITimerExampleView import ITimerExampleView
+from opendrop.sample_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+
+from opendrop.sample_app.presenters.ITimerExampleView import ITimerExampleView
 
 
 class TimerExampleView(GtkApplicationWindowView, ITimerExampleView):
-    def setup(self):
+    def setup(self) -> None:
+        # -- Build the UI --
         listbox = Gtk.ListBox()
         self.window.add(listbox)
 
-        row1 = Gtk.ListBoxRow(selectable=False)
-        listbox.add(row1)
+        row = Gtk.ListBoxRow(selectable=False)
+        listbox.add(row)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-        row1.add(hbox)
+        row.add(hbox)
 
         timer_label = Gtk.Label('Timer:', xalign=0)
         timer_duration = Gtk.SpinButton(
@@ -28,25 +31,22 @@ class TimerExampleView(GtkApplicationWindowView, ITimerExampleView):
         hbox.pack_start(timer_label, True, True, 0)
         hbox.pack_start(timer_duration, True, True, 0)
 
-        row2 = Gtk.ListBoxRow()
-        listbox.add(row2)
+        row = Gtk.ListBoxRow(selectable=False)
+        listbox.add(row)
 
         start_button = Gtk.Button(label='Start timer')
-        row2.add(start_button)
+        row.add(start_button)
 
         self.window.show_all()
 
-        # Attach events
-        start_button.connect('clicked', self.on_start_button_clicked)
+        # -- Attach events --
+        start_button.connect('clicked', partial(self.fire_ignore_args, 'on_start_button_clicked'))
 
-        # Keep these widgets accessible
+        # -- Keep these widgets accessible --
         self.timer_duration = timer_duration
-        self.start_button = start_button
+        self.start_button   = start_button
 
-    def on_start_button_clicked(self, button):
-        self.fire('on_start_button_clicked')
-
-    def get_timer_duration(self):
+    def get_timer_duration(self) -> float:
         return self.timer_duration.get_value()
 
     def set_timer_countdown_mode(self, value: bool) -> None:

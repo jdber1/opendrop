@@ -1,18 +1,19 @@
 import asyncio
 
 import functools
+from typing import Any
 
 from gi.repository import GObject
 
 
 class GtkHookLoopPolicy(asyncio.DefaultEventLoopPolicy):
-    def set_event_loop(self, loop: asyncio.AbstractEventLoop):
+    def set_event_loop(self, loop: asyncio.AbstractEventLoop) -> None:
         loop = WrappedLoopRunOnGLoop(loop)
 
-        return super().set_event_loop(loop)
+        super().set_event_loop(loop)
 
-    def get_event_loop(self):
-        loop = super().get_event_loop()
+    def get_event_loop(self) -> asyncio.AbstractEventLoop:
+        loop = super().get_event_loop()  # type: asyncio.AbstractEventLoop
 
         assert isinstance(loop, WrappedLoopRunOnGLoop)
 
@@ -20,18 +21,20 @@ class GtkHookLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 class WrappedLoopRunOnGLoopMethods:
-    def run_forever(self):
+    alive = False  # type: bool
+
+    def run_forever(self) -> None:
         if self.alive:
             raise RuntimeError('This event loop is already running')
 
         self.alive = True
         GObject.idle_add(self.step)
 
-    def stop(self):
+    def stop(self) -> None:
         self.alive = False
         self.step()
 
-    def run_once(self):
+    def run_once(self) -> None:
         # This pairing of 'arrange a call to stop' and 'run_forever' is used to iterate through the event loop once
         self.target.stop()
 
@@ -40,7 +43,7 @@ class WrappedLoopRunOnGLoopMethods:
         except RuntimeError:
             pass
 
-    def step(self):
+    def step(self) -> None:
         if self.is_closed():
             return
 
@@ -52,15 +55,15 @@ class WrappedLoopRunOnGLoopMethods:
 
 
 class WrappedLoopRunOnGLoop(asyncio.AbstractEventLoop):
-    def __init__(self, target):
-        self.target = target
-        self.alive = False
+    def __init__(self, target: asyncio.AbstractEventLoop) -> None:
+        self.target = target  # type: asyncio.AbstractEventLoop
+        self.alive = False  # type: bool
 
-    def __getattribute__(self, item):
-        if item == "alive" or item == "target":
-            return object.__getattribute__(self, item)
+    def __getattribute__(self, name: str) -> Any:
+        if name == "alive" or name == "target":
+            return object.__getattribute__(self, name)
 
         try:
-            return functools.partial(getattr(WrappedLoopRunOnGLoopMethods, item), self)
+            return functools.partial(getattr(WrappedLoopRunOnGLoopMethods, name), self)
         except AttributeError:
-            return getattr(self.target, item)
+            return getattr(self.target, name)

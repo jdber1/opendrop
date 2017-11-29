@@ -1,5 +1,3 @@
-import functools
-
 from gi.repository import Gtk
 
 from opendrop.mvp.View import View
@@ -33,3 +31,6 @@ class GtkApplicationWindowView(View):
         View.destroy(self)
 
         self.window.destroy()
+
+class B:
+    pass

@@ -29,8 +29,11 @@ class View(IView):
     def fire(self, event_name: str, *args, **kwargs) -> None:
         self.events[event_name].fire(*args, **kwargs)
 
-    def connect(self, event_name: str, handler: Callable[..., None]) -> None:
-        self.events[event_name].connect(handler)
+    def fire_ignore_args(self, event_name: str, *args, **kwargs) -> None:
+        self.events[event_name].fire_ignore_args(*args, **kwargs)
+
+    def connect(self, event_name: str, handler: Callable[..., None], *args, **kwargs) -> None:
+        self.events[event_name].connect(handler, *args, **kwargs)
 
     def disconnect(self, event_name: str, handler: Callable[..., None]) -> None:
         self.events[event_name].disconnect(handler)

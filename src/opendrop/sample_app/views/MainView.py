@@ -1,16 +1,13 @@
 from gi.repository import Gtk
 
-from opendrop.app.bases.GtkApplicationWindowView import GtkApplicationWindowView
-from opendrop.app.presenters.IMainView import IMainView
+from opendrop.sample_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+from opendrop.sample_app.presenters.IMainView import IMainView
 
 
 class MainView(GtkApplicationWindowView, IMainView):
     def setup(self) -> None:
-        grid = Gtk.Grid(
-            margin=10,
-            column_spacing=10,
-            row_spacing=10
-        )
+        # -- Build the UI --
+        grid = Gtk.Grid(margin=10, column_spacing=10, row_spacing=10)
 
         self.window.add(grid)
 
@@ -26,22 +23,28 @@ class MainView(GtkApplicationWindowView, IMainView):
         grid.attach(button2, 1, 0, 1, 1)
         grid.attach(button3, 0, 1, 2, 1)
 
-        # About dialog
-        self.about_dialog = Gtk.AboutDialog(
-            program_name='Sample Application',
-            version='1.0.0',
-            website='http://www.example.org',
-            comments='Example application with sample code to demonstrate use.',
-            authors=['John', 'Jane', 'Jackson', 'Jennifer'],
-            documenters=['Wayne'],
-            transient_for=self.window,
-            modal=True
-        )
-
         self.window.show_all()
 
+        # About dialog
+        about_dialog = Gtk.AboutDialog(
+           program_name= 'Sample Application',
+                version= '1.0.0',
+                website= 'http://www.example.org',
+               comments= 'Example application with sample code to demonstrate use.',
+                authors=['John',
+                         'Jane',
+                         'Jackson',
+                         'Jennifer'],
+            documenters=['Wayne'],
+            transient_for=self.window, modal=True
+        )
+
+        # -- Attach events --
         for button in (button1, button2, button3):
             button.connect('clicked', self.on_buttonx_clicked)
+
+        # -- Keep these widgets accessible --
+        self.about_dialog = about_dialog
 
     def on_buttonx_clicked(self, button: Gtk.Button) -> None:
         self.fire(button.event_name)

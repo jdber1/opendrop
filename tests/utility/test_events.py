@@ -4,6 +4,8 @@ from unittest.mock import Mock, call
 
 import pytest
 
+from pytest import raises
+
 import opendrop.utility.events as events
 
 
@@ -130,3 +132,73 @@ async def test_event_fires_coroutine(event, sample_str_args, sample_str_str_kwar
     await asyncio.sleep(0)
 
     cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
+
+def test_event_immediate_callback_connect(event, sample_str_args, sample_str_str_kwargs):
+    cb = Mock()
+
+    event.connect(cb, immediate=True)
+
+    cb.assert_not_called()
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
+@pytest.mark.asyncio
+async def test_event_ignore_args_connect(event, sample_str_args, sample_str_str_kwargs):
+    cb = Mock()
+
+    event.connect(cb, ignore_args=True)
+
+    cb.assert_not_called()
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+async def test_event_fire_ignore_args(event, sample_str_args, sample_str_str_kwargs):
+    cb = Mock()
+
+    event.connect(cb, ignore_args=True)
+
+    cb.assert_not_called()
+
+    event.fire_ignore_args(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+async def test_event_once_connect(event, sample_str_args, sample_str_str_kwargs):
+    cb = Mock()
+
+    event.connect(cb, once=True)
+
+    cb.assert_not_called()
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
+
+def test_event_immediate_callback_connect_with_coroutine(event):
+    async def async_cb(*args, **kwargs):
+        pass
+
+    with raises(ValueError):
+        event.connect(async_cb, immediate=True)

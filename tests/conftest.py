@@ -1,13 +1,12 @@
 import asyncio
-
-from gi.repository import Gtk
-
-from opendrop.app.Application import Application
-from opendrop.app.GtkHookLoopPolicy import GtkHookLoopPolicy
+from functools import partial
 
 import pytest
 
-from functools import partial
+from gi.repository import Gtk
+
+from opendrop.sample_app.GtkHookLoopPolicy import GtkHookLoopPolicy
+from opendrop.sample_app.Application import Application
 
 
 def pytest_runtest_setup(item: pytest.Item):

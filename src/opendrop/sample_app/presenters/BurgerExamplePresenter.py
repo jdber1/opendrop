@@ -1,8 +1,9 @@
 from typing import Any, Mapping
 
-from opendrop.app.presenters.IBurgerExampleView import IBurgerExampleView
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
+
+from opendrop.sample_app.presenters.IBurgerExampleView import IBurgerExampleView
 
 
 class BurgerExamplePresenter(Presenter[Any, IBurgerExampleView]):
@@ -19,7 +20,7 @@ class BurgerExamplePresenter(Presenter[Any, IBurgerExampleView]):
 
     CHEESE_PRICE = 0.50  # type: float
 
-    def setup(self):
+    def setup(self) -> None:
         self.handle_order_changed()
 
     @handles('on_order_button_clicked')
@@ -34,7 +35,7 @@ class BurgerExamplePresenter(Presenter[Any, IBurgerExampleView]):
         order = self.view.get_order()
         order_cost = self.calculate_order_cost(order)
 
-        self.view.set_display_cost(order_cost)
+        self.view.update_display_cost(order_cost)
 
     def calculate_order_cost(self, order: Mapping[str, Any]) -> float:
         order_cost = self.BASE_COST  # type: float
