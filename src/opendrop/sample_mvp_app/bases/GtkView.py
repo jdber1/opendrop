@@ -3,7 +3,7 @@ from gi.repository import Gtk
 from opendrop.mvp.View import View
 
 
-class GtkApplicationWindowView(View):
+class GtkView(View):
     TITLE = None
 
     def __init__(self, gtk_app) -> None:
