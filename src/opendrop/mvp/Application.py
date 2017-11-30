@@ -22,6 +22,15 @@ class Application:
 
         self._active_views = []  # type: List[IView]
 
+    def initialise_view(self, view_cls: Type[IView]) -> IView:
+        return view_cls()
+
+    def run(self, *args, **kwargs) -> None:
+        pass
+
+    def quit(self) -> None:
+        pass
+
     def _register_active_view(self, view: IView) -> None:
         self._active_views.append(view)
 
@@ -55,12 +64,3 @@ class Application:
 
         self._deregister_active_view(src_view)
         src_view.destroy()
-
-    def initialise_view(self, view_cls: Type[IView]) -> IView:
-        return view_cls()
-
-    def run(self, *args, **kwargs) -> None:
-        pass
-
-    def quit(self) -> None:
-        pass

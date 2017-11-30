@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from opendrop.mvp.handler_metadata import is_handler, handles
+from opendrop.mvp import handler_metadata, handles
 
 from opendrop.mvp.Model import Model
 from opendrop.mvp.View import View
@@ -24,7 +24,7 @@ def test_handles():
     assert presenter.handle_event0 in handlers and presenter.handle_event1 in handlers
 
     for handler in presenter.get_handlers():
-        assert is_handler(handler)
+        assert handler_metadata.has(handler)
 
 
 def test_handles_immediate():

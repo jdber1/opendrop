@@ -1,3 +1,6 @@
+"""Documentation
+"""
+
 from collections import namedtuple
 
 from typing import Any, Callable, NewType, Optional, TypeVar
@@ -11,23 +14,21 @@ from typing import Any, Callable, NewType, Optional, TypeVar
 # to work. If in the future, circular dependencies are resolved, we can remove this.
 Presenter = NewType('Presenter', Any)
 
+T = TypeVar('T')
 
 HANDLER_TAG_NAME = '_presenter_handler_tag'
-PRESENTER_TAG_NAME = '_presenter_iview_tag'
-
-T = TypeVar('T')
 
 HandlerMetadata = namedtuple('HandlerMetadata', ['event_name', 'immediate'])
 
 
-def is_handler(method: Callable) -> bool:
-    if hasattr(method, HANDLER_TAG_NAME):
-        return True
+def get(method: Callable) -> HandlerMetadata:
+    if not has(method):
+        raise TypeError("{} has not been tagged as a handler".format(method))
 
-    return False
+    return getattr(method, HANDLER_TAG_NAME)
 
 
-def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
+def set_(event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
     def decorator(method: T) -> T:
         setattr(method, HANDLER_TAG_NAME, HandlerMetadata(event_name, immediate))
 
@@ -36,12 +37,8 @@ def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T],
     return decorator
 
 
-def get_handler_metadata(method: Callable) -> HandlerMetadata:
-    if not is_handler(method):
-        raise TypeError("{} has not been tagged as a handler".format(method))
+def has(method: Callable) -> bool:
+    if hasattr(method, HANDLER_TAG_NAME):
+        return True
 
-    return getattr(method, HANDLER_TAG_NAME)
-
-
-def handles_what(method: Callable) -> str:
-    return get_handler_metadata(method).event_name
+    return False

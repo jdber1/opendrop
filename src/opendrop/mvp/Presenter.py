@@ -1,6 +1,8 @@
 from typing import Callable, Generic, List, Mapping, Tuple, Type, TypeVar
 
-from opendrop.mvp.handler_metadata import is_handler, handles, get_handler_metadata
+from opendrop.mvp import handles
+
+from opendrop.mvp import handler_metadata
 
 from opendrop.mvp.Model import Model
 from opendrop.mvp.IView import IView
@@ -65,7 +67,7 @@ class Presenter(Generic[T, S], metaclass=PresenterMeta):
         handlers = []  # List[Callable[..., None]]
 
         for method in (getattr(self, attr_name) for attr_name in dir(self) if callable(getattr(self, attr_name))):
-            if is_handler(method):
+            if handler_metadata.has(method):
                 handlers.append(method)
 
         return handlers
@@ -88,7 +90,8 @@ class Presenter(Generic[T, S], metaclass=PresenterMeta):
     # Private methods
 
     def _destroy(self) -> None:
-        """Destroy the presenter object. Called automatically after the associated view has been destroyed.
+        """Destroy the presenter object. Called automatically after the associated view has been destroyed, should not
+        be called directly.
         :return: None
         """
         print('Tearing down', type(self).__name__)  # DEBUG
@@ -98,7 +101,7 @@ class Presenter(Generic[T, S], metaclass=PresenterMeta):
         handlers = self.get_handlers()  # List[Callable[..., None]]
 
         for handler in handlers:
-            metadata = get_handler_metadata(handler)
+            metadata = handler_metadata.get(handler)
 
             self.view.connect(metadata.event_name, handler, immediate=metadata.immediate)
 

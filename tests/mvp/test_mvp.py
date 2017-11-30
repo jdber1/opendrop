@@ -9,7 +9,7 @@ from opendrop.mvp.IView import IView
 from opendrop.mvp.Presenter import Presenter
 from opendrop.mvp.View import View
 
-from opendrop.mvp.handler_metadata import handles, handles_what
+from opendrop.mvp import handles
 
 
 @pytest.fixture
