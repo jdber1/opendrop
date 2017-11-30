@@ -1,9 +1,7 @@
 Opendrop MVP Framework
 ======================
 
-This document will outline the usage of the internal MVP framework.
-
-There are five main components of the framework:
+There are five main components of the MVP framework:
  - `Model`
  - `Presenter`
  - `View`
