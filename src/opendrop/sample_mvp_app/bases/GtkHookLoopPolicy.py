@@ -8,6 +8,9 @@ from gi.repository import GObject
 
 
 class GtkHookLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    """An asyncio event loop policy that allows the asyncio event loop to run alongside the Gtk event loop. Each time
+    the Gtk event loop idles, one 'iteration' of the asyncio event loop is made.
+    """
     def set_event_loop(self, loop: asyncio.AbstractEventLoop) -> None:
         loop = WrappedLoopRunOnGLoop(loop)
 

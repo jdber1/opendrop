@@ -11,8 +11,18 @@ from opendrop.sample_mvp_app.bases.GtkHookLoopPolicy import GtkHookLoopPolicy
 
 
 class GtkApplication(Application):
+
+    """Application that uses the Python GTK+ 3 library
+
+    Attributes:
+        APPLICATION_ID  Application ID of the app.
+        gtk_app         The underlying Gtk.Application object.
+    """
+
+    APPLICATION_ID = None  # type: str
+
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         self.gtk_app = Gtk.Application(*args, application_id=self.APPLICATION_ID, **kwargs)  # type: Gtk.Application
 

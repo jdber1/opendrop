@@ -4,7 +4,17 @@ from opendrop.mvp.View import View
 
 
 class GtkView(View):
-    TITLE = None
+
+    """Implementation of View that uses the Python GTK+ 3 library, managed by `GtkApplication`. Each view represents a
+    window.
+
+    Attributes:
+        TITLE   The title of the window.
+        gtk_app The Gtk.Application object.
+        window  The view's Gtk.ApplicationWindow object, widgets should be added to this.
+    """
+
+    TITLE = None  # type: str
 
     def __init__(self, gtk_app) -> None:
         self.gtk_app = gtk_app

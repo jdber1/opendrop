@@ -3,12 +3,12 @@ from typing import Optional
 
 from gi.repository import Gtk
 
-from opendrop.sample_mvp_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+from opendrop.sample_mvp_app.bases.GtkView import GtkView
 
 from opendrop.sample_mvp_app.presenters.ITimerExampleView import ITimerExampleView
 
 
-class TimerExampleView(GtkApplicationWindowView, ITimerExampleView):
+class TimerExampleView(GtkView, ITimerExampleView):
     def setup(self) -> None:
         # -- Build the UI --
         listbox = Gtk.ListBox()

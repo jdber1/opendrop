@@ -1,1 +1,1 @@
-from .handler_metadata import set_ as handles
+from .handler_metadata import handles

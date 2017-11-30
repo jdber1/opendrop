@@ -7,13 +7,24 @@ from opendrop.mvp.ViewPresenterMap import ViewPresenterMap
 
 
 class Application:
+
+    """Manages the lifecycle of views and presenters and acts as the base class of some GUI application utilising this
+    MVP framework.
+
+    Attributes:
+        MODEL       The model class that should be given to all the presenters.
+        VIEWS       The list of views that this application has.
+        PRESENTERS  The list of presenters that this application has.
+        ENTRY_VIEW  The first view that the application should show to the user on startup.
+    """
+
     MODEL = None  # type: Type[Model]
     VIEWS = []  # type: List[Type[IView]]
     PRESENTERS = []  # type: List[Type[Presenter]]
 
     ENTRY_VIEW = None  # type: Type[IView]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self) -> None:
         assert self.ENTRY_VIEW in self.VIEWS
 
         self._model = self.MODEL()
@@ -23,12 +34,24 @@ class Application:
         self._active_views = []  # type: List[IView]
 
     def initialise_view(self, view_cls: Type[IView]) -> IView:
+        """Initialises `view_cls`. Override this if your application needs to pass arguments to the view constructor
+        or any other advanced initialisation process.
+        :param view_cls: The view class to be initialised
+        :return: The initialised view object
+        """
         return view_cls()
 
     def run(self, *args, **kwargs) -> None:
+        """Run the application. Override this to implement any procedures that should be executed when the application
+        runs, such as starting the GUI library's main loop.
+        :return: None
+        """
         pass
 
-    def quit(self) -> None:
+    def quit(self, *args, **kwargs) -> None:
+        """Quit the application. Override this to perform any clean up tasks like ending a GUI library's main loop.
+        :return: None
+        """
         pass
 
     def _register_active_view(self, view: IView) -> None:

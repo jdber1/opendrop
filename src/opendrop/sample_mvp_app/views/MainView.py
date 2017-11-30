@@ -1,10 +1,10 @@
 from gi.repository import Gtk
 
-from opendrop.sample_mvp_app.bases.GtkApplicationWindowView import GtkApplicationWindowView
+from opendrop.sample_mvp_app.bases.GtkView import GtkView
 from opendrop.sample_mvp_app.presenters.IMainView import IMainView
 
 
-class MainView(GtkApplicationWindowView, IMainView):
+class MainView(GtkView, IMainView):
     def setup(self) -> None:
         # -- Build the UI --
         grid = Gtk.Grid(margin=10, column_spacing=10, row_spacing=10)

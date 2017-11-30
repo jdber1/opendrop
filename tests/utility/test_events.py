@@ -22,6 +22,7 @@ def sample_str_args(request):
 
     return tuple(["arg{}".format(i) for i in range(n)])
 
+
 @pytest.fixture(params=[0, 5])
 def sample_str_str_kwargs(request):
     """Create some sample keyword arguments and return"""
@@ -144,6 +145,7 @@ def test_event_immediate_callback_connect(event, sample_str_args, sample_str_str
     event.fire(*sample_str_args, **sample_str_str_kwargs)
 
     cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
 
 @pytest.mark.asyncio
 async def test_event_ignore_args_connect(event, sample_str_args, sample_str_str_kwargs):
