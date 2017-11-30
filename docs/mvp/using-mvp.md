@@ -79,6 +79,18 @@ Subclassing `Presenter` is as follows:
 Where `MyModel` is an implementation of `Model` and `IMyView` is the
 interface for the view that `MyPresenter` presents.
 
+To handle view events, use the `@handles` decorator, imported from
+`opendrop.mvp`:
+
+    MyPresenter(Presenter[MyModel, IMyView]):
+        @handles('on_event0')
+        def handle_event0(self):
+            pass
+
+The `@handles` decorator will mark a method as an event handler and such
+methods are automatically connected to the view events during the
+initialisation fo the presenter.
+
 Subclassing `Application`:
 
     SampleApplication(Application):
