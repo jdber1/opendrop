@@ -13,6 +13,3 @@ class ITimerExampleView(IView):
 
     @abstractmethod
     def set_timer_countdown_value(self, value: Optional[int]) -> None: pass
-
-class A:
-    pass
