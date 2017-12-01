@@ -1,4 +1,4 @@
-from typing import Callable, Mapping, Optional, Type
+from typing import Mapping, Optional, Type
 
 from collections import defaultdict
 
