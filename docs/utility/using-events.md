@@ -56,3 +56,11 @@ that it's connected to.
 If you would like for a handler to be fired immediately, pass the
 `immediate=True` keyword argument to the `connect()` method when
 connecting the handler.
+
+`immediate=True` can't be used when connecting a coroutine function to
+an event (such as functions defined with `async def`), since
+coroutines need to be scheduled with `AbstractEventLoop.create_task()`
+which will add the coroutine to the event loop queue, hence there is no
+way to call it immediately. There could be a way to run the 'first part'
+of a coroutine function (before the `await` statement) 'immediately',
+but this has not been implemented as there has been no use cases for it.
