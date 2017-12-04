@@ -2,11 +2,9 @@ from typing import Any
 
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
-
-from opendrop.sample_mvp_app.presenters.IMainView import IMainView
-
-from opendrop.sample_mvp_app.views.TimerExampleView import TimerExampleView
+from opendrop.sample_mvp_app.presenters.iviews.IMainView import IMainView
 from opendrop.sample_mvp_app.views.BurgerExampleView import BurgerExampleView
+from opendrop.sample_mvp_app.views.TimerExampleView import TimerExampleView
 
 
 class MainPresenter(Presenter[Any, IMainView]):

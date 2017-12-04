@@ -3,8 +3,7 @@ from typing import Any
 
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
-
-from opendrop.sample_mvp_app.presenters.ITimerExampleView import ITimerExampleView
+from opendrop.sample_mvp_app.presenters.iviews.ITimerExampleView import ITimerExampleView
 
 
 class TimerExamplePresenter(Presenter[Any, ITimerExampleView]):

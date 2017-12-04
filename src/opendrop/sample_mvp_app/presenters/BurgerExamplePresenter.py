@@ -1,10 +1,8 @@
-from typing import Any, Mapping
-
 from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
 from opendrop.sample_mvp_app.SampleAppModel import SampleAppModel
 
-from opendrop.sample_mvp_app.presenters.IBurgerExampleView import IBurgerExampleView
+from opendrop.sample_mvp_app.presenters.iviews.IBurgerExampleView import IBurgerExampleView
 
 
 class BurgerExamplePresenter(Presenter[SampleAppModel, IBurgerExampleView]):

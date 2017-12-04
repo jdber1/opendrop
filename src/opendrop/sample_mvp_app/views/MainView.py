@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 
 from opendrop.sample_mvp_app.bases.GtkView import GtkView
-from opendrop.sample_mvp_app.presenters.IMainView import IMainView
+from opendrop.sample_mvp_app.presenters.iviews.IMainView import IMainView
 
 
 class MainView(GtkView, IMainView):
