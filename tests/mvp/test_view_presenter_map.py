@@ -1,45 +1,6 @@
 from opendrop.mvp.ViewPresenterMap import ViewPresenterMap
-from opendrop.mvp.Presenter import Presenter
-from opendrop.mvp.IView import IView
-from opendrop.mvp.View import View
 
-TestModel = None
-
-
-class IViewOne(IView):
-    pass
-
-
-class IViewTwo(IView):
-    pass
-
-
-class IViewThree(IView):
-    pass
-
-
-class PresenterOne(Presenter[TestModel, IViewOne]):
-    pass
-
-
-class PresenterTwo(Presenter[TestModel, IViewTwo]):
-    pass
-
-
-class PresenterThree(Presenter[TestModel, IViewThree]):
-    pass
-
-
-class ViewOne(View, IViewOne):
-    pass
-
-
-class ViewTwo(View, IViewTwo):
-    pass
-
-
-class ViewThree(View, IViewThree):
-    pass
+from tests.mvp.samples import ViewOne, ViewTwo, ViewThree, PresenterOne, PresenterTwo, PresenterThree
 
 
 def test_view_presenter_map():
