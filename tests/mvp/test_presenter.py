@@ -13,11 +13,8 @@ def test_presenter_can_present_method():
 
 
 def test_presenter_initialisation_with_incompatible_view():
-    model = MyModel()
-    view = OtherView()
-
     with raises(TypeError):
-        MyPresenter(model, view)
+        MyPresenter(MyModel(), OtherView())
 
 
 @pytest.mark.asyncio
@@ -63,18 +60,17 @@ def test_presenter_call_view_methods():
 
 
 def test_presenter_lifecycle():
-    # Test setup
-    with patch.object(MyPresenter, 'setup', Mock()):
-        presenter = MyPresenter(MyModel(), MyView())
+    with patch.object(MyPresenter, 'setup', Mock()), \
+         patch.object(MyPresenter, 'teardown', Mock()):
+        model = MyModel()
+        view = MyView()
+
+        presenter = MyPresenter(model, view)
 
         presenter.setup.assert_called_once_with()
 
-    # Test teardown
-    with patch.object(MyPresenter, 'teardown', Mock()):
-        model = MyModel()
-        view = MyView()
-        presenter = MyPresenter(model, view)
-
+        # Destroying the view should automatically destroy the presenter, the presenter should never be destroyed
+        # directly
         view.destroy()
 
         presenter.teardown.assert_called_once_with()
