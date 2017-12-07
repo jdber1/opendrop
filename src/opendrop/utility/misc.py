@@ -5,10 +5,8 @@ from types import ModuleType
 from typing import Union, Optional, Any
 
 
-def recursive_load(pkg: Union[ModuleType, str]):
+def recursive_load(pkg: Union[ModuleType, str]) -> None:
     pkg = importlib.import_module(pkg) if isinstance(pkg, str) else pkg
-
-    enums = []
 
     if hasattr(pkg, '__path__'):
         for loader, name, is_pkg in pkgutil.walk_packages(pkg.__path__):
@@ -16,10 +14,7 @@ def recursive_load(pkg: Union[ModuleType, str]):
 
             child = importlib.import_module(full_name)
 
-            if is_pkg:
-                enums += recursive_load(child)
-
-    return enums
+            recursive_load(child)
 
 
 class EnumBuilder:
