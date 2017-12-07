@@ -1,1 +1,1 @@
-from .handler_metadata import handles
+from opendrop.mvp.handler_metadata import handles
