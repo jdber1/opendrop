@@ -5,7 +5,7 @@ from typing import Any, Generic, List, Set, Type, TypeVar
 
 class IResource:
     @abstractmethod
-    def destroy(self) -> None: pass
+    def teardown(self) -> None: pass
 
 
 T = TypeVar('T', bound=IResource)
@@ -32,7 +32,7 @@ class ResourceToken(Generic[T]):
         self._references -= 1
 
         if self._references == 0:
-            self._instance.destroy()
+            self._instance.teardown()
             self._instance = None
 
     def _create_resource_wrapper(self, resource_cls: Type[T]) -> Type[T]:

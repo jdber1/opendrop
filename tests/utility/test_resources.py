@@ -15,7 +15,7 @@ def TestResource():
         def __init__(self):
             TestResource.init_count += 1
 
-        def destroy(self):
+        def teardown(self):
             TestResource.destroy_count += 1
 
         def method1(self):
