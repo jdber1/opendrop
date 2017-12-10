@@ -46,6 +46,17 @@ def test_resource_lifecycle(TestResource):
     assert TestResource.destroy_count == 1
 
 
+def test_resource_call_teardown(TestResource):
+    test_res_token = ResourceToken(TestResource)
+
+    test_res = test_res_token.acquire()
+
+    # Shouldn't be able to call `teardown()` on a resource (since it destroys the underlying resource), use `release()`
+    # instead as that utilises reference counting to determine when to destroy the resource.
+    with raises(ValueError):
+        test_res.teardown()
+
+
 def test_resource_multiple_release(TestResource):
     test_res_token = ResourceToken(TestResource)
 
