@@ -5,6 +5,45 @@ from typing import Callable, List
 
 import functools
 
+from collections import defaultdict
+
+
+class EventSource:
+
+    """Essentially an events container, has all the same methods as `Event` but instead the first parameter takes the
+    event name of the event to perform the action on.
+
+    Usage:
+
+        class MyClass(EventSource):
+            def __init__(self):
+                EventSource.__init__(self)
+                # class initialisation
+
+        def handle_my_event(arg):
+            print(arg)
+
+        obj = MyClass()
+
+        obj.connect('on_my_event', handle_my_event)
+        obj.fire('on_my_event', 'Hello')  # fires `handle_my_event()` with arg='Hello'
+    """
+
+    def __init__(self):
+        self._events_store = defaultdict(Event)
+
+    def connect(self, name: str, *args, **kwargs):
+        return self._events_store[name].connect(*args, **kwargs)
+
+    def disconnect(self, name: str, *args, **kwargs):
+        return self._events_store[name].disconnect(*args, **kwargs)
+
+    def fire(self, name: str, *args, **kwargs):
+        return self._events_store[name].fire(*args, **kwargs)
+
+    def fire_ignore_args(self, name: str, *args, **kwargs):
+        return self._events_store[name].fire_ignore_args(*args, **kwargs)
+
 
 class Event(object):
 

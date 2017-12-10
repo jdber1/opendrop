@@ -4,10 +4,10 @@ from collections import defaultdict
 
 from opendrop.mvp.IView import IView
 
-from opendrop.utility.events import Event
+from opendrop.utility.events import Event, EventSource
 
 
-class View(IView):
+class View(EventSource, IView):
 
     """The view class, responsible for presenting the user interface to the user and notifying the presenter of user
     inputs.
@@ -16,6 +16,8 @@ class View(IView):
     def __init__(self) -> None:
         """View constructor, this will call `setup()` after initialisation has finished.
         """
+        EventSource.__init__(self)
+
         self.events = defaultdict(Event)  # type: Mapping[str, Event]
 
         self.setup()
@@ -59,39 +61,3 @@ class View(IView):
         :return: None
         """
         self.fire('on_spawn', self, new_view, modal)
-
-    def fire(self, event_name: str, *args, **kwargs) -> None:
-        """Convenience method for calling `fire()` on the `event_name` event. All other arguments are passed through to
-        `Event.fire()`.
-        See documentation for `Event.fire()`
-        :param event_name: Name of the event to fire
-        :return: None
-        """
-        self.events[event_name].fire(*args, **kwargs)
-
-    def fire_ignore_args(self, event_name: str, *args, **kwargs) -> None:
-        """Convenience method for calling `fire_ignore_args()` on the `event_name` event. All other arguments are passed
-        through to `Event.fire_ignore_args()`.
-        See documentation for `Event.fire_ignore_args()`
-        :param event_name: Name of the event to fire
-        :return: None
-        """
-        self.events[event_name].fire_ignore_args(*args, **kwargs)
-
-    def connect(self, event_name: str, *args, **kwargs) -> None:
-        """Convenience method for calling `connect()` on the `event_name` event. All other arguments are passed
-        through to `Event.connect()`.
-        See documentation for `Event.connect()`
-        :param event_name: Name of the event to connect to
-        :return: None
-        """
-        self.events[event_name].connect(*args, **kwargs)
-
-    def disconnect(self, event_name: str, *args, **kwargs) -> None:
-        """Convenience method for calling `disconnect()` on the `event_name` event. All other arguments are passed
-        through to `Event.disconnect()`.
-        See documentation for `Event.disconnect()`
-        :param event_name: Name of the event to disconnect from
-        :return: None
-        """
-        self.events[event_name].disconnect(*args, **kwargs)

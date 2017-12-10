@@ -2,6 +2,7 @@ import asyncio
 
 from unittest.mock import Mock, call
 
+import functools
 import pytest
 
 from pytest import raises
@@ -9,10 +10,30 @@ from pytest import raises
 import opendrop.utility.events as events
 
 
-@pytest.fixture
-def event():
-    """Create and return a new Event"""
-    return events.Event()
+class EventSourceTestWrapper:
+    def __init__(self):
+        self.event_source = events.EventSource()
+
+    def connect(self, *args, **kwargs):
+        return self.event_source.connect('on_my_event', *args, **kwargs)
+
+    def disconnect(self, *args, **kwargs):
+        return self.event_source.disconnect('on_my_event', *args, **kwargs)
+
+    def fire(self, *args, **kwargs):
+        return self.event_source.fire('on_my_event', *args, **kwargs)
+
+    def fire_ignore_args(self, *args, **kwargs):
+        return self.event_source.fire_ignore_args('on_my_event', *args, **kwargs)
+
+
+@pytest.fixture(params=['normal', 'event_source_wrapped'])
+def event(request):
+    """Create and return a new Event or a special wrapper object to test EventSource functionality"""
+    if request.param == 'normal':
+        return events.Event()
+    elif request.param == 'event_source_wrapped':
+        return EventSourceTestWrapper()
 
 
 @pytest.fixture(params=[0, 5])
@@ -100,7 +121,7 @@ async def test_event_multiple_connect(event, sample_str_args, sample_str_str_kwa
 
     await asyncio.sleep(0)
 
-    cb.assert_has_calls([call(*sample_str_args, **sample_str_str_kwargs)]*2)
+    cb.assert_has_calls([call(*sample_str_args, **sample_str_str_kwargs)] * 2)
 
 
 @pytest.mark.asyncio
