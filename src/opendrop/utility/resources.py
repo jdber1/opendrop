@@ -7,6 +7,9 @@ class IResource:
     @abstractmethod
     def teardown(self) -> None: pass
 
+    @abstractmethod
+    def release(self) -> None: pass
+
 
 T = TypeVar('T', bound=IResource)
 
@@ -52,7 +55,7 @@ class ResourceToken(Generic[T]):
                 return hash(resource_cls)
 
         class ResourceWrapper(resource_cls, metaclass=ResourceWrapperMeta):
-            LOCALS = {'_target', 'token', 'teardown', 'release', 'released'}  # type: Set[str]
+            LOCALS = {'_target', 'token', 'release', 'released'}  # type: Set[str]
 
             token = self  # type: ResourceToken[T]
 
@@ -71,9 +74,6 @@ class ResourceToken(Generic[T]):
                     object.__setattr__(self, name, value)
 
                 setattr(self._target, name, value)
-
-            def teardown(self) -> None:
-                raise ValueError('Can\'t call `teardown()` on a ResourceWrapper, did you mean `release()`?')
 
             def release(self) -> None:
                 if self.released:
