@@ -22,8 +22,8 @@ async def test_call_soon():
 
 @pytest.mark.gloop
 async def test_sleep():
-    EPSILON = 0.001
-    WAIT = 0.5
+    EPSILON = 0.01
+    WAIT = 0.2
 
     start = time.time()
 
