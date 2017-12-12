@@ -7,7 +7,6 @@ class IResource:
     @abstractmethod
     def teardown(self) -> None: pass
 
-    @abstractmethod
     def release(self) -> None: pass
 
 
