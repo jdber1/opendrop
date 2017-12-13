@@ -14,8 +14,10 @@ T = TypeVar('T', bound=IResource)
 
 
 class ResourceToken(Generic[T]):
-    def __init__(self, resource_cls: Type[T]) -> None:
+    def __init__(self, resource_cls: Type[T], **kwargs) -> None:
         self._resource_cls = resource_cls  # type: Type[T]
+
+        self._init_kwargs = kwargs
 
         self._instance = None  # type: T
         self._references = 0  # type: int
@@ -24,7 +26,7 @@ class ResourceToken(Generic[T]):
 
     def acquire(self) -> T:
         if not self._instance:
-            self._instance = self._resource_cls()
+            self._instance = self._resource_cls(**self._init_kwargs)
 
         self._references += 1
 

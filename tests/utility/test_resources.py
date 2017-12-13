@@ -1,3 +1,5 @@
+from unittest.mock import patch, Mock
+
 import pytest
 from pytest import raises
 
@@ -22,6 +24,16 @@ def TestResource():
             self.var1 += 1
 
     return TestResource
+
+
+def test_resource_init_kwargs(TestResource):
+    m = Mock(return_value=None)
+
+    with patch.object(TestResource, '__init__', m):
+        test_res_token = ResourceToken(TestResource, arg0='Apple', arg1='pie')
+        test_res_token.acquire()
+
+        m.assert_called_with(arg0='Apple', arg1='pie')
 
 
 def test_resource_lifecycle(TestResource):
