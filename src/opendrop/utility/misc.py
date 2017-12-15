@@ -17,6 +17,7 @@ def recursive_load(pkg: Union[ModuleType, str]) -> None:
             recursive_load(child)
 
 
+# No longer used by anything, probably delete in the future
 class EnumBuilder:
     def __init__(self, value: str, type: Optional[type] = None) -> None:
         self._value = value
