@@ -20,6 +20,9 @@ class EventSourceTestWrapper:
     def disconnect(self, *args, **kwargs):
         return self.event_source.disconnect('on_my_event', *args, **kwargs)
 
+    def inline(self, *args, **kwargs):
+        return self.event_source.inline('on_my_event', *args, **kwargs)
+
     def fire(self, *args, **kwargs):
         return self.event_source.fire('on_my_event', *args, **kwargs)
 
@@ -200,23 +203,31 @@ async def test_event_fire_ignore_args(event, sample_str_args, sample_str_str_kwa
 
 @pytest.mark.asyncio
 async def test_event_once_connect(event, sample_str_args, sample_str_str_kwargs):
-    cb = Mock()
+    cb0 = Mock()
+    cb1 = Mock()
 
-    event.connect(cb, once=True)
+    event.connect(cb0, once=True)
+    event.connect(cb1)
 
-    cb.assert_not_called()
-
-    event.fire(*sample_str_args, **sample_str_str_kwargs)
-
-    await asyncio.sleep(0)
-
-    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+    cb0.assert_not_called()
+    cb1.assert_not_called()
 
     event.fire(*sample_str_args, **sample_str_str_kwargs)
 
     await asyncio.sleep(0)
 
-    cb.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+    cb0.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+    cb1.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+
+    event.fire(*sample_str_args, **sample_str_str_kwargs)
+
+    await asyncio.sleep(0)
+
+    cb0.assert_called_once_with(*sample_str_args, **sample_str_str_kwargs)
+    cb1.assert_has_calls([
+        call(*sample_str_args, **sample_str_str_kwargs),
+        call(*sample_str_args, **sample_str_str_kwargs)
+    ])
 
 
 def test_event_immediate_callback_connect_with_coroutine(event):
@@ -225,3 +236,12 @@ def test_event_immediate_callback_connect_with_coroutine(event):
 
     with raises(ValueError):
         event.connect(async_cb, immediate=True)
+
+
+@pytest.mark.asyncio
+async def test_event_inline(event, sample_str_args):
+    asyncio.get_event_loop().call_soon(functools.partial(event.fire, *sample_str_args))
+
+    resp = await event.inline()
+
+    assert resp == sample_str_args

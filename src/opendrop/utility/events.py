@@ -38,6 +38,9 @@ class EventSource:
     def disconnect(self, name: str, *args, **kwargs):
         return self._events_store[name].disconnect(*args, **kwargs)
 
+    def inline(self, name: str, *args, **kwargs):
+        return self._events_store[name].inline(*args, **kwargs)
+
     def fire(self, name: str, *args, **kwargs):
         return self._events_store[name].fire(*args, **kwargs)
 
@@ -84,11 +87,18 @@ class Event(object):
         else:
             raise HandlerNotConnected
 
+    def inline(self) -> 'AwaitableCallback':  # TODO: can't inline if called by kwargs??
+        cb = AwaitableCallback()
+
+        self.connect(cb, once=True)
+
+        return cb
+
     def fire(self, *args, **kwargs) -> None:
         """Fire the event, any arguments are passed through to event handlers
         :return: None
         """
-        for container in self._handlers:
+        for container in list(self._handlers):
             handler = container.handler
 
             if container.ignore_args:
@@ -114,6 +124,11 @@ class Event(object):
         :return: None
         """
         self.fire()
+
+
+class AwaitableCallback(asyncio.Future):
+    def __call__(self, *args, **kwargs):
+        self.set_result(args)
 
 
 class HandlerContainer:
