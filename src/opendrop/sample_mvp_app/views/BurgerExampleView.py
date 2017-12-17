@@ -70,15 +70,6 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
 
         self.window.show_all()
 
-        # Order confirmation dialog
-        order_confirmation_dialog = Gtk.MessageDialog(
-            self.window, 0,
-            Gtk.MessageType.INFO,
-            Gtk.ButtonsType.OK,
-            'Burger order confirmation',
-            modal=True
-        )
-
         # -- Attach events --
         cheese_input.connect('value-changed', partial(self.fire_ignore_args, 'on_order_changed'))
         bacon_input .connect('toggled'      , partial(self.fire_ignore_args, 'on_order_changed'))
@@ -93,8 +84,6 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
 
         self.order_button = order_button
 
-        self.order_confirmation_dialog = order_confirmation_dialog
-
     def get_order(self) -> Mapping[str, Any]:
         order = {
             'cheese_slices': self.cheese_input.get_value_as_int(),
@@ -108,8 +97,20 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
         self.order_button.props.label = 'Place order (${0:.2f})'.format(cost)
 
     def show_order_confirmation(self, total_cost: float) -> None:
-        self.order_confirmation_dialog.format_secondary_markup('Total cost: ${0:.2f}'.format(total_cost))
+        # Order confirmation dialog
+        order_confirmation_dialog = Gtk.MessageDialog(
+            self.window, 0,
+            Gtk.MessageType.INFO,
+            Gtk.ButtonsType.OK,
+            'Burger order confirmation',
+            modal=True
+        )
 
-        resp = self.order_confirmation_dialog.run()
+        order_confirmation_dialog.format_secondary_markup('Total cost: ${0:.2f}'.format(total_cost))
 
-        self.order_confirmation_dialog.hide()
+        order_confirmation_dialog.show()
+
+        def handle_response(*args):
+            order_confirmation_dialog.destroy()
+
+        order_confirmation_dialog.connect('response', handle_response)
