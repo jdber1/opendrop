@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from typing import Optional, Type
+from typing import Optional, Type, Iterable
 
 
 class IView:
@@ -9,9 +9,6 @@ class IView:
 
     @abstractmethod
     def spawn(self, new_view: Type['IView'], modal: bool = False) -> None: pass
-
-    @abstractmethod
-    def fire(self, event_name: str, *args, **kwargs) -> None: pass
 
     @abstractmethod
     def fire_ignore_args(self, event_name: str, *args, **kwargs) -> None: pass

@@ -17,7 +17,7 @@ def test_handles():
         def handle_event1(self):
             pass
 
-    presenter = TestPresenter(Model(), View())
+    presenter = TestPresenter(app=Mock(), model=Model(), view=View())
 
     handlers = presenter.get_handlers()
 
@@ -33,7 +33,7 @@ def test_handles_immediate():
 
     view = View()
 
-    presenter = TestPresenter(Model(), view)
+    presenter = TestPresenter(app=Mock(), model=Model(), view=view)
 
     view.fire('on_event0')
 

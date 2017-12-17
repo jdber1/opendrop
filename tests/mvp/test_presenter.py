@@ -14,7 +14,7 @@ def test_presenter_can_present_method():
 
 def test_presenter_initialisation_with_incompatible_view():
     with raises(TypeError):
-        MyPresenter(MyModel(), OtherView())
+        MyPresenter(app=Mock, model=MyModel(), view=OtherView())
 
 
 @pytest.mark.asyncio
@@ -22,7 +22,7 @@ async def test_presenter_handle_events():
     model = MyModel()
     view = MyView()
 
-    presenter = MyPresenter(model, view)
+    presenter = MyPresenter(app=Mock(), model=model, view=view)
 
     presenter.handle_event0.assert_not_called()
     presenter.handle_event1.assert_not_called()
@@ -46,7 +46,7 @@ def test_presenter_call_view_methods():
     model = None
     view = MyView()
 
-    presenter = MyPresenter(model, view)
+    presenter = MyPresenter(app=Mock(), model=model, view=view)
 
     presenter.view.do0()
 
@@ -65,7 +65,7 @@ def test_presenter_lifecycle():
         model = MyModel()
         view = MyView()
 
-        presenter = MyPresenter(model, view)
+        presenter = MyPresenter(app=Mock(), model=model, view=view)
 
         presenter.setup.assert_called_once_with()
 

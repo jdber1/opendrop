@@ -1,4 +1,4 @@
-from typing import Callable, Generic, List, Mapping, Tuple, Type, TypeVar
+from typing import Callable, Generic, List, Mapping, Tuple, Type, TypeVar, NewType, Any
 
 from opendrop.mvp import handles
 
@@ -6,6 +6,15 @@ from opendrop.mvp import handler_metadata
 
 from opendrop.mvp.Model import Model
 from opendrop.mvp.IView import IView
+
+# Originally imported `Application` to use with type hints, but because this causes a circular dependency with no easy
+# solution using python's import machinery, we have to use a workaround.
+
+# from opendrop.mvp.Application import Application
+
+# Type hints workaround, doesn't really provide any type hinting benefits but will at least allow the rest of the code
+# to work. If in the future, circular dependencies are resolved, we can remove this.
+Application = NewType('Application', Any)
 
 T = TypeVar('T', bound=Model)
 S = TypeVar('S', bound=IView)
@@ -27,7 +36,7 @@ class PresenterMeta(type(Generic)):
 class Presenter(Generic[T, S], metaclass=PresenterMeta):
     _args = (Model, IView)  # type: Tuple[Type[Model], Type[IView]]
 
-    def __init__(self, model: T, view: S) -> None:
+    def __init__(self, app: Application, model: T, view: S) -> None:
         """
         :param model: The model object used by the presenter.
         :param view: The view to be presented by the presenter.
@@ -37,6 +46,7 @@ class Presenter(Generic[T, S], metaclass=PresenterMeta):
                 type(view).__name__, self.presents_via().__name__, type(self).__name__
             ))
 
+        self.app = app  # type: Application
         self.model = model  # type: T
         self.view = view  # type: S
 

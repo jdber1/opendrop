@@ -1,10 +1,8 @@
-from typing import Mapping, Optional, Type
-
-from collections import defaultdict
+import asyncio
+from typing import Optional, Type, Iterable, Any
 
 from opendrop.mvp.IView import IView
-
-from opendrop.utility.events import Event, EventSource
+from opendrop.utility.events import EventSource
 
 
 class View(EventSource, IView):
@@ -17,8 +15,6 @@ class View(EventSource, IView):
         """View constructor, this will call `setup()` after initialisation has finished.
         """
         EventSource.__init__(self)
-
-        self.events = defaultdict(Event)  # type: Mapping[str, Event]
 
         self.setup()
 
@@ -36,7 +32,7 @@ class View(EventSource, IView):
         """
         pass
 
-    def teardown(self) -> None:
+    def teardown(self) -> Any:
         """Called after `destroy()`, override to perform any clean up tasks such as releasing resources.
         """
         pass
@@ -50,14 +46,3 @@ class View(EventSource, IView):
         :return: None
         """
         self.fire('on_close', self, next_view)
-
-    def spawn(self, new_view: Type[IView], modal: bool = False) -> None:
-        """Spawn a new view alongside this view.
-
-        TODO: currently not implemented by Application
-
-        :param new_view: New view to spawn
-        :param modal: If the new view is modal to this view
-        :return: None
-        """
-        self.fire('on_spawn', self, new_view, modal)
