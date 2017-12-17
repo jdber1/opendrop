@@ -9,16 +9,16 @@ class GtkView(View):
     window.
 
     Attributes:
-        TITLE   The title of the window.
+        TITLE   The title of the window, if None, then defaults to class name of view.
         gtk_app The Gtk.Application object.
         window  The view's Gtk.ApplicationWindow object, widgets should be added to this.
     """
 
     TITLE = None  # type: str
 
-    def __init__(self, gtk_app) -> None:
-        self.gtk_app = gtk_app
-        self.window = Gtk.ApplicationWindow(application=gtk_app, title=(self.TITLE or type(self).__name__))
+    def __init__(self, window: Gtk.ApplicationWindow) -> None:
+        self.window = window
+        self.window.props.title = self.TITLE or type(self).__name__
 
         View.__init__(self)
 
