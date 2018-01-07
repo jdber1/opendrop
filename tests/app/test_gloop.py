@@ -6,6 +6,7 @@ from timeit import time
 
 import pytest
 
+EPSILON = 0.025
 
 @pytest.mark.gloop
 async def test_call_soon():
@@ -22,7 +23,6 @@ async def test_call_soon():
 
 @pytest.mark.gloop
 async def test_sleep():
-    EPSILON = 0.01
     WAIT = 0.2
 
     start = time.time()
