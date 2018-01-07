@@ -1,14 +1,11 @@
 import asyncio
-
-from typing import Type, Optional
+from typing import Type, Mapping, Any
 
 from gi.repository import Gtk
+from opendrop.gtk_specific.GtkHookLoopPolicy import GtkHookLoopPolicy
 
+from opendrop.gtk_specific.GtkView import GtkView
 from opendrop.mvp.Application import Application
-from opendrop.mvp.IView import IView
-
-from opendrop.sample_mvp_app.bases.GtkHookLoopPolicy import GtkHookLoopPolicy
-from opendrop.sample_mvp_app.bases.GtkView import GtkView
 
 
 class GtkApplication(Application):
@@ -35,14 +32,8 @@ class GtkApplication(Application):
             ('shutdown', self.handle_gtk_app_shutdown),
         ): self.gtk_app.connect(*args)
 
-    def initialise_view(self, view_cls: Type[GtkView], parent_view: Optional[GtkView], modal: bool) -> IView:
-        window = Gtk.ApplicationWindow(application=self.gtk_app)
-
-        if modal and parent_view:
-            window.props.transient_for = parent_view.window
-            window.props.modal = modal
-
-        return view_cls(window=window)
+    def initialise_view(self, view_cls: Type[GtkView], view_opts: Mapping[str, Any]) -> GtkView:
+        return view_cls(gtk_app=self.gtk_app, **view_opts)
 
     def run(self, *args, **kwargs) -> None:
         asyncio.set_event_loop_policy(GtkHookLoopPolicy())
@@ -69,7 +60,7 @@ class GtkApplication(Application):
 
     def handle_gtk_app_activate(self, gtk_app: Gtk.Application) -> None:
         print("Activating app...")
-        self.spawn(self.ENTRY_VIEW)
+        self.main()
 
     def handle_gtk_app_shutdown(self, gtk_app: Gtk.Application) -> None:
         print('Shutting down app...')

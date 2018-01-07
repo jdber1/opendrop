@@ -1,10 +1,17 @@
+# TODO: improve cpu performance by not having to iterate through the asyncio event loop all the time. This would be done
+# by possibly having to write a custom event loop class.
+
 import asyncio
 
 import functools
 
 from typing import Any
 
+import time
 from gi.repository import GObject
+
+
+STEP_SLEEP = 0.005
 
 
 class GtkHookLoopPolicy(asyncio.DefaultEventLoopPolicy):
@@ -46,6 +53,9 @@ class WrappedLoopRunOnGLoopMethods:
             self.target.run_forever()
         except RuntimeError:
             pass
+
+        # Sleep for a bit so CPU usage isn't 100%
+        time.sleep(STEP_SLEEP)
 
     def step(self) -> None:
         if self.is_closed():
