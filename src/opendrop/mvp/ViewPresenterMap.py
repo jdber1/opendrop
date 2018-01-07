@@ -4,6 +4,7 @@ from opendrop.mvp.IView import IView
 from opendrop.mvp.Presenter import Presenter
 
 
+# No longer used, pending removal.
 class ViewPresenterMap:
 
     """Helper container class that stores a list of views and presenters, and can be used to get the view class for a
@@ -41,5 +42,5 @@ class ViewPresenterMap:
     @staticmethod
     def _find_presenter_for_view(view_cls: Type[IView], presenter_clses: List[Type[Presenter]]) -> Type[Presenter]:
         for presenter_cls in presenter_clses:
-            if presenter_cls.can_present(view_cls):
+            if presenter_cls.can_control(view_cls):
                 return presenter_cls

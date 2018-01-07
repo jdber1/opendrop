@@ -20,10 +20,10 @@ T = TypeVar('T')
 
 HANDLER_TAG_NAME = '_presenter_handler_tag'
 
-HandlerMetadata = namedtuple('HandlerMetadata', ['event_name', 'immediate'])
+HandlerMetadata = namedtuple('HandlerMetadata', ['source_name', 'event_name', 'immediate'])
 
 
-def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
+def handles(source_name: str, event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
     """Decorator that specifies the method is an event handler for event `event_name`. Methods with this decorator will
     automatically connect to the specified event on initialisation of the presenter.
     :param event_name: The event name that the handler will connect to
@@ -31,7 +31,7 @@ def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T],
     :return: None
     """
     def decorator(method: T) -> T:
-        set_(method, event_name, immediate)
+        set_(method, source_name, event_name, immediate)
 
         return method
 
@@ -39,17 +39,17 @@ def handles(event_name: str, immediate: Optional[bool] = False) -> Callable[[T],
 
 
 def get(method: Callable) -> HandlerMetadata:
-    if not has(method):
+    if not has_metadata(method):
         raise TypeError("{} has not been tagged as a handler".format(method))
 
     return getattr(method, HANDLER_TAG_NAME)
 
 
-def set_(method: Callable[[T], T], event_name: str, immediate: Optional[bool] = False) -> None:
-    setattr(method, HANDLER_TAG_NAME, HandlerMetadata(event_name, immediate))
+def set_(method: Callable[[T], T], source: str, event_name: str, immediate: Optional[bool] = False) -> None:
+    setattr(method, HANDLER_TAG_NAME, HandlerMetadata(source, event_name, immediate))
 
 
-def has(method: Callable) -> bool:
+def has_metadata(method: Callable) -> bool:
     if hasattr(method, HANDLER_TAG_NAME):
         return True
 

@@ -1,8 +1,12 @@
 import asyncio
-from typing import Optional, Type, Iterable, Any
+from typing import Optional, Type, Iterable, Any, Mapping, TypeVar
 
 from opendrop.mvp.IView import IView
+from opendrop.mvp.Model import Model
 from opendrop.utility.events import EventSource
+from opendrop.utility.strategy import strategy
+
+T = TypeVar('T', bound=IView)
 
 
 class View(EventSource, IView):
@@ -11,24 +15,38 @@ class View(EventSource, IView):
     inputs.
     """
 
+    PREVIOUS = 0  # type: int
+
     def __init__(self) -> None:
-        """View constructor, this will call `setup()` after initialisation has finished.
+        """View constructor.
         """
         EventSource.__init__(self)
 
-        self.setup()
+        self._hidden = False  # type: bool
+
+        self._destroyed = False  # type: bool
 
     def destroy(self) -> None:
         """Destroy the view (called by the Application object, use `close()` to end the View from the Presenter
         instead). This method will call `teardown()` and fire the 'on_destroy' event afterwards.
         :return: None
         """
+        self._destroyed = True
+
         self.teardown()
         self.fire('on_destroy')
 
+    def do_setup(self) -> None:
+        """Wrapper for `setup` so after setup is complete, 'on_setup_done' event is fired. Called by `Application` after
+        `__init__` is completed.
+        :return: None
+        """
+        self.setup()
+        self.fire('on_setup_done')
+
     def setup(self) -> None:
-        """Called after initialisation of this View, override to perform setup tasks such as creating and
-        displaying widgets.
+        """Override to perform setup tasks such as creating and displaying widgets.
+        :return: None
         """
         pass
 
@@ -37,12 +55,46 @@ class View(EventSource, IView):
         """
         pass
 
-    def close(self, next_view: Optional[Type[IView]] = None) -> None:
-        """Called by the presenter to end the view. This method will fire the 'on_close' event which the Application
-        is connected to. If an optional `next_view` argument is specified, the Application will destroy this view and
-        setup `next_view` and its presenter. If `next_view` is not specified, the Application will just destroy the
-        view.
-        :param next_view: Next view to show.
+    @strategy
+    def close(self) -> None:
+        """Destroy the view.
+
+        The `Application` will provide an implementation to this strategy to destroy the view when called.
         :return: None
         """
-        self.fire('on_close', self, next_view)
+        pass
+
+    @strategy
+    def spawn(self, view_cls: Type[T], model: Model = None, child: bool = False,
+              view_opts: Optional[Mapping[str, Any]] = None) -> T:
+        """Spawn a new view.
+
+        The `Application` will provide an implementation to this strategy to spawn a new view when called.
+
+        If the new view is spawned as a child of this view, then when `close()` is called on this view, all child views
+        will be closed first before closing this view.
+
+        :param view_cls: The class of the view to spawn.
+        :param model: The model object that should be given to the presenter.
+        :param child: If the spawned view should be a child of this view.
+        :param view_opts: Keyword arguments to be passed to the constructor of the to be spawned view.
+        :return:
+        """
+        pass
+
+    # Properties
+
+    @property
+    def hidden(self) -> bool:
+        """Return True if the current view is hidden and False if it's not.
+        :return: Hidden state.
+        """
+        return self._hidden
+
+    @hidden.setter
+    def hidden(self, value: bool):
+        self._hidden = value
+
+    @property
+    def destroyed(self) -> bool:
+        return self._destroyed
