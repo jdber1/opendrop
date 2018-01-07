@@ -52,6 +52,9 @@ class Strategy:
         #     test.use(impl)  # Currently works
         #
         # TODO: Implement this
+        # A signature is compatible if the function decorated by @strategy can be safely replaced with the
+        # implementation, so any valid calls that can be made to the original function also works with the new
+        # implementation.
 
         my_sig = inspect.signature(self._do_descriptor_protocol(self._get_impl()))  # type: inspect.Signature
 
