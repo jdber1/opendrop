@@ -1,8 +1,11 @@
 import asyncio
+import weakref
 
 from unittest.mock import Mock, call
 
 import functools
+
+import gc
 import pytest
 
 from pytest import raises
@@ -39,12 +42,10 @@ def event(request):
         return EventSourceTestWrapper()
 
 
-@pytest.fixture(params=[0, 5])
+@pytest.fixture
 def sample_str_args(request):
     """Create some sample arguments and return"""
-    n = request.param
-
-    return tuple(["arg{}".format(i) for i in range(n)])
+    return tuple(["arg{}".format(i) for i in range(5)])
 
 
 @pytest.fixture(params=[0, 5])
@@ -245,3 +246,80 @@ async def test_event_inline(event, sample_str_args):
     resp = await event.inline()
 
     assert resp == sample_str_args
+
+
+@pytest.mark.asyncio
+async def test_event_strong_ref(event, sample_str_args):
+    cb = Mock()
+
+    event.connect(cb, strong_ref=True)
+
+    cb_weak_ref = weakref.ref(cb)
+
+    del cb
+
+    gc.collect()
+
+    event.fire(*sample_str_args)
+
+    await asyncio.sleep(0)
+
+    assert cb_weak_ref() is not None
+
+    cb_weak_ref().assert_called_with(*sample_str_args)
+
+
+@pytest.mark.asyncio
+async def test_event_weak_ref_with_method_type(event, sample_str_args):
+    call_count = 0
+
+    class A:
+        def handler(self):
+            nonlocal call_count
+
+            call_count += 1
+
+    a = A()
+
+    event.connect(a.handler)
+
+    event.fire()
+
+    await asyncio.sleep(0)
+
+    assert call_count == 1
+
+
+def test_event_weak_ref(event):
+    a = Mock()
+
+    a_weak_ref = weakref.ref(a)
+
+    event.connect(a)
+
+    del a
+
+    gc.collect()
+
+    assert a_weak_ref() is None
+
+
+@pytest.mark.asyncio
+async def test_event_weak_ref2(event):
+    a = Mock()
+    b = Mock()
+
+    a_weak_ref = weakref.ref(a)
+
+    event.connect(a)
+    event.connect(b)
+
+    del a
+
+    gc.collect()
+
+    event.fire()
+
+    await asyncio.sleep(0)
+
+    b.assert_called_once_with()

@@ -1,7 +1,9 @@
 import asyncio
+import types
+import weakref
 from numbers import Number
 
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import functools
 
@@ -57,7 +59,7 @@ class Event(object):
         self._handlers = []  # type: List[HandlerContainer]
 
     def connect(self, handler: Callable[..., None], immediate: bool = False, once: bool = False,
-                ignore_args: bool = False) -> None:
+                ignore_args: bool = False, strong_ref: bool = False) -> None:
         """
         Connect function `handler` to the event. `handler` is invoked with the same arguments (and keyword arguments) as
         what the event is fired with.
@@ -68,12 +70,14 @@ class Event(object):
         once.
         :param ignore_args: Whether the function should be called with no arguments, ignoring the arguments the event
         was fired with.
+        :param strong_ref: Whether the event should keep a strong reference to the handler, default False.
         :return: None
         """
         if asyncio.iscoroutinefunction(handler) and immediate:
             raise ValueError('Can\'t connect coroutine function with immediate=True')
 
-        self._handlers.append(HandlerContainer(handler, immediate=immediate, once=once, ignore_args=ignore_args))
+        self._handlers.append(HandlerContainer(handler, immediate=immediate, once=once,
+                                               ignore_args=ignore_args, strong_ref=strong_ref))
 
     def disconnect(self, handler: Callable[..., None]) -> None:
         """Disconnect `handler` from this event.
@@ -87,7 +91,16 @@ class Event(object):
         else:
             raise HandlerNotConnected
 
-    def inline(self) -> 'AwaitableCallback':  # TODO: can't inline if called by kwargs??
+    def inline(self) -> 'AwaitableCallback':  # TODO: kwargs are ignored, mention in docs, automatically once only, also
+        # awaitable callback is a future. Also only holds a weak reference to the returned callback, so if a strong
+        # reference is not maintained, the callback is never fired, e.g.
+        #
+        #     event.inline().add_done_callback(fn)
+        #
+        # In this situation, you should use `connect` with `once=True` instead:
+        #
+        #     event.connect(fn, once=True)
+        #
         cb = AwaitableCallback()
 
         self.connect(cb, once=True)
@@ -100,6 +113,11 @@ class Event(object):
         """
         for container in list(self._handlers):
             handler = container.handler
+            if handler is None:
+                # Handler has been garbage collected
+                self._handlers.remove(container)
+
+                continue
 
             if container.ignore_args:
                 args = []
@@ -137,12 +155,27 @@ class HandlerContainer:
     """
 
     def __init__(self, handler: Callable[..., None], immediate: bool = False, once: bool = False,
-                 ignore_args: bool = False) -> None:
+                 ignore_args: bool = False, strong_ref: bool = False) -> None:
 
-        self.handler = handler  # type: Callable[..., None]
+        self._handler = None  # type: Optional[Callable[..., None]]
+        self._handler_ref = None  # type: Optional[Callable[[], Callable[..., None]]]
+
         self.immediate = immediate  # type: bool
         self.ignore_args = ignore_args  # type: bool
         self.remaining = 1 if once else float('inf')  # type: Number
+
+        if strong_ref:
+            self._handler = handler  # type: Callable[..., None]
+        else:
+            self._handler_ref = weakref.ref(handler) if not isinstance(handler, types.MethodType) else \
+                                weakref.WeakMethod(handler)
+
+    @property
+    def handler(self) -> Callable[..., None]:
+        if self._handler is not None:
+            return self._handler
+        elif self._handler_ref is not None:
+            return self._handler_ref()
 
 
 class HandlerNotConnected(Exception):
