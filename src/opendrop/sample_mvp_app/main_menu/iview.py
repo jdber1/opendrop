@@ -2,9 +2,7 @@ from abc import abstractmethod
 
 from opendrop.mvp.IView import IView
 
-from opendrop.sample_mvp_app.bases.IMaximizable import IMaximizable
 
-
-class IMainView(IView, IMaximizable):
+class IMainView(IView):
     @abstractmethod
     def show_about_dialog(self): pass

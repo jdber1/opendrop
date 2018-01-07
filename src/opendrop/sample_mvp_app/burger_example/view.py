@@ -1,13 +1,13 @@
 from functools import partial
-from typing import Mapping, Any
+from typing import Any
 
 from gi.repository import Gtk
 
-from opendrop.sample_mvp_app.bases.GtkView import GtkView
-from opendrop.sample_mvp_app.presenters.iviews.IBurgerExampleView import IBurgerExampleView
+from opendrop.gtk_specific.GtkWindowView import GtkWindowView
+from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
 
 
-class BurgerExampleView(GtkView, IBurgerExampleView):
+class BurgerExampleView(GtkWindowView, IBurgerExampleView):
     def setup(self) -> None:
         # -- Build the UI --
         listbox = Gtk.ListBox()
@@ -54,9 +54,6 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
         meal_label = Gtk.Label('Meal size:', xalign=0)
         meal_input = Gtk.ComboBoxText()
 
-        for size in ('Small', 'Medium', 'Large', 'Supersize™'):
-            meal_input.append(None, size)
-
         meal_input.set_active(0)
 
         hbox.pack_start(meal_label, True, True, 0)
@@ -71,9 +68,12 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
         self.window.show_all()
 
         # -- Attach events --
-        cheese_input.connect('value-changed', partial(self.fire_ignore_args, 'on_order_changed'))
-        bacon_input .connect('toggled'      , partial(self.fire_ignore_args, 'on_order_changed'))
-        meal_input  .connect('changed'      , partial(self.fire_ignore_args, 'on_order_changed'))
+        cheese_input.connect(
+            'value-changed', lambda w: self._on_order_changed('cheese_slices', cheese_input.get_value_as_int()))
+        bacon_input.connect(
+            'toggled', lambda w: self._on_order_changed('bacon', bacon_input.get_active()))
+        meal_input.connect(
+            'changed', lambda w: self._on_order_changed('meal_size', meal_input.get_active_text()))
 
         order_button.connect('clicked', partial(self.fire_ignore_args, 'on_order_button_clicked'))
 
@@ -84,14 +84,19 @@ class BurgerExampleView(GtkView, IBurgerExampleView):
 
         self.order_button = order_button
 
-    def get_order(self) -> Mapping[str, Any]:
-        order = {
-            'cheese_slices': self.cheese_input.get_value_as_int(),
-            'bacon'        : self.bacon_input .get_active(),
-            'meal_size'    : self.meal_input  .get_active_text()
-        }
+    def _on_order_changed(self, name: str, value: Any) -> None:
+        self.fire('on_order_changed', name, value)
 
-        return order
+    def add_meal_size(self, display: str) -> None:
+        self.meal_input.append(id=display, text=display)
+
+    def edit_order(self, name: str, value: Any) -> None:
+        if name == 'cheese_slices':
+            self.cheese_input.props.value = int(value)
+        elif name == 'bacon':
+            self.bacon_input.props.active = bool(value)
+        elif name == 'meal_size':
+            self.meal_input.props.active_id = str(value)
 
     def update_display_cost(self, cost: float) -> None:
         self.order_button.props.label = 'Place order (${0:.2f})'.format(cost)

@@ -1,21 +1,15 @@
-from opendrop.sample_mvp_app.bases.GtkApplication import GtkApplication
-
-from opendrop.sample_mvp_app.SampleAppModel import SampleAppModel
-
-from opendrop.sample_mvp_app.presenters.BurgerExamplePresenter import BurgerExamplePresenter
-from opendrop.sample_mvp_app.presenters.MainPresenter import MainPresenter
-from opendrop.sample_mvp_app.presenters.TimerExamplePresenter import TimerExamplePresenter
-
-from opendrop.sample_mvp_app.views.BurgerExampleView import BurgerExampleView
-from opendrop.sample_mvp_app.views.MainView import MainView
-from opendrop.sample_mvp_app.views.TimerExampleView import TimerExampleView
+from opendrop import sample_mvp_app
+from opendrop.gtk_specific.GtkApplication import GtkApplication
+from opendrop.sample_mvp_app.main_menu.model import MainMenuModel
+from opendrop.sample_mvp_app.main_menu.view import MainView
 
 
 class SampleApplication(GtkApplication):
     APPLICATION_ID = 'org.example.sampleapp'
 
-    MODEL = SampleAppModel
-    VIEWS = [MainView, TimerExampleView, BurgerExampleView]
-    PRESENTERS = [MainPresenter, TimerExamplePresenter, BurgerExamplePresenter]
+    PRESENTERS_PKG = sample_mvp_app
 
     ENTRY_VIEW = MainView
+
+    def main(self) -> None:
+        self.spawn(self.ENTRY_VIEW, MainMenuModel())
