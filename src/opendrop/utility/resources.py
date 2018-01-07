@@ -87,4 +87,10 @@ class ResourceToken(Generic[T]):
 
                 self.token._release()
 
+            def __del__(self):
+                # If the resource wrapper is about to be garbage collected and is not yet released, then automatically
+                # release it.
+                if not self.released:
+                    self.release()
+
         return ResourceWrapper

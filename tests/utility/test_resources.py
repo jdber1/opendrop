@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock
 
+import gc
 import pytest
 from pytest import raises
 
@@ -54,6 +55,20 @@ def test_resource_lifecycle(TestResource):
     assert TestResource.destroy_count == 0
 
     test_res2.release()
+
+    assert TestResource.destroy_count == 1
+
+
+def test_resource_gc_collect(TestResource):
+    test_res_token = ResourceToken(TestResource)
+
+    test_res1 = test_res_token.acquire()
+
+    assert TestResource.init_count == 1
+
+    del test_res1
+
+    gc.collect()
 
     assert TestResource.destroy_count == 1
 
