@@ -8,7 +8,7 @@ gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 
-from opendrop.sample_mvp_app.bases.GtkHookLoopPolicy import GtkHookLoopPolicy
+from opendrop.gtk_specific.GtkHookLoopPolicy import GtkHookLoopPolicy
 
 
 def pytest_runtest_setup(item: pytest.Item):
