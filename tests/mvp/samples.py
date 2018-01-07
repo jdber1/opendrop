@@ -30,9 +30,13 @@ class MyPresenter(Presenter[MyModel, IMyView]):
 
     def teardown(self): pass
 
-    handle_event0 = handles('on_event0')(Mock())
+    handle_event0 = handles('view', 'on_event0')(Mock())
 
-    handle_event1 = handles('on_event1')(Mock())
+    handle_event1 = handles('view', 'on_event1')(Mock())
+
+    handle_event2 = handles('view', 'on_event2', immediate=True)(Mock())
+
+    handle_event3 = handles('model', 'on_event3')(Mock())
 
 
 class IOtherView(IView):
