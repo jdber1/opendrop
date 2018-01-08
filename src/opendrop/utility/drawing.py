@@ -29,12 +29,17 @@ def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
     # Basically the size of each row in bytes
     rowstride = width * bits_per_sample/8 * 3  # type: int
 
-    return GdkPixbuf.Pixbuf.new_from_bytes(
-        GLib.Bytes(data),
+    pixbuf = GdkPixbuf.Pixbuf.new_from_data(
+        data,
         colorspace,
         has_alpha,
         bits_per_sample,
         width,
         height,
         rowstride
-    )
+    )  # type: GdkPixbuf.Pixbuf
+
+    # Keep a reference to data otherwise it will be garbage collected
+    pixbuf.data = data
+
+    return pixbuf
