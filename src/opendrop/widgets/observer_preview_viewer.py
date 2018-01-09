@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import math
-from typing import List, Type, Optional, Tuple
+from typing import Optional, Tuple
 
 import cairo
 import cv2
@@ -10,7 +10,7 @@ from gi.repository import Gtk, Gdk
 from opendrop.observer.bases import ObserverPreview
 from opendrop.observer.types.camera import CameraObserverPreview
 from opendrop.observer.types.image_slideshow import ImageSlideshowObserverPreview
-from opendrop.utility.drawing import pixbuf_from_array
+from opendrop.gtk_specific.misc import pixbuf_from_array
 from opendrop.widgets.integer_entry import IntegerEntry
 
 
