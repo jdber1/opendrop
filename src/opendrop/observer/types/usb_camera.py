@@ -10,8 +10,25 @@ from opendrop.utility.resources import ResourceToken
 
 
 class USBCamera(ICamera):
+    PRECAPTURE = 5  # type: int
+
     def __init__(self, camera_index: int):
         self.vc = cv2.VideoCapture(camera_index)
+        self.wait_until_ready()
+
+        # For some reason, on some cameras, the first few images captured will be dark, so consume those images
+        # now so the camera will be fully ready after initialisation.
+        for i in range(self.PRECAPTURE):
+            self.vc.read()
+
+    def wait_until_ready(self) -> None:
+        success = False
+
+        while not success:
+            if not self.vc.isOpened():
+                raise ValueError('Camera failed to open.')
+
+            success = self.vc.read()[0]
 
     def capture(self) -> np.ndarray:
         if not self.vc.isOpened():
