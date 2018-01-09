@@ -45,12 +45,21 @@ def camera_capture_test_image(camera_index=TEST_CAMERA_INDEX):
         vc.release()
 
 
-def image_similar(img0, img1):  # compares histograms to check for image similarity
+def image_similar(img0, img1):
     # Using user verification
-    cv2.imshow('Image comparison', np.concatenate((img0, img1), axis=1))
-    cv2.waitKey(0)
+    window_title = 'Press ENTER if images similar, any key otherwise'
 
-    return True
+    try:
+        cv2.imshow(window_title, np.concatenate((img0, img1), axis=1))
+
+        resp = cv2.waitKey(0)
+
+        if resp == 13:  # 13 is Carriage Return
+            return True
+        else:
+            return False
+    finally:
+        cv2.destroyWindow(window_title)
 
     # # Comparing histograms to verify similarity
     # hist0 = cv2.calcHist([img0], mask=None, channels=[0, 1, 2], histSize=[8, 8, 8], ranges=[0, 256, 0, 256, 0, 256])
