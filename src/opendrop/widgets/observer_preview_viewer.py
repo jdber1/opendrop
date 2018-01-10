@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import cairo
 import cv2
 import numpy as np
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.observer.bases import ObserverPreview
 from opendrop.observer.types.camera import CameraObserverPreview
@@ -23,7 +23,8 @@ class ObserverPreviewControllerContext:
 class ObserverPreviewController:
     @staticmethod
     @abstractmethod
-    def can_control(ctx: ObserverPreviewControllerContext) -> bool: pass
+    def can_control(ctx: ObserverPreviewControllerContext) -> bool:
+        pass
 
     @classmethod
     def control(cls, ctx: ObserverPreviewControllerContext) -> 'ObserverPreviewController':
@@ -50,7 +51,6 @@ class CameraObserverPreviewController(ObserverPreviewController):
         return isinstance(ctx.preview, CameraObserverPreview)
 
 
-# add ability to draw over, image filter
 class ImageSlideshowObserverPreviewController(ObserverPreviewController):
     _controls = type(None)
 
@@ -131,7 +131,6 @@ class ImageSlideshowObserverPreviewController(ObserverPreviewController):
 
 
 class ObserverPreviewViewer(Gtk.VBox):
-
     __gtype_name__ = 'ObserverPreviewViewer'
 
     def __init__(self, preview: Optional[ObserverPreview] = None) -> None:
@@ -145,6 +144,19 @@ class ObserverPreviewViewer(Gtk.VBox):
         # preview_drawing_area
         preview_drawing_area = Gtk.DrawingArea()  # type: Gtk.DrawingArea
         preview_drawing_area.connect('draw', self.handle_preview_drawing_area_draw)
+
+        preview_drawing_area.add_events(
+            Gdk.EventMask.POINTER_MOTION_MASK
+            | Gdk.EventMask.BUTTON_PRESS_MASK
+        )
+
+        preview_drawing_area.connect('motion-notify-event',
+                                     lambda widget, event: self.emit('viewer-motion-notify-event', event)
+                                     )
+
+        preview_drawing_area.connect('button-press-event',
+                                     lambda widget, event: self.emit('viewer-button-press-event', event)
+                                     )
 
         self.pack_start(preview_drawing_area, expand=True, fill=True, padding=0)
 
@@ -161,7 +173,7 @@ class ObserverPreviewViewer(Gtk.VBox):
             }
         ''', encoding='utf-8'))
         controls_area_container.get_style_context() \
-                               .add_provider(plugin_area_container_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            .add_provider(plugin_area_container_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         self.pack_start(controls_area_container, expand=False, fill=False, padding=0)
 
@@ -252,22 +264,22 @@ class ObserverPreviewViewer(Gtk.VBox):
             return
 
         widget_size = (widget.get_allocated_width(), widget.get_allocated_height())  # type: Tuple[int, int]
-        widget_aspect = widget_size[0]/widget_size[1]  # type: float
+        widget_aspect = widget_size[0] / widget_size[1]  # type: float
 
         image_size = self.preview_image.shape[1], self.preview_image.shape[0]  # type: Tuple[int, int]
-        image_aspect = image_size[0]/image_size[1]  # type: float
+        image_aspect = image_size[0] / image_size[1]  # type: float
         scale_factor = 1  # type: int
 
         if self.zoom_fill and (widget_aspect > image_aspect) or not self.zoom_fill and (widget_aspect <= image_aspect):
-            scale_factor = widget_size[0]/image_size[0]
+            scale_factor = widget_size[0] / image_size[0]
         else:
-            scale_factor = widget_size[1]/image_size[1]
+            scale_factor = widget_size[1] / image_size[1]
 
         im = cv2.resize(self.preview_image, dsize=(0, 0), fx=scale_factor, fy=scale_factor)  # type: np.ndarray
 
         offset = (
-            widget_size[0]/2 - (image_size[0] * scale_factor)/2,
-            widget_size[1]/2 - (image_size[1] * scale_factor)/2
+            widget_size[0] / 2 - (image_size[0] * scale_factor) / 2,
+            widget_size[1] / 2 - (image_size[1] * scale_factor) / 2
         )  # type: Tuple[float, float]
 
         Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *offset)
@@ -282,3 +294,11 @@ class ObserverPreviewViewer(Gtk.VBox):
             self.zoom_fill = True
 
             widget.props.label = 'Fit'
+
+
+GObject.signal_new('viewer-motion-notify-event',
+                   ObserverPreviewViewer, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT, (GObject.TYPE_PYOBJECT,)
+                   )
+GObject.signal_new('viewer-button-press-event',
+                   ObserverPreviewViewer, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT, (GObject.TYPE_PYOBJECT,)
+                   )
