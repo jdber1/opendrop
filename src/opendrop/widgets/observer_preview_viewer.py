@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from gi.repository import Gtk, Gdk, GObject
 
+from opendrop.image_filter.image_filter_group import ImageFilterGroup
 from opendrop.observer.bases import ObserverPreview
 from opendrop.observer.types.camera import CameraObserverPreview
 from opendrop.observer.types.image_slideshow import ImageSlideshowObserverPreview
@@ -135,6 +136,8 @@ class ObserverPreviewViewer(Gtk.VBox):
 
     def __init__(self, preview: Optional[ObserverPreview] = None) -> None:
         super().__init__()
+
+        self.filters = ImageFilterGroup()
 
         # initialise attributes
         self._zoom_fill = True  # type: bool
@@ -281,6 +284,9 @@ class ObserverPreviewViewer(Gtk.VBox):
             widget_size[0] / 2 - (image_size[0] * scale_factor) / 2,
             widget_size[1] / 2 - (image_size[1] * scale_factor) / 2
         )  # type: Tuple[float, float]
+
+        # Apply the custom filters
+        im = self.filters.apply(im)
 
         Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *offset)
         cr.paint()
