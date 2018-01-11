@@ -292,14 +292,9 @@ class ObserverPreviewViewer(Gtk.VBox):
         cr.paint()
 
     def handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
-        if self.zoom_fill:
-            self.zoom_fill = False
+        self.zoom_fill ^= True
 
-            widget.props.label = 'Fill'
-        else:
-            self.zoom_fill = True
-
-            widget.props.label = 'Fit'
+        widget.props.label = ('Fill', 'Fit')[self.zoom_fill]
 
 
 GObject.signal_new('viewer-motion-notify-event',
