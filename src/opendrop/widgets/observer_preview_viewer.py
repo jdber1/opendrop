@@ -256,45 +256,60 @@ class ObserverPreviewViewer(Gtk.VBox):
         self.preview_drawing_area.queue_draw()
 
     def handle_preview_drawing_area_draw(self, widget: Gtk.Widget, cr: cairo.Context) -> None:
+        # Fill drawing area background black
         cr.set_source_rgb(0, 0, 0)
         cr.paint()
 
+        # If there's no preview image, draw a placeholder graphic
         if self.preview_image is None:
             cr.set_source_rgb(255, 255, 255)
             cr.move_to(10, 20)
             cr.show_text('No preview')
-
             return
 
-        widget_size = (widget.get_allocated_width(), widget.get_allocated_height())  # type: Tuple[int, int]
-        widget_aspect = widget_size[0] / widget_size[1]  # type: float
+        im_draw_size = self.preview_image_draw_size  # type: Tuple[int, int]
+        im_draw_offset = self.preview_image_draw_offset  # type: Tuple[int, int]
 
-        image_size = self.preview_image.shape[1], self.preview_image.shape[0]  # type: Tuple[int, int]
-        image_aspect = image_size[0] / image_size[1]  # type: float
-        scale_factor = 1  # type: int
-
-        if self.zoom_fill and (widget_aspect > image_aspect) or not self.zoom_fill and (widget_aspect <= image_aspect):
-            scale_factor = widget_size[0] / image_size[0]
-        else:
-            scale_factor = widget_size[1] / image_size[1]
-
-        im = cv2.resize(self.preview_image, dsize=(0, 0), fx=scale_factor, fy=scale_factor)  # type: np.ndarray
-
-        offset = (
-            widget_size[0] / 2 - (image_size[0] * scale_factor) / 2,
-            widget_size[1] / 2 - (image_size[1] * scale_factor) / 2
-        )  # type: Tuple[float, float]
+        im = cv2.resize(self.preview_image, dsize=im_draw_size)  # type: np.ndarray
 
         # Apply the custom filters
         im = self.filters.apply(im)
 
-        Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *offset)
+        Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *im_draw_offset)
         cr.paint()
 
     def handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
         self.zoom_fill ^= True
 
         widget.props.label = ('Fill', 'Fit')[self.zoom_fill]
+
+    @property
+    def preview_image_draw_size(self) -> Tuple[int, int]:
+        da = self.preview_drawing_area  # type: Gtk.DrawingArea
+
+        da_size = (da.get_allocated_width(), da.get_allocated_height())  # type: Tuple[int, int]
+        da_aspect = da_size[0] / da_size[1]  # type: float
+
+        image_size = self.preview_image.shape[1], self.preview_image.shape[0]  # type: Tuple[int, int]
+        image_aspect = image_size[0] / image_size[1]  # type: float
+
+        if self.zoom_fill and (da_aspect > image_aspect) or not self.zoom_fill and (da_aspect <= image_aspect):
+            scale_factor = da_size[0] / image_size[0]  # type: float
+        else:
+            scale_factor = da_size[1] / image_size[1]  # type: float
+
+        return round(image_size[0] * scale_factor), round(image_size[1] * scale_factor)
+
+    @property
+    def preview_image_draw_offset(self) -> Tuple[int, int]:
+        da = self.preview_drawing_area  # type: Gtk.DrawingArea
+
+        da_size = np.array((da.get_allocated_width(), da.get_allocated_height()))  # type: np.ndarray
+        image_draw_size = np.array(self.preview_image_draw_size)  # type: np.ndarray
+
+        offset = tuple(da_size/2 - image_draw_size/2)
+
+        return offset
 
 
 GObject.signal_new('viewer-motion-notify-event',
