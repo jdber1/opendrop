@@ -23,7 +23,7 @@ IMAGE_EXTENSION='.png'
 BACKGROUND_COLOR='gray90'
 # BACKGROUND_COLOR='SlateGray1'
 # BACKGROUND_COLOR='red'
-VERSION='1.1'
+VERSION='2.0'
 
 NEEDLE_OPTIONS = ['0.7176', '1.270', '1.651']
 IMAGE_SOURCE_OPTIONS = ["Flea3", "USB camera", "Local images"]
@@ -59,6 +59,10 @@ class UserInterface(tk.Toplevel):
         self.create_plotting_checklist()
         self.create_save_location()
         self.create_image_acquisition()
+
+        # Only create these widgets if we're doing pendant drop
+        if user_input_data.drop_type == 1:
+            self.create_volume_control()
         # self.create_save_box()
         self.create_run_quit(user_input_data)
         self.create_homepage_url()
@@ -110,25 +114,21 @@ class UserInterface(tk.Toplevel):
         image_acquisition_frame.grid_columnconfigure(2, weight=1)
 
         self.image_source = OptionMenuStyle(self, image_acquisition_frame, "Image source:", IMAGE_SOURCE_OPTIONS, rw=0, label_width=12) #(LABEL_WIDTH-ENTRY_WIDTH))
-        
+
         # self.number_frames = IntegerEntryStyle(self, image_acquisition_frame, "Number of frames:", rw=0, cl=3, pdx=10)
         # self.wait_time = IntegerEntryStyle(self, image_acquisition_frame, "Wait time (s):", rw=1, cl=3, pdx=10)
 
         # self.directory = DirectoryEntryStyle(self.root, self.save_info_frame, "Location:", rw=3, entry_width=50)
- 
+
         # image_acquisition_frame.grid_columnconfigure(3, minsize=LABEL_WIDTH)
         # self.image_source.text_variable.trace_variable('w',self.propogate_state)
         self.image_source.text_variable.trace_variable('w',self.propogate_state)
-
-        
-
         self.number_frames = IntegerEntryStyle(self, image_acquisition_frame, "Number of frames:", rw=3, cl=0, pdx=10)
         self.wait_time = IntegerEntryStyle(self, image_acquisition_frame, "Wait time (s):", rw=4, cl=0, pdx=10)
 
         self.save_images_boole = CheckButtonStyle(self, image_acquisition_frame, "Save image", rw=3, cl=3)
         self.create_new_dir_boole = CheckButtonStyle(self, image_acquisition_frame, "Create new directory", rw=4, cl=3)#, pdx=50)
-        self.save_images_boole.int_variable.trace_variable('w',self.check_button_changed)
-
+        self.save_images_boole.int_variable.trace_variable('w',self.check_save_images_button_changed)
 
 
     def propogate_state(self, *args):
@@ -140,14 +140,14 @@ class UserInterface(tk.Toplevel):
             # self.filename_extension.config(state="disable")
         else:
             self.save_images_boole.normal()
-            self.check_button_changed()
+            self.check_save_images_button_changed()
 
 
     def create_save_location(self):
         location_frame = tk.LabelFrame(self.root, text="Output data location", height=15, padx=30, pady=10)
         location_frame.config(background=BACKGROUND_COLOR)
         location_frame.grid(row=4, columnspan=3, rowspan=1, sticky="w", padx=15, pady=10)
-        
+
         self.directory = DirectoryEntryStyle(self.root, location_frame, "Location:", rw=0, entry_width=50)
 
         self.filename_string = TextEntryStyle(self, location_frame, "Filename:", rw=1, width_specify=20, stckyE="ew")
@@ -156,7 +156,20 @@ class UserInterface(tk.Toplevel):
         location_frame.columnconfigure(1,weight=1)
 
 
-        
+    def create_volume_control(self):
+        volume_control_frame = tk.LabelFrame(self.root, text="Volume control", height=15, padx=30, pady=10)
+        volume_control_frame.config(background=BACKGROUND_COLOR)
+        volume_control_frame.grid(row=6, columnspan=4, rowspan=1, sticky="we",padx=15, pady=10)
+        volume_control_frame.grid_columnconfigure(2, weight=1)
+
+        self.constant_volume_bool = CheckButtonStyle(self, volume_control_frame, "Constant volume", rw=2, cl=0, pdx=10)
+        self.constant_volume_bool.int_variable.trace_variable('w',self.check_constant_volume_button_change)
+        self.syringe_inner_diameter = FloatEntryStyle(self, volume_control_frame, "Syringe inner diameter (mm):", rw=3, width_specify=10)
+        self.volume_change_threshold = FloatEntryStyle(self, volume_control_frame, "Volume change threshold ("u"\u00b5""L):", rw=4, width_specify=10)
+
+        self.test_syringe_pump = tk.Button(volume_control_frame, text="Test", highlightbackground=BACKGROUND_COLOR)
+        self.test_syringe_pump.grid(row=3, column=2, sticky="e")
+
 
     # def create_save_box(self):
     #     self.save_info_frame = tk.LabelFrame(self.root, text="Save images", height=15, padx=30, pady=10)
@@ -181,11 +194,10 @@ class UserInterface(tk.Toplevel):
     #     self.save_info_frame.columnconfigure(1, weight=1)
     #     # self.save_info_frame.columnconfigure(4, weight=1)
 
-    #     self.save_images_boole.int_variable.trace_variable('w',self.check_button_changed)
+    #     self.save_images_boole.int_variable.trace_variable('w',self.check_save_images_button_changed)
 
 
-
-    def check_button_changed(self, *args):
+    def check_save_images_button_changed(self, *args):
         if self.save_images_boole.get_value():
             self.create_new_dir_boole.normal()
             # self.filename_string.normal()
@@ -197,7 +209,16 @@ class UserInterface(tk.Toplevel):
             # self.directory.disable()
             # self.filename_extension.config(state="disable")
 
-        
+    def check_constant_volume_button_change(self, *args):
+        if self.constant_volume_bool.get_value():
+            self.syringe_inner_diameter.normal()
+            self.volume_change_threshold.normal()
+            self.test_syringe_pump.config(state="normal")
+        else:
+            self.syringe_inner_diameter.disable()
+            self.volume_change_threshold.disable()
+            self.test_syringe_pump.config(state="disabled")
+
 
     # def update_directory(self):
     #     directory = os.path.dirname(os.path.realpath(__file__))
@@ -239,7 +260,7 @@ class UserInterface(tk.Toplevel):
         # save_images_quit.grid(row=0, column=3, sticky="we")#padx=15, pady=10, sticky=W+E)
         save_images_quit.grid(row=0, column=1, sticky="we")#padx=15, pady=10, sticky=W+E)
         save_images_run.grid(row=0, column=3, sticky="we")#padx=15, pady=10, sticky=W+E)
-    
+
 
     def create_homepage_url(self):
         homepage_frame = tk.Frame(self.root)
@@ -264,7 +285,7 @@ class UserInterface(tk.Toplevel):
 
     def remove_underline_link(self, event):
         self.label_link.config(text="opencolloids.com", font=self.link_font, fg="blue")# underline = False)
-    
+
 
     def run(self, user_input_data):
         self.update_user_settings(user_input_data)
@@ -292,7 +313,7 @@ class UserInterface(tk.Toplevel):
         #     new_directory = os.path.join(user_input_data.directory_string, self.filename_string.get_value())
         #     os.makedirs(new_directory)
         #     user_input_data.directory_string = new_directory
-        
+
         # if user doesnt select files - abort
         if user_input_data.number_of_frames == 0:
             sys.exit()
@@ -312,6 +333,7 @@ class UserInterface(tk.Toplevel):
             writer = csv.reader(open(PATH_TO_FILE, 'r'))
             for row in writer:
                 data.append(row)
+            print(data)
             self.density_inner.set_value(data[0][1])
             self.density_outer.set_value(data[1][1])
             self.needle_diameter.set_value(data[2][1])
@@ -324,7 +346,7 @@ class UserInterface(tk.Toplevel):
                 self.image_source.set_value(given_image_source) # set image source
             else:
                 self.directory.set_value("")
-            
+
             self.number_frames.set_value(data[7][1])
             self.wait_time.set_value(data[8][1])
             self.save_images_boole.set_value(data[9][1]) # do this after others
@@ -332,10 +354,13 @@ class UserInterface(tk.Toplevel):
 
             self.filename_string.set_value(data[11][1])
 
-            
+
             given_dir = data[12][1]
 
             self.threshold_val.set_value(data[13][1])
+            self.constant_volume_bool.set_value(data[14][1])
+            self.syringe_inner_diameter.set_value(data[15][1])
+            self.volume_change_threshold.set_value(data[16][1])
 
             if os.path.isdir(given_dir):
                 self.directory.set_value(given_dir) # set given directory
@@ -357,13 +382,14 @@ class UserInterface(tk.Toplevel):
         user_input_data.wait_time = self.wait_time.get_value()
         user_input_data.save_images_boole = self.save_images_boole.get_value()
         user_input_data.create_folder_boole = self.create_new_dir_boole.get_value()
+        user_input_data.constant_volume_bool = self.constant_volume_bool.get_value()
+        user_input_data.syringe_inner_diameter = self.syringe_inner_diameter.get_value()
+        user_input_data.volume_change_threshold = self.volume_change_threshold.get_value()
         temp_filename = self.filename_string.get_value()
         if temp_filename == '':
             temp_filename = "Extracted_data"
         user_input_data.filename = temp_filename + IMAGE_EXTENSION
         user_input_data.directory_string = self.directory.get_value()
-
-
 
 
     def export_parameters(self):
@@ -381,12 +407,14 @@ class UserInterface(tk.Toplevel):
             ('Create new data folder',self.create_new_dir_boole.get_value()),
             ('Filename',self.filename_string.get_value()),
             ('Directory',self.directory.get_value()),
-            ('Threshold value', self.threshold_val.get_value())
+            ('Threshold value', self.threshold_val.get_value()),
+            ('Constant volume', self.constant_volume_bool.get_value()),
+            ('Syringe inner diameter', self.syringe_inner_diameter.get_value()),
+            ('Volume change threshold', self.volume_change_threshold.get_value())
         ])
         writer = csv.writer(open(PATH_TO_FILE, 'w'))
         for row in parameter_vector:
             writer.writerow(row)
-
 
 
     # def validate_float(self, value_if_allowed):
@@ -470,6 +498,7 @@ class IntegerEntryStyle():
         self.entry.config(state="normal")
         self.label.config(state="normal")
 
+
 class FloatEntryStyle():
     def __init__(self, parent, frame, text_left, rw=0, label_width=None, width_specify=10):
         self.label = tk.Label(frame, text=text_left, background=BACKGROUND_COLOR, width=label_width)
@@ -495,6 +524,7 @@ class FloatEntryStyle():
         self.entry.config(state="normal")
         self.label.config(state="normal")
 
+
 class TextEntryStyle():
     def __init__(self, parent, frame, text_left, rw=0, width_specify=10, stckyL="w", stckyE="w"):
         self.label = tk.Label(frame, text=text_left, background=BACKGROUND_COLOR)
@@ -502,7 +532,7 @@ class TextEntryStyle():
         self.text_variable = tk.StringVar()
         self.entry = tk.Entry(frame, highlightbackground=BACKGROUND_COLOR, textvariable=self.text_variable)
         self.entry.config(width=width_specify)
-        self.entry.grid(row=rw, column=1, sticky=stckyE)        
+        self.entry.grid(row=rw, column=1, sticky=stckyE)
 
     def get_value(self):
         # if self.text_variable.get() == '':
@@ -580,8 +610,6 @@ class DirectoryEntryStyle():
     #     return string
 
 
-
-
 class FloatComboboxStyle():
     def __init__(self, parent, frame, text_left, options_list, rw=0, width_specify=10, label_width=None):
         self.label = tk.Label(frame, text=text_left, background=BACKGROUND_COLOR, width=label_width)
@@ -609,13 +637,12 @@ class FloatComboboxStyle():
         self.label.config(state="normal")
 
 
-
 class CheckButtonStyle():
     def __init__(self, parent, frame, text_left, rw=0, cl=0, width_specify=10, pdx=0, pdy=2, stcky="w"): #, pd=5
         self._save_previous_variable = 0
         self.int_variable = tk.IntVar()
-        self.check_button = tk.Checkbutton(frame, text=text_left, background=BACKGROUND_COLOR, variable=self.int_variable)        
-        self.check_button.grid(row=rw, column=cl, sticky=stcky, pady=pdy, padx=pdx)#"CENTER") # sticky="w" padx=pd, 
+        self.check_button = tk.Checkbutton(frame, text=text_left, background=BACKGROUND_COLOR, variable=self.int_variable)
+        self.check_button.grid(row=rw, column=cl, sticky=stcky, pady=pdy, padx=pdx)#"CENTER") # sticky="w" padx=pd,
 
     def get_value(self):
         return self.int_variable.get()
@@ -679,12 +706,3 @@ class LabelFrameStyle():
 if __name__ == '__main__':
     UserInterface()
     # ui.app()
-
-
-
-
-
-
-
-
-

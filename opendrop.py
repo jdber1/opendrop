@@ -66,7 +66,7 @@ def opendrop(drop_type, auto_test):
     fitted_drop_data = DropData()
 
     tolerances = Tolerances(
-        DELTA_TOL, 
+        DELTA_TOL,
         GRADIENT_TOL,
         MAXIMUM_FITTING_STEPS,
         OBJECTIVE_TOL,
@@ -76,6 +76,7 @@ def opendrop(drop_type, auto_test):
         NEEDLE_STEPS)
 
     user_inputs = ExperimentalSetup()
+    user_inputs.drop_type = drop_type
 
     if auto_test != None:
 
@@ -197,27 +198,23 @@ def cheeky_pause():
     #root = Tkinter.Tk()
     #    B = Tkinter.Button(top, text="Exit",command = cv2.destroyAllWindows())
     #    B = Tkinter.Button(root, text="Exit",command = root.destroy())
-    #    
+    #
     #    B.pack()
     #    root.mainloop()
-    
+
     root = Tkinter.Tk()
     frame = Tkinter.Frame(root)
     frame.pack()
-    
+
     button = Tkinter.Button(frame)
     button['text'] ="Good-bye."
     button['command'] = root.destroy()#close_window(root)
     button.pack()
-    
+
     root.mainloop()
 
 def quit_(root):
     root.quit()
 
 #def close_window(root):
-#    root.destroy()  
-
-
-
-
+#    root.destroy()

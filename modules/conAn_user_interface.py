@@ -134,7 +134,7 @@ class UserInterface(tk.Toplevel):
         self.save_images_boole = CheckButtonStyle(self, image_acquisition_frame, "Save image", rw=3, cl=3)
         self.create_new_dir_boole = CheckButtonStyle(self, image_acquisition_frame, "Create new directory", rw=4,
                                                      cl=3)  # , pdx=50)
-        self.save_images_boole.int_variable.trace_variable('w', self.check_button_changed)
+        self.save_images_boole.int_variable.trace_variable('w', self.check_save_images_button_changed)
 
     def propogate_state(self, *args):
         if self.image_source.get_value() == "Local images":
@@ -145,7 +145,7 @@ class UserInterface(tk.Toplevel):
             # self.filename_extension.config(state="disable")
         else:
             self.save_images_boole.normal()
-            self.check_button_changed()
+            self.check_save_images_button_changed()
 
     def create_save_location(self):
         location_frame = tk.LabelFrame(self.root, text="Output data location", height=15, padx=30, pady=10)
@@ -183,11 +183,11 @@ class UserInterface(tk.Toplevel):
     #     self.save_info_frame.columnconfigure(1, weight=1)
     #     # self.save_info_frame.columnconfigure(4, weight=1)
 
-    #     self.save_images_boole.int_variable.trace_variable('w',self.check_button_changed)
+    #     self.save_images_boole.int_variable.trace_variable('w',self.check_save_images_button_changed)
 
 
 
-    def check_button_changed(self, *args):
+    def check_save_images_button_changed(self, *args):
         if self.save_images_boole.get_value():
             self.create_new_dir_boole.normal()
             # self.filename_string.normal()
