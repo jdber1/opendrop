@@ -198,10 +198,13 @@ class ObserverPreviewViewer(Gtk.VBox):
         zoom_btn_container.pack_start(zoom_btn_lbl, expand=False, fill=False, padding=0)
 
         # zoom_btn
-        zoom_btn = Gtk.Button(label='Fill')  # type: Gtk.Button
-        zoom_btn.connect('clicked', self.handle_zoom_btn_clicked)
+        self.zoom_btn = Gtk.Button()  # type: Gtk.Button
+        self.zoom_btn.connect('clicked', self.handle_zoom_btn_clicked)
 
-        zoom_btn_container.pack_start(zoom_btn, expand=False, fill=False, padding=0)
+        # Invoke the setter so it updates zoom_btn's label
+        self.zoom_fill = self.zoom_fill
+
+        zoom_btn_container.pack_start(self.zoom_btn, expand=False, fill=False, padding=0)
 
         # extern_controls_area
         extern_controls_area = Gtk.HBox(spacing=5)  # type: Gtk.HBox
@@ -220,6 +223,8 @@ class ObserverPreviewViewer(Gtk.VBox):
     @zoom_fill.setter
     def zoom_fill(self, value: bool) -> None:
         self._zoom_fill = value
+
+        self.zoom_btn.props.label = ('Fill', 'Fit')[value]
 
         self.redraw_preview()
 
@@ -280,8 +285,6 @@ class ObserverPreviewViewer(Gtk.VBox):
 
     def handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
         self.zoom_fill ^= True
-
-        widget.props.label = ('Fill', 'Fit')[self.zoom_fill]
 
     @property
     def preview_image_draw_size(self) -> Tuple[int, int]:
