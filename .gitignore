@@ -1,3 +1,4 @@
 *.pyc
 /*.csv
 /modules/opendrop_parameters.csv
+USBTemp.png
