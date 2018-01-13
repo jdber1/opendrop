@@ -146,7 +146,7 @@ class ObserverPreviewViewer(Gtk.VBox):
 
         # preview_drawing_area
         preview_drawing_area = Gtk.DrawingArea()  # type: Gtk.DrawingArea
-        preview_drawing_area.connect('draw', self.handle_preview_drawing_area_draw)
+        preview_drawing_area.connect('draw', self._handle_preview_drawing_area_draw)
 
         preview_drawing_area.add_events(
             Gdk.EventMask.POINTER_MOTION_MASK
@@ -199,7 +199,7 @@ class ObserverPreviewViewer(Gtk.VBox):
 
         # zoom_btn
         self.zoom_btn = Gtk.Button()  # type: Gtk.Button
-        self.zoom_btn.connect('clicked', self.handle_zoom_btn_clicked)
+        self.zoom_btn.connect('clicked', self._handle_zoom_btn_clicked)
 
         # Invoke the setter so it updates zoom_btn's label
         self.zoom_fill = self.zoom_fill
@@ -226,41 +226,41 @@ class ObserverPreviewViewer(Gtk.VBox):
 
         self.zoom_btn.props.label = ('Fill', 'Fit')[value]
 
-        self.redraw_preview()
+        self._redraw_preview()
 
     def set_preview(self, preview: ObserverPreview) -> None:
         if self.preview:
-            self.preview.disconnect('on_update', self.handle_preview_on_update)
+            self.preview.disconnect('on_update', self._handle_preview_on_update)
 
         if preview is not None:
-            preview.connect('on_update', self.handle_preview_on_update)
+            preview.connect('on_update', self._handle_preview_on_update)
 
         self.preview = preview
         self.preview_image = None
 
-        self.load_controller()
+        self._load_controller()
 
-        self.redraw_preview()
+        self._redraw_preview()
 
-    def load_controller(self) -> None:
+    def _load_controller(self) -> None:
         self.extern_controls_area.foreach(lambda w: w.destroy())
 
-        ObserverPreviewController.control(self.create_context())
+        ObserverPreviewController.control(self._create_context())
 
         self.extern_controls_area.show_all()
 
-    def create_context(self) -> ObserverPreviewControllerContext:
+    def _create_context(self) -> ObserverPreviewControllerContext:
         return ObserverPreviewControllerContext(self.preview, self.extern_controls_area)
 
-    def handle_preview_on_update(self, image: np.ndarray) -> None:
+    def _handle_preview_on_update(self, image: np.ndarray) -> None:
         self.preview_image = image
 
-        self.redraw_preview()
+        self._redraw_preview()
 
-    def redraw_preview(self) -> None:
+    def _redraw_preview(self) -> None:
         self.preview_drawing_area.queue_draw()
 
-    def handle_preview_drawing_area_draw(self, widget: Gtk.Widget, cr: cairo.Context) -> None:
+    def _handle_preview_drawing_area_draw(self, widget: Gtk.Widget, cr: cairo.Context) -> None:
         # Fill drawing area background black
         cr.set_source_rgb(0, 0, 0)
         cr.paint()
@@ -272,8 +272,8 @@ class ObserverPreviewViewer(Gtk.VBox):
             cr.show_text('No preview')
             return
 
-        im_draw_size = self.preview_image_draw_size  # type: Tuple[int, int]
-        im_draw_offset = self.preview_image_draw_offset  # type: Tuple[int, int]
+        im_draw_size = self._preview_image_draw_size  # type: Tuple[int, int]
+        im_draw_offset = self._preview_image_draw_offset  # type: Tuple[int, int]
 
         im = cv2.resize(self.preview_image, dsize=im_draw_size)  # type: np.ndarray
 
@@ -283,15 +283,18 @@ class ObserverPreviewViewer(Gtk.VBox):
         Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *im_draw_offset)
         cr.paint()
 
-    def handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
+    def _handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
         self.zoom_fill ^= True
 
     @property
-    def preview_image_draw_size(self) -> Tuple[int, int]:
+    def _preview_image_draw_size(self) -> Tuple[int, int]:
         da = self.preview_drawing_area  # type: Gtk.DrawingArea
 
         da_size = (da.get_allocated_width(), da.get_allocated_height())  # type: Tuple[int, int]
         da_aspect = da_size[0] / da_size[1]  # type: float
+
+        if self.preview_image is None:
+            return da_size
 
         image_size = self.preview_image.shape[1], self.preview_image.shape[0]  # type: Tuple[int, int]
         image_aspect = image_size[0] / image_size[1]  # type: float
@@ -304,11 +307,14 @@ class ObserverPreviewViewer(Gtk.VBox):
         return round(image_size[0] * scale_factor), round(image_size[1] * scale_factor)
 
     @property
-    def preview_image_draw_offset(self) -> Tuple[int, int]:
+    def _preview_image_draw_offset(self) -> Tuple[int, int]:
+        if self.preview_image is None:
+            return 0, 0
+
         da = self.preview_drawing_area  # type: Gtk.DrawingArea
 
         da_size = np.array((da.get_allocated_width(), da.get_allocated_height()))  # type: np.ndarray
-        image_draw_size = np.array(self.preview_image_draw_size)  # type: np.ndarray
+        image_draw_size = np.array(self._preview_image_draw_size)  # type: np.ndarray
 
         offset = tuple(da_size/2 - image_draw_size/2)
 
