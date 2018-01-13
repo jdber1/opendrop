@@ -117,7 +117,7 @@ class Application:
 
     def __init__(self) -> None:
         self._presenters = PresenterRegistry(
-            get_classes_in_modules(recursive_load(self.PRESENTERS_PKG), cls=Presenter)
+            filter(lambda p: not p.IGNORE, get_classes_in_modules(recursive_load(self.PRESENTERS_PKG), cls=Presenter))
         )  # type: PresenterRegistry
 
         self._vp_registry = VPRegistry()  # type: VPRegistry

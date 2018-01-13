@@ -26,6 +26,8 @@ class PresenterMeta(type(Generic)):
 
 
 class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
+    IGNORE = False  # type: bool
+
     _args = (Model, IView)  # type: Tuple[Optional[Type[Model]], Type[IView]]
 
     def __init__(self, model: Optional[T], view: S) -> None:
