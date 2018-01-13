@@ -153,13 +153,9 @@ class ObserverPreviewViewer(Gtk.VBox):
             | Gdk.EventMask.BUTTON_PRESS_MASK
         )
 
-        preview_drawing_area.connect('motion-notify-event',
-                                     lambda widget, event: self.emit('viewer-motion-notify-event', event)
-                                     )
+        preview_drawing_area.connect('motion-notify-event', self._handle_da_motion_notify_event)
 
-        preview_drawing_area.connect('button-press-event',
-                                     lambda widget, event: self.emit('viewer-button-press-event', event)
-                                     )
+        preview_drawing_area.connect('button-press-event', self._handle_da_button_press_event)
 
         self.pack_start(preview_drawing_area, expand=True, fill=True, padding=0)
 
@@ -285,6 +281,26 @@ class ObserverPreviewViewer(Gtk.VBox):
 
     def _handle_zoom_btn_clicked(self, widget: Gtk.Widget) -> None:
         self.zoom_fill ^= True
+
+    def _handle_da_motion_notify_event(self, widget: Gtk.Widget, event: Gdk.EventMotion):
+        event.x, event.y = self.image_rel_pos_from_da_abs_pos(event.x, event.y)
+
+        self.emit('viewer-motion-notify-event', event)
+
+    def _handle_da_button_press_event(self, widget: Gtk.Widget, event: Gdk.EventButton):
+        event.x, event.y = self.image_rel_pos_from_da_abs_pos(event.x, event.y)
+
+        self.emit('viewer-button-press-event', event)
+
+    def _image_rel_pos_from_da_abs_pos(self, x: float, y: float) -> Tuple[float, float]:
+        size = self._preview_image_draw_size  # type: Tuple[int, int]
+        offset = self._preview_image_draw_offset  # type: Tuple[int, int]
+
+        pos = (x - offset[0], y - offset[1])  # type: Tuple[float, float]
+
+        pos = (pos[0]/size[0], pos[1]/size[1])
+
+        return pos
 
     @property
     def _preview_image_draw_size(self) -> Tuple[int, int]:
