@@ -6,16 +6,11 @@ from opendrop.mvp.View import View
 
 class GtkWidgetView(GtkView):
 
-    """Implementation of View that uses the Python GTK+ 3 library, managed by `GtkApplication`. Each view represents a
-    window.
+    """Each view represents a Gtk widget.
 
     Attributes:
-        TITLE   The title of the window, if None, then defaults to class name of view.
-        gtk_app The Gtk.Application object.
-        window  The view's Gtk.ApplicationWindow object, widgets should be added to this.
+        container  The container widget that should store all child widgets.
     """
-
-    TITLE = None  # type: str
 
     def __init__(self, gtk_app: Gtk.Application) -> None:
         super().__init__(gtk_app)
