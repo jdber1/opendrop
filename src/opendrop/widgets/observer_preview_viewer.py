@@ -222,7 +222,7 @@ class ObserverPreviewViewer(Gtk.VBox):
 
         self.zoom_btn.props.label = ('Fill', 'Fit')[value]
 
-        self._redraw_preview()
+        self.redraw_preview()
 
     def set_preview(self, preview: ObserverPreview) -> None:
         if self.preview:
@@ -236,7 +236,7 @@ class ObserverPreviewViewer(Gtk.VBox):
 
         self._load_controller()
 
-        self._redraw_preview()
+        self.redraw_preview()
 
     def _load_controller(self) -> None:
         self.extern_controls_area.foreach(lambda w: w.destroy())
@@ -251,9 +251,9 @@ class ObserverPreviewViewer(Gtk.VBox):
     def _handle_preview_on_update(self, image: np.ndarray) -> None:
         self.preview_image = image
 
-        self._redraw_preview()
+        self.redraw_preview()
 
-    def _redraw_preview(self) -> None:
+    def redraw_preview(self) -> None:
         self.preview_drawing_area.queue_draw()
 
     def _handle_preview_drawing_area_draw(self, widget: Gtk.Widget, cr: cairo.Context) -> None:
