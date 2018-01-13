@@ -293,6 +293,9 @@ class ObserverPreviewViewer(Gtk.VBox):
         da_size = (da.get_allocated_width(), da.get_allocated_height())  # type: Tuple[int, int]
         da_aspect = da_size[0] / da_size[1]  # type: float
 
+        if self.preview_image is None:
+            return da_size
+
         image_size = self.preview_image.shape[1], self.preview_image.shape[0]  # type: Tuple[int, int]
         image_aspect = image_size[0] / image_size[1]  # type: float
 
@@ -305,6 +308,9 @@ class ObserverPreviewViewer(Gtk.VBox):
 
     @property
     def _preview_image_draw_offset(self) -> Tuple[int, int]:
+        if self.preview_image is None:
+            return 0, 0
+
         da = self.preview_drawing_area  # type: Gtk.DrawingArea
 
         da_size = np.array((da.get_allocated_width(), da.get_allocated_height()))  # type: np.ndarray
