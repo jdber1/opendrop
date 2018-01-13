@@ -1,13 +1,13 @@
 import inspect
-from typing import List, Type, Union
+from typing import List, Type, Union, Iterable
 
 from opendrop.mvp.Presenter import Presenter
 from opendrop.mvp.View import View
 
 
 class PresenterRegistry:
-    def __init__(self, presenters: List[Type[Presenter]]) -> None:
-        self._presenters = presenters  # type: List[Presenter]
+    def __init__(self, presenters: Iterable[Type[Presenter]]) -> None:
+        self._presenters = list(presenters)  # type: List[Presenter]
 
     def get_presenter_for_view(self, view: Union[View, Type[View]]):
         if not inspect.isclass(view):
