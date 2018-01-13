@@ -283,12 +283,12 @@ class ObserverPreviewViewer(Gtk.VBox):
         self.zoom_fill ^= True
 
     def _handle_da_motion_notify_event(self, widget: Gtk.Widget, event: Gdk.EventMotion):
-        event.x, event.y = self.image_rel_pos_from_da_abs_pos(event.x, event.y)
+        event.x, event.y = self._image_rel_pos_from_da_abs_pos(event.x, event.y)
 
         self.emit('viewer-motion-notify-event', event)
 
     def _handle_da_button_press_event(self, widget: Gtk.Widget, event: Gdk.EventButton):
-        event.x, event.y = self.image_rel_pos_from_da_abs_pos(event.x, event.y)
+        event.x, event.y = self._image_rel_pos_from_da_abs_pos(event.x, event.y)
 
         self.emit('viewer-button-press-event', event)
 
