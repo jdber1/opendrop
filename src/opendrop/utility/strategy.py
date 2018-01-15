@@ -83,8 +83,6 @@ class UnboundStrategy(Strategy):
         self._default = default  # type: Callable
         self._custom = None  # type: Optional[Callable]
 
-        self._bounded_strategies = {}
-
     def __get__(self, instance: Any, owner: type):
         if instance is None:
             # Convert to a 'class strategy'
@@ -92,15 +90,12 @@ class UnboundStrategy(Strategy):
 
             return self
 
-        if id(instance) not in self._bounded_strategies:
-            self._bounded_strategies[id(instance)] = InstanceStrategy(self, instance)
+        strategy_hidden_attr_name = '_strategy{}'.format(id(self))  # type: str
 
-            def callback(instance):
-                del self._bounded_strategies[id(instance)]
+        if not hasattr(instance, strategy_hidden_attr_name):
+            setattr(instance, strategy_hidden_attr_name, InstanceStrategy(self, instance))
 
-            weakref.ref(instance, callback)
-
-        return self._bounded_strategies[id(instance)]
+        return getattr(instance, strategy_hidden_attr_name)
 
     def _get_impl(self) -> Callable:
         return self._custom if self._custom is not None else self._default
