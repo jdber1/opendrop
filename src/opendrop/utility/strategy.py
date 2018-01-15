@@ -24,10 +24,10 @@ class Strategy:
         if not self.check_signature_compatible(f_decorated_sig):
             raise ValueError
 
-        self._set_impl(f_decorated)
+        self._use_impl(f_decorated)
 
     def clear(self) -> None:
-        self._set_impl(None)
+        self._use_impl(None)
 
     def _do_descriptor_protocol(self, f: Callable) -> Callable:
         if self._descriptor_args is not None and hasattr(f, '__get__'):
@@ -61,7 +61,7 @@ class Strategy:
     def _get_impl(self) -> Callable: pass
 
     @abstractmethod
-    def _set_impl(self, value: Optional[Callable]) -> None: pass
+    def _use_impl(self, value: Optional[Callable]) -> None: pass
 
 
 class UnboundStrategy:
@@ -126,7 +126,7 @@ class ClassStrategy(Strategy):
 
         return impl
 
-    def _set_impl(self, value: Optional[Callable]) -> None:
+    def _use_impl(self, value: Optional[Callable]) -> None:
         self._override = value
 
 
@@ -146,7 +146,7 @@ class InstanceStrategy(Strategy):
 
         return impl
 
-    def _set_impl(self, value: Optional[Callable]) -> None:
+    def _use_impl(self, value: Optional[Callable]) -> None:
         self._override = value
 
 
