@@ -50,7 +50,9 @@ def patch_instance(source: T, mixin: Type[U]) -> U:
 
     inherit = type(mixin), type(source_cls)
 
-    if issubclass(type(source_cls), type(mixin)):
+    if inherit[0] == inherit[1]:
+        inherit = (inherit[0],)
+    elif issubclass(type(source_cls), type(mixin)):
         inherit = reversed(inherit)
 
     class PatchedInstanceMeta(*inherit):

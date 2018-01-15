@@ -149,3 +149,16 @@ class TestPatchedInstance:
 
     def test_misc(self):
         print(self.a == self.a_patched)
+
+
+class ANoMeta:
+    pass
+
+
+class A2NoMeta:
+    pass
+
+
+def test_patch_with_same_metaclass():
+    a = ANoMeta()
+    a_patched = patch_instance(a, A2NoMeta)
