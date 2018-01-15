@@ -15,6 +15,7 @@ import webbrowser
 import sys
 import os
 import csv
+import serial.tools.list_ports as list_ports
 
 # from classes import ExperimentalSetup
 
@@ -167,8 +168,15 @@ class UserInterface(tk.Toplevel):
         self.syringe_inner_diameter = FloatEntryStyle(self, volume_control_frame, "Syringe inner diameter (mm):", rw=3, width_specify=10)
         self.volume_change_threshold = FloatEntryStyle(self, volume_control_frame, "Volume change threshold ("u"\u00b5""L):", rw=4, width_specify=10)
 
-        self.test_syringe_pump = tk.Button(volume_control_frame, text="Test", highlightbackground=BACKGROUND_COLOR)
-        self.test_syringe_pump.grid(row=3, column=2, sticky="e")
+        self.update_devices = tk.Button(volume_control_frame, text="Update devices", command=lambda:self.update_serial_devices(), highlightbackground=BACKGROUND_COLOR)
+        self.update_devices.grid(row=3, column=2, sticky="e")
+
+        self.test_syringe_pump = tk.Button(volume_control_frame, text="Test", command=lambda:self.syringe_pump_test(), highlightbackground=BACKGROUND_COLOR)
+        self.test_syringe_pump.grid(row=4, column=2, sticky="e")
+
+        # serial_devices
+        serial_device_list = self.fetch_serial_devices()
+        self.serial_device = OptionMenuStyle(self, volume_control_frame, "Serial device:", serial_device_list, rw=5, label_width=12)
 
 
     # def create_save_box(self):
@@ -201,7 +209,7 @@ class UserInterface(tk.Toplevel):
         if self.save_images_boole.get_value():
             self.create_new_dir_boole.normal()
             # self.filename_string.normal()
-            # self.directory.normal()
+            # self.directory.normal()""
             # self.filename_extension.config(state="normal")
         else:
             self.create_new_dir_boole.disable()
@@ -209,16 +217,28 @@ class UserInterface(tk.Toplevel):
             # self.directory.disable()
             # self.filename_extension.config(state="disable")
 
+
     def check_constant_volume_button_change(self, *args):
         if self.constant_volume_bool.get_value():
             self.syringe_inner_diameter.normal()
             self.volume_change_threshold.normal()
             self.test_syringe_pump.config(state="normal")
+            self.serial_device.normal()
         else:
             self.syringe_inner_diameter.disable()
             self.volume_change_threshold.disable()
             self.test_syringe_pump.config(state="disabled")
+            self.serial_device.disable()
 
+    def fetch_serial_devices(self):
+        return list_ports.comports()
+
+    def update_serial_devices(self):
+        print("update serial devices")
+
+
+    def syringe_pump_test(self):
+        print("syringe pump test")
 
     # def update_directory(self):
     #     directory = os.path.dirname(os.path.realpath(__file__))
@@ -333,7 +353,7 @@ class UserInterface(tk.Toplevel):
             writer = csv.reader(open(PATH_TO_FILE, 'r'))
             for row in writer:
                 data.append(row)
-            print(data)
+
             self.density_inner.set_value(data[0][1])
             self.density_outer.set_value(data[1][1])
             self.needle_diameter.set_value(data[2][1])
@@ -351,9 +371,7 @@ class UserInterface(tk.Toplevel):
             self.wait_time.set_value(data[8][1])
             self.save_images_boole.set_value(data[9][1]) # do this after others
             self.create_new_dir_boole.set_value(data[10][1])
-
             self.filename_string.set_value(data[11][1])
-
 
             given_dir = data[12][1]
 
@@ -361,6 +379,7 @@ class UserInterface(tk.Toplevel):
             self.constant_volume_bool.set_value(data[14][1])
             self.syringe_inner_diameter.set_value(data[15][1])
             self.volume_change_threshold.set_value(data[16][1])
+            self.serial_device.set_value(data[17][1])
 
             if os.path.isdir(given_dir):
                 self.directory.set_value(given_dir) # set given directory
@@ -385,6 +404,7 @@ class UserInterface(tk.Toplevel):
         user_input_data.constant_volume_bool = self.constant_volume_bool.get_value()
         user_input_data.syringe_inner_diameter = self.syringe_inner_diameter.get_value()
         user_input_data.volume_change_threshold = self.volume_change_threshold.get_value()
+        user_input_data.serial_device = self.serial_device.get_value()
         temp_filename = self.filename_string.get_value()
         if temp_filename == '':
             temp_filename = "Extracted_data"
@@ -410,7 +430,8 @@ class UserInterface(tk.Toplevel):
             ('Threshold value', self.threshold_val.get_value()),
             ('Constant volume', self.constant_volume_bool.get_value()),
             ('Syringe inner diameter', self.syringe_inner_diameter.get_value()),
-            ('Volume change threshold', self.volume_change_threshold.get_value())
+            ('Volume change threshold', self.volume_change_threshold.get_value()),
+            ('Serial device', self.serial_device.get_value())
         ])
         writer = csv.writer(open(PATH_TO_FILE, 'w'))
         for row in parameter_vector:
@@ -669,6 +690,7 @@ class CheckButtonStyle():
 class OptionMenuStyle():
     def __init__(self, parent, frame, text_left, options_list, rw=0, width_specify=15, label_width=None):
         self.entry_list = options_list
+        self.frame = frame
         self.label = tk.Label(frame, text=text_left, background=BACKGROUND_COLOR, width=label_width, anchor="w")
         self.label.grid(row=rw, column=0, sticky="w")
         self.text_variable = tk.StringVar()
@@ -684,6 +706,10 @@ class OptionMenuStyle():
             self.text_variable.set(value)
         else:
             self.text_variable.set(entry_list[0])
+
+    def update_entry_list(self, new_entry_list):
+        self.entry_list = new_entry_list
+        self.optionmenu = apply(tk.OptionMenu, (self.frame, self.text_variable) + tuple(self.entry_list))
 
     def disable(self):
         self.optionmenu.config(state="disabled")

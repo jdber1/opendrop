@@ -12,6 +12,7 @@ Create new data folder,0
 Filename,test
 Directory,/home/askoufis/code/opendrop
 Threshold value,40.0
-Constant volume,0
+Constant volume,1
 Syringe inner diameter,10.0
 Volume change threshold,0.1
+Serial device,3

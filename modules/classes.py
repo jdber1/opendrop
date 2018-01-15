@@ -58,6 +58,7 @@ class ExperimentalSetup(object):
         self.constant_volume_bool = None
         self.syringe_inner_diameter = None
         self.volume_change_threshold = None
+        self.serial_device = None
 
 class ExperimentalDrop(object):
     def __init__(self):
