@@ -4,6 +4,8 @@ import weakref
 from abc import abstractmethod
 from typing import Callable, Optional, Any, Tuple, List
 
+STRATEGY_HIDDEN_ATTR_NAME_FORMAT = '_strategy{}'  # type: str
+
 
 class Strategy:
     def __init__(self, decorator: Callable[[Callable], Callable], descriptor_args: Optional[Tuple[Any, Any]] = None)\
@@ -69,54 +71,80 @@ class Strategy:
     def _set_impl(self, value: Optional[Callable]) -> None: pass
 
 
-class UnboundStrategy(Strategy):
+class UnboundStrategy:
     def __init__(self, default: Callable):
-        decorator = None
+        self._decorator = None
 
         if isinstance(default, classmethod):
-            decorator = classmethod
+            self._decorator = classmethod
         elif isinstance(default, staticmethod):
-            decorator = staticmethod
-
-        super().__init__(decorator)
+            self._decorator = staticmethod
 
         self._default = default  # type: Callable
-        self._custom = None  # type: Optional[Callable]
 
     def __get__(self, instance: Any, owner: type):
         if instance is None:
-            # Convert to a 'class strategy'
-            self._descriptor_args = (None, owner)
+            if self._hidden_attr_name not in owner.__dict__:
+                setattr(owner, self._hidden_attr_name, ClassStrategy(self, owner, self._decorator))
 
-            return self
+            return getattr(owner, self._hidden_attr_name)
+        else:
+            if self._hidden_attr_name not in instance.__dict__:
+                setattr(instance, self._hidden_attr_name, InstanceStrategy(self.__get__(None, owner), instance, self._decorator))
 
-        strategy_hidden_attr_name = '_strategy{}'.format(id(self))  # type: str
+            return getattr(instance, self._hidden_attr_name)
 
-        if not hasattr(instance, strategy_hidden_attr_name):
-            setattr(instance, strategy_hidden_attr_name, InstanceStrategy(self, instance))
+    @property
+    def _hidden_attr_name(self):
+        return STRATEGY_HIDDEN_ATTR_NAME_FORMAT.format(id(self))
 
-        return getattr(instance, strategy_hidden_attr_name)
+
+class ClassStrategy(Strategy):
+    def __init__(self, unbound: UnboundStrategy, owner: type, decorator: Optional[Callable]) -> None:
+        super().__init__(decorator, (None, owner))
+
+        self._unbound = unbound  # type: UnboundStrategy
+
+        self._owner = owner  # type: type
+
+        self._override = None  # type: Optional[Callable]
 
     def _get_impl(self) -> Callable:
-        return self._custom if self._custom is not None else self._default
+        super_owner = super(self._owner, self._owner)
+
+        super_strategy = getattr(super_owner, self._unbound._hidden_attr_name, None)  # type: Optional[Strategy]
+
+        impl = self._unbound._default  # type: Callable
+
+        if self._override is not None:
+            impl = self._override
+        elif super_strategy is not None:
+            impl = super_strategy._get_impl()
+
+        return impl
 
     def _set_impl(self, value: Optional[Callable]) -> None:
-        self._custom = value
+        self._override = value
 
 
 class InstanceStrategy(Strategy):
-    def __init__(self, parent: Strategy, instance: Any):
-        super().__init__(parent._decorator, (instance, type(instance)))
+    def __init__(self, cls_bound: ClassStrategy, instance: Any, decorator: Optional[Callable]) -> None:
+        super().__init__(decorator, (instance, type(instance)))
 
-        self._parent = parent  # type: UnboundStrategy
+        self._cls_bound = cls_bound  # type: UnboundStrategy
 
-        self._custom = None  # type: Optional[Callable]
+        self._override = None  # type: Optional[Callable]
 
     def _get_impl(self) -> Callable:
-        return self._custom if self._custom is not None else self._parent._get_impl()
+        if self._override is not None:
+            impl = self._override  # type: Callable
+        else:
+            impl = self._cls_bound._get_impl()  # type: Callable
+
+        return impl
 
     def _set_impl(self, value: Optional[Callable]) -> None:
-        self._custom = value
+        self._override = value
 
 
 def strategy(f: Callable) -> Strategy:
