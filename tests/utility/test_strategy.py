@@ -5,6 +5,7 @@ from opendrop.utility.strategy import strategy
 
 def test_stub(): ...
 
+
 @pytest.mark.skip
 def test_positional_only_impl():
     @strategy
@@ -13,7 +14,6 @@ def test_positional_only_impl():
 
     with raises(ValueError):
         my_hook.use(pow)
-
 
 @pytest.mark.skip
 class TestStrategy:
@@ -51,6 +51,7 @@ class TestStrategy:
 
         assert self.my_hook(1, 2, 3) == 0
 
+    @pytest.mark.skip
     def test_use_wrong_signature(self):
         def my_wrong_impl(a, b, c, d): pass
 
@@ -62,13 +63,13 @@ class TestStrategy:
         with raises(ValueError):
             self.my_hook.use(my_wrong_impl2)
 
+    @pytest.mark.skip
     def test_use_compatible(self):
         self.my_hook.use(self.my_impl2)
 
         assert self.my_hook(1, 2, 3) == self.my_impl2(1, 2, 3)
 
 
-@pytest.mark.skip
 class TestBoundStrategy:
     def setup(self):
         class A:
@@ -95,7 +96,12 @@ class TestBoundStrategy:
         def my_impl3(a, b, c):
             return None, 3 * (a+b+c)
 
+        class B(A):
+            pass
+
         self.A = A
+        self.B = B
+
         self.my_impl1 = my_impl1
         self.my_impl2 = my_impl2
         self.my_impl3 = my_impl3
@@ -147,6 +153,13 @@ class TestBoundStrategy:
 
         assert A.my_hook3(1, 2, 3) == a.my_hook3(1, 2, 3) == self.my_impl3(1, 2, 3)
 
+    @pytest.mark.skip
     def test_use_wrong_signature(self):
         with raises(ValueError):
             self.A.my_hook1.use(self.my_impl3)
+
+    def test_inherited_classmethod_strategy(self):
+        f_a = self.A.my_hook2
+        f_b = self.B.my_hook2
+
+        assert f_a(0, 0, 0)[0] == self.A and f_b(0, 0, 0)[0] == self.B
