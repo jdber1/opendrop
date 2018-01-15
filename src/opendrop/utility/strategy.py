@@ -1,35 +1,30 @@
 import inspect
-import types
-import weakref
 from abc import abstractmethod
-from typing import Callable, Optional, Any, Tuple, List
+from typing import Callable, Optional, Any, Tuple
 
 STRATEGY_HIDDEN_ATTR_NAME_FORMAT = '_strategy{}'  # type: str
 
 
 class Strategy:
-    def __init__(self, decorator: Callable[[Callable], Callable], descriptor_args: Optional[Tuple[Any, Any]] = None)\
-            -> None:
-        self._decorator = decorator
-        self._descriptor_args = descriptor_args
+    def __init__(self, descriptor_args: Optional[Tuple[Any, Any]],
+                 extra_decorator: Callable[[Callable], Callable] = None) -> None:
+        self._extra_decorator = extra_decorator  # type: Callable
+        self._descriptor_args = descriptor_args  # type: Tuple[Any, Any]
 
     def __call__(self, *args, **kwargs) -> Any:
         f = self._do_descriptor_protocol(self._get_impl())  # type: Callable
+
         return f(*args, **kwargs)
 
     def use(self, f: Callable) -> None:
-        # Save a copy for error reporting
-        original_f = f  # type: Callable
+        f_decorated = self._extra_decorator(f) if self._extra_decorator is not None else f  # type: Callable
 
-        if self._decorator is not None:
-            f = self._decorator(f)
+        f_decorated_sig = inspect.signature(self._do_descriptor_protocol(f_decorated))  # type: inspect.Signature
 
-        f_sig = inspect.signature(self._do_descriptor_protocol(f))  # type: inspect.Signature
-
-        if not self.check_signature_compatible(f_sig):
+        if not self.check_signature_compatible(f_decorated_sig):
             raise ValueError
 
-        self._set_impl(f)
+        self._set_impl(f_decorated)
 
     def clear(self) -> None:
         self._set_impl(None)
@@ -62,8 +57,6 @@ class Strategy:
 
         return True
 
-
-
     @abstractmethod
     def _get_impl(self) -> Callable: pass
 
@@ -73,24 +66,34 @@ class Strategy:
 
 class UnboundStrategy:
     def __init__(self, default: Callable):
-        self._decorator = None
+        self._extra_decorator = None  # type: Callable
 
         if isinstance(default, classmethod):
-            self._decorator = classmethod
+            self._extra_decorator = classmethod
         elif isinstance(default, staticmethod):
-            self._decorator = staticmethod
+            self._extra_decorator = staticmethod
 
         self._default = default  # type: Callable
 
     def __get__(self, instance: Any, owner: type):
         if instance is None:
             if self._hidden_attr_name not in owner.__dict__:
-                setattr(owner, self._hidden_attr_name, ClassStrategy(self, owner, self._decorator))
+                setattr(owner, self._hidden_attr_name,
+                        ClassStrategy(
+                            unbound=self,
+                            owner=owner,
+                            extra_decorator=self._extra_decorator
+                        ))
 
             return getattr(owner, self._hidden_attr_name)
         else:
             if self._hidden_attr_name not in instance.__dict__:
-                setattr(instance, self._hidden_attr_name, InstanceStrategy(self.__get__(None, owner), instance, self._decorator))
+                setattr(instance, self._hidden_attr_name,
+                        InstanceStrategy(
+                            cls_bound=self.__get__(None, owner),
+                            instance=instance,
+                            extra_decorator=self._extra_decorator
+                        ))
 
             return getattr(instance, self._hidden_attr_name)
 
@@ -100,8 +103,8 @@ class UnboundStrategy:
 
 
 class ClassStrategy(Strategy):
-    def __init__(self, unbound: UnboundStrategy, owner: type, decorator: Optional[Callable]) -> None:
-        super().__init__(decorator, (None, owner))
+    def __init__(self, unbound: UnboundStrategy, owner: type, extra_decorator: Optional[Callable]) -> None:
+        super().__init__((None, owner), extra_decorator)
 
         self._unbound = unbound  # type: UnboundStrategy
 
@@ -128,8 +131,8 @@ class ClassStrategy(Strategy):
 
 
 class InstanceStrategy(Strategy):
-    def __init__(self, cls_bound: ClassStrategy, instance: Any, decorator: Optional[Callable]) -> None:
-        super().__init__(decorator, (instance, type(instance)))
+    def __init__(self, cls_bound: ClassStrategy, instance: Any, extra_decorator: Optional[Callable]) -> None:
+        super().__init__((instance, type(instance)), extra_decorator)
 
         self._cls_bound = cls_bound  # type: UnboundStrategy
 
@@ -147,5 +150,5 @@ class InstanceStrategy(Strategy):
         self._override = value
 
 
-def strategy(f: Callable) -> Strategy:
+def strategy(f: Callable) -> UnboundStrategy:
     return UnboundStrategy(f)
