@@ -1,3 +1,134 @@
+"""
+How to use:
+
+The @strategy decorator wraps a method to be used as a strategy. The method wrapped becomes the default implementation
+of the strategy when none is chosen.
+
+>>> class MyClass:
+...    @strategy
+...    def my_method(self):
+...        return 0
+...
+>>> MyClass().my_method()
+0
+
+To choose a different implementation during runtime, call the `use()` method on the strategy:
+
+>>> def my_method_impl(self):
+...    return 1
+...
+>>> my_obj = MyClass()
+>>> my_obj.my_method()
+0
+>>> my_obj.my_method.use(my_method_impl)
+>>> my_obj.my_method()
+1
+
+To reset the implementation to the default, call `clear()`:
+
+>>> my_obj.my_method.clear()
+>>> my_obj.my_method()
+0
+
+Choosing an implementation is done independently for each instance:
+
+>>> my_obj1 = MyClass()
+>>> my_obj2 = MyClass()
+>>> my_obj1.my_method.use(my_method_impl)
+>>> my_obj1.my_method(), my_obj2.my_method()
+(1, 0)
+
+>>> my_obj.my_method()
+
+@strategy also works with @classmethod and @staticmethod.
+
+>>> class MyClass:
+...    @strategy
+...    def my_method(self):
+...        return 0
+...
+...     @strategy
+...     @classmethod
+...     def my_class_method(cls):
+...         return cls
+...
+...     @strategy
+...     @staticmethod
+...     def my_static_method(param):
+...         return param
+...
+>>> MyClass.my_class_method() == MyClass().my_class_method() == MyClass
+True
+>>> MyClass.my_static_method(15) == MyClass().my_static_method(15) == 15
+True
+
+When choosing an implementation for a class like so:
+
+>>> MyClass.my_method.use(my_method_impl)
+
+This will modify the default implementation of all instances (regardless if they were instantiated before or after
+`use()` was called), example:
+
+>>> def my_method_impl2(self):
+...     return 2
+...
+>>> MyClass.my_method.use(my_method_impl)
+>>> my_obj = MyClass()
+>>> my_obj.my_method()
+1
+>>> my_obj.my_method.clear(); my_obj.my_method()
+1
+>>> my_obj.my_method.use(my_method_impl2); my_obj.my_method()
+2
+>>> my_obj.my_method.clear(); my_obj.my_method()
+1
+
+Choosing an implementation for a class will also affect the default implementation for subclasses and instances of those
+subclasses:
+
+>>> class MyClass:
+...     @strategy
+...     def my_method(self=None):
+...         return 0
+...
+>>> class MySubclass(MyClass):
+...     pass
+...
+>>> MyClass.my_method.use(my_method_impl)
+>>> MyClass.my_method(), MySubclass.my_method(), MySubclass().my_method()
+(1, 1, 1)
+
+However, in the following example;
+
+>>> class MyClass:
+...     @strategy
+...     def my_method(self=None):
+...         return 0
+...
+>>> class MySubclass(MyClass):
+...     @strategy
+...     def my_method(self=None):
+...         return 10
+...
+>>> MyClass.my_method.use(my_method_impl)
+>>> MyClass.my_method(), MySubclass.my_method(), MySubclass().my_method()
+(1, 10, 10)
+
+The `my_method` strategy has been redefined in `MySubclass` and so overrides the original strategy in `MyClass`, thus
+`MyClass.my_method` and `MySubclass.my_method` no longer refer to the same strategy.
+
+In general, the implementation of a strategy chosen is done as follows:
+
+Check if instance has a custom implementation, else
+Check if class of instance has a custom implementation, else
+Check if superclasses have a custom implementation (following MRO), else
+Use the default implementation that was decorated with @strategy
+
+Information about what implementation has been chosen for each instance/class is stored as an attribute with the format
+_strategyXXXX, where XXXX is some numerical ID to avoid naming collision. As such, the instances and classes that use
+@strategy must have the ability to add new attributes.
+"""
+
 import inspect
 from abc import abstractmethod
 from typing import Callable, Optional, Any, Tuple
