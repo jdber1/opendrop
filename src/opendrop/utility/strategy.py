@@ -21,7 +21,7 @@ class Strategy:
 
         f_decorated_sig = inspect.signature(self._do_descriptor_protocol(f_decorated))  # type: inspect.Signature
 
-        if not self.check_signature_compatible(f_decorated_sig):
+        if not self._check_signature_compatible(f_decorated_sig):
             raise ValueError
 
         self._use_impl(f_decorated)
@@ -35,7 +35,7 @@ class Strategy:
 
         return f
 
-    def check_signature_compatible(self, f_sig: inspect.Signature) -> bool:
+    def _check_signature_compatible(self, f_sig: inspect.Signature) -> bool:
         # Signature checking of strategy implementation not yet implemented, so any strategy may use any
         # implementation, even if signatures are incompatible, e.g.
         #
