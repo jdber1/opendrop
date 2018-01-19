@@ -2,48 +2,45 @@ import asyncio
 import functools
 import types
 import weakref
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import Callable, List, Optional, Tuple, Any, Mapping
+from typing import Callable, List, Optional, Any, Mapping, TypeVar
+
+T = TypeVar('T')
 
 
-class EventSource:
+class HandlerContainer:
 
-    """Essentially an events container, has all the same methods as `Event` but instead the first parameter takes the
-    event name of the event to perform the action on.
-
-    Usage:
-
-        class MyClass(EventSource):
-            def __init__(self):
-                EventSource.__init__(self)
-                # class initialisation
-
-        def handle_my_event(arg):
-            print(arg)
-
-        obj = MyClass()
-
-        obj.connect('on_my_event', handle_my_event)
-        obj.fire('on_my_event', 'Hello')  # fires `handle_my_event()` with arg='Hello'
+    """Utility class for storing connect arguments of handlers which affect callback behaviour.
     """
 
-    _forward = ['connect', 'disconnect', 'inline', 'fire', 'fire_ignore_args', 'is_connected']
+    def __init__(self, handler: Callable[..., None], immediate: bool = False, once: bool = False,
+                 ignore_args: bool = False, strong_ref: bool = False) -> None:
 
-    def __init__(self):
-        self._events_store = defaultdict(Event)  # type: Mapping[str, Event]
+        self._handler = None  # type: Optional[Callable[..., None]]
+        self._handler_ref = None  # type: Optional[Callable[[], Callable[..., None]]]
 
-    def __getattribute__(self, name: str) -> Any:
-        if name.startswith('_') or name not in self._forward:
-            return super().__getattribute__(name)
+        self.immediate = immediate  # type: bool
+        self.ignore_args = ignore_args  # type: bool
+        self.remaining = 1 if once else float('inf')  # type: Number
 
-        def f(event_name: str, *args, **kwargs):
-            return getattr(self._events_store[event_name], name)(*args, **kwargs)
+        if strong_ref:
+            self._handler = handler  # type: Callable[..., None]
+        else:
+            self._handler_ref = weakref.ref(handler) if not isinstance(handler, types.MethodType) else \
+                                weakref.WeakMethod(handler)
 
-        return f
+    @property
+    def handler(self) -> Callable[..., None]:
+        if self._handler is not None:
+            return self._handler
+        elif self._handler_ref is not None:
+            return self._handler_ref()
 
-    def num_connected(self, name: str) -> int:
-        return self._events_store[name].num_connected
+
+class AwaitableCallback(asyncio.Future):
+    def __call__(self, *args, **kwargs) -> None:
+        self.set_result(args)
 
 
 class Event:
@@ -150,76 +147,140 @@ class Event:
     def num_connected(self) -> int:
         return len(self._handlers)
 
-class AwaitableCallback(asyncio.Future):
-    def __call__(self, *args, **kwargs):
-        self.set_result(args)
 
+class EventSource:
 
-class HandlerContainer:
+    """Essentially an events container, has all the same methods as `Event` but instead the first parameter takes the
+    event name of the event to perform the action on.
 
-    """Utility class for storing connect arguments of handlers which affect callback behaviour.
+    Usage:
+
+        class MyClass(EventSource):
+            def __init__(self):
+                EventSource.__init__(self)
+                # class initialisation
+
+        def handle_my_event(arg):
+            print(arg)
+
+        obj = MyClass()
+
+        obj.connect('on_my_event', handle_my_event)
+        obj.fire('on_my_event', 'Hello')  # fires `handle_my_event()` with arg='Hello'
     """
 
-    def __init__(self, handler: Callable[..., None], immediate: bool = False, once: bool = False,
-                 ignore_args: bool = False, strong_ref: bool = False) -> None:
+    _forward = ['connect', 'disconnect', 'inline', 'fire', 'fire_ignore_args', 'is_connected']
 
-        self._handler = None  # type: Optional[Callable[..., None]]
-        self._handler_ref = None  # type: Optional[Callable[[], Callable[..., None]]]
+    def __init__(self):
+        self._events_store = defaultdict(Event)  # type: Mapping[str, Event]
 
-        self.immediate = immediate  # type: bool
-        self.ignore_args = ignore_args  # type: bool
-        self.remaining = 1 if once else float('inf')  # type: Number
+    def __getattribute__(self, name: str) -> Any:
+        if name.startswith('_') or name not in self._forward:
+            return super().__getattribute__(name)
 
-        if strong_ref:
-            self._handler = handler  # type: Callable[..., None]
-        else:
-            self._handler_ref = weakref.ref(handler) if not isinstance(handler, types.MethodType) else \
-                                weakref.WeakMethod(handler)
+        def f(event_name: str, *args, **kwargs):
+            return getattr(self._events_store[event_name], name)(*args, **kwargs)
 
-    @property
-    def handler(self) -> Callable[..., None]:
-        if self._handler is not None:
-            return self._handler
-        elif self._handler_ref is not None:
-            return self._handler_ref()
+        return f
+
+    def num_connected(self, name: str) -> int:
+        return self._events_store[name].num_connected
+
+    def connect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Connect the handlers of an object that could be found using dir()"""
+        for handler in get_handlers_from_obj(obj, source_name_filter):
+            handler_metadata = get_handler_metadata(handler)
+
+            self.connect(handler_metadata.event_name, handler, immediate=handler_metadata.immediate)
+
+    # disconnect_handlers ignores HandlerNotConnected exceptions
+    def disconnect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Disconnect the handlers of an object that could be found using dir(), if a new handler was added since
+        the call to `connect_handlers()`, the subsequent `HandlerNotConnected` exception that is raised when attempting
+        to disconnect it is ignored. Also, if a handler has been removed from the object before a call to this function,
+        it will not be found and so will not be disconnected."""
+        for handler in get_handlers_from_obj(obj, source_name_filter):
+            handler_metadata = get_handler_metadata(handler)
+
+            try:
+                self.disconnect(handler_metadata.event_name, handler)
+            except HandlerNotConnected:
+                pass
+
+    def reconnect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Call `disconnect_handlers()` then call `connect_handlers()`"""
+        self.disconnect_handlers(obj, source_name_filter)
+        self.connect_handlers(obj, source_name_filter)
 
 
-class EventSourceProxy:
-    class EventSourceListenToContainer:
-        def __init__(self, event_source: EventSource, descriptor_args: Optional[Tuple[Any, Any]] = None) -> None:
-            self.event_source = event_source  # type: EventSource
-            self.descriptor_args = descriptor_args  # type: Optional[Tuple[Any, Any]]
+# Handler metadata functions
 
-    def __init__(self) -> None:
-        self._clean_events_store = {}  # type: MutableMapping[str, Event]
-        self._dirty_events_store = {}
-        self._sources = []  # type: List[EventSourceProxy.EventSourceListenToContainer]
+HANDLER_TAG_NAME = '_handler_tag'
 
-    def listen_to(self, event_source: EventSource) -> None:
+HandlerMetadata = namedtuple('HandlerMetadata', ['source_name', 'event_name', 'immediate'])
 
-        self._sources.append(EventSourceProxy.EventSourceListenToContainer(event_source, ))
 
-    def connect(self, name: str, *args, **kwargs):
-        def wrapper(handler):
-            self._get_proxy_event(name).connect(handler, *args, **kwargs)
+def handler(source_name: str, event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
+    """Decorator marks the method as an event handler for event `event_name`. Used in conjunction with
+    `EventSource.connect_handlers()`.
+    :param source_name: The source name of the handler, see `EventSource.connect_handlers()`.
+    :param event_name: The event name that the handler will connect to.
+    :param immediate: If the handler should connect with immediate=True or not, see events documentation.
+    :return: None
+    """
 
-        return wrapper
+    def decorator(method: T) -> T:
+        set_handler(method, source_name, event_name, immediate)
 
-    def _new_proxy_event(self, name: str) -> Event:
-        assert name not in self._events_store
+        return method
 
-        new_event = Event()
+    return decorator
 
-        self._events_store[name] = new_event
 
-        for event_source in self._sources:
-            event_source.hi
+def get_handler_metadata(method: Callable) -> HandlerMetadata:
+    if not is_handler(method):
+        raise TypeError("{} has not been tagged as a handler".format(method))
 
-    def _get_proxy_event(self, name: str) -> Event:
-        if name not in self._events_store:
-            self._new_proxy_event(name)
+    return getattr(method, HANDLER_TAG_NAME)
 
-        return self._events_store[name]
+
+def set_handler(method: Callable[[T], T], source: str, event_name: str, immediate: Optional[bool] = False) -> None:
+    setattr(method, HANDLER_TAG_NAME, HandlerMetadata(source, event_name, immediate))
+
+
+def is_handler(method: Callable) -> bool:
+    if hasattr(method, HANDLER_TAG_NAME):
+        return True
+
+    return False
+
+
+def get_handlers_from_obj(obj: Any, source_name_filter: Optional[str] = None) -> List[Callable[..., None]]:
+    """
+    Return the event handlers of this presenter.
+    :return: A list of event handlers.
+    """
+    handlers = []  # List[Callable[..., None]]
+
+    for attr_name in dir(obj):
+        try:
+            attr = getattr(obj, attr_name)
+
+            if not callable(attr):
+                continue
+
+            if is_handler(attr):
+                handler_metadata = get_handler_metadata(attr)
+
+                if source_name_filter is None or handler_metadata.source_name == source_name_filter:
+                    handlers.append(attr)
+        except AttributeError:
+            pass
+
+    return handlers
+
+
+# Exceptions
 
 class HandlerNotConnected(Exception):
     pass

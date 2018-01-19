@@ -337,3 +337,80 @@ def test_event_num_connected(event):
     event.connect(cb)
 
     assert event.num_connected == 1
+
+
+class TestEventSource:
+    def setup(self):
+        self.event_source = events.EventSource()
+
+        class MyClass:
+            def __init__(self):
+                self.name0_event0_count = 0
+                self.name1_event0_count = 0
+
+            @events.handler('name0', 'on_event0')
+            def handle_name0_event0(self):
+                self.name0_event0_count += 1
+
+            @events.handler('name1', 'on_event0')
+            def handle_name1_event0(self):
+                self.name1_event0_count += 1
+
+        self.my_class = MyClass
+        self.handlers_obj = MyClass()
+
+    @pytest.mark.asyncio
+    async def test_connect_handlers(self):
+        assert self.handlers_obj.name0_event0_count == 0 \
+           and self.handlers_obj.name1_event0_count == 0
+
+        self.event_source.connect_handlers(self.handlers_obj, 'name0')
+
+        self.event_source.fire('on_event0'); await asyncio.sleep(0)
+
+        assert self.handlers_obj.name0_event0_count == 1 \
+           and self.handlers_obj.name1_event0_count == 0
+
+        self.event_source.connect_handlers(self.handlers_obj, 'name1')
+
+        self.event_source.fire('on_event0'); await asyncio.sleep(0)
+
+        assert self.handlers_obj.name0_event0_count == 2 \
+           and self.handlers_obj.name1_event0_count == 1
+
+    @pytest.mark.asyncio
+    async def test_disconnect_handlers(self):
+        self.event_source.connect_handlers(self.handlers_obj, 'name0')
+
+        self.event_source.fire('on_event0'); await asyncio.sleep(0)
+
+        assert self.handlers_obj.name0_event0_count == 1 \
+           and self.handlers_obj.name1_event0_count == 0
+
+
+        # Add in some new handler at runtime to make sure `disconnect_handlers()` doesn't throw HandlerNotConnected
+        # exceptions
+        self.handlers_obj.handle_name0_event1 = events.handler('name0', 'on_event1')(Mock())
+
+        self.event_source.disconnect_handlers(self.handlers_obj, 'name0')
+
+        self.event_source.fire('on_event0'); await asyncio.sleep(0)
+
+        assert self.handlers_obj.name0_event0_count == 1 \
+           and self.handlers_obj.name1_event0_count == 0
+
+    @pytest.mark.asyncio
+    async def test_reconnect_handlers(self):
+        self.event_source.connect_handlers(self.handlers_obj, 'name0')
+
+        self.handlers_obj.handle_name0_event1 = events.handler('name0', 'on_event1')(Mock())
+
+        self.event_source.fire('on_event1'); await asyncio.sleep(0)
+
+        self.handlers_obj.handle_name0_event1.assert_not_called()
+
+        self.event_source.reconnect_handlers(self.handlers_obj, 'name0')
+
+        self.event_source.fire('on_event1'); await asyncio.sleep(0)
+
+        self.handlers_obj.handle_name0_event1.assert_called_once_with()
