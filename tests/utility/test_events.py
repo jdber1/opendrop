@@ -15,22 +15,17 @@ import opendrop.utility.events as events
 
 class EventSourceTestWrapper:
     def __init__(self):
-        self.event_source = events.EventSource()
+        self._event_source = events.EventSource()
 
-    def connect(self, *args, **kwargs):
-        return self.event_source.connect('on_my_event', *args, **kwargs)
+    def __getattr__(self, name):
+        def f(*args, **kwargs):
+            return getattr(self._event_source, name)('on_my_event', *args, **kwargs)
 
-    def disconnect(self, *args, **kwargs):
-        return self.event_source.disconnect('on_my_event', *args, **kwargs)
+        return f
 
-    def inline(self, *args, **kwargs):
-        return self.event_source.inline('on_my_event', *args, **kwargs)
-
-    def fire(self, *args, **kwargs):
-        return self.event_source.fire('on_my_event', *args, **kwargs)
-
-    def fire_ignore_args(self, *args, **kwargs):
-        return self.event_source.fire_ignore_args('on_my_event', *args, **kwargs)
+    @property
+    def num_connected(self):
+        return self._event_source.num_connected('on_my_event')
 
 
 @pytest.fixture(params=['normal', 'event_source_wrapped'])
@@ -323,3 +318,22 @@ async def test_event_weak_ref2(event):
     await asyncio.sleep(0)
 
     b.assert_called_once_with()
+
+
+def test_event_is_connected(event):
+    cb = Mock()
+
+    assert not event.is_connected(cb)
+    event.connect(cb)
+
+    assert event.is_connected(cb)
+
+
+def test_event_num_connected(event):
+    cb = Mock()
+
+    assert event.num_connected == 0
+
+    event.connect(cb)
+
+    assert event.num_connected == 1
