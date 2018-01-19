@@ -2,9 +2,11 @@ import asyncio
 import functools
 import types
 import weakref
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import Callable, List, Optional, Tuple, Any, Mapping
+from typing import Callable, List, Optional, Tuple, Any, Mapping, TypeVar
+
+T = TypeVar('T')
 
 
 class EventSource:
@@ -44,6 +46,32 @@ class EventSource:
 
     def num_connected(self, name: str) -> int:
         return self._events_store[name].num_connected
+
+    def connect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Connect the handlers of an object that could be found using dir()"""
+        for handler in get_handlers_from_obj(obj, source_name_filter):
+            handler_metadata = get_handler_metadata(handler)
+
+            self.connect(handler_metadata.event_name, handler, immediate=handler_metadata.immediate)
+
+    # disconnect_handlers ignores HandlerNotConnected exceptions
+    def disconnect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Disconnect the handlers of an object that could be found using dir(), if a new handler was added since
+        the call to `connect_handlers()`, the subsequent `HandlerNotConnected` exception that is raised when attempting
+        to disconnect it is ignored. Also, if a handler has been removed from the object before a call to this function,
+        it will not be found and so will not be disconnected."""
+        for handler in get_handlers_from_obj(obj, source_name_filter):
+            handler_metadata = get_handler_metadata(handler)
+
+            try:
+                self.disconnect(handler_metadata.event_name, handler)
+            except HandlerNotConnected:
+                pass
+
+    def reconnect_handlers(self, obj: Any, source_name_filter: Optional[str] = None) -> None:
+        """Call `disconnect_handlers()` then call `connect_handlers()`"""
+        self.disconnect_handlers(obj, source_name_filter)
+        self.connect_handlers(obj, source_name_filter)
 
 
 class Event:
@@ -150,6 +178,7 @@ class Event:
     def num_connected(self) -> int:
         return len(self._handlers)
 
+
 class AwaitableCallback(asyncio.Future):
     def __call__(self, *args, **kwargs):
         self.set_result(args)
@@ -184,42 +213,72 @@ class HandlerContainer:
             return self._handler_ref()
 
 
-class EventSourceProxy:
-    class EventSourceListenToContainer:
-        def __init__(self, event_source: EventSource, descriptor_args: Optional[Tuple[Any, Any]] = None) -> None:
-            self.event_source = event_source  # type: EventSource
-            self.descriptor_args = descriptor_args  # type: Optional[Tuple[Any, Any]]
+HANDLER_TAG_NAME = '_handler_tag'
 
-    def __init__(self) -> None:
-        self._clean_events_store = {}  # type: MutableMapping[str, Event]
-        self._dirty_events_store = {}
-        self._sources = []  # type: List[EventSourceProxy.EventSourceListenToContainer]
+HandlerMetadata = namedtuple('HandlerMetadata', ['source_name', 'event_name', 'immediate'])
 
-    def listen_to(self, event_source: EventSource) -> None:
 
-        self._sources.append(EventSourceProxy.EventSourceListenToContainer(event_source, ))
+def handler(source_name: str, event_name: str, immediate: Optional[bool] = False) -> Callable[[T], T]:
+    """Decorator marks the method as an event handler for event `event_name`. Used in conjunction with
+    `EventSource.connect_handlers()`.
+    :param source_name: The source name of the handler, see `EventSource.connect_handlers()`.
+    :param event_name: The event name that the handler will connect to.
+    :param immediate: If the handler should connect with immediate=True or not, see events documentation.
+    :return: None
+    """
 
-    def connect(self, name: str, *args, **kwargs):
-        def wrapper(handler):
-            self._get_proxy_event(name).connect(handler, *args, **kwargs)
+    def decorator(method: T) -> T:
+        set_handler(method, source_name, event_name, immediate)
 
-        return wrapper
+        return method
 
-    def _new_proxy_event(self, name: str) -> Event:
-        assert name not in self._events_store
+    return decorator
 
-        new_event = Event()
 
-        self._events_store[name] = new_event
+def get_handler_metadata(method: Callable) -> HandlerMetadata:
+    if not is_handler(method):
+        raise TypeError("{} has not been tagged as a handler".format(method))
 
-        for event_source in self._sources:
-            event_source.hi
+    return getattr(method, HANDLER_TAG_NAME)
 
-    def _get_proxy_event(self, name: str) -> Event:
-        if name not in self._events_store:
-            self._new_proxy_event(name)
 
-        return self._events_store[name]
+def set_handler(method: Callable[[T], T], source: str, event_name: str, immediate: Optional[bool] = False) -> None:
+    setattr(method, HANDLER_TAG_NAME, HandlerMetadata(source, event_name, immediate))
+
+
+def is_handler(method: Callable) -> bool:
+    if hasattr(method, HANDLER_TAG_NAME):
+        return True
+
+    return False
+
+
+def get_handlers_from_obj(obj: Any, source_name_filter: Optional[str] = None) -> List[Callable[..., None]]:
+    """
+    Return the event handlers of this presenter.
+    :return: A list of event handlers.
+    """
+    handlers = []  # List[Callable[..., None]]
+
+    for attr_name in dir(obj):
+        try:
+            attr = getattr(obj, attr_name)
+
+            if not callable(attr):
+                continue
+
+            if is_handler(attr):
+                handler_metadata = get_handler_metadata(attr)
+
+                if source_name_filter is None or handler_metadata.source_name == source_name_filter:
+                    handlers.append(attr)
+        except AttributeError:
+            pass
+
+    return handlers
+
+
+# Exceptions
 
 class HandlerNotConnected(Exception):
     pass
