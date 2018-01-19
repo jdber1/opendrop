@@ -1,13 +1,10 @@
 import asyncio
+import functools
 import types
 import weakref
-from numbers import Number
-
-from typing import Callable, List, Optional
-
-import functools
-
 from collections import defaultdict
+from numbers import Number
+from typing import Callable, List, Optional, Tuple, Any, Mapping
 
 
 class EventSource:
@@ -31,26 +28,25 @@ class EventSource:
         obj.fire('on_my_event', 'Hello')  # fires `handle_my_event()` with arg='Hello'
     """
 
+    _forward = ['connect', 'disconnect', 'inline', 'fire', 'fire_ignore_args', 'is_connected']
+
     def __init__(self):
-        self._events_store = defaultdict(Event)
+        self._events_store = defaultdict(Event)  # type: Mapping[str, Event]
 
-    def connect(self, name: str, *args, **kwargs):
-        return self._events_store[name].connect(*args, **kwargs)
+    def __getattribute__(self, name: str) -> Any:
+        if name.startswith('_') or name not in self._forward:
+            return super().__getattribute__(name)
 
-    def disconnect(self, name: str, *args, **kwargs):
-        return self._events_store[name].disconnect(*args, **kwargs)
+        def f(event_name: str, *args, **kwargs):
+            return getattr(self._events_store[event_name], name)(*args, **kwargs)
 
-    def inline(self, name: str, *args, **kwargs):
-        return self._events_store[name].inline(*args, **kwargs)
+        return f
 
-    def fire(self, name: str, *args, **kwargs):
-        return self._events_store[name].fire(*args, **kwargs)
-
-    def fire_ignore_args(self, name: str, *args, **kwargs):
-        return self._events_store[name].fire_ignore_args(*args, **kwargs)
+    def num_connected(self, name: str) -> int:
+        return self._events_store[name].num_connected
 
 
-class Event(object):
+class Event:
 
     """An event class.
     """
@@ -143,6 +139,16 @@ class Event(object):
         """
         self.fire()
 
+    def is_connected(self, handler: Callable) -> bool:
+        for container in self._handlers:
+            if container.handler == handler:
+                return True
+        else:
+            return False
+
+    @property
+    def num_connected(self) -> int:
+        return len(self._handlers)
 
 class AwaitableCallback(asyncio.Future):
     def __call__(self, *args, **kwargs):
@@ -177,6 +183,43 @@ class HandlerContainer:
         elif self._handler_ref is not None:
             return self._handler_ref()
 
+
+class EventSourceProxy:
+    class EventSourceListenToContainer:
+        def __init__(self, event_source: EventSource, descriptor_args: Optional[Tuple[Any, Any]] = None) -> None:
+            self.event_source = event_source  # type: EventSource
+            self.descriptor_args = descriptor_args  # type: Optional[Tuple[Any, Any]]
+
+    def __init__(self) -> None:
+        self._clean_events_store = {}  # type: MutableMapping[str, Event]
+        self._dirty_events_store = {}
+        self._sources = []  # type: List[EventSourceProxy.EventSourceListenToContainer]
+
+    def listen_to(self, event_source: EventSource) -> None:
+
+        self._sources.append(EventSourceProxy.EventSourceListenToContainer(event_source, ))
+
+    def connect(self, name: str, *args, **kwargs):
+        def wrapper(handler):
+            self._get_proxy_event(name).connect(handler, *args, **kwargs)
+
+        return wrapper
+
+    def _new_proxy_event(self, name: str) -> Event:
+        assert name not in self._events_store
+
+        new_event = Event()
+
+        self._events_store[name] = new_event
+
+        for event_source in self._sources:
+            event_source.hi
+
+    def _get_proxy_event(self, name: str) -> Event:
+        if name not in self._events_store:
+            self._new_proxy_event(name)
+
+        return self._events_store[name]
 
 class HandlerNotConnected(Exception):
     pass
