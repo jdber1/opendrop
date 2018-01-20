@@ -11,6 +11,10 @@ def test_patch_instance():
         def do_my_class_thing(self):
             return 1
 
+        @property
+        def my_prop(self):
+            return 5
+
     class MyMixin(MyClass):
         my_attr = 4
 
@@ -23,6 +27,10 @@ def test_patch_instance():
         def get_self(self):
             return self
 
+        @property
+        def my_prop(self):
+            return 6
+
     my_obj1 = MyClass()
     my_obj2 = MyClass()
 
@@ -34,6 +42,8 @@ def test_patch_instance():
     assert my_obj2_patched.my_attr == 4
 
     assert my_obj2_patched.get_self() == my_obj2
+
+    assert my_obj1.my_prop == my_obj2_patched.my_prop == 5
 
     assert my_obj2.do_this == my_obj2_patched.do_this
 
