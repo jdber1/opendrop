@@ -320,13 +320,21 @@ async def test_event_weak_ref2(event):
     b.assert_called_once_with()
 
 
-def test_event_is_connected(event):
+@pytest.mark.asyncio
+async def test_event_is_connected(event):
     cb = Mock()
 
+    event.fire()
+
     assert not event.is_connected(cb)
+    cb.assert_not_called()
+
     event.connect(cb)
 
+    event.fire(); await asyncio.sleep(0)
+
     assert event.is_connected(cb)
+    cb.assert_called_once_with()
 
 
 def test_event_num_connected(event):
@@ -366,17 +374,13 @@ class TestEventSource:
 
         self.event_source.connect_handlers(self.handlers_obj, 'name0')
 
-        self.event_source.fire('on_event0'); await asyncio.sleep(0)
-
-        assert self.handlers_obj.name0_event0_count == 1 \
-           and self.handlers_obj.name1_event0_count == 0
+        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name0_event0)
+        assert not self.event_source.is_connected('on_event0', self.handlers_obj.handle_name1_event0)
 
         self.event_source.connect_handlers(self.handlers_obj, 'name1')
 
-        self.event_source.fire('on_event0'); await asyncio.sleep(0)
-
-        assert self.handlers_obj.name0_event0_count == 2 \
-           and self.handlers_obj.name1_event0_count == 1
+        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name0_event0)
+        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name1_event0)
 
     @pytest.mark.asyncio
     async def test_disconnect_handlers(self):
@@ -414,3 +418,31 @@ class TestEventSource:
         self.event_source.fire('on_event1'); await asyncio.sleep(0)
 
         self.handlers_obj.handle_name0_event1.assert_called_once_with()
+
+
+def test_get_handlers():
+    class MyClass:
+        @events.handler('name0', 'on_event0')
+        def handle_name0_event0(self):
+            pass
+
+        @events.handler('name1', 'on_event0')
+        def handle_name1_event0(self):
+            pass
+
+    assert set(events.get_handlers_from_obj(MyClass)) == {MyClass.handle_name0_event0, MyClass.handle_name1_event0}
+
+
+def test_handler_with_immediate():
+    class MyClass:
+        handle_name0_event0 = events.handler('name0', 'on_event0', immediate=True)(Mock())
+
+    my_obj = MyClass()
+
+    my_event_source = events.EventSource()
+
+    my_event_source.connect_handlers(my_obj, 'name0')
+
+    my_event_source.fire('on_event0')
+
+    my_obj.handle_name0_event0.assert_called_once_with()
