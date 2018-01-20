@@ -54,7 +54,6 @@ def patch_instance(obj: Any, mixin: Type[T]) -> T:
         if hasattr(attr_value, '__get__'):
             attr_value = attr_value.__get__(obj, type(obj))
 
-        print('Patching {}:'.format(attr_name), inspect.getattr_static(obj, attr_name, None), inspect.getattr_static(mixin, attr_name))
         setattr(obj, attr_name, attr_value)
 
     return obj
