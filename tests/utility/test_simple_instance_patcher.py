@@ -45,7 +45,5 @@ def test_patch_instance():
 
     assert my_obj1.my_prop == my_obj2_patched.my_prop == 5
 
-    assert my_obj2.do_this == my_obj2_patched.do_this
-
     with pytest.raises(AttributeError):
         my_obj1.do_my_mixin_thing()
