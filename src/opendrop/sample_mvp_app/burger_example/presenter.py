@@ -1,9 +1,9 @@
 from typing import Any
 
-from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
 from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
 from opendrop.sample_mvp_app.main_menu.model import BurgerOrder
+from opendrop.utility.events import handler
 
 
 class BurgerExamplePresenter(Presenter[BurgerOrder, IBurgerExampleView]):
@@ -17,7 +17,7 @@ class BurgerExamplePresenter(Presenter[BurgerOrder, IBurgerExampleView]):
         for name, value in self.model.order.items():
             self.handle_model_order_changed(name, value)
 
-    @handles('view', 'on_order_changed')
+    @handler('view', 'on_order_changed')
     def handle_view_order_changed(self, name: str, value: Any) -> None:
         if self.cache[name] == value:
             return
@@ -26,7 +26,7 @@ class BurgerExamplePresenter(Presenter[BurgerOrder, IBurgerExampleView]):
 
         self.model.edit_order(name, value)
 
-    @handles('model', 'on_order_changed')
+    @handler('model', 'on_order_changed')
     def handle_model_order_changed(self, name: str, value: Any) -> None:
         if name in self.cache and self.cache[name] == value:
             return
@@ -35,14 +35,14 @@ class BurgerExamplePresenter(Presenter[BurgerOrder, IBurgerExampleView]):
 
         self.view.edit_order(name, value)
 
-    @handles('model', 'on_order_cost_changed')
+    @handler('model', 'on_order_cost_changed')
     def handle_model_order_cost_changed(self) -> None:
         self.view.update_display_cost(self.model.order_cost)
 
-    @handles('view', 'on_order_button_clicked')
+    @handler('view', 'on_order_button_clicked')
     def handle_order_button_clicked(self) -> None:
         self.view.show_order_confirmation(self.model.order_cost)
 
-    @handles('model', 'on_order_cost_changed')
+    @handler('model', 'on_order_cost_changed')
     def handle_cost_changed(self) -> None:
         self.view.update_display_cost(self.model.order_cost)

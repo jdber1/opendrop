@@ -1,15 +1,11 @@
-from typing import Callable, Generic, List, Mapping, Tuple, Type, TypeVar, NewType, Any, Union, Optional
-
-from opendrop.mvp import handles
-
-from opendrop.mvp import handler_metadata
+from typing import Generic, Tuple, Type, TypeVar, Optional
 
 from opendrop.mvp.Model import Model
-from opendrop.mvp.IView import IView
-from opendrop.utility.events import EventSource
+from opendrop.mvp.View import View
+from opendrop.utility.events import EventSource, handler
 
 T = TypeVar('T', bound=Model)
-S = TypeVar('S', bound=IView)
+S = TypeVar('S', bound=View)
 
 
 class PresenterMeta(type(Generic)):
@@ -18,7 +14,7 @@ class PresenterMeta(type(Generic)):
     information.
     """
 
-    def __getitem__(self, args: Tuple[Optional[Type[Model]], Type[IView]]) -> type:
+    def __getitem__(self, args: Tuple[Optional[Type[Model]], Type[View]]) -> type:
         class ParametrizedPresenter(super().__getitem__(args)):
             _args = args
 
@@ -28,7 +24,7 @@ class PresenterMeta(type(Generic)):
 class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
     IGNORE = False  # type: bool
 
-    _args = (Model, IView)  # type: Tuple[Optional[Type[Model]], Type[IView]]
+    _args = (Model, View)  # type: Tuple[Optional[Type[Model]], Type[View]]
 
     def __init__(self, model: Optional[T], view: S) -> None:
         """
@@ -69,41 +65,20 @@ class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
         """
         pass
 
-    def get_handlers(self) -> List[Callable[..., None]]:
-        """
-        Return the event handlers of this presenter.
-        :return: A list of event handlers.
-        """
-        handlers = []  # List[Callable[..., None]]
-
-        for attr_name in dir(self):
-            try:
-                attr = getattr(self, attr_name)
-
-                if not callable(attr):
-                    continue
-
-                if handler_metadata.has_metadata(attr):
-                    handlers.append(attr)
-            except AttributeError:
-                pass
-
-        return handlers
-
     @classmethod
-    def controls_via(cls) -> Type[IView]:
+    def controls_via(cls) -> Type[View]:
         """Return the view interface that the presenter uses.
         :return: The view interface.
         """
         return cls._args[1]
 
     @classmethod
-    def can_control(cls, iview: Type[IView]) -> bool:
+    def can_control(cls, view: Type[View]) -> bool:
         """Check if this presenter is able to present the given view class.
-        :param iview: IView class object in question.
+        :param view: View class object in question.
         :return: True if presenter can present, False otherwise.
         """
-        return issubclass(iview, cls.controls_via())
+        return issubclass(view, cls.controls_via())
 
     # Private methods
 
@@ -116,26 +91,13 @@ class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
         self.teardown()
 
     def _connect_handlers(self) -> None:
-        handlers = self.get_handlers()  # type: List[Callable[..., None]]
-
-        request_close_handled = False  # type: bool
-
-        for handler in handlers:
-            metadata = handler_metadata.get(handler)  # type: handler_metadata.HandlerMetadata
-
-            if metadata.source_name == 'view':
-                self.view.connect(metadata.event_name, handler, immediate=metadata.immediate)
-
-                if metadata.event_name == 'on_request_close':
-                    request_close_handled = True
-
-            elif metadata.source_name == 'model':
-                self.model.connect(metadata.event_name, handler, immediate=metadata.immediate)
-
-        if not request_close_handled:
-            self.view.connect('on_request_close', self._handle_request_close)
+        self.view.connect_handlers(self, 'view')
+        self.model.connect_handlers(self, 'model')
 
     # Event handlers
 
+    @handler('view', 'on_request_close')
     def _handle_request_close(self) -> None:
-        self.view.close()
+        if self.view.num_connected('on_request_close') == 1 \
+           and self.view.is_connected('on_request_close', self._handle_request_close):
+            self.view.close()

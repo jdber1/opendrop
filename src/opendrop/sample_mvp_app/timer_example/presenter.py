@@ -1,15 +1,15 @@
 import asyncio
 from typing import Any
 
-from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
 from opendrop.sample_mvp_app.timer_example.iview import ITimerExampleView
+from opendrop.utility.events import handler
 
 
 class TimerExamplePresenter(Presenter[Any, ITimerExampleView]):
     timer_on = False
 
-    @handles('view', 'on_start_button_clicked')
+    @handler('view', 'on_start_button_clicked')
     async def handle_start_button_clicked(self):
         if not self.timer_on:
             self.timer_on = True

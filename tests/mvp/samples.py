@@ -1,11 +1,11 @@
 from unittest.mock import Mock
 
-from opendrop.mvp.Model import Model
+from opendrop.utility.events import handler
+
 from opendrop.mvp.IView import IView
+from opendrop.mvp.Model import Model
 from opendrop.mvp.Presenter import Presenter
 from opendrop.mvp.View import View
-
-from opendrop.mvp import handles
 
 
 # Generic test classes
@@ -30,13 +30,13 @@ class MyPresenter(Presenter[MyModel, IMyView]):
 
     def teardown(self): pass
 
-    handle_event0 = handles('view', 'on_event0')(Mock())
+    handle_event0 = handler('view', 'on_event0')(Mock())
 
-    handle_event1 = handles('view', 'on_event1')(Mock())
+    handle_event1 = handler('view', 'on_event1')(Mock())
 
-    handle_event2 = handles('view', 'on_event2', immediate=True)(Mock())
+    handle_event2 = handler('view', 'on_event2', immediate=True)(Mock())
 
-    handle_event3 = handles('model', 'on_event3')(Mock())
+    handle_event3 = handler('model', 'on_event3')(Mock())
 
 
 class IOtherView(IView):

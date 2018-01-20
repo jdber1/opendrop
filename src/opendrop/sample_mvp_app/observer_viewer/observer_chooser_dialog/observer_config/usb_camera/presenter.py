@@ -1,7 +1,7 @@
-from opendrop.mvp import handles
 from opendrop.mvp.IView import IView
 from opendrop.mvp.Presenter import Presenter
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.model import ObserverConfigRequest
+from opendrop.utility.events import handler
 
 
 class USBCameraConfigIView(IView):
@@ -17,6 +17,6 @@ class USBCameraConfigPresenter(Presenter[ObserverConfigRequest, USBCameraConfigI
 
         self.view.set_camera_index(self.model.opts['camera_index'])
 
-    @handles('view', 'on_camera_index_changed')
+    @handler('view', 'on_camera_index_changed')
     def handle_camera_index_changed(self, index: int) -> None:
         self.model.opts['camera_index'] = index
