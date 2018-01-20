@@ -1,6 +1,5 @@
 from typing import Any, List, Optional
 
-from opendrop.mvp import handles
 from opendrop.mvp.Model import Model
 from opendrop.mvp.Presenter import Presenter
 from opendrop.mvp.View import View
@@ -9,6 +8,7 @@ from opendrop.sample_mvp_app.observer_viewer.model import ObserverViewerModel
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.iview import \
     ICameraChooserDialogView
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import ObserverConfigView
+from opendrop.utility.events import handler
 
 
 class ObserverConfigRequest(Model):
@@ -35,7 +35,7 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
         self.config_view = None  # type: Optional[View]
         self.config_request = ObserverConfigRequest()  # type: ObserverConfigRequest
 
-    @handles('view', 'on_type_combo_changed')
+    @handler('view', 'on_type_combo_changed')
     def handle_type_combo_changed(self, active_id: str):
         otype = self.otypes[int(active_id)]  # type: Any
 
@@ -50,16 +50,16 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
 
         self.view.set_config(self.config_view)
 
-    @handles('view', 'on_user_submit_button_clicked')
+    @handler('view', 'on_user_submit_button_clicked')
     def handle_submit_clicked(self):
         self.view.submit(self.config_request.type, self.config_request.opts)
         self.view.close()
 
-    @handles('view', 'on_user_cancel_button_clicked')
+    @handler('view', 'on_user_cancel_button_clicked')
     def handle_cancel_clicked(self):
         self.view.fire('on_request_close')
 
-    @handles('view', 'on_request_close')
+    @handler('view', 'on_request_close')
     def handle_request_close(self):
         self.view.submit(None, {})
         self.view.close()

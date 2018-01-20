@@ -2,12 +2,12 @@ from typing import Optional, Mapping, Any
 
 from opendrop.sample_mvp_app.observer_viewer.model import ObserverViewerModel
 
-from opendrop.mvp import handles
 from opendrop.mvp.Presenter import Presenter
 from opendrop.observer.bases import ObserverPreview
 from opendrop.sample_mvp_app.observer_viewer.iview import IObserverViewerView
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.view import \
     CameraChooserDialogView
+from opendrop.utility.events import handler
 
 
 class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView]):
@@ -55,7 +55,7 @@ class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView
         if not self.view.destroyed:
             self.view.set_viewer_preview(value)
 
-    @handles('model', 'on_current_observer_changed')
+    @handler('model', 'on_current_observer_changed')
     def handle_current_observer_changed(self) -> None:
         self.clear_active_preview()
 

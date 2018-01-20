@@ -2,7 +2,7 @@ from typing import Generic, Tuple, Type, TypeVar, Optional
 
 from opendrop.mvp.Model import Model
 from opendrop.mvp.View import View
-from opendrop.utility.events import EventSource
+from opendrop.utility.events import EventSource, handler
 
 T = TypeVar('T', bound=Model)
 S = TypeVar('S', bound=View)
@@ -96,5 +96,8 @@ class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
 
     # Event handlers
 
+    @handler('view', 'on_request_close')
     def _handle_request_close(self) -> None:
-        self.view.close()
+        if self.view.num_connected('on_request_close') == 1 \
+           and self.view.is_connected('on_request_close', self._handle_request_close):
+            self.view.close()
