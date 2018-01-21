@@ -152,7 +152,7 @@ class Application:
     def close(self, view: IView) -> None:
         record = self._vp_registry.get_record_by_view(view)  # type: VPRecord
 
-        for child_record in record:
+        for child_record in list(record):
             if child_record.attached_to_parent:
                 child_record.view.close()
 
