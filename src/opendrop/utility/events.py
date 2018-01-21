@@ -116,17 +116,17 @@ class Event:
                 args = []
                 kwargs = {}
 
+            container.remaining -= 1
+
+            if container.remaining == 0:
+                self.disconnect(handler)
+
             if container.immediate:
                 handler(*args, **kwargs)
             elif asyncio.iscoroutinefunction(handler):
                 asyncio.get_event_loop().create_task(handler(*args, **kwargs))
             else:
                 asyncio.get_event_loop().call_soon(functools.partial(handler, *args, **kwargs))
-
-            container.remaining -= 1
-
-            if container.remaining == 0:
-                self.disconnect(handler)
 
     def fire_ignore_args(self, *args, **kwargs):
         """Same as `Event.fire()` but any arguments passed are ignored. Useful for when using as a callback for other

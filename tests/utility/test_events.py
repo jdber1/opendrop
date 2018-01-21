@@ -446,3 +446,20 @@ def test_handler_with_immediate():
     my_event_source.fire('on_event0')
 
     my_obj.handle_name0_event0.assert_called_once_with()
+
+
+def test_event_connect_once_recursion(event):
+    count = 0
+
+    def cb():
+        nonlocal count
+
+        count += 1
+
+        assert count == 1
+
+        event.fire()
+
+    event.connect(cb, once=True, immediate=True)
+
+    event.fire()
