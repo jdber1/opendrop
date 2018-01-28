@@ -420,19 +420,6 @@ class TestEventSource:
         self.handlers_obj.handle_name0_event1.assert_called_once_with()
 
 
-def test_get_handlers():
-    class MyClass:
-        @events.handler('name0', 'on_event0')
-        def handle_name0_event0(self):
-            pass
-
-        @events.handler('name1', 'on_event0')
-        def handle_name1_event0(self):
-            pass
-
-    assert set(events.get_handlers_from_obj(MyClass)) == {MyClass.handle_name0_event0, MyClass.handle_name1_event0}
-
-
 def test_handler_with_immediate():
     class MyClass:
         handle_name0_event0 = events.handler('name0', 'on_event0', immediate=True)(Mock())
@@ -455,7 +442,6 @@ def test_event_connect_once_recursion(event):
         nonlocal count
 
         count += 1
-
         assert count == 1
 
         event.fire()
