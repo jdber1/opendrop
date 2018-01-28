@@ -23,4 +23,4 @@ class ObserverViewerModel(Model):
     def current_observer(self, value: Optional[Observer]) -> None:
         self._current_observer = value
 
-        self.fire('on_current_observer_changed')
+        self.events.on_current_observer_changed.fire()

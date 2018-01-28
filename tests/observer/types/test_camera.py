@@ -106,7 +106,7 @@ class TestCameraObserverPreview:
             # Check that the frame passed to the callback matches the image in the camera class
             frame_matches = (frame == self.cam_cls.IMAGE).all()
 
-        self.cam_preview.connect('on_update', cb)
+        self.cam_preview.events.on_update.connect(cb)
 
         # Wait a short period so 'on_update' is fired
         await asyncio.sleep(0.01)
@@ -125,7 +125,7 @@ class TestCameraObserverPreview:
 
             num_frames += 1
 
-        self.cam_preview.connect('on_update', cb)
+        self.cam_preview.events.on_update.connect(cb)
 
         for wait, fps in zip(WAIT, FPS):
             self.cam_preview.fps = fps
@@ -150,7 +150,7 @@ class TestCameraObserverPreview:
 
         cb = Mock()
 
-        self.cam_preview.connect('on_update', cb)
+        self.cam_preview.events.on_update.connect(cb)
 
         # Wait a short period of time so 'on_update' even has a chance of being fired
         await asyncio.sleep(EPSILON)

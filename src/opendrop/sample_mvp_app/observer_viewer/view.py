@@ -3,7 +3,7 @@ from typing import Optional
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.observer.bases import ObserverPreview
 from opendrop.sample_mvp_app.observer_viewer.iview import IObserverViewerView
-from opendrop.widgets.observer_preview_viewer import ObserverPreviewViewer
+from opendrop.widgets.observer.preview_viewer import PreviewViewer
 
 
 class ObserverViewerView(GtkWindowView, IObserverViewerView):
@@ -11,7 +11,7 @@ class ObserverViewerView(GtkWindowView, IObserverViewerView):
         self.hidden = True
 
         # -- Build UI --
-        viewer = ObserverPreviewViewer()
+        viewer = PreviewViewer()
 
         self.window.add(viewer)
 

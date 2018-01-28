@@ -19,7 +19,7 @@ class GtkWidgetView(GtkView):
 
         self.container = Gtk.Box()  # type: Gtk.Box
 
-        self.connect('on_setup_done', self.post_setup, once=True)
+        self.events.on_setup_done.connect(self.post_setup, once=True)
 
     def post_setup(self) -> None:
         if not self.hidden:

@@ -36,7 +36,7 @@ class CameraObserver(Observer):
             observations.append(new_observation)
 
         # Once the last observation is done, release the camera.
-        observations[-1].connect('on_ready', cam.release, once=True, ignore_args=True, strong_ref=True)
+        observations[-1].events.on_ready.connect(cam.release, once=True, ignore_args=True, strong_ref=True)
 
         return observations
 
@@ -71,7 +71,7 @@ class CameraObserverPreview(ObserverPreview):
         if delta < self._frame_interval:
             await asyncio.sleep(self._frame_interval - delta)
         else:
-            self.fire('on_update', self._cam.capture())
+            self.events.on_update.fire(self._cam.capture())
             self._last_update = now
 
         self._schedule_step()

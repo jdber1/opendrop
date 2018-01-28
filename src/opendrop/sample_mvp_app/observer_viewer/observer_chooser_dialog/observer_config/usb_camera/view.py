@@ -31,7 +31,7 @@ class USBCameraConfigView(ObserverConfigView, USBCameraConfigIView):
 
     def _on_camera_index_changed(self, widget: IntegerEntry) -> None:
         new_value = int(widget.props.text) if widget.props.text else None  # type: Optional[int]
-        self.fire('on_camera_index_changed', new_value)
+        self.events.on_camera_index_changed.fire(new_value)
 
     def set_camera_index(self, text: int) -> None:
         self.index_input.props.text = str(text)

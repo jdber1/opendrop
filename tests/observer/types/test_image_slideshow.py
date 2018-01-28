@@ -79,7 +79,7 @@ class TestImageSlideshowObserverPreview:
 
         cb = Mock()
 
-        self.preview.connect('on_update', cb)
+        self.preview.events.on_update.connect(cb)
 
         self.preview.show(IMAGE_INDEX_TO_SHOW)
 

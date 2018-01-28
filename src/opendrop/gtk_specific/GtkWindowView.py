@@ -33,7 +33,7 @@ class GtkWindowView(GtkView):
 
         self.window.connect('delete-event', self.handle_window_delete_event)
 
-        self.connect('on_setup_done', self.post_setup, once=True)
+        self.events.on_setup_done.connect(self.post_setup, once=True)
 
     def post_setup(self) -> None:
         if not self.hidden:
@@ -59,7 +59,7 @@ class GtkWindowView(GtkView):
         self.window.destroy()
 
     def handle_window_delete_event(self, *args) -> bool:
-        self.fire('on_request_close')
+        self.events.on_request_close.fire()
 
         # Return true to block the window from closing
         return True

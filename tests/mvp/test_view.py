@@ -24,7 +24,7 @@ async def test_view_setup():
 
     handle_setup = Mock(spec=[])
 
-    view.connect('on_setup_done', handle_setup)
+    view.events.on_setup_done.connect(handle_setup)
 
     view.do_setup()
 

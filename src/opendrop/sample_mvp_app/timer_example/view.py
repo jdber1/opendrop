@@ -39,7 +39,7 @@ class TimerExampleView(GtkWindowView, ITimerExampleView):
         self.window.show_all()
 
         # -- Attach events --
-        start_button.connect('clicked', partial(self.fire_ignore_args, 'on_start_button_clicked'))
+        start_button.connect('clicked', self.events.on_start_button_clicked.fire_ignore_args)
 
         # -- Keep these widgets accessible --
         self.timer_duration = timer_duration

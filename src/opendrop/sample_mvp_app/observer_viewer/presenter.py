@@ -22,7 +22,7 @@ class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView
         v = self.view.spawn(CameraChooserDialogView, model=self.model, child=True,
                             view_opts={'transient_for': self.view, 'modal': True})  # type: CameraChooserDialogView
 
-        v.connect('on_submit', self._handle_observer_chooser_on_submit, once=True)
+        v.events.on_submit.connect(self._handle_observer_chooser_on_submit, once=True)
 
     def _handle_observer_chooser_on_submit(self, observer_type: Any, observer_opts: Mapping[str, Any]) -> None:
         if observer_type is None:

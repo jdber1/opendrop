@@ -36,5 +36,5 @@ def test_presenter_connect_handlers():
 
     presenter = MyPresenter(model=model, view=view)
 
-    assert view.is_connected('on_event0', presenter.handle_event0)
-    assert model.is_connected('on_event3', presenter.handle_event3)
+    assert view.events.on_event0.is_connected(presenter.handle_event0)
+    assert model.events.on_event3.is_connected(presenter.handle_event3)
