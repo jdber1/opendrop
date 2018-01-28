@@ -4,12 +4,13 @@ from typing import Optional, Type, Iterable, Any, Mapping, TypeVar
 from opendrop.mvp.IView import IView
 from opendrop.mvp.Model import Model
 from opendrop.utility.events import EventSource
+from opendrop.utility.events.events import HasEvents
 from opendrop.utility.strategy import strategy
 
 T = TypeVar('T', bound=IView)
 
 
-class View(EventSource, IView):
+class View(HasEvents, IView):
 
     """The view class, responsible for presenting the user interface to the user and notifying the presenter of user
     inputs.
@@ -20,7 +21,7 @@ class View(EventSource, IView):
     def __init__(self) -> None:
         """View constructor.
         """
-        EventSource.__init__(self)
+        self.events = EventSource()
 
         self._hidden = False  # type: bool
 
@@ -34,7 +35,7 @@ class View(EventSource, IView):
         self._destroyed = True
 
         self.teardown()
-        self.fire('on_destroy')
+        self.events.on_destroy.fire()
 
     def do_setup(self) -> None:
         """Wrapper for `setup` so after setup is complete, 'on_setup_done' event is fired. Called by `Application` after
@@ -42,7 +43,7 @@ class View(EventSource, IView):
         :return: None
         """
         self.setup()
-        self.fire('on_setup_done')
+        self.events.on_setup_done.fire()
 
     def setup(self) -> None:
         """Override to perform setup tasks such as creating and displaying widgets.

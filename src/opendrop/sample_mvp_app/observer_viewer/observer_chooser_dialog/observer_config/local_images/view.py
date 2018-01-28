@@ -46,10 +46,10 @@ class ImagesConfigView(ObserverConfigView, ImagesConfigIView):
         grid.show_all()
 
     def _on_file_input_changed(self, widget: FileChooserButton) -> None:
-        self.fire('on_file_input_changed', widget.filenames)
+        self.events.on_file_input_changed.fire(widget.filenames)
 
     def _on_frame_interval_input_changed(self, widget: IntegerEntry) -> None:
-        self.fire('on_frame_interval_input_changed', int(widget.props.text) if widget.props.text else None)
+        self.events.on_frame_interval_input_changed.fire(int(widget.props.text) if widget.props.text else None)
 
     def set_file_input(self, filenames: Iterable[str]) -> None:
         self.file_input.filenames = filenames

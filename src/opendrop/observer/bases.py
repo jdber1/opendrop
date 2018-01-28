@@ -7,6 +7,7 @@ from typing import Any, Iterator, List, Mapping, MutableMapping, Optional, Type,
 import numpy as np
 
 from opendrop.utility.events import EventSource
+from opendrop.utility.events.events import HasEvents
 
 
 class Observer:
@@ -19,9 +20,9 @@ class Observer:
         pass
 
 
-class Observation(EventSource):  # make sure to list the events in the class doc
+class Observation(HasEvents):  # make sure to list the events in the class doc
     def __init__(self) -> None:
-        EventSource.__init__(self)
+        self.events = EventSource()
 
         self.timestamp = -1
 
@@ -46,7 +47,7 @@ class Observation(EventSource):  # make sure to list the events in the class doc
         self._image = image
         self._ready_event.set()
 
-        self.fire('on_ready', image)
+        self.events.on_ready.fire(image)
 
     def __iter__(self):
         yield from self._ready_event.wait()
@@ -55,9 +56,9 @@ class Observation(EventSource):  # make sure to list the events in the class doc
     __await__ = __iter__
 
 
-class ObserverPreview(EventSource):  # on_update event, list in doc
+class ObserverPreview(HasEvents):  # on_update event, list in doc
     def __init__(self, observer: Observer):
-        EventSource.__init__(self)
+        self.events = EventSource()
 
     @abstractmethod
     def close(self): pass

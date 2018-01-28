@@ -118,7 +118,7 @@ class BurgerOrder(Model):
             if self._cache[name] != order_value:
                 self._cache[name] = order_value
 
-                self.fire('on_order_changed', name, order_value)
+                self.events.on_order_changed.fire(name, order_value)
 
     @property
     def order(self) -> Mapping[str, BurgerItemVar]:
@@ -129,7 +129,7 @@ class BurgerOrder(Model):
 
         self.check_for_changes()
 
-        self.fire('on_order_cost_changed')
+        self.events.on_order_cost_changed.fire()
 
     @property
     def order_cost(self) -> float:

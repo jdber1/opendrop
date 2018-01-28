@@ -85,7 +85,7 @@ class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
         ok_btn = Gtk.Button(label='Ok')
         ok_btn.props.hexpand = True
 
-        ok_btn.connect('clicked', functools.partial(self.fire_ignore_args, 'on_user_submit_button_clicked'))
+        ok_btn.connect('clicked', self.events.on_user_submit_button_clicked.fire_ignore_args)
 
         submit_container.attach(ok_btn, 1, 0, 1, 1)
 
@@ -93,7 +93,7 @@ class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
         cancel_btn = Gtk.Button(label='Cancel')
         cancel_btn.props.hexpand = True
 
-        cancel_btn.connect('clicked', functools.partial(self.fire_ignore_args, 'on_user_cancel_button_clicked'))
+        cancel_btn.connect('clicked', self.events.on_user_cancel_button_clicked.fire_ignore_args)
 
         submit_container.attach(cancel_btn, 0, 0, 1, 1)
 
@@ -106,7 +106,7 @@ class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
         self.type_combo.append(id, name)
 
     def handle_type_combo_changed(self, combo: Gtk.ComboBox) -> None:
-        self.fire('on_type_combo_changed', combo.get_active_id())
+        self.events.on_type_combo_changed.fire(combo.get_active_id())
 
     def submit(self, observer_type: Any, camera_opts: Mapping[str, Any]) -> None:
-        self.fire('on_submit', observer_type, camera_opts)
+        self.events.on_submit.fire(observer_type, camera_opts)

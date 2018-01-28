@@ -50,7 +50,7 @@ class MainView(GtkWindowView, IMainView):
         self.about_dialog = about_dialog
 
     def on_buttonx_clicked(self, button: Gtk.Button) -> None:
-        self.fire(button.event_name)
+        self.events[button.event_name].fire()
 
     def show_about_dialog(self) -> None:
         response = self.about_dialog.run()

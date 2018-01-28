@@ -13,28 +13,10 @@ from pytest import raises
 import opendrop.utility.events as events
 
 
-class EventSourceTestWrapper:
-    def __init__(self):
-        self._event_source = events.EventSource()
-
-    def __getattr__(self, name):
-        def f(*args, **kwargs):
-            return getattr(self._event_source, name)('on_my_event', *args, **kwargs)
-
-        return f
-
-    @property
-    def num_connected(self):
-        return self._event_source.num_connected('on_my_event')
-
-
-@pytest.fixture(params=['normal', 'event_source_wrapped'])
+@pytest.fixture
 def event(request):
-    """Create and return a new Event or a special wrapper object to test EventSource functionality"""
-    if request.param == 'normal':
-        return events.Event()
-    elif request.param == 'event_source_wrapped':
-        return EventSourceTestWrapper()
+    """Create and return a new Event"""
+    return events.Event()
 
 
 @pytest.fixture
@@ -347,6 +329,22 @@ def test_event_num_connected(event):
     assert event.num_connected == 1
 
 
+def test_event_connect_once_recursion(event):
+    count = 0
+
+    def cb():
+        nonlocal count
+
+        count += 1
+        assert count == 1
+
+        event.fire()
+
+    event.connect(cb, once=True, immediate=True)
+
+    event.fire()
+
+
 class TestEventSource:
     def setup(self):
         self.event_source = events.EventSource()
@@ -360,7 +358,7 @@ class TestEventSource:
             def handle_name0_event0(self):
                 self.name0_event0_count += 1
 
-            @events.handler('name1', 'on_event0')
+            @events.handler('name1', 'on_event0', immediate=True)
             def handle_name1_event0(self):
                 self.name1_event0_count += 1
 
@@ -374,15 +372,21 @@ class TestEventSource:
 
         self.event_source.connect_handlers(self.handlers_obj, 'name0')
 
-        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name0_event0)
-        assert not self.event_source.is_connected('on_event0', self.handlers_obj.handle_name1_event0)
+        assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name0_event0)
+        assert not self.event_source.on_event0.is_connected(self.handlers_obj.handle_name1_event0)
 
         self.event_source.connect_handlers(self.handlers_obj, 'name1')
 
-        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name0_event0)
-        assert self.event_source.is_connected('on_event0', self.handlers_obj.handle_name1_event0)
+        assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name0_event0)
+        assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name1_event0)
 
-    @pytest.mark.asyncio
+    def test_connect_with_immediate(self):
+        self.event_source.connect_handlers(self.handlers_obj, 'name1')
+
+        self.event_source.on_event0.fire()
+
+        assert self.handlers_obj.name1_event0_count == 1
+
     async def test_disconnect_handlers(self):
         self.event_source.connect_handlers(self.handlers_obj, 'name0')
 
@@ -409,57 +413,18 @@ class TestEventSource:
 
         self.handlers_obj.handle_name0_event1 = events.handler('name0', 'on_event1')(Mock())
 
-        self.event_source.fire('on_event1'); await asyncio.sleep(0)
+        self.event_source.on_event1.fire(); await asyncio.sleep(0)
 
         self.handlers_obj.handle_name0_event1.assert_not_called()
 
         self.event_source.reconnect_handlers(self.handlers_obj, 'name0')
 
-        self.event_source.fire('on_event1'); await asyncio.sleep(0)
+        self.event_source.on_event1.fire(); await asyncio.sleep(0)
 
         self.handlers_obj.handle_name0_event1.assert_called_once_with()
 
+    def test_get_event(self):
+        event = self.event_source.my_event
 
-def test_get_handlers():
-    class MyClass:
-        @events.handler('name0', 'on_event0')
-        def handle_name0_event0(self):
-            pass
-
-        @events.handler('name1', 'on_event0')
-        def handle_name1_event0(self):
-            pass
-
-    assert set(events.get_handlers_from_obj(MyClass)) == {MyClass.handle_name0_event0, MyClass.handle_name1_event0}
-
-
-def test_handler_with_immediate():
-    class MyClass:
-        handle_name0_event0 = events.handler('name0', 'on_event0', immediate=True)(Mock())
-
-    my_obj = MyClass()
-
-    my_event_source = events.EventSource()
-
-    my_event_source.connect_handlers(my_obj, 'name0')
-
-    my_event_source.fire('on_event0')
-
-    my_obj.handle_name0_event0.assert_called_once_with()
-
-
-def test_event_connect_once_recursion(event):
-    count = 0
-
-    def cb():
-        nonlocal count
-
-        count += 1
-
-        assert count == 1
-
-        event.fire()
-
-    event.connect(cb, once=True, immediate=True)
-
-    event.fire()
+        assert isinstance(event, events.Event)
+        assert event == self.event_source.my_event == self.event_source['my_event']

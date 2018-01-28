@@ -75,7 +75,7 @@ class TestObservation:
     async def test_on_ready_event(self):
         cb = Mock()
 
-        self.o.connect('on_ready', cb)
+        self.o.events.on_ready.connect(cb)
 
         asyncio.get_event_loop().call_soon(self.o.load, self.image)
 

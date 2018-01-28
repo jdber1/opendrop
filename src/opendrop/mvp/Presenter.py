@@ -3,6 +3,7 @@ from typing import Generic, Tuple, Type, TypeVar, Optional
 from opendrop.mvp.Model import Model
 from opendrop.mvp.View import View
 from opendrop.utility.events import EventSource, handler
+from opendrop.utility.events.events import HasEvents
 
 T = TypeVar('T', bound=Model)
 S = TypeVar('S', bound=View)
@@ -21,7 +22,7 @@ class PresenterMeta(type(Generic)):
         return ParametrizedPresenter
 
 
-class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
+class Presenter(Generic[T, S], HasEvents, metaclass=PresenterMeta):
     IGNORE = False  # type: bool
 
     _args = (Model, View)  # type: Tuple[Optional[Type[Model]], Type[View]]
@@ -36,7 +37,7 @@ class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
                 type(view).__name__, self.controls_via().__name__, type(self).__name__
             ))
 
-        EventSource.__init__(self)
+        self.events = EventSource()
 
         self.model = model  # type: Optional[T]
 
@@ -91,13 +92,15 @@ class Presenter(Generic[T, S], EventSource, metaclass=PresenterMeta):
         self.teardown()
 
     def _connect_handlers(self) -> None:
-        self.view.connect_handlers(self, 'view')
-        self.model.connect_handlers(self, 'model')
+        self.view.events.connect_handlers(self, 'view')
+
+        if self.model is not None:
+            self.model.events.connect_handlers(self, 'model')
 
     # Event handlers
 
     @handler('view', 'on_request_close')
     def _handle_request_close(self) -> None:
-        if self.view.num_connected('on_request_close') == 1 \
-           and self.view.is_connected('on_request_close', self._handle_request_close):
+        if self.view.events.on_request_close.num_connected == 1 \
+           and self.view.events.on_request_close.is_connected(self._handle_request_close):
             self.view.close()

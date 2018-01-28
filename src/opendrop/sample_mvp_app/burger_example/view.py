@@ -75,7 +75,7 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
         meal_input.connect(
             'changed', lambda w: self._on_order_changed('meal_size', meal_input.get_active_text()))
 
-        order_button.connect('clicked', partial(self.fire_ignore_args, 'on_order_button_clicked'))
+        order_button.connect('clicked', self.events.on_order_button_clicked.fire_ignore_args)
 
         # -- Keep these widgets accessible --
         self.cheese_input = cheese_input
@@ -85,7 +85,7 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
         self.order_button = order_button
 
     def _on_order_changed(self, name: str, value: Any) -> None:
-        self.fire('on_order_changed', name, value)
+        self.events.on_order_changed.fire(name, value)
 
     def add_meal_size(self, display: str) -> None:
         self.meal_input.append(id=display, text=display)

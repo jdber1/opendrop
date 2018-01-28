@@ -84,7 +84,7 @@ class ImageSlideshowObserverPreview(ObserverPreview):
         return self._observer.num_images
 
     def show(self, index: int):
-        self.fire('on_update', self._observer.get_image(index))
+        self.events.on_update.fire(self._observer.get_image(index))
 
     def close(self):
         # No need to do any clean up
