@@ -1,9 +1,11 @@
 from typing import Optional
 
+from gi.repository import Gtk
+
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.observer.bases import ObserverPreview
+from opendrop.observer.gtk import PreviewViewer, PreviewViewerController
 from opendrop.sample_mvp_app.observer_viewer.iview import IObserverViewerView
-from opendrop.widgets.observer.preview_viewer import PreviewViewer
 
 
 class ObserverViewerView(GtkWindowView, IObserverViewerView):
@@ -11,17 +13,20 @@ class ObserverViewerView(GtkWindowView, IObserverViewerView):
         self.hidden = True
 
         # -- Build UI --
-        viewer = PreviewViewer()
+        body = Gtk.Grid()
 
-        self.window.add(viewer)
+        self.viewer = PreviewViewer(hexpand=True, vexpand=True)
+        viewer_controller = PreviewViewerController(viewer=self.viewer)
 
-        viewer.show()
+        body.attach(self.viewer, 0, 0, 1, 1)
+        body.attach(viewer_controller, 0, 1, 1, 1)
 
-        # -- Keep these widgets accessible --
-        self.viewer = viewer
+        self.window.add(body)
+
+        body.show_all()
 
     def set_viewer_preview(self, preview: Optional[ObserverPreview]):
-        self.viewer.set_preview(preview)
+        self.viewer.props.preview = preview
 
         self.hidden = False
 
