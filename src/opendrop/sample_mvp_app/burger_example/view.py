@@ -1,27 +1,25 @@
-from functools import partial
-from typing import Any
-
 from gi.repository import Gtk
 
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
+from opendrop.utility import data_binding
 
 
 class BurgerExampleView(GtkWindowView, IBurgerExampleView):
     def setup(self) -> None:
         # -- Build the UI --
-        listbox = Gtk.ListBox()
-        self.window.add(listbox)
+        body = Gtk.ListBox()
+        self.window.add(body)
 
         # Cheese row
         row = Gtk.ListBoxRow(selectable=False)
-        listbox.add(row)
+        body.add(row)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
         row.add(hbox)
 
         cheese_label = Gtk.Label('Slices of cheese:', xalign=0)
-        cheese_input = Gtk.SpinButton(
+        cheese_slices_input = Gtk.SpinButton(
             adjustment=Gtk.Adjustment(value=0, lower=0, upper=4, step_incr=1),
             numeric=True,
             digits=0,
@@ -29,11 +27,11 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
         )
 
         hbox.pack_start(cheese_label, True, True, 0)
-        hbox.pack_start(cheese_input, True, True, 0)
+        hbox.pack_start(cheese_slices_input, True, True, 0)
 
         # Bacon row
         row = Gtk.ListBoxRow(selectable=False)
-        listbox.add(row)
+        body.add(row)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
         row.add(hbox)
@@ -46,21 +44,21 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
 
         # Meal size row
         row = Gtk.ListBoxRow(selectable=False)
-        listbox.add(row)
+        body.add(row)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
         row.add(hbox)
         
         meal_label = Gtk.Label('Meal size:', xalign=0)
-        meal_input = Gtk.ComboBoxText()
+        meal_size_input = Gtk.ComboBoxText()
 
-        meal_input.set_active(0)
+        meal_size_input.set_active(0)
 
         hbox.pack_start(meal_label, True, True, 0)
-        hbox.pack_start(meal_input, True, True, 0)
+        hbox.pack_start(meal_size_input, True, True, 0)
 
         row = Gtk.ListBoxRow(selectable=False)
-        listbox.add(row)
+        body.add(row)
 
         order_button = Gtk.Button(label='Place Order')
         row.add(order_button)
@@ -68,37 +66,53 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
         self.window.show_all()
 
         # -- Attach events --
-        cheese_input.connect(
-            'value-changed', lambda w: self._on_order_changed('cheese_slices', cheese_input.get_value_as_int()))
+        cheese_slices_input.connect(
+            'value-changed', lambda w: data_binding.poke(self, BurgerExampleView.cheese_slices))
         bacon_input.connect(
-            'toggled', lambda w: self._on_order_changed('bacon', bacon_input.get_active()))
-        meal_input.connect(
-            'changed', lambda w: self._on_order_changed('meal_size', meal_input.get_active_text()))
+            'toggled', lambda w: data_binding.poke(self, BurgerExampleView.bacon))
+        meal_size_input.connect(
+            'changed', lambda w: data_binding.poke(self, BurgerExampleView.meal_size))
 
         order_button.connect('clicked', self.events.on_order_button_clicked.fire_ignore_args)
 
         # -- Keep these widgets accessible --
-        self.cheese_input = cheese_input
+        self.cheese_input = cheese_slices_input
         self.bacon_input  = bacon_input
-        self.meal_input   = meal_input
+        self.meal_input   = meal_size_input
 
         self.order_button = order_button
-
-    def _on_order_changed(self, name: str, value: Any) -> None:
-        self.events.on_order_changed.fire(name, value)
 
     def add_meal_size(self, display: str) -> None:
         self.meal_input.append(id=display, text=display)
 
-    def edit_order(self, name: str, value: Any) -> None:
-        if name == 'cheese_slices':
-            self.cheese_input.props.value = int(value)
-        elif name == 'bacon':
-            self.bacon_input.props.active = bool(value)
-        elif name == 'meal_size':
-            self.meal_input.props.active_id = str(value)
+    @data_binding.property
+    def cheese_slices(self) -> int:
+        return self.cheese_input.props.value
 
-    def update_display_cost(self, cost: float) -> None:
+    @cheese_slices.setter
+    def cheese_slices(self, value: int) -> None:
+        self.cheese_input.props.value = value
+
+    @data_binding.property
+    def bacon(self) -> bool:
+        return self.bacon_input.props.active
+
+    @bacon.setter
+    def bacon(self, value: bool) -> None:
+        self.bacon_input.props.active = value
+
+    @data_binding.property
+    def meal_size(self) -> str:
+        return self.meal_input.props.active_id
+
+    @meal_size.setter
+    def meal_size(self, value: str) -> None:
+        self.meal_input.props.active_id = value
+
+    order_cost = data_binding.property()
+
+    @order_cost.setter
+    def order_cost(self, cost: float) -> None:
         self.order_button.props.label = 'Place order (${0:.2f})'.format(cost)
 
     def show_order_confirmation(self, total_cost: float) -> None:
