@@ -57,7 +57,7 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
 
     @handler('view', 'on_user_cancel_button_clicked')
     def handle_cancel_clicked(self):
-        self.view.fire('on_request_close')
+        self.view.events.on_request_close.fire()
 
     @handler('view', 'on_request_close')
     def handle_request_close(self):
