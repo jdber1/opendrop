@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Generic, TypeVar, Union, Any, Mapping, Optional, Dict
+from typing import Generic, TypeVar, Union, Any, Mapping, Optional, Dict, Tuple
 
 from opendrop.mvp.Model import Model
+from opendrop.utility import data_binding
 
 T = TypeVar('T')
 
@@ -103,39 +104,56 @@ class BurgerOrder(Model):
     def __init__(self):
         super().__init__()
 
-        self._order = {
-            'cheese_slices': CheeseSlicesVar(0),
-            'bacon': BaconVar(False),
-            'meal_size': MealSizeVar(MealSizeType.SMALL)
-        }  # type: Dict[str, BurgerItemVar]
+        self._cheese_slices = CheeseSlicesVar(0)
+        self._bacon = BaconVar(False)
+        self._meal_size = MealSizeVar(MealSizeType.SMALL)
 
-        self._cache = {
-            name: item.get() for name, item in self._order.items()
-        }
+    @data_binding.property
+    def cheese_slices(self) -> int:
+        return self._cheese_slices.get()
 
-    def check_for_changes(self) -> None:
-        for name, order_value in self.order.items():
-            if self._cache[name] != order_value:
-                self._cache[name] = order_value
+    @cheese_slices.setter
+    def cheese_slices(self, value: int):
+        self._cheese_slices.set(value)
 
-                self.events.on_order_changed.fire(name, order_value)
+        self.update_order_cost()
 
-    @property
-    def order(self) -> Mapping[str, BurgerItemVar]:
-        return {name: item.get() for name, item in self._order.items()}
+    @data_binding.property
+    def bacon(self) -> bool:
+        return self._bacon.get()
 
-    def edit_order(self, name: str, new_value: Any) -> None:
-        self._order[name].set(new_value)
+    @bacon.setter
+    def bacon(self, value: bool) -> None:
+        self._bacon.set(value)
 
-        self.check_for_changes()
+        self.update_order_cost()
 
-        self.events.on_order_cost_changed.fire()
+    @data_binding.property
+    def meal_size(self) -> MealSizeType:
+        return self._meal_size.get()
 
-    @property
+    @meal_size.setter
+    def meal_size(self, value: MealSizeType) -> None:
+        self._meal_size.set(value)
+
+        self.update_order_cost()
+
+    @data_binding.property
     def order_cost(self) -> float:
+        return self._order_cost
+
+    @order_cost.setter
+    def order_cost(self, value: float) -> None:
+        self._order_cost = value
+
+    @property
+    def order(self) -> Tuple[BurgerItemVar, ...]:
+        return self._cheese_slices, self._bacon, self._meal_size
+
+    def update_order_cost(self):
         order_cost = self.BASE_COST  # type: float
 
-        for item in self._order.values():
+        for item in self.order:
             order_cost += item.price
 
-        return order_cost
+        self.order_cost = order_cost
