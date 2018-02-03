@@ -379,7 +379,7 @@ class UserInterface(tk.Toplevel):
             self.constant_volume_bool.set_value(data[14][1])
             self.syringe_inner_diameter.set_value(data[15][1])
             self.volume_change_threshold.set_value(data[16][1])
-            self.serial_device.set_value(data[17][1])
+            # self.serial_device.set_value(data[17][1])
 
             if os.path.isdir(given_dir):
                 self.directory.set_value(given_dir) # set given directory
@@ -404,7 +404,7 @@ class UserInterface(tk.Toplevel):
         user_input_data.constant_volume_bool = self.constant_volume_bool.get_value()
         user_input_data.syringe_inner_diameter = self.syringe_inner_diameter.get_value()
         user_input_data.volume_change_threshold = self.volume_change_threshold.get_value()
-        user_input_data.serial_device = self.serial_device.get_value()
+        # user_input_data.serial_device = self.serial_device.get_value()
         temp_filename = self.filename_string.get_value()
         if temp_filename == '':
             temp_filename = "Extracted_data"
@@ -430,8 +430,8 @@ class UserInterface(tk.Toplevel):
             ('Threshold value', self.threshold_val.get_value()),
             ('Constant volume', self.constant_volume_bool.get_value()),
             ('Syringe inner diameter', self.syringe_inner_diameter.get_value()),
-            ('Volume change threshold', self.volume_change_threshold.get_value()),
-            ('Serial device', self.serial_device.get_value())
+            ('Volume change threshold', self.volume_change_threshold.get_value())#,
+            # ('Serial device', self.serial_device.get_value())
         ])
         writer = csv.writer(open(PATH_TO_FILE, 'w'))
         for row in parameter_vector:
