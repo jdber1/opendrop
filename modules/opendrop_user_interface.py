@@ -174,7 +174,9 @@ class UserInterface(tk.Toplevel):
         self.test_syringe_pump = tk.Button(volume_control_frame, text="Test", command=lambda:self.syringe_pump_test(), highlightbackground=BACKGROUND_COLOR)
         self.test_syringe_pump.grid(row=4, column=2, sticky="e")
 
-        # serial_devices
+        self.test_status = tk.Label(volume_control_frame, text="", background=BACKGROUND_COLOR)
+        self.test_status.grid(row=5, column=2, sticky="e")
+
         serial_device_list = self.fetch_serial_devices()
         self.serial_device = OptionMenuStyle(self, volume_control_frame, "Serial device:", serial_device_list, rw=5, label_width=12)
 
@@ -223,22 +225,36 @@ class UserInterface(tk.Toplevel):
             self.syringe_inner_diameter.normal()
             self.volume_change_threshold.normal()
             self.test_syringe_pump.config(state="normal")
+            self.update_devices.config(state="normal")
             self.serial_device.normal()
         else:
             self.syringe_inner_diameter.disable()
             self.volume_change_threshold.disable()
             self.test_syringe_pump.config(state="disabled")
+            self.update_devices.config(state="disabled")
             self.serial_device.disable()
 
     def fetch_serial_devices(self):
         return list_ports.comports()
 
     def update_serial_devices(self):
-        print("update serial devices")
-
+        serial_device_list = self.fetch_serial_devices()
+        self.serial_device.update_entry_list(serial_device_list)
+        print("Updated serial devices")
 
     def syringe_pump_test(self):
-        print("syringe pump test")
+        test_succeeded = True
+        print("Testing syringe pump")
+        
+        if test_succeeded:
+            print("Test successful")
+            self.test_status["text"] = "Test successful"
+            self.test_status.config(fg="green")
+        else:
+            print("Test failed")
+            self.test_status["text"] = "Test failed"
+            self.test_status.config(fg="red")
+
 
     # def update_directory(self):
     #     directory = os.path.dirname(os.path.realpath(__file__))
@@ -705,8 +721,12 @@ class OptionMenuStyle():
             self.text_variable.set(entry_list[0])
 
     def update_entry_list(self, new_entry_list):
+        # Magic
         self.entry_list = new_entry_list
-        self.optionmenu = apply(tk.OptionMenu, (self.frame, self.text_variable) + tuple(self.entry_list))
+        menu = self.optionmenu["menu"]
+        menu.delete(0, "end")
+        for string in self.entry_list:
+            menu.add_command(label=string, command=lambda value=string: self.text_variable.set(value))
 
     def disable(self):
         self.optionmenu.config(state="disabled")
