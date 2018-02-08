@@ -20,6 +20,7 @@ from modules.read_image import get_image
 from modules.opendrop_select_regions import set_regions
 from modules.initialise_parameters import initialise_parameters
 from modules.analyse_needle import calculate_needle_diameter
+from modules.syringe_pump import SyringePump
 
 from modules.pendant_extract_profile import PendantExtractProfile
 from modules.pendant_extract_data import PendantExtractData
@@ -35,8 +36,6 @@ from modules.sessile_fitting_plots import SessileFittingPlots
 #from opendrop_user_interface import UserInterface
 
 # from modules. import add_data_to_lists
-
-
 
 import os
 import numpy as np
@@ -102,9 +101,27 @@ def opendrop(drop_type, auto_test):
     if user_inputs.interfacial_tension_boole:
         plots = PlotManager(user_inputs.wait_time, n_frames)
 
+    initial_volume = 0;
+    current_volume = 0;
+    syringe_inner_diameter = 0;
+    volume_change_threshold = 0;
+    abs_total_volume_change = 0;
+    pump = None
+
+    if (n_frames > 1) and (user_inputs.constant_volume_bool):
+        syringe_inner_diameter = user_inputs.syringe_inner_diameter
+        volume_change_threshold = user_inputs.volume_change_threshold
+        pump_path = user_inputs.serial_device.split()[0]
+        pump = SyringePump(pump_path)
+
+        # Diameter is in mm
+        pump.setDiameter(syringe_inner_diameter)
+        # Accumulator units are dependent on the diameter value given, so we'll
+        # force it to be uL
+        pump.setAccumUnits("UL")
+        pump.clearVolumeAccum("both")
 
     get_image(raw_experiment, user_inputs, -1)
-
 
     set_regions(raw_experiment, user_inputs)
 
@@ -131,11 +148,62 @@ def opendrop(drop_type, auto_test):
 
         if user_inputs.interfacial_tension_boole:
             plots.append_data_plot(data_vector, i)
+
+        if user_inputs.constant_volume_bool:
+            # The 3rd element of data_vector is the drop volume in uL
+            volume = data_vector[2]
+            print("Drop volume for frame {0} is {1:01.6f} uL.".format(i+1, volume))
+
+            if i == 0:
+                initial_volume = volume
+                current_volume = volume
+            else:
+                current_volume = volume
+
+            volume_difference = current_volume - initial_volume
+            abs_total_volume_change += abs(volume_difference)
+
+            if (abs(volume_difference) > volume_change_threshold) and (i != (n_frames - 1)):
+                print("Difference between current drop volume and initial is {0} uL.".format(volume_difference))
+
+                # If the volume has increased
+                if volume_difference > 0:
+                    pump_direction = "withdraw"
+
+                # If the volume has decreased
+                elif volume_difference < 0:
+                    pump_direction = "infuse"
+
+                # We don't care about the sign anymore, so let's avoid more calls to abs
+                volume_difference = abs(volume_difference)
+
+                # Since volume adjustments are going to be pretty small, we can
+                # perform them in a few seconds without going over the max flow
+                # rate of the pump
+                # Currently the rate is calculated so as the adjustment is
+                # completed in a fifth of the wait time between frames
+                rate = 60 * (volume_difference / ((int(user_inputs.wait_time) * 0.2)))
+                print("Rate to {0} {1} uL in 5 seconds is {2} uL/min.".format(pump_direction, volume_difference, rate))
+                # Rate is in micro litres per minute
+                units = "UM"
+
+                # This makes the pump automatically stop after the desired
+                # volume has been dispensed
+                pump.setVolumeToDispense(volume_difference)
+                pump.setDirection(pump_direction)
+                pump.setRate(rate, units)
+
+                pump.run()
+
+                print("Absolute total volume difference: {0}".format(abs_total_volume_change))
+                print("Pumping...")
+                print("Volume accumulator in nL (infuse, withdraw): {0}".format(pump.getVolumeAccum()))
+
         if i != (n_frames - 1):
             time_loop = timeit.default_timer() - time_start
             pause_wait_time(time_loop, user_inputs.wait_time)
 
-#       for auto test funtion
+        # for auto test funtion
         if auto_test != None and drop_type == 1:
 
             plots.fig.savefig(os.path.dirname(__file__)+'/outputs/pendantDrop_figures.jpg')
@@ -159,7 +227,7 @@ def opendrop(drop_type, auto_test):
             else:
                 print("the figures output is incorrect")
 
-#       end of the auto test function
+        # end of the auto test function
 
         extract_data.export_data(export_filename,i)
 

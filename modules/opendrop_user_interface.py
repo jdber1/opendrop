@@ -15,7 +15,9 @@ import webbrowser
 import sys
 import os
 import csv
+import serial.serialutil
 import serial.tools.list_ports as list_ports
+from syringe_pump import SyringePump
 
 # from classes import ExperimentalSetup
 
@@ -243,17 +245,26 @@ class UserInterface(tk.Toplevel):
         print("Updated serial devices")
 
     def syringe_pump_test(self):
-        test_succeeded = True
-        print("Testing syringe pump")
-        
-        if test_succeeded:
-            print("Test successful")
-            self.test_status["text"] = "Test successful"
-            self.test_status.config(fg="green")
+        serial_device = self.serial_device.get_value()
+
+        if (serial_device):
+            print("Testing syringe pump")
+            try:
+                print(serial_device)
+                pump = SyringePump(serial_device.split()[0])
+                pump.getVolumeAccum()
+                print("Test successful")
+                self.test_status["text"] = "Test successful"
+                self.test_status.config(fg="green")
+
+            except serial.serialutil.SerialException as err:
+                print("SerialException: {0}".format(err))
+                print("Test failed")
+                self.test_status["text"] = "Test failed"
+                self.test_status.config(fg="red")
         else:
-            print("Test failed")
-            self.test_status["text"] = "Test failed"
-            self.test_status.config(fg="red")
+            self.test_status["text"] = "Please select a serial device"
+            self.test_status.config(fg="black")
 
 
     # def update_directory(self):
@@ -286,11 +297,9 @@ class UserInterface(tk.Toplevel):
         self.root.bind("<Return>", lambda _: self.run(user_input_data))
         self.root.bind("<Escape>", lambda _: self.quit())
 
-
         run_quit_frame.columnconfigure(0, weight=1)
         run_quit_frame.columnconfigure(2, weight=1)
         run_quit_frame.columnconfigure(4, weight=1)
-
 
         # save_images_run.grid(row=0, column=1, sticky="we")#padx=15, pady=10, sticky=W+E)
         # save_images_quit.grid(row=0, column=3, sticky="we")#padx=15, pady=10, sticky=W+E)
@@ -321,7 +330,6 @@ class UserInterface(tk.Toplevel):
 
     def remove_underline_link(self, event):
         self.label_link.config(text="opencolloids.com", font=self.link_font, fg="blue")# underline = False)
-
 
     def run(self, user_input_data):
         self.update_user_settings(user_input_data)
@@ -419,6 +427,7 @@ class UserInterface(tk.Toplevel):
         user_input_data.constant_volume_bool = self.constant_volume_bool.get_value()
         user_input_data.syringe_inner_diameter = self.syringe_inner_diameter.get_value()
         user_input_data.volume_change_threshold = self.volume_change_threshold.get_value()
+        user_input_data.serial_device = self.serial_device.get_value()
         temp_filename = self.filename_string.get_value()
         if temp_filename == '':
             temp_filename = "Extracted_data"
