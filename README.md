@@ -1,9 +1,4 @@
-OpenDrop README
-===============
-
-
-Release notes and license
-=========================
+# Release notes and license
 
 OpenDrop is released under the GNU GPL License. You are free to modify and distribute the code, but always under the same license (i.e. you cannot make commercial derivatives).
 
@@ -31,29 +26,35 @@ If you find any bugs, require assistance, or have implemented improvements/exten
 
 To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ricotabor/opendrop/blob/master/manual/manual.ipynb).
 
-Contents
-========
 
-0) [Operating system](#operating-system)
+# Contents
 
-1) [Installation](#installation)
+1\. [Operating system](#operating-system)
 
-2) [Image source selection](#image-source-selection)
+2\. [Installation](#installation)
 
-3) [Running measurements](#running-measurements)
+3\. [Image source selection](#image-source-selection)
 
-[Appendix A](#appendix-a): preparing Ubuntu for OpenDrop
+4\. [Running measurements](#running-measurements)
 
-[Appendix B](#appendix-b): preparing Windows 7 for OpenDrop
+5\. [Version 2 changes](#version-2-changes)
 
-[Appendix C](#appendix-c): preparing Mac OSX for OpenDrop
+[Appendix A: preparing Ubuntu for OpenDrop](#appendix-a)
 
-[Appendix D](#appendix-d): preparing FlyCap2 for using Point Grey cameras
+[Appendix B: upgrading from OpenDrop v1 to OpenDrop v2](#appendix-b)
+
+[Appendix C: preparing Windows 7 for OpenDrop](#appendix-c)
+
+[Appendix D: preparing Mac OSX for OpenDrop](#appendix-d)
+
+[Appendix E: preparing FlyCap2 for using Point Grey cameras](#appendix-e)
+
 
 # Operating system:
 In the spirit of its open source and free nature, OpenDrop is recommended for use with Linux, and has been extenstively tested on Ubuntu 14.04 LTS.
 
 OpenDrop also works on Mac OSX and Windows, provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
+
 
 # Installation:
 OpenDrop itself does not require installation. Simply place the files and modules folder in a suitable location on your computer.
@@ -69,17 +70,22 @@ If not contained within the Python/OpenCV installation method that you choose, a
 
 Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX.
 
-# 2. Image source selection:
+
+# Image source selection:
 OpenDrop can currently utilise images from three sources:
   * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 USB cameras.
   * USB camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". a
   * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
 
-# 3. Running measurements:
+
+# Running measurements:
 For Ubuntu, the OpenDrop.py file can be made "double-clickable" by changing the default Nautilus preferences (Edit --> Preferences --> Behaviour). Similarly, so can the more universal "run" file. If your operating system is setup for this behaviour, simply double-click "run" to start the software.
 
 Alternatively, running:
->  ./run
+
+```
+./run
+```
 
 in a terminal will provide a verbose terminal and run the program.
 
@@ -90,6 +96,21 @@ Once the settings have been suitably adjusted, select "Run". This should capture
 The automated fitting routine will then commence. A file is created with the specified name and a date-time stamp containing the fitted data.
 
 
+# Version 2 changes
+
+- Support for 3 new measurement modes has been added:
+  - Sessile drop
+  - Contact angle (free bubble on surface)
+  - Contact angle (bubble on surface with needle present)
+
+- Constant volume mode:
+  - Allows for long term measurements of pendant droplets by compensating for
+    evaporation by making small adjustments to drop volume
+  - Supports [PumpSystemsInc.](http://www.syringepump.com/) syringe pumps
+    (tested with NE-1000 model but other models should work)
+
+- Genearal UI and performance tweaks
+
 
 # Appendix A
 
@@ -97,49 +118,57 @@ The automated fitting routine will then commence. A file is created with the spe
 
 The following commands typed into the terminal will prepare an installation of Ubuntu 14.04.01 for OpenDrop, installing all required libraries and fixing dependencies. An unresolvable conflict (that may have since been corrected) was encountered when trying this process with 14.04.02.
 
-> sudo apt-get update
+**NB:** On newer versions of of Ubuntu, some packages listed below may not
+longer be available for download. This is fine since those packages are not used
+by newer version of OpenCV. If this is the case, the latest version of
+OpenCV 2 should be installed, rather than 2.4.9. See
+[here](https://opencv.org/releases.html) for the latest release of OpenCV.
 
-> sudo apt-get upgrade
+```
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install build-essential libgtk2.0-dev libjpeg-dev libtiff4-dev libjasper-dev libopenexr-dev cmake python-dev python-numpy python-tk libtbb-dev libeigen3-dev yasm libfaac-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev libx264-dev libqt4-dev libqt4-opengl-dev sphinx-common texlive-latex-extra libv4l-dev libdc1394-22-dev libavcodec-dev libavformat-dev libswscale-dev default-jdk ant libvtk5-qt4-dev python-pil.imagetk
+sudo apt-get install python-scipy
+sudo apt-get install python-matplotlib
+cd ~
+wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.9/opencv-2.4.9.zip
+unzip opencv-2.4.9.zip
+cd opencv-2.4.9
+mkdir build
+cd build
+cmake -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_VTK=ON ..
+make
+sudo make install
+```
 
-> sudo apt-get install build-essential libgtk2.0-dev libjpeg-dev libtiff4-dev libjasper-dev libopenexr-dev cmake python-dev python-numpy python-tk libtbb-dev libeigen3-dev yasm libfaac-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev libx264-dev libqt4-dev libqt4-opengl-dev sphinx-common texlive-latex-extra libv4l-dev libdc1394-22-dev libavcodec-dev libavformat-dev libswscale-dev default-jdk ant libvtk5-qt4-dev
+After the installation has finished, add the line `/usr/local/lib` to your
+`opencv.conf` and then run ldconfig:
 
-> sudo apt-get install python-scipy
+```
+sudo gedit /etc/ld.so.conf.d/opencv.conf
+sudo ldconfig
+```
 
-> sudo apt-get install python-matplotlib
-
-> cd ~
-
-> wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.9/opencv-2.4.9.zip
-
-> unzip opencv-2.4.9.zip
-
-> cd opencv-2.4.9
-
-> mkdir build
-
-> cd build
-
-> cmake -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_VTK=ON ..
-
-> make
-
-> sudo make install
-
-> sudo gedit /etc/ld.so.conf.d/opencv.conf
-
-and add line
-/usr/local/lib
-
-> sudo ldconfig
-
-> sudo gedit /etc/bash.bashrc
-
-and add lines
+Finally, add the lines
+```
 PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 export PKG_CONFIG_PATH
-close the console and open a new one, restart the computer or logout and then login again.
+```
+to your `.bashrc` or equivalent bash config file, then restart your console or
+source your `.bashrc` so the changes take effect.
+
 
 # Appendix B
+
+## Upgrading from OpenDrop v1 to OpenDrop v2
+The only package you need to install should be python-pil.imagetk:
+
+```
+sudo apt-get install python-pil.imagetk
+```
+
+
+# Appendix C
 
 ## Preparing Windows 7 for OpenDrop.
 * Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
@@ -149,26 +178,39 @@ close the console and open a new one, restart the computer or logout and then lo
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
-# Appendix C
+
+# Appendix D
 
 ## Preparing Mac OSX for OpenDrop.
 Coming very soon!!
 
-# Appendix D
+
+# Appendix E
 
 ## Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
-Download the latest FlyCap2 from https://www.ptgrey.com/support/downloads (login required) - tested using 2.7.3.13
+Download the latest FlyCap2 software from
+[here](https://www.ptgrey.com/support/downloads)
+(login required).
 
-> sudo apt-get install glade
+**NB:** tested using 2.7.3.13
 
-> sudo apt-get install libraw1394-11 libgtk2.0-0 libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-1.0-0
+```
+sudo apt-get install glade
+sudo apt-get install libraw1394-11 libgtk2.0-0 libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-1.0-0
+```
 
 Unpack the FlyCap2 zip, and find your way into the directory. Run:
 
-> sh install_flycapture.sh
+```
+sh install_flycapture.sh
+```
 
 To make the FCGrab script:
 
-Copy the FlyCapture_building directory from Dropbox to somewhere convenient
-Move into /src/FCGrab
-> make
+Copy the FlyCapture_building directory from Dropbox to somewhere convenient adn
+then build the script:
+
+```
+cd src/FCGrab
+make
+```
