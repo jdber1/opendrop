@@ -24,20 +24,20 @@ These citations help us not only to understand who is using and developing OpenD
 
 If you find any bugs, require assistance, or have implemented improvements/extensions, please [email](mailto:opendrop.dev@gmail.com) us.
 
-To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ricotabor/opendrop/blob/master/manual/manual.ipynb).
+To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/jdber1/opendrop/blob/master/manual/manual.ipynb).
 
 
 # Contents
 
-1\. [Operating system](#operating-system)
+[1. Operating system](#operating-system)
 
-2\. [Installation](#installation)
+[2. Installation](#installation)
 
-3\. [Image source selection](#image-source-selection)
+[3\. Image source selection](#image-source-selection)
 
-4\. [Running measurements](#running-measurements)
+[4\. Running measurements](#running-measurements)
 
-5\. [Version 2 changes](#version-2-changes)
+[5\. Version 2 changes](#version-2-changes)
 
 [Appendix A: preparing Ubuntu for OpenDrop](#appendix-a)
 
