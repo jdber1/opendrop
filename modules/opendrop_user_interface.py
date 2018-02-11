@@ -170,7 +170,7 @@ class UserInterface(tk.Toplevel):
         self.syringe_inner_diameter = FloatEntryStyle(self, volume_control_frame, "Syringe inner diameter (mm):", rw=3, width_specify=10)
         self.volume_change_threshold = FloatEntryStyle(self, volume_control_frame, "Volume change threshold ("u"\u00b5""L):", rw=4, width_specify=10)
 
-        self.update_devices = tk.Button(volume_control_frame, text="Update devices", command=lambda:self.update_serial_devices(), highlightbackground=BACKGROUND_COLOR)
+        self.update_devices = tk.Button(volume_control_frame, text="Update device list", command=lambda:self.update_serial_devices(), highlightbackground=BACKGROUND_COLOR)
         self.update_devices.grid(row=3, column=2, sticky="e")
 
         self.test_syringe_pump = tk.Button(volume_control_frame, text="Test", command=lambda:self.syringe_pump_test(), highlightbackground=BACKGROUND_COLOR)
@@ -289,7 +289,7 @@ class UserInterface(tk.Toplevel):
         run_quit_frame.grid(row=22, columnspan=5, padx=10, pady=10, sticky="we")
         # save_images_run = tk.Button(run_quit_frame, text='Run', highlightbackground=BACKGROUND_COLOR, command=self.run) # , state='disabled'
         save_images_run = tk.Button(run_quit_frame, text='Run', highlightbackground=BACKGROUND_COLOR,
-                                    command=lambda: self.run(user_input_data)) # , state='disabled'
+                                    command=lambda: self.pre_run_check(user_input_data)) # , state='disabled'
         save_images_quit = tk.Button(run_quit_frame, text='Quit', highlightbackground=BACKGROUND_COLOR, command=self.quit)
 
         # self.root.bind("<Return>", lambda _: self.callback_run(user_input_data))
@@ -331,6 +331,17 @@ class UserInterface(tk.Toplevel):
     def remove_underline_link(self, event):
         self.label_link.config(text="opencolloids.com", font=self.link_font, fg="blue")# underline = False)
 
+    def pre_run_check(self, user_input_data):
+        if (self.constant_volume_bool.get_value()):
+            if (self.serial_device.get_value()):
+                self.run(user_input_data)
+            else:
+                self.test_status["text"] = "Please select a serial device"
+                self.test_status.config(fg="black")
+
+        else:
+            self.run(user_input_data)
+
     def run(self, user_input_data):
         self.update_user_settings(user_input_data)
         self.export_parameters()
@@ -361,7 +372,6 @@ class UserInterface(tk.Toplevel):
         # if user doesnt select files - abort
         if user_input_data.number_of_frames == 0:
             sys.exit()
-
 
         self.root.destroy()
 
