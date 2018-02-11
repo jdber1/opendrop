@@ -46,6 +46,7 @@ def call_user_input(user_input_data):
 
 class UserInterface(tk.Toplevel):
     def __init__(self, user_input_data):
+        self.user_input_data = user_input_data
         self.initialise = True # need this flag to disable float and integer checking for inputs
         self.root = tk.Tk()
         self.root.geometry("+100+100")
@@ -62,10 +63,16 @@ class UserInterface(tk.Toplevel):
         self.create_plotting_checklist()
         self.create_save_location()
         self.create_image_acquisition()
+        self.create_volume_control()
 
         # Only create these widgets if we're doing pendant drop
-        if user_input_data.drop_type == 1:
-            self.create_volume_control()
+
+        # Disable constant volume checkbox if in sessile drop mode
+        if user_input_data.drop_type == 2:
+            self.constant_volume_bool.set_value(0)
+            self.constant_volume_bool.disable()
+            self.check_constant_volume_button_change()
+
         # self.create_save_box()
         self.create_run_quit(user_input_data)
         self.create_homepage_url()
@@ -410,7 +417,8 @@ class UserInterface(tk.Toplevel):
             given_dir = data[12][1]
 
             self.threshold_val.set_value(data[13][1])
-            self.constant_volume_bool.set_value(data[14][1])
+            if self.user_input_data.drop_type == 1:
+                self.constant_volume_bool.set_value(data[14][1])
             self.syringe_inner_diameter.set_value(data[15][1])
             self.volume_change_threshold.set_value(data[16][1])
 
