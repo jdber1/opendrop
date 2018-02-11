@@ -1,1 +1,1 @@
-python start.py
+python2 start.py

@@ -5,10 +5,13 @@ Plot residuals,1
 Plot profiles,1
 Plot IFT,1
 Image source,Local images
-Number of frames,20
+Number of frames,1
 Wait time,10
 Save images,0
 Create new data folder,0
-Filename,Latex
-Directory,/home/jizheh/Downloads/opendrop2.0
+Filename,test
+Directory,/home/adamsko/code/opendrop
 Threshold value,40.0
+Constant volume,1
+Syringe inner diameter,10.0
+Volume change threshold,0.1

@@ -665,12 +665,3 @@ class LabelFrameStyle():
 if __name__ == '__main__':
     UserInterface()
     # ui.app()
-
-
-
-
-
-
-
-
-
