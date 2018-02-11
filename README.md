@@ -148,7 +148,7 @@ serial device if you have multiple serial devices connected to your computer.
 
 # Appendix A
 
-## Preparing Ubuntu 14.04 for OpenDrop.
+### Preparing Ubuntu 14.04 for OpenDrop.
 
 The following commands typed into the terminal will prepare an installation of Ubuntu 14.04.01 for OpenDrop, installing all required libraries and fixing dependencies. An unresolvable conflict (that may have since been corrected) was encountered when trying this process with 14.04.02.
 
@@ -194,7 +194,7 @@ source your `.bashrc` so the changes take effect.
 
 # Appendix B
 
-## Upgrading from OpenDrop v1 to OpenDrop v2
+### Upgrading from OpenDrop v1 to OpenDrop v2
 
 The only package you need to install should be python-pil.imagetk:
 
@@ -205,7 +205,7 @@ sudo apt-get install python-pil.imagetk
 
 # Appendix C
 
-## Preparing Windows for OpenDrop.
+### Preparing Windows for OpenDrop.
 
 - Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
 - Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to.
@@ -217,14 +217,14 @@ If you have any problems, find alternative solutions, or manage to install succe
 
 # Appendix D
 
-## Preparing Mac OSX for OpenDrop.
+### Preparing Mac OSX for OpenDrop.
 
 Coming very soon!!
 
 
 # Appendix E
 
-## Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
+### Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
 
 Download the prerequisite libraries:
 ```
