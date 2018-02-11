@@ -43,7 +43,7 @@ To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ric
 
 [Appendix B: upgrading from OpenDrop v1 to OpenDrop v2](#appendix-b)
 
-[Appendix C: preparing Windows 7 for OpenDrop](#appendix-c)
+[Appendix C: preparing Windows for OpenDrop](#appendix-c)
 
 [Appendix D: preparing Mac OSX for OpenDrop](#appendix-d)
 
@@ -170,11 +170,11 @@ sudo apt-get install python-pil.imagetk
 
 # Appendix C
 
-## Preparing Windows 7 for OpenDrop.
-* Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
-* Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to.
-* Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
-* Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
+## Preparing Windows for OpenDrop.
+- Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
+- Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to.
+- Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
+- Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
@@ -188,27 +188,25 @@ Coming very soon!!
 # Appendix E
 
 ## Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
-Download the latest FlyCap2 software from
-[here](https://www.ptgrey.com/support/downloads)
-(login required).
-
-**NB:** tested using 2.7.3.13
-
+Download the prerequisite libraries:
 ```
 sudo apt-get install glade
 sudo apt-get install libraw1394-11 libgtk2.0-0 libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-1.0-0
 ```
 
-Unpack the FlyCap2 zip, and find your way into the directory. Run:
+Download the latest FlyCapture2 Viewer software from the software section on
+[this](https://www.ptgrey.com/support/downloads) website (login required).
+
+**NB:** tested using 2.7.3.13
+
+Unpack the FlyCapture2 Viewer zip and navigate to the directory and run:
 
 ```
 sh install_flycapture.sh
 ```
 
-To make the FCGrab script:
-
-Copy the FlyCapture_building directory from Dropbox to somewhere convenient adn
-then build the script:
+To make the FCGrab script, copy the FlyCapture_building directory to somewhere
+convenient and then build the script:
 
 ```
 cd src/FCGrab
