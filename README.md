@@ -34,34 +34,31 @@ To view the OpenDrop manual, click [here](http://nbviewer.ipython.org/github/ric
 Contents
 ========
 
-0) Operating system
+0) [Operating system](#operating-system)
 
-1) Installation
+1) [Installation](#installation)
 
-2) Image source selection
+2) [Image source selection](#image-source-selection)
 
-3) Running measurements
+3) [Running measurements](#running-measurements)
 
-Appendix A: preparing Ubuntu for OpenDrop
+[Appendix A](#appendix-a): preparing Ubuntu for OpenDrop
 
-Appendix B: preparing Windows 7 for OpenDrop
+[Appendix B](#appendix-b): preparing Windows 7 for OpenDrop
 
-Appendix C: preparing Mac OSX for OpenDrop
+[Appendix C](#appendix-c): preparing Mac OSX for OpenDrop
 
-Appendix D: preparing FlyCap2 for using Point Grey cameras
+[Appendix D](#appendix-d): preparing FlyCap2 for using Point Grey cameras
 
-
-
-
-0. Operating system:
+# Operating system:
 --------------------
 In the spirit of its open source and free nature, OpenDrop is recommended for use with Linux, and has been extenstively tested on Ubuntu 14.04 LTS.
 
 OpenDrop also works on Mac OSX and Windows, provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
 
-1. Installation:
+# Installation:
 ----------------
-OpenDrop itself does not require installation. Simply place the files and modules folder in a suitable location on your computer. 
+OpenDrop itself does not require installation. Simply place the files and modules folder in a suitable location on your computer.
 
 OpenDrop has dependencies on the following resources/libraries:
 - Python
@@ -72,33 +69,33 @@ If not contained within the Python/OpenCV installation method that you choose, a
 - Python-matplotlib
 - Python-numpy
 
-Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX. 
+Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX.
 
-2. Image source selection:
+# 2. Image source selection:
 --------------------------
 OpenDrop can currently utilise images from three sources:
   * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 USB cameras.
   * USB camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". a
   * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
 
-3. Running measurements:
+# 3. Running measurements:
 ------------------------
 For Ubuntu, the OpenDrop.py file can be made "double-clickable" by changing the default Nautilus preferences (Edit --> Preferences --> Behaviour). Similarly, so can the more universal "run" file. If your operating system is setup for this behaviour, simply double-click "run" to start the software.
 
 Alternatively, running:
->  ./run 
+>  ./run
 
 in a terminal will provide a verbose terminal and run the program.
 
 A window will appear requiring input for system parameters such as image source, needle diameter, droplet and continuous phase density, etc. The selection items should be fairly obvious. Boxes will be recalled from previous values after the first use.
 
-Once the settings have been suitably adjusted, select "Run". This should capture/open an image from the selected source, and bring up an OpenCV window containing this window. As requested, draw boxes over the desired fitting area of the drop, and a section of the needle that is representative and clear from contamination/aberrations. After each selection, press either the "enter" or "space" key. 
+Once the settings have been suitably adjusted, select "Run". This should capture/open an image from the selected source, and bring up an OpenCV window containing this window. As requested, draw boxes over the desired fitting area of the drop, and a section of the needle that is representative and clear from contamination/aberrations. After each selection, press either the "enter" or "space" key.
 
 The automated fitting routine will then commence. A file is created with the specified name and a date-time stamp containing the fitted data.
 
 
 
-Appendix A
+# Appendix A
 ==========
 
 Preparing Ubuntu 14.04 for OpenDrop.
@@ -136,7 +133,7 @@ The following commands typed into the terminal will prepare an installation of U
 
 > sudo gedit /etc/ld.so.conf.d/opencv.conf
 
-and add line 
+and add line
 /usr/local/lib
 
 > sudo ldconfig
@@ -148,26 +145,26 @@ PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 export PKG_CONFIG_PATH
 close the console and open a new one, restart the computer or logout and then login again.
 
-Appendix B
+# Appendix B
 ==========
 
 Preparing Windows 7 for OpenDrop.
 ------------------------------------
-* Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer). 
-* Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to. 
+* Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
+* Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to.
 * Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
 * Now open the OpenDrop folder, and double-click on "run.bat". If everything has installed correctly, OpenDrop should start.
 
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
-Appendix C
+# Appendix C
 ==========
 
 Preparing Mac OSX for OpenDrop.
 ------------------------------------
 Coming very soon!!
 
-Appendix D
+# Appendix D
 ==========
 
 Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
@@ -187,4 +184,3 @@ To make the FCGrab script:
 Copy the FlyCapture_building directory from Dropbox to somewhere convenient
 Move into /src/FCGrab
 > make
-
