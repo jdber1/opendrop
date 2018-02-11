@@ -51,13 +51,11 @@ Contents
 [Appendix D](#appendix-d): preparing FlyCap2 for using Point Grey cameras
 
 # Operating system:
---------------------
 In the spirit of its open source and free nature, OpenDrop is recommended for use with Linux, and has been extenstively tested on Ubuntu 14.04 LTS.
 
 OpenDrop also works on Mac OSX and Windows, provided that Python and OpenCV libraries are successfully installed, however this has not been extensively tested.
 
 # Installation:
-----------------
 OpenDrop itself does not require installation. Simply place the files and modules folder in a suitable location on your computer.
 
 OpenDrop has dependencies on the following resources/libraries:
@@ -72,14 +70,12 @@ If not contained within the Python/OpenCV installation method that you choose, a
 Make sure these are installed for your operating system before running OpenDrop. See Appendix A for how to prepare a fresh installation of Ubuntu 14.04 for OpenDrop, Appendix B for installation on Windows 7, and Appendix C for installation on Mac OSX.
 
 # 2. Image source selection:
---------------------------
 OpenDrop can currently utilise images from three sources:
   * Point Grey cameras (Linux/Windows - the script supplied is for Linux, but a Windows script of the same name could also be used). An installation guide for getting these set up under Ubuntu is provided in Appendix D. OpenDrop has been tested with Flea3 USB cameras.
   * USB camera (currently Linux/Mac, appears to also work on Windows 7). Selecting this option will utilise the primary camera, i.e. the one listed as "camera0". a
   * Local images (all operating systems). This option allows a user to select a locally stored image file for fitting.
 
 # 3. Running measurements:
-------------------------
 For Ubuntu, the OpenDrop.py file can be made "double-clickable" by changing the default Nautilus preferences (Edit --> Preferences --> Behaviour). Similarly, so can the more universal "run" file. If your operating system is setup for this behaviour, simply double-click "run" to start the software.
 
 Alternatively, running:
@@ -96,10 +92,8 @@ The automated fitting routine will then commence. A file is created with the spe
 
 
 # Appendix A
-==========
 
-Preparing Ubuntu 14.04 for OpenDrop.
-------------------------------------
+## Preparing Ubuntu 14.04 for OpenDrop.
 
 The following commands typed into the terminal will prepare an installation of Ubuntu 14.04.01 for OpenDrop, installing all required libraries and fixing dependencies. An unresolvable conflict (that may have since been corrected) was encountered when trying this process with 14.04.02.
 
@@ -146,10 +140,8 @@ export PKG_CONFIG_PATH
 close the console and open a new one, restart the computer or logout and then login again.
 
 # Appendix B
-==========
 
-Preparing Windows 7 for OpenDrop.
-------------------------------------
+## Preparing Windows 7 for OpenDrop.
 * Download the free Anaconda Python distribution from [here](http://continuum.io/downloads), and install (tested and works with Anaconda 64-bit Python 2.7 Graphical Installer).
 * Download the latest OpenCV release from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/) and double-click to extract it (tested and works with opencv-3.0.0-rc1.exe). The folder opencv will be created in the folder you extract to.
 * Go to the opencv/build/python/2.7/x64 folder (x86 for 32-bit), and then copy cv2.pyd to the C:/Python27/lib/site-packages/ folder. If this doesn't work, or if this folder doesn't exist, copy cv2.pyd to the C:/Anaconda/Lib/site-packages/ folder.
@@ -158,17 +150,13 @@ Preparing Windows 7 for OpenDrop.
 If you have any problems, find alternative solutions, or manage to install successfully on other Windows versions please let us know.
 
 # Appendix C
-==========
 
-Preparing Mac OSX for OpenDrop.
-------------------------------------
+## Preparing Mac OSX for OpenDrop.
 Coming very soon!!
 
 # Appendix D
-==========
 
-Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
------------------------------------------------------------------------------------------------------
+## Installing and preparing FlyCap2 software and libraries for using Point Grey cameras on Ubuntu 14.04:
 Download the latest FlyCap2 from https://www.ptgrey.com/support/downloads (login required) - tested using 2.7.3.13
 
 > sudo apt-get install glade
