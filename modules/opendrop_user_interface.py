@@ -44,6 +44,7 @@ ENTRY_WIDTH = 11
 def call_user_input(user_input_data):
     UserInterface(user_input_data)
 
+
 class UserInterface(tk.Toplevel):
     def __init__(self, user_input_data):
         self.user_input_data = user_input_data
@@ -87,12 +88,14 @@ class UserInterface(tk.Toplevel):
 
         self.root.mainloop()
 
+
     def create_title(self):
         title_frame = tk.Frame(self.root)
         title_frame.config(background=BACKGROUND_COLOR)
         title_frame.grid(row=0, columnspan=3, rowspan=1, padx=30, pady=10)
         # Label(title_frame, text="Open drop", font=("Helvetica", 36), justify=CENTER, background="lavender").grid(row=0, sticky=N)
         tk.Label(title_frame, text="Open drop", background=BACKGROUND_COLOR, font=("Helvetica", 36), anchor="center").grid(row=0)
+
 
     def create_physical_inputs(self):
         physical_frame = tk.LabelFrame(self.root, text="Physical inputs", padx=30, pady=10)
@@ -105,6 +108,7 @@ class UserInterface(tk.Toplevel):
         self.threshold_val = FloatEntryStyle(self, physical_frame, "Threshold value:", rw=4, width_specify=ENTRY_WIDTH)
 
         physical_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
+
 
     def create_plotting_checklist(self):
         clist_frame = tk.LabelFrame(self.root, text="To view during fitting", padx=30, pady=10) #, height=15)
@@ -338,6 +342,7 @@ class UserInterface(tk.Toplevel):
     def remove_underline_link(self, event):
         self.label_link.config(text="opencolloids.com", font=self.link_font, fg="blue")# underline = False)
 
+
     def pre_run_check(self, user_input_data):
         if (self.constant_volume_bool.get_value()):
             if (self.serial_device.get_value()):
@@ -385,6 +390,7 @@ class UserInterface(tk.Toplevel):
 
     def quit(self):
         sys.exit()
+
 
     def import_parameters(self):
 
@@ -487,6 +493,8 @@ class UserInterface(tk.Toplevel):
     #             return False
     #     else:
     #         return False
+
+
     def validate_float(self, action, index, value_if_allowed,
                        prior_value, text, validation_type, trigger_type, widget_name):
         # print "OnValidate:"
@@ -770,7 +778,6 @@ class LabelFrameStyle():
         self.config(background=BACKGROUND_COLOR)
         # self.grid(row=rw, column=cl, columnspan=clspan, rowspan=rwspan, sticky=stcky, padx=pdx, pady=pdy)
         self.grid(row=rw, columnspan=clspan, rowspan=rwspan, sticky="w", padx=pdx, pady=pdy)
-
 
 
 if __name__ == '__main__':
