@@ -59,6 +59,7 @@ class UserInterface(tk.Toplevel):
         self.root.title('OpenDrop v '+VERSION)
 
         self.root.configure(height=25, background=BACKGROUND_COLOR, padx=50)
+        self.serial_device_list = None
         self.create_title()
         self.create_physical_inputs()
         self.create_plotting_checklist()
@@ -190,8 +191,16 @@ class UserInterface(tk.Toplevel):
         self.test_status = tk.Label(volume_control_frame, text="", background=BACKGROUND_COLOR)
         self.test_status.grid(row=5, column=2, sticky="e")
 
-        serial_device_list = self.fetch_serial_devices()
-        self.serial_device = OptionMenuStyle(self, volume_control_frame, "Serial device:", serial_device_list, rw=5, label_width=12)
+        self.serial_device_list = self.fetch_serial_devices()
+
+        self.serial_device = OptionMenuStyle(self, volume_control_frame, "Serial device:", self.listToNumberedList(self.serial_device_list), rw=5, label_width=12)
+
+    def listToNumberedList(self, l):
+        numberedList = []
+        for i in range(0, len(l)):
+            numberedList.append(str(i+1) + " " + str(l[i]))
+
+        return numberedList
 
 
     # def create_save_box(self):
@@ -251,8 +260,8 @@ class UserInterface(tk.Toplevel):
         return list_ports.comports()
 
     def update_serial_devices(self):
-        serial_device_list = self.fetch_serial_devices()
-        self.serial_device.update_entry_list(serial_device_list)
+        self.serial_device_list = self.fetch_serial_devices()
+        self.serial_device.update_entry_list(self.listToNumberedList(self.serial_device_list))
         print("Updated serial devices")
 
     def syringe_pump_test(self):
@@ -261,8 +270,9 @@ class UserInterface(tk.Toplevel):
         if (serial_device):
             print("Testing syringe pump")
             try:
-                print(serial_device)
-                pump = SyringePump(serial_device.split()[0])
+                serial_device_index = int(serial_device.split()[0]) - 1
+                print(serial_device_index)
+                pump = SyringePump(self.serial_device_list[serial_device_index].device)
                 pump.getVolumeAccum()
                 print("Test successful")
                 self.test_status["text"] = "Test successful"
