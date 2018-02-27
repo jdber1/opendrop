@@ -28,7 +28,7 @@ from modules.pendant_fit_data import PendantFitData
 from modules.pendant_generate_data import PendantGenerateData
 from modules.pendant_fitting_plots import PendantFittingPlots
 
-from modules.sessile_extract_peofile import SessileExtractProfile
+from modules.sessile_extract_profile import SessileExtractProfile
 from modules.sessile_extract_data import SessileExtractData
 from modules.sessile_fit_data import SessileFitData
 from modules.sessile_generate_data import SessileGenerateData
@@ -111,7 +111,7 @@ def opendrop(drop_type, auto_test):
     if (n_frames > 1) and (user_inputs.constant_volume_bool):
         syringe_inner_diameter = user_inputs.syringe_inner_diameter
         volume_change_threshold = user_inputs.volume_change_threshold
-        pump_path = user_inputs.serial_device.split()[0]
+        pump_path = user_inputs.serial_device_path
         pump = SyringePump(pump_path)
 
         # Diameter is in mm
