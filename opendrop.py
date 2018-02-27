@@ -28,7 +28,7 @@ from modules.pendant_fit_data import PendantFitData
 from modules.pendant_generate_data import PendantGenerateData
 from modules.pendant_fitting_plots import PendantFittingPlots
 
-from modules.sessile_extract_peofile import SessileExtractProfile
+from modules.sessile_extract_profile import SessileExtractProfile
 from modules.sessile_extract_data import SessileExtractData
 from modules.sessile_fit_data import SessileFitData
 from modules.sessile_generate_data import SessileGenerateData
