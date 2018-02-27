@@ -269,10 +269,10 @@ class UserInterface(tk.Toplevel):
 
         if (serial_device):
             print("Testing syringe pump")
+            serial_device_index = int(serial_device.split()[0]) - 1
+            pump_path = self.serial_device_list[serial_device_index].device
             try:
-                serial_device_index = int(serial_device.split()[0]) - 1
-                print(serial_device_index)
-                pump = SyringePump(self.serial_device_list[serial_device_index].device)
+                pump = SyringePump(pump_path)
                 pump.getVolumeAccum()
                 print("Test successful")
                 self.test_status["text"] = "Test successful"
@@ -461,7 +461,11 @@ class UserInterface(tk.Toplevel):
         user_input_data.constant_volume_bool = self.constant_volume_bool.get_value()
         user_input_data.syringe_inner_diameter = self.syringe_inner_diameter.get_value()
         user_input_data.volume_change_threshold = self.volume_change_threshold.get_value()
-        user_input_data.serial_device = self.serial_device.get_value()
+        if self.constant_volume_bool.get_value():
+            serial_device = self.serial_device.get_value()
+            # Update the index in case the user doesn't click the test button
+            serial_device_index = int(serial_device.split()[0]) - 1
+            user_input_data.serial_device_path = self.serial_device_list[serial_device_index].device
         temp_filename = self.filename_string.get_value()
         if temp_filename == '':
             temp_filename = "Extracted_data"

@@ -111,7 +111,7 @@ def opendrop(drop_type, auto_test):
     if (n_frames > 1) and (user_inputs.constant_volume_bool):
         syringe_inner_diameter = user_inputs.syringe_inner_diameter
         volume_change_threshold = user_inputs.volume_change_threshold
-        pump_path = user_inputs.serial_device.split()[0]
+        pump_path = user_inputs.serial_device_path
         pump = SyringePump(pump_path)
 
         # Diameter is in mm
