@@ -152,6 +152,9 @@ def opendrop(drop_type, auto_test):
         if user_inputs.constant_volume_bool:
             # The 3rd element of data_vector is the drop volume in uL
             volume = data_vector[2]
+            if (i != 0):
+                print("Initial volume was {0:01.6f} uL.".format(initial_volume))
+
             print("Drop volume for frame {0} is {1:01.6f} uL.".format(i+1, volume))
 
             if i == 0:
@@ -166,24 +169,26 @@ def opendrop(drop_type, auto_test):
             if (abs(volume_difference) > volume_change_threshold) and (i != (n_frames - 1)):
                 print("Difference between current drop volume and initial is {0} uL.".format(volume_difference))
 
-                # If the volume has increased
+                # If the volume has increased above the initial volume
                 if volume_difference > 0:
                     pump_direction = "withdraw"
 
-                # If the volume has decreased
+                # If the volume has decreased below the initial volume
                 elif volume_difference < 0:
                     pump_direction = "infuse"
 
-                # We don't care about the sign anymore, so let's avoid more calls to abs
+                # We don't care about the sign anymore, so let's avoid further calls to abs
                 volume_difference = abs(volume_difference)
 
                 # Since volume adjustments are going to be pretty small, we can
                 # perform them in a few seconds without going over the max flow
                 # rate of the pump
-                # Currently the rate is calculated so as the adjustment is
+                # Currently the rate is calculated so that the adjustment is
                 # completed in a fifth of the wait time between frames
-                rate = 60 * (volume_difference / ((int(user_inputs.wait_time) * 0.2)))
-                print("Rate to {0} {1} uL in 5 seconds is {2} uL/min.".format(pump_direction, volume_difference, rate))
+                adjustment_time = int(user_inputs.wait_time) * 0.2
+                rate = 60 * (volume_difference / (adjustment_time))
+                print("Rate to {0} {1} uL in {2} seconds is {3} uL/min.".format(pump_direction,
+                    volume_difference, adjustment_time, rate))
                 # Rate is in micro litres per minute
                 units = "UM"
 
