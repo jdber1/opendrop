@@ -32,7 +32,7 @@ def image_crop(image, points):
     # return image[points[0][1]:points[1][1], points[0][0]:points[1][0]]
     # imageUD = np.flipud(image)
     # pixels are referenced as image[y][x] - row major order
-    return image[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+    return image[int(points[0][1]):int(points[1][1]), int(points[0][0]):int(points[1][0])]
 
 def detect_edges(image, raw_experiment, points, ret, n_contours):
     # image = np.flipud(imageUD)
