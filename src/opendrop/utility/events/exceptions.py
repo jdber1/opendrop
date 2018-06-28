@@ -1,2 +1,2 @@
-class HandlerNotConnected(Exception):
+class NotConnected(Exception):
     pass

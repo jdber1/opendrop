@@ -1,3 +1,2 @@
-from .events import Event, EventSource, HasEvents
-from .exceptions import HandlerNotConnected
-from .markers import handler
+from .events import Event, EventConnection
+from .exceptions import NotConnected
