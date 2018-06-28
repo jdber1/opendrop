@@ -23,6 +23,7 @@ class MealSizeType(Enum):
     @classmethod
     def from_display_string(cls, display: str) -> 'MealSizeType':
         for e in cls:
+            print(display)
             if e.display == display:
                 return e
         else:

@@ -1,7 +1,6 @@
 from opendrop.mvp.Presenter import Presenter
 
 from opendrop.utility import data_binding
-from opendrop.utility.events import handler
 
 from .view import BurgerExampleView
 from .model import BurgerOrder
@@ -24,6 +23,8 @@ class BurgerExamplePresenter(Presenter[BurgerOrder, BurgerExampleView]):
         data_binding.bind(self.model, self.view, routes=routes)
         data_binding.poke(self.model)
 
-    @handler('view', 'on_order_button_clicked')
+        # Connect event handlers
+        self.view.events.on_order_button_clicked.connect(self.handle_order_button_clicked)
+
     def handle_order_button_clicked(self) -> None:
         self.view.show_order_confirmation(self.model.order_cost)

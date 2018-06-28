@@ -5,6 +5,7 @@ from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_co
 
 from opendrop import observer
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import ObserverConfigView
+from opendrop.utility.events import Event
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.integer_entry import IntegerEntry
 
@@ -13,6 +14,12 @@ from opendrop.widgets.integer_entry import IntegerEntry
 # also, frame interval needs to be larger than 1
 class ImagesConfigView(ObserverConfigView, ImagesConfigIView):
     OBSERVER_TYPE = observer.types.IMAGE_SLIDESHOW
+
+    class _Events(ObserverConfigView._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_file_input_changed = Event()
+            self.on_frame_interval_input_changed = Event()
 
     def setup(self) -> None:
         grid = Gtk.Grid(column_spacing=10, row_spacing=10)
@@ -31,8 +38,6 @@ class ImagesConfigView(ObserverConfigView, ImagesConfigIView):
         self.file_input.connect('changed', self._on_file_input_changed)
 
         grid.attach(self.file_input, 1, 0, 1, 1)
-
-
 
         frame_interval_input_lbl = Gtk.Label('Frame Interval:')
         grid.attach(frame_interval_input_lbl, 0, 1, 1, 1)

@@ -1,17 +1,24 @@
 from typing import Optional
 
 from gi.repository import Gtk
-from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import ObserverConfigView
+from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import \
+    ObserverConfigView
 
 from opendrop import observer
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.usb_camera.presenter import \
     USBCameraConfigIView
+from opendrop.utility.events import Event
 from opendrop.widgets.integer_entry import IntegerEntry
 
 
 # TODO: if user tries to submit with a blank camera index input, show some kind of error/warning.
 class USBCameraConfigView(ObserverConfigView, USBCameraConfigIView):
     OBSERVER_TYPE = observer.types.USB_CAMERA
+
+    class _Events(ObserverConfigView._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_camera_index_changed = Event()
 
     def setup(self) -> None:
         grid = Gtk.Grid(column_spacing=10, row_spacing=10)

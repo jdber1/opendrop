@@ -1,15 +1,23 @@
-import functools
 from typing import Any, Mapping, Type, Optional
 
 from gi.repository import Gtk
-from opendrop.gtk_specific.GtkWidgetView import GtkWidgetView
 
+from opendrop.gtk_specific.GtkWidgetView import GtkWidgetView
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.iview import \
     ICameraChooserDialogView
+from opendrop.utility.events import Event
 
 
 class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
+    class _Events(GtkWindowView._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_type_combo_changed = Event()
+            self.on_submit_button_clicked = Event()
+            self.on_cancel_button_clicked = Event()
+            self.on_submit = Event()
+
     def setup(self):
         # Outer
         outer = Gtk.VBox(spacing=5)
@@ -85,7 +93,7 @@ class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
         ok_btn = Gtk.Button(label='Ok')
         ok_btn.props.hexpand = True
 
-        ok_btn.connect('clicked', self.events.on_user_submit_button_clicked.fire_ignore_args)
+        ok_btn.connect('clicked', lambda *_: self.events.on_submit_button_clicked.fire())
 
         submit_container.attach(ok_btn, 1, 0, 1, 1)
 
@@ -93,7 +101,7 @@ class CameraChooserDialogView(GtkWindowView, ICameraChooserDialogView):
         cancel_btn = Gtk.Button(label='Cancel')
         cancel_btn.props.hexpand = True
 
-        cancel_btn.connect('clicked', self.events.on_user_cancel_button_clicked.fire_ignore_args)
+        cancel_btn.connect('clicked', lambda *_: self.events.on_cancel_button_clicked.fire())
 
         submit_container.attach(cancel_btn, 0, 0, 1, 1)
 

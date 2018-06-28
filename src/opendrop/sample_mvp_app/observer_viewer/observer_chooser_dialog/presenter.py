@@ -7,8 +7,8 @@ from opendrop.observer.bases import ObserverType
 from opendrop.sample_mvp_app.observer_viewer.model import ObserverViewerModel
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.iview import \
     ICameraChooserDialogView
-from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import ObserverConfigView
-from opendrop.utility.events import handler
+from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.observer_config.base_config.view import \
+    ObserverConfigView
 
 
 class ObserverConfigRequest(Model):
@@ -35,7 +35,11 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
         self.config_view = None  # type: Optional[View]
         self.config_request = ObserverConfigRequest()  # type: ObserverConfigRequest
 
-    @handler('view', 'on_type_combo_changed')
+        self.view.events.on_type_combo_changed.connect(self.handle_type_combo_changed)
+        self.view.events.on_submit_button_clicked.connect(self.handle_submit_button_clicked)
+        self.view.events.on_cancel_button_clicked.connect(self.handle_cancel_button_clicked)
+        self.view.events.on_request_close.connect(self.handle_request_close)
+
     def handle_type_combo_changed(self, active_id: str):
         otype = self.otypes[int(active_id)]  # type: Any
 
@@ -50,16 +54,13 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
 
         self.view.set_config(self.config_view)
 
-    @handler('view', 'on_user_submit_button_clicked')
-    def handle_submit_clicked(self):
+    def handle_submit_button_clicked(self):
         self.view.submit(self.config_request.type, self.config_request.opts)
         self.view.close()
 
-    @handler('view', 'on_user_cancel_button_clicked')
-    def handle_cancel_clicked(self):
+    def handle_cancel_button_clicked(self):
         self.view.events.on_request_close.fire()
 
-    @handler('view', 'on_request_close')
     def handle_request_close(self):
         self.view.submit(None, {})
         self.view.close()

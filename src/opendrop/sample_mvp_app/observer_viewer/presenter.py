@@ -7,7 +7,6 @@ from opendrop.observer.bases import ObserverPreview
 from opendrop.sample_mvp_app.observer_viewer.iview import IObserverViewerView
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.view import \
     CameraChooserDialogView
-from opendrop.utility.events import handler
 
 
 class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView]):
@@ -17,6 +16,8 @@ class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView
         self.observer_chosen = False  # type: bool
 
         self.do_observer_chooser()
+
+        self.model.events.on_current_observer_changed.connect(self.handle_current_observer_changed)
 
     def do_observer_chooser(self) -> None:
         v = self.view.spawn(CameraChooserDialogView, model=self.model, child=True,
@@ -55,7 +56,6 @@ class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView
         if not self.view.destroyed:
             self.view.set_viewer_preview(value)
 
-    @handler('model', 'on_current_observer_changed')
     def handle_current_observer_changed(self) -> None:
         self.clear_active_preview()
 

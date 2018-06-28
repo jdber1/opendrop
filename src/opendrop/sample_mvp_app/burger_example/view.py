@@ -1,11 +1,18 @@
 from gi.repository import Gtk
 
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
+from opendrop.mvp.View import View
 from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
 from opendrop.utility import data_binding
+from opendrop.utility.events import Event
 
 
 class BurgerExampleView(GtkWindowView, IBurgerExampleView):
+    class _Events(View._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_order_button_clicked = Event()
+
     def setup(self) -> None:
         # -- Build the UI --
         body = Gtk.ListBox()
@@ -73,7 +80,7 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
         meal_size_input.connect(
             'changed', lambda w: data_binding.poke(self, BurgerExampleView.meal_size))
 
-        order_button.connect('clicked', self.events.on_order_button_clicked.fire_ignore_args)
+        order_button.connect('clicked', lambda *_: self.events.on_order_button_clicked.fire())
 
         # -- Keep these widgets accessible --
         self.cheese_input = cheese_slices_input

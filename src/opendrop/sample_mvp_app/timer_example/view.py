@@ -1,13 +1,18 @@
-from functools import partial
 from typing import Optional
 
 from gi.repository import Gtk
 
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.sample_mvp_app.timer_example.iview import ITimerExampleView
+from opendrop.utility.events import Event
 
 
 class TimerExampleView(GtkWindowView, ITimerExampleView):
+    class _Events(GtkWindowView._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_start_button_clicked = Event()
+
     def setup(self) -> None:
         # -- Build the UI --
         listbox = Gtk.ListBox()
@@ -39,7 +44,7 @@ class TimerExampleView(GtkWindowView, ITimerExampleView):
         self.window.show_all()
 
         # -- Attach events --
-        start_button.connect('clicked', self.events.on_start_button_clicked.fire_ignore_args)
+        start_button.connect('clicked', lambda *_: self.events.on_start_button_clicked.fire())
 
         # -- Keep these widgets accessible --
         self.timer_duration = timer_duration

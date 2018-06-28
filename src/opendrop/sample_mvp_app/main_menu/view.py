@@ -2,9 +2,18 @@ from gi.repository import Gtk
 
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.sample_mvp_app.main_menu.iview import IMainView
+from opendrop.utility.events import Event
 
 
 class MainView(GtkWindowView, IMainView):
+    class _Events(GtkWindowView._Events):
+        def __init__(self):
+            super().__init__()
+            self.on_timer_button_clicked = Event()
+            self.on_burger_button_clicked = Event()
+            self.on_camera_button_clicked = Event()
+            self.on_about_button_clicked = Event()
+
     def setup(self) -> None:
         # -- Build the UI --
         grid = Gtk.Grid(margin=10, column_spacing=10, row_spacing=10)
@@ -50,7 +59,7 @@ class MainView(GtkWindowView, IMainView):
         self.about_dialog = about_dialog
 
     def on_buttonx_clicked(self, button: Gtk.Button) -> None:
-        self.events[button.event_name].fire()
+        getattr(self.events, button.event_name).fire()
 
     def show_about_dialog(self) -> None:
         response = self.about_dialog.run()
