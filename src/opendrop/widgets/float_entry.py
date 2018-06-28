@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 from gi.repository import GObject
@@ -5,7 +6,8 @@ from gi.repository import GObject
 from opendrop.widgets.validated_entry import ValidatedEntry
 
 
-class IntegerEntry(ValidatedEntry):
+class FloatEntry(ValidatedEntry):
+    # TODO: Remove this code duplication with IntegerEntry
     _min = None  # type: Optional[int]
     _max = None  # type: Optional[int]
     _default = None  # type: Optional[int]
@@ -56,24 +58,28 @@ class IntegerEntry(ValidatedEntry):
             return False
 
         try:
-            self.t_from_str(text)
+            v = self.t_from_str(text)
+
+            if math.isnan(v):
+                return False
+
             return True
         except (TypeError, ValueError):
-            if text in ('+', '-'):
+            if text in ('+', '-', '.'):
                 return True
 
             return False
 
-    def t_from_str(self, text: str) -> Optional[int]:
+    def t_from_str(self, text: str) -> Optional[float]:
         if text == '':
             return None
-        elif text in ('+', '-'):
+        elif text in ('+', '-', '.'):
             return None
 
-        return int(text)
+        return float(text)
 
-    def str_from_t(self, value: Optional[int]) -> str:
-        if value is None:
+    def str_from_t(self, value: Optional[float]) -> str:
+        if value is None or math.isnan(value):
             return ''
 
-        return str(int(value))
+        return str(float(value))
