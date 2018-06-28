@@ -5,8 +5,12 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+from pytest import raises
 
-from opendrop.observer.bases import ObserverProvider, ObserverType, Observation
+from opendrop.observer.bases import ObserverProvider, ObserverType, Observation, ObservationCancelled
+
+
+def test_stub(): pass
 
 
 class TestObserverType:
@@ -40,6 +44,7 @@ class TestObserverType:
 
         assert self.observer_type_b.config_opts == self.provider_b.CONFIG_OPTS
 
+
 class TestObservation:
     def setup(self):
         self.o = Observation()
@@ -68,7 +73,12 @@ class TestObservation:
 
         start = time.time()
 
-        assert (await self.o == self.image).all()
+        image = await self.o
+
+        # Try awaiting again, to make sure it works more than once
+        image = await self.o
+
+        assert (image == self.image).all()
         assert abs(time.time() - start - WAIT) < EPSILON
 
     @pytest.mark.asyncio
@@ -101,3 +111,29 @@ class TestObservation:
         self.o.load(self.image, TIMESTAMP)
 
         assert self.o.timestamp == TIMESTAMP
+
+    def test_cancel(self):
+        assert not self.o.cancelled
+
+        self.o.cancel()
+
+        assert self.o.cancelled
+
+    @pytest.mark.asyncio
+    async def test_await_cancelled(self):
+        async def cancel_observation(delay=0.0):
+            await asyncio.sleep(delay)
+            self.o.cancel()
+
+        asyncio.get_event_loop().create_task(cancel_observation(0.5))
+
+        with raises(ObservationCancelled):
+            await asyncio.wait_for(self.o, 1)
+
+    @pytest.mark.asyncio
+    async def test_await_already_cancelled(self):
+        self.o.load(self.image)
+        self.o.cancel()
+
+        with raises(ObservationCancelled):
+            await self.o

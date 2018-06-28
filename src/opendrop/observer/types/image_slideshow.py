@@ -19,8 +19,8 @@ class ImageSlideshowObserver(Observer):
             raise ValueError(
                 'image_paths is empty'
             )
-        invalid_image_path = image_paths_invalid(image_paths)
 
+        invalid_image_path = image_paths_invalid(image_paths)
         if invalid_image_path is not None :
             raise ValueError(
                 '{!r} is not a valid image path'.format(invalid_image_path)
@@ -49,6 +49,7 @@ class ImageSlideshowObserver(Observer):
 
     def get_image(self, index: Optional[int] = None, *, timestamp: Optional[float] = None) -> np.ndarray:
         index = index if index is not None else np.abs(np.array(self.timestamps) - timestamp).argmin()
+
         image_path = self.image_paths[index]
 
         image = cv2.imread(image_path)
@@ -69,7 +70,7 @@ class ImageSlideshowObserver(Observer):
 
         return observations
 
-    def preview(self) -> 'ImageSlideshowPreview':
+    def preview(self) -> 'ImageSlideshowObserverPreview':
         return ImageSlideshowObserverPreview(self)
 
 

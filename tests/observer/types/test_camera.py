@@ -1,5 +1,5 @@
 import asyncio
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -8,7 +8,7 @@ import time
 from pytest import raises
 
 from opendrop.observer.bases import Observation
-from opendrop.observer.types.camera import ICamera, CameraObserver, CameraObserverPreview
+from opendrop.observer.types.camera import ICamera, CameraObserver, CameraObserverPreview, CameraObservation
 from opendrop.utility.resources import ResourceToken
 
 
@@ -56,6 +56,10 @@ class TestCameraObserver:
         assert all(isinstance(o, Observation) for o in observations)
         assert len(observations) == len(timestamps)
 
+        # Test time until ready
+        for o, t in zip(observations, timestamps):
+            assert abs(o.time_until_ready - t) < EPSILON
+
         loaded_at = []
 
         assert self.cam_cls.init_count == 1
@@ -82,6 +86,33 @@ class TestCameraObserver:
         deltas = loaded_at[1:] - loaded_at[:-1]
 
         assert (np.fabs(deltas - FRAME_INTERVAL) < EPSILON).all()
+
+    # This unit test doesn't really belong in this class, so, todo: refactor
+    @pytest.mark.asyncio
+    async def test_cancel_camera_observation(self):
+        load_from_cam_called = False
+
+        def load_from_cam_wrapper(self):
+            nonlocal load_from_cam_called
+            load_from_cam_called = True
+
+        with patch.object(CameraObservation, '_load_from_cam', load_from_cam_wrapper):
+            observation = self.cam_observer.timelapse([0])[0]
+
+            assert self.cam_cls.init_count == 1
+            assert self.cam_cls.teardown_count == 0
+
+            assert not observation.cancelled
+
+            observation.cancel()
+
+            assert observation.cancelled
+
+            assert self.cam_cls.teardown_count == 1
+
+            await asyncio.sleep(0.1)
+
+            assert not load_from_cam_called
 
 
 class TestCameraObserverPreview:
@@ -117,7 +148,7 @@ class TestCameraObserverPreview:
     async def test_fps(self):
         EPSILON = 0.01
 
-        FPS = [30, 0, 12, 40]
+        FPS = [30, 0]
         WAIT = [0.5] * len(FPS)
 
         def cb(frame):
@@ -163,3 +194,24 @@ class TestCameraObserverPreview:
     def teardown(self):
         if self.cam_preview.alive:
             self.cam_preview.close()
+
+
+class TestCameraObservation:
+    def setup(self):
+        self.cam_cls = create_my_camera_cls()
+        self.cam_token = ResourceToken(self.cam_cls)
+        self.cam_observer = CameraObserver(self.cam_token)
+
+        self.o = self.cam_observer.timelapse([0])[0]
+
+    def test_cancel(self):
+        assert self.cam_cls.teardown_count == 0
+        self.o.cancel()
+        assert self.cam_cls.teardown_count == 1
+
+
+    @pytest.mark.asyncio
+    async def test_cancel_after_loaded(self):
+        await self.o
+
+        self.o.cancel()

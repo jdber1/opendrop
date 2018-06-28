@@ -1,10 +1,9 @@
-from abc import abstractmethod
 import asyncio
+from abc import abstractmethod
 from asyncio import Task
 from typing import List, Optional, Sequence
 
 import numpy as np
-import time
 
 from opendrop.observer.bases import Observer, Observation, ObserverPreview
 from opendrop.utility.resources import IResource, ResourceToken
@@ -13,6 +12,39 @@ from opendrop.utility.resources import IResource, ResourceToken
 class ICamera(IResource):
     @abstractmethod
     def capture(self) -> np.ndarray: pass
+
+
+class CameraObservation(Observation):
+    def __init__(self, observer: 'CameraObserver', delay: float = 0) -> None:
+        super().__init__(volatile=True)
+
+        self.scheduled_at = asyncio.get_event_loop().time() + delay  # type: float
+
+        self._cam = observer.acquire_camera()  # type: ICamera
+        self._load_later_handle = asyncio.get_event_loop().call_at(self.scheduled_at, self._load_from_cam
+                                                                   )  # type: asyncio.Handle
+        self._cancelled = False  # type: bool
+
+    def _load_from_cam(self):
+        assert not self.cancelled
+
+        self.load(self._cam.capture())
+        self._cam.release()
+
+    # Cancel the loading of the observation, if already cancelled, does nothing.
+    def cancel(self) -> None:
+        if self.cancelled:
+            return
+
+        if not self.ready:
+            self._load_later_handle.cancel()
+            self._cam.release()
+
+        super().cancel()
+
+    @property
+    def time_until_ready(self):
+        return max(self.scheduled_at - asyncio.get_event_loop().time(), 0)
 
 
 class CameraObserver(Observer):
@@ -30,13 +62,7 @@ class CameraObserver(Observer):
         observations = []  # type: List[Observation]
 
         for t in timestamps:
-            new_observation = Observation()  # type: Observation
-            event_loop.call_at(now + t, lambda o: o.load(cam.capture()), new_observation)
-
-            observations.append(new_observation)
-
-        # Once the last observation is done, release the camera.
-        observations[-1].events.on_ready.connect(cam.release, once=True, ignore_args=True, strong_ref=True)
+            observations.append(CameraObservation(observer=self, delay=t))
 
         return observations
 
@@ -47,7 +73,7 @@ class CameraObserver(Observer):
         return self.cam_token.acquire()
 
 
-# NEEDS EVENT LOOP TO BE RUNNING!!!
+# needs event loop to be running
 class CameraObserverPreview(ObserverPreview):
     def __init__(self, observer: CameraObserver) -> None:
         super().__init__(observer)
@@ -62,7 +88,7 @@ class CameraObserverPreview(ObserverPreview):
         self._schedule_step()
 
     async def _step(self) -> None:
-        if self._frame_interval == -1:
+        if self._frame_interval is None:
             return
 
         now = asyncio.get_event_loop().time()
@@ -110,7 +136,7 @@ class CameraObserverPreview(ObserverPreview):
     @fps.setter
     def fps(self, value: float) -> None:
         if value == 0:
-            self._frame_interval = -1
+            self._frame_interval = None
         elif value is None:
             self._frame_interval = 0
         else:
