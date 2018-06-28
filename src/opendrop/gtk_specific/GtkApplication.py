@@ -32,7 +32,8 @@ class GtkApplication(Application):
             ('shutdown', self.handle_gtk_app_shutdown),
         ): self.gtk_app.connect(*args)
 
-    def initialise_view(self, view_cls: Type[GtkView], view_opts: Mapping[str, Any]) -> GtkView:
+    def initialise_view(self, view_cls: Type[GtkView], src_view: Type[GtkView], view_opts: Mapping[str, Any])\
+            -> GtkView:
         return view_cls(gtk_app=self.gtk_app, **view_opts)
 
     def run(self, *args, **kwargs) -> None:
