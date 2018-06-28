@@ -1,28 +1,24 @@
 import os
-from typing import Callable, Optional, Any
-
-import cv2
-import numpy as np
+from typing import Optional, Any
 
 from opendrop.image_filter.bases import ImageFilter
 from opendrop.image_filter.image_filter_group import ImageFilterGroup
-
 from tests import samples
 
 SAMPLES_DIR = os.path.dirname(samples.__file__)
 
 
 class MyImageFilter(ImageFilter):
-    def apply(self, image: 'MyTestImage') -> 'MyTestImage':
-        image.touched_by.append(self.name)
-
-        return image
-
     def __init__(self, name: Any, z_index: Optional[int] = None) -> None:
         self.name = name  # type: Any
 
         if z_index is not None:
             self.z_index = z_index  # type: z_index
+
+    def apply(self, image: 'MyTestImage') -> 'MyTestImage':
+        image.touched_by.append(self.name)
+
+        return image
 
 
 class MyTestImage:
@@ -54,18 +50,16 @@ class TestImageFilterGroup:
         assert self.image.touched_by == [2]
 
     def test_add_and_z_index_ordering(self):
-        call_order = []
-
         filters = [
-            MyImageFilter(2, z_index=4),
-            MyImageFilter(7, z_index=-1),
-            MyImageFilter(1, z_index=5),
-            MyImageFilter(8, z_index=-2),
+            MyImageFilter(7, z_index=4),
+            MyImageFilter(2, z_index=-1),
+            MyImageFilter(8, z_index=5),
+            MyImageFilter(1, z_index=-2),
 
-            MyImageFilter(3, z_index=2),
-            MyImageFilter(4, z_index=2),
-            MyImageFilter(5),
-            MyImageFilter(6)
+            MyImageFilter(5, z_index=2),
+            MyImageFilter(6, z_index=2),
+            MyImageFilter(3),
+            MyImageFilter(4)
         ]
 
         for f in filters:
