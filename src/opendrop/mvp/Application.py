@@ -1,7 +1,10 @@
+import weakref
 from abc import abstractmethod
 from typing import Type, List, Optional, Iterable, Mapping, Any, TypeVar, Union, Iterator, Callable
 
 import functools
+
+import gc
 
 from opendrop.mvp.Model import Model
 from opendrop.mvp.IView import IView
@@ -37,6 +40,7 @@ class VPRegistry:
         else:
             raise ValueError('No record with view matching {!r} found'.format(view))
 
+    # todo: rename to branch dead
     def handle_record_family_dead(self, record: 'VPRecord') -> None:
         self._records.remove(record)
 
@@ -122,7 +126,7 @@ class Application:
 
         self._vp_registry = VPRegistry()  # type: VPRegistry
 
-    def initialise_view(self, view_cls: Type[IView], view_opts: Mapping[str, Any]) -> IView:
+    def initialise_view(self, view_cls: Type[IView], src_view: Type[IView], view_opts: Mapping[str, Any]) -> IView:
         """Initialises `view_cls`. Override this if your application needs to pass arguments to the view constructor
         or any other advanced initialisation process.
         :param view_cls: The view class to be initialised.
@@ -161,6 +165,9 @@ class Application:
         record.view.destroy()
         record.presenter.destroy()
 
+        record.view = None
+        record.presenter = None
+
         record.dead = True
 
         self._check_if_all_views_dead()
@@ -168,6 +175,8 @@ class Application:
     def spawn(self, view_cls: Union[Type[T], int], model: Model = None, child: bool = False,
               view_opts: Optional[Mapping[str, Any]] = None, src_view: Optional[IView] = None) -> Optional[T]:
         parent_registry = self._vp_registry.get_record_by_view(src_view) if src_view is not None else self._vp_registry
+
+        reuse_record = None
 
         if view_cls == View.PREVIOUS and src_view is not None:
             if parent_registry.parent is None:
@@ -177,28 +186,34 @@ class Application:
 
             model = parent_registry.parent.model
 
+            reuse_record = parent_registry.parent
+
         view_opts = view_opts if view_opts is not None else {}
 
-        view = self.initialise_view(view_cls, view_opts)  # type: T
+        view = self.initialise_view(view_cls, src_view, view_opts)  # type: T
 
         # Set up hooks for `view.close()` and `view.spawn()`
-        view.close.use(functools.partial(self.close, view=view))
-        view.spawn.use(functools.partial(self.spawn, src_view=view))
-
-        view.do_setup()
+        view.close = functools.partial(self.close, view=view)
+        view.spawn = functools.partial(self.spawn, src_view=view)
 
         presenter_cls = self._get_presenter_for_view(view)  # type: Type[Presenter]
 
         # Create and wire up the presenter
         presenter = presenter_cls(model=model, view=view)
 
-        parent_registry.new_record(
-            view=view,
-            presenter=presenter,
-            model=model,
-            attached_to_parent=child
-        )
+        if reuse_record is None:
+            parent_registry.new_record(
+                view=view,
+                presenter=presenter,
+                model=model,
+                attached_to_parent=child
+            )
+        else:
+            reuse_record.view = view
+            reuse_record.presenter = presenter
+            reuse_record.dead = False
 
+        view.do_setup()
         presenter.do_setup()
 
         return view

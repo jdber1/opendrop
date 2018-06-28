@@ -1,22 +1,21 @@
+import gc
 import weakref
 
-import gc
-from unittest.mock import patch
-
-from collections import defaultdict
 from pytest import raises
 
 from opendrop.utility import data_binding
-from opendrop.utility.data_binding import poke
-from opendrop.utility.events import HasEvents, EventSource
+from opendrop.utility.data_binding import Bindable, poke
 
 
 def test_stub(): pass
 
 
-class Common(HasEvents):
+class Common(Bindable):
+    MY_VAR0 = None
+    MY_VAR1 = None
+
     def __init__(self):
-        self.events = EventSource()
+        super().__init__()
 
         self._var0 = self.MY_VAR0
         self._var1 = self.MY_VAR1
@@ -342,6 +341,7 @@ def test_property_overriding_behaviour():
 
     assert child.var0 == 10
     assert subchild.var0 == 40
+
 
 def test_property_deleter():
     child = Child()

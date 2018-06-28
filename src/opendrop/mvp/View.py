@@ -1,16 +1,15 @@
-import asyncio
-from typing import Optional, Type, Iterable, Any, Mapping, TypeVar
+from typing import Optional, Type, Any, Mapping, TypeVar
 
 from opendrop.mvp.IView import IView
 from opendrop.mvp.Model import Model
-from opendrop.utility.events import EventSource
-from opendrop.utility.events.events import HasEvents
+from opendrop.utility.data_binding import Bindable
+from opendrop.utility.events import Event
 from opendrop.utility.strategy import strategy
 
 T = TypeVar('T', bound=IView)
 
 
-class View(HasEvents, IView):
+class View(Bindable, IView):
 
     """The view class, responsible for presenting the user interface to the user and notifying the presenter of user
     inputs.
@@ -18,10 +17,17 @@ class View(HasEvents, IView):
 
     PREVIOUS = 0  # type: int
 
+    class _Events:
+        def __init__(self):
+            self.on_setup_done = Event()
+            self.on_request_close = Event()
+            self.on_destroy = Event()
+
     def __init__(self) -> None:
         """View constructor.
         """
-        self.events = EventSource()
+        Bindable.__init__(self)
+        self.events = self._Events()
 
         self._hidden = False  # type: bool
 

@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from opendrop.utility.events import handler
+from opendrop.utility.events import Event
 
 from opendrop.mvp.IView import IView
 from opendrop.mvp.Model import Model
@@ -20,6 +20,14 @@ class IMyView(IView):
 
 
 class MyView(View, IMyView):
+    class _Events(View._Events):
+        def __init__(self):
+            super().__init__()
+
+            self.on_event0 = Event()
+            self.on_event1 = Event()
+            self.on_event2 = Event()
+
     def setup(self): pass
 
     def teardown(self): pass
@@ -29,14 +37,6 @@ class MyPresenter(Presenter[MyModel, IMyView]):
     def setup(self): pass
 
     def teardown(self): pass
-
-    handle_event0 = handler('view', 'on_event0')(Mock())
-
-    handle_event1 = handler('view', 'on_event1')(Mock())
-
-    handle_event2 = handler('view', 'on_event2', immediate=True)(Mock())
-
-    handle_event3 = handler('model', 'on_event3')(Mock())
 
 
 class IOtherView(IView):

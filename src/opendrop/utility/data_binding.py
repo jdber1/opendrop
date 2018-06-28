@@ -2,12 +2,7 @@ import weakref
 from enum import IntEnum
 from typing import Callable, Any, List, Optional, Tuple
 
-from opendrop.utility.events import HasEvents
-
-# Event name constants:
-
-EVENT_PREFIX = 'data_binding'
-EVENT_ON_PROPERTY_CHANGED = EVENT_PREFIX + '::on_changed'
+from opendrop.utility.events import Event
 
 # Globals:
 
@@ -87,6 +82,11 @@ class Route:
         return (cls.a_to_b(prop_a, prop_b, to_b), cls.b_to_a(prop_a, prop_b, to_a))
 
 
+class Bindable:
+    def __init__(self):
+        self._databinding_commevent = Event()
+
+
 class DataBindingProperty(_property_):
 
     """Can be used like the built-in property class but has additional functionality to facilitate data binding used
@@ -98,10 +98,10 @@ class DataBindingProperty(_property_):
     this module.
     """
 
-    def __set__(self, instance: HasEvents, value: Any) -> None:
+    def __set__(self, instance: Bindable, value: Any) -> None:
         self.set(instance, value)
 
-    def set(self, instance: Any, value: Any, trail: Optional[List] = None) -> None:
+    def set(self, instance: Bindable, value: Any, trail: Optional[List] = None) -> None:
         if trail is None:
             trail = []
         elif instance in trail:
@@ -113,13 +113,13 @@ class DataBindingProperty(_property_):
 
         self._changed(instance, trail)
 
-    def _rawget(self, instance: Any):
+    def _rawget(self, instance: Bindable):
         return super().__get__(instance, type(instance))
 
-    def _rawset(self, instance: Any, value: Any) -> None:
+    def _rawset(self, instance: Bindable, value: Any) -> None:
         super().__set__(instance, value)
 
-    def _changed(self, instance: HasEvents, existing_trail: Optional[List] = None):
+    def _changed(self, instance: Bindable, existing_trail: Optional[List] = None):
         trail = existing_trail if existing_trail is not None else [instance]
 
         try:
@@ -127,7 +127,11 @@ class DataBindingProperty(_property_):
         except AttributeError:
             return
 
-        instance.events[EVENT_ON_PROPERTY_CHANGED].fire(instance, self, current_value, trail)
+        instance._databinding_commevent.fire(instance, self, current_value, trail)
+
+    @classmethod
+    def write_only(cls, fset: Callable) -> 'DataBindingProperty':
+        return cls(fset=fset)
 
 
 class Binder:
@@ -138,7 +142,7 @@ class Binder:
 
     dead = False
 
-    def __init__(self, obj_a: HasEvents, obj_b: HasEvents, routes: List[Route]) -> None:
+    def __init__(self, obj_a: Bindable, obj_b: Bindable, routes: List[Route]) -> None:
         """Listen for changes in properties in `obj_a` and `obj_b` and if appropriate routes exist, propagate changes
         from one object to the other. `prop_a` in `Route` refers to a property in `obj_a`, and similarly with `prop_b`.
         Only property relations described by the list of routes `routes` will have any data binding behaviour. The
@@ -179,10 +183,9 @@ class Binder:
         self._routes = routes  # type: List[Route]
 
         for obj in (obj_a, obj_b):
-            # Make sure the objects have a strong ref to the Binder otherwise if it is unexpectedly garbage collected,
-            # obj0 and obj1 will no longer be data bound.
-            obj.events[EVENT_ON_PROPERTY_CHANGED].connect(self._handle_obj_properties_changed, immediate=True,
-                                                          strong_ref=True)
+            # Make sure the objects have a strong ref to the Binder otherwise if the Binder is unexpectedly garbage
+            # collected, obj0 and obj1 will no longer be data bound.
+            obj._databinding_commevent.connect(self._handle_obj_properties_changed, immediate=True, strong_ref=True)
 
     def unbind(self) -> None:
         """Unbind `obj_a` and `obj_b` so their properties will no longer be bound
@@ -198,7 +201,7 @@ class Binder:
     def _find_route(self, obj: Any, prop: DataBindingProperty) -> Optional[Route]:
         return next(filter(lambda r: r.prop_src == prop, self._routes_from(obj)), None)
 
-    def _handle_obj_properties_changed(self, obj: HasEvents, prop: DataBindingProperty, value: Any, trail: List) -> None:
+    def _handle_obj_properties_changed(self, obj: Bindable, prop: DataBindingProperty, value: Any, trail: List) -> None:
         other_obj = self._get_other_obj(obj)
 
         # `other_obj` shouldn't have been garbage collected yet, if it has, then `_cleanup()` should have been
@@ -229,16 +232,16 @@ class Binder:
             if obj is None:
                 continue
 
-            obj.events[EVENT_ON_PROPERTY_CHANGED].disconnect(self._handle_obj_properties_changed)
+            obj._databinding_commevent.disconnect_by_func(self._handle_obj_properties_changed)
 
         self.dead = True
 
     @_property_
-    def _obj_a(self) -> Any:
+    def _obj_a(self) -> Bindable:
         return self._obj_a_ref()
 
     @_property_
-    def _obj_b(self) -> Any:
+    def _obj_b(self) -> Bindable:
         return self._obj_b_ref()
 
 

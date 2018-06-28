@@ -28,13 +28,3 @@ def test_presenter_call_view_methods():
 
     view.do0.assert_called_once_with()
     view.do1.assert_called_once_with()
-
-
-def test_presenter_connect_handlers():
-    model = MyModel()
-    view = MyView()
-
-    presenter = MyPresenter(model=model, view=view)
-
-    assert view.events.on_event0.is_connected(presenter.handle_event0)
-    assert model.events.on_event3.is_connected(presenter.handle_event3)

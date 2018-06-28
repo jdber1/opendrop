@@ -1,7 +1,5 @@
-from opendrop.utility.events import EventSource
-from opendrop.utility.events.events import HasEvents
+from opendrop.utility.data_binding import Bindable
 
 
-class Model(HasEvents):
-    def __init__(self):
-        self.events = EventSource()
+class Model(Bindable):
+    pass
