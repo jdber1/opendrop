@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TypeVar, Optional
+from typing import TypeVar
 
 from gi.repository import Gtk, GObject, Gdk
 
@@ -7,7 +7,7 @@ T = TypeVar('T')
 
 
 # Can't inherit from Generic[T] because of conflicting metaclasses.
-# Need to re-inherit from Gtk.Editable so that `ValidatedEntry.do_insert_text()` doesn't overwrite the default handler
+# Need to re-inherit from Gtk.Editable so that `ValidatedEntry.do_insert_text()` doesn't "overwrite the default handler"
 # see https://stackoverflow.com/q/48634804/8944057
 class ValidatedEntry(Gtk.Entry, Gtk.Editable):
     def __init__(self, *args, **kwargs):
@@ -15,8 +15,8 @@ class ValidatedEntry(Gtk.Entry, Gtk.Editable):
 
         # For some reason, if we override `do_focus_out_event()`, when switching stacks (in a Gtk.Stack) with an empty
         # ValidatedEntry widget, a warning is thrown:
-        # (__init__.py:20612): Gtk-WARNING **: GtkEntry - did not receive focus-out-event. If you connect a handler to
-        # this signal, it must return GDK_EVENT_PROPAGATE so the entry gets the event as well ...
+        #   (__init__.py:20612): Gtk-WARNING **: GtkEntry - did not receive focus-out-event. If you connect a handler to
+        #   this signal, it must return GDK_EVENT_PROPAGATE so the entry gets the event as well ...
         self.connect('focus-out-event', self.on_focus_out_event)
 
         # Invoke the setter
