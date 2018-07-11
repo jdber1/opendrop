@@ -129,9 +129,9 @@ class BurgerOrder(Model):
             getter=self._calculate_order_cost
         )
 
-        self.bn_cheese_slices.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
-        self.bn_bacon.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
-        self.bn_meal_size.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
+        self.bn_cheese_slices.on_changed.connect(self.bn_order_cost.poke)
+        self.bn_bacon.on_changed.connect(self.bn_order_cost.poke)
+        self.bn_meal_size.on_changed.connect(self.bn_order_cost.poke)
 
     @AbstractAtomicBindable.property_adapter
     def cheese_slices(self): return self.bn_cheese_slices

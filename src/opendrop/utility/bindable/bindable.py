@@ -72,7 +72,7 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.on_changed = Event()
+        self.on_changed = Event()  # emits: ()
 
     @staticmethod
     def create_tx(value: VT) -> AtomicBindableTx[VT]:
@@ -99,7 +99,7 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
         self._value_changed(self._raw_get(), bcast_tx=True)
 
     def _value_changed(self, new_value: VT, bcast_tx: bool) -> None:
-        self.on_changed.fire(new_value)
+        self.on_changed.fire()
         if bcast_tx:
             self._bcast_tx(self.create_tx(new_value))
 

@@ -240,10 +240,10 @@ def test_abstract_atomic_bn_changed_event():
             pass
 
         def _raw_set(self, v):
-            pass
+            checkpoints.append(('_raw_set', v))
 
-    def hdl_changed(v):
-        checkpoints.append(('hdl_changed', v))
+    def hdl_changed():
+        checkpoints.append(('hdl_changed',))
 
     bn = MyAtomicBindable()
     bn.on_changed.connect(hdl_changed, immediate=True)
@@ -252,8 +252,10 @@ def test_abstract_atomic_bn_changed_event():
     bn._apply_tx(MyAtomicBindable.create_tx(456))
 
     assert checkpoints == [
-        ('hdl_changed', 123),
-        ('hdl_changed', 456)
+        ('_raw_set', 123),
+        ('hdl_changed',),
+        ('_raw_set', 456),
+        ('hdl_changed',)
     ]
 
 
