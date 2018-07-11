@@ -93,8 +93,8 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
 
     def poke(self) -> None:
         """Force this AbstractAtomicBindable (AAB) to fire its `on_new_tx` event with a transaction representing the
-        current value of this AAB. Also fires its `on_changed` event with the current value. Usually called when the
-        underlying value of this AAB has changed, but this change was not made using AAB.set().
+        current value of this AAB. Also fires its `on_changed` event. Usually called when the underlying value of this
+        AAB has changed, but this change was not made using AAB.set().
         """
         self._value_changed(self._raw_get(), bcast_tx=True)
 
