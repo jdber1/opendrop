@@ -1,5 +1,2 @@
-from opendrop.utility.data_binding import Bindable
-
-
-class Model(Bindable):
+class Model:
     pass

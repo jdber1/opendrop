@@ -2,14 +2,13 @@ from typing import Optional, Type, Any, Mapping, TypeVar
 
 from opendrop.mvp.IView import IView
 from opendrop.mvp.Model import Model
-from opendrop.utility.data_binding import Bindable
 from opendrop.utility.events import Event
 from opendrop.utility.strategy import strategy
 
 T = TypeVar('T', bound=IView)
 
 
-class View(Bindable, IView):
+class View(IView):
 
     """The view class, responsible for presenting the user interface to the user and notifying the presenter of user
     inputs.
@@ -26,7 +25,6 @@ class View(Bindable, IView):
     def __init__(self) -> None:
         """View constructor.
         """
-        Bindable.__init__(self)
         self.events = self._Events()
 
         self._hidden = False  # type: bool
