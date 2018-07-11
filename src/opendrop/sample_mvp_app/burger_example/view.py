@@ -3,7 +3,7 @@ from gi.repository import Gtk
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.mvp.View import View
 from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
-from opendrop.utility import data_binding
+from opendrop.utility.bindable.bindable import AbstractAtomicBindable, AtomicBindableAdapter
 from opendrop.utility.events import Event
 
 
@@ -72,55 +72,57 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
 
         self.window.show_all()
 
-        # -- Attach events --
-        cheese_slices_input.connect(
-            'value-changed', lambda w: data_binding.poke(self, BurgerExampleView.cheese_slices))
-        bacon_input.connect(
-            'toggled', lambda w: data_binding.poke(self, BurgerExampleView.bacon))
-        meal_size_input.connect(
-            'changed', lambda w: data_binding.poke(self, BurgerExampleView.meal_size))
-
         order_button.connect('clicked', lambda *_: self.events.on_order_button_clicked.fire())
 
         # -- Keep these widgets accessible --
         self.cheese_input = cheese_slices_input
         self.bacon_input  = bacon_input
-        self.meal_input   = meal_size_input
+        self.meal_size_input   = meal_size_input
 
         self.order_button = order_button
 
+        self.bn_cheese_slices = AtomicBindableAdapter(
+            getter=self.cheese_input.get_value,
+            setter=self.cheese_input.set_value
+        )
+        self.bn_bacon = AtomicBindableAdapter(
+            getter=self.bacon_input.get_active,
+            setter=self.bacon_input.set_active
+        )
+        self.bn_meal_size = AtomicBindableAdapter(
+            getter=self.meal_size_input.get_active_id,
+            setter=self.meal_size_input.set_active_id
+        )
+        self.bn_order_cost = AtomicBindableAdapter(
+            setter=lambda cost: self.order_button.set_label('Place order (${0:.2f})'.format(cost))
+        )
+
+        # -- Attach events --
+        cheese_slices_input.connect(
+            'value-changed', lambda w: self.bn_cheese_slices.poke())
+        bacon_input.connect(
+            'toggled', lambda w: self.bn_bacon.poke())
+        meal_size_input.connect(
+            'changed', lambda w: self.bn_meal_size.poke())
+
     def add_meal_size(self, display: str) -> None:
-        self.meal_input.append(id=display, text=display)
+        self.meal_size_input.append(id=display, text=display)
 
-    @data_binding.property
+    @AbstractAtomicBindable.property_adapter
     def cheese_slices(self) -> int:
-        return self.cheese_input.props.value
+        return self.bn_cheese_slices
 
-    @cheese_slices.setter
-    def cheese_slices(self, value: int) -> None:
-        self.cheese_input.props.value = value
+    @AbstractAtomicBindable.property_adapter
+    def bacon(self) -> int:
+        return self.bn_bacon
 
-    @data_binding.property
-    def bacon(self) -> bool:
-        return self.bacon_input.props.active
+    @AbstractAtomicBindable.property_adapter
+    def meal_size(self) -> int:
+        return self.bn_meal_size
 
-    @bacon.setter
-    def bacon(self, value: bool) -> None:
-        self.bacon_input.props.active = value
-
-    @data_binding.property
-    def meal_size(self) -> str:
-        return self.meal_input.props.active_id
-
-    @meal_size.setter
-    def meal_size(self, value: str) -> None:
-        self.meal_input.props.active_id = value
-
-    order_cost = data_binding.property()
-
-    @order_cost.setter
-    def order_cost(self, cost: float) -> None:
-        self.order_button.props.label = 'Place order (${0:.2f})'.format(cost)
+    @AbstractAtomicBindable.property_adapter
+    def meal_size(self) -> int:
+        return self.bn_order_cost
 
     def show_order_confirmation(self, total_cost: float) -> None:
         # Order confirmation dialog

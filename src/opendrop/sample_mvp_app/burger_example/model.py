@@ -1,9 +1,9 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Generic, TypeVar, Union, Any, Mapping, Optional, Dict, Tuple
+from typing import Generic, TypeVar, Union, Optional
 
 from opendrop.mvp.Model import Model
-from opendrop.utility import data_binding
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AbstractAtomicBindable
 
 T = TypeVar('T')
 
@@ -21,11 +21,10 @@ class MealSizeType(Enum):
         self.price = price  # type: float
 
     @classmethod
-    def from_display_string(cls, display: str) -> 'MealSizeType':
-        for e in cls:
-            print(display)
-            if e.display == display:
-                return e
+    def from_display(cls, display: str) -> 'MealSizeType':
+        for enm in cls:
+            if enm.display == display:
+                return enm
         else:
             raise ValueError
 
@@ -94,7 +93,7 @@ class MealSizeVar(BurgerItemVar[MealSizeType]):
         return self._value
 
     def set(self, value: Union[MealSizeType, str]) -> None:
-        self._value = MealSizeType.from_display_string(value) if isinstance(value, str) else value
+        self._value = MealSizeType.from_display(value) if isinstance(value, str) else value
 
 
 class BurgerOrder(Model):
@@ -105,56 +104,51 @@ class BurgerOrder(Model):
     def __init__(self):
         super().__init__()
 
-        self._cheese_slices = CheeseSlicesVar(0)
-        self._bacon = BaconVar(False)
-        self._meal_size = MealSizeVar(MealSizeType.SMALL)
+        self._v_cheese_slices = CheeseSlicesVar(0)
+        self._v_bacon = BaconVar(False)
+        self._v_meal_size = MealSizeVar(MealSizeType.SMALL)
 
-    @data_binding.property
-    def cheese_slices(self) -> int:
-        return self._cheese_slices.get()
+        self._order = [self._v_cheese_slices, self._v_bacon, self._v_meal_size]
 
-    @cheese_slices.setter
-    def cheese_slices(self, value: int):
-        self._cheese_slices.set(value)
+        self.bn_cheese_slices = AtomicBindableAdapter(
+            getter=self._v_cheese_slices.get,
+            setter=self._v_cheese_slices.set
+        )
 
-        self.update_order_cost()
+        self.bn_bacon = AtomicBindableAdapter(
+            getter=self._v_bacon.get,
+            setter=self._v_bacon.set
+        )
 
-    @data_binding.property
-    def bacon(self) -> bool:
-        return self._bacon.get()
+        self.bn_meal_size = AtomicBindableAdapter(
+            getter=self._v_meal_size.get,
+            setter=self._v_meal_size.set
+        )
 
-    @bacon.setter
-    def bacon(self, value: bool) -> None:
-        self._bacon.set(value)
+        self.bn_order_cost = AtomicBindableAdapter(
+            getter=self._calculate_order_cost
+        )
 
-        self.update_order_cost()
+        self.bn_cheese_slices.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
+        self.bn_bacon.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
+        self.bn_meal_size.on_changed.connect(self.bn_order_cost.poke, ignore_args=True)
 
-    @data_binding.property
-    def meal_size(self) -> MealSizeType:
-        return self._meal_size.get()
+    @AbstractAtomicBindable.property_adapter
+    def cheese_slices(self): return self.bn_cheese_slices
 
-    @meal_size.setter
-    def meal_size(self, value: MealSizeType) -> None:
-        self._meal_size.set(value)
+    @AbstractAtomicBindable.property_adapter
+    def bacon(self): return self.bn_bacon
 
-        self.update_order_cost()
+    @AbstractAtomicBindable.property_adapter
+    def meal_size(self): return self.bn_meal_size
 
-    @data_binding.property
-    def order_cost(self) -> float:
-        return self._order_cost
+    @AbstractAtomicBindable.property_adapter
+    def order_cost(self): return self.bn_order_cost
 
-    @order_cost.setter
-    def order_cost(self, value: float) -> None:
-        self._order_cost = value
-
-    @property
-    def order(self) -> Tuple[BurgerItemVar, ...]:
-        return self._cheese_slices, self._bacon, self._meal_size
-
-    def update_order_cost(self):
+    def _calculate_order_cost(self):
         order_cost = self.BASE_COST  # type: float
 
-        for item in self.order:
+        for item in self._order:
             order_cost += item.price
 
-        self.order_cost = order_cost
+        return order_cost
