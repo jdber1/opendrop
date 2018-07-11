@@ -353,14 +353,19 @@ class TestEvent:
             nonlocal res
             res = await self.event
 
-        main_task = asyncio.get_event_loop().create_task(main())
+        # Don't hold a reference to the task created.
+        asyncio.get_event_loop().create_task(main())
 
         # Let the event loop begin executing `main()` first so that it is stuck on the await.
         await asyncio.sleep(0)
 
-        wait_for_main = asyncio.wait_for(main_task, timeout=0.1)
+        # Perform a garbage collection, the task created previously (for main()) should not be garbage collected,
+        # otherwise we will get a 'Task was destroyed but it is pending!' error message and the assertion at the end
+        # will fail.
+        gc.collect()
+
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await wait_for_main
+        await asyncio.sleep(0.1)
 
         assert res == SAMPLE_ARGS
 

@@ -12,6 +12,9 @@ Handler = Union[Callable, Coroutine]
 
 
 # todo: Add documentation for EventConnection lifecycle, explanation of CONNECTED, LAST_CALL, DISCONNECTED
+# todo: Make threadsafe
+# todo: Warn if connecting a lambda function or functools.partial (or others) without strong_ref=True, this is a common
+#       mistake. Alternatively make strong_ref=True the default option, however this may lead to silent memory leaks.
 class EventConnection:
     class Status(Enum):
         CONNECTED = 1
@@ -312,6 +315,35 @@ class Event:
         f.__Event_await_implicit_callback = handler
 
         conn = self.connect(handler, once=True)
+
+        # We should actually hold a reference to `f` from this Event, however the `on_disconnect()` closure actually
+        # holds a reference to it, and we are now setting `conn._on_disconnected` to `on_disconnect()` which will hold
+        # a reference to the closure, and `conn` is in turned referred to by this event through `self.__connections`.
+        # So, indirectly, this event will end up holding a reference to `f`. This implementation is a little brittle
+        # to be honest.
+        #
+        # We want to maintain a reference to `f` so that the following example works:
+        #   async def main():
+        #       event = Event()
+        #       res = None
+        #
+        #       async def inner():
+        #           nonlocal res
+        #           res = await event
+        #           print('done')
+        #
+        #       asyncio.get_event_loop().create_task(inner())  # No reference held to this task
+        #       await asyncio.sleep(0)
+        #
+        #       # If there are no references to `f`, then the above task would be garbage collected and we would get
+        #       # a 'Task was destroyed but it is pending!' error message, the rest of `inner()` also would not execute.
+        #       gc.collect()
+        #       event.fire(123)
+        #       await asyncio.sleep(0.1)
+        #       assert res == 123
+        #
+        #   asyncio.get_event_loop().run_until_complete(main())
+
         conn._on_disconnected = on_disconnect
 
         return f.__await__()
