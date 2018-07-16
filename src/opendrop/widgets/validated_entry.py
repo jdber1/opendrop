@@ -7,6 +7,7 @@ T = TypeVar('T')
 
 
 # Can't inherit from Generic[T] because of conflicting metaclasses.
+#
 # Need to re-inherit from Gtk.Editable so that `ValidatedEntry.do_insert_text()` doesn't "overwrite the default handler"
 # see https://stackoverflow.com/q/48634804/8944057
 class ValidatedEntry(Gtk.Entry, Gtk.Editable):
@@ -82,3 +83,6 @@ class ValidatedEntry(Gtk.Entry, Gtk.Editable):
         value = self.restrict(value)
 
         self.props.text = self.str_from_t(value)
+
+    get_value = value.fget
+    set_value = value.fset
