@@ -26,7 +26,7 @@ class ImageSlideshowObserverPreviewViewerController(AbstractPreviewViewerControl
         self.attach(left_btn, 0, 0, 1, 1)
 
         num_images = self.viewer.props.preview.num_images  # type: int
-        self.preview_index_input = IntegerEntry(min=1, max=num_images, default=0, width_chars=int(math.log10(num_images or 1)) + 1)
+        self.preview_index_input = IntegerEntry(lower=1, upper=num_images, default=0, width_chars=int(math.log10(num_images or 1)) + 1)
         self.preview_index_input.connect('changed', self.handle_preview_index_input_changed)
 
         self.attach(self.preview_index_input, 1, 0, 1, 1)
