@@ -30,7 +30,7 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
         self.otypes = self.model.observer_types.get_types()  # type: List[Any]
 
         for i, otype in enumerate(self.otypes):
-            self.view.add_observer_type(str(i), otype.display)
+            self.view.add_observer_type(str(i), otype.name)
 
         self.config_view = None  # type: Optional[View]
         self.config_request = ObserverConfigRequest()  # type: ObserverConfigRequest

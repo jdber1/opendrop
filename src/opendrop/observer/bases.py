@@ -123,8 +123,8 @@ class ObserverProvider:
 
 
 class ObserverType:
-    def __init__(self, display: str, provider: ObserverProvider) -> None:
-        self.display = display  # type: str
+    def __init__(self, name: str, provider: ObserverProvider) -> None:
+        self.name = name  # type: str
 
         self._provider = provider  # type: ObserverProvider
 
