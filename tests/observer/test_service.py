@@ -8,7 +8,7 @@ class MyObserverProvider(ObserverProvider):
     provide = Mock()
 
 
-MY_OBSERVER = ObserverType('My Observer', MyObserverProvider)
+MY_OBSERVER = ObserverType('My Observer', MyObserverProvider())
 
 
 class TestObserverService:
