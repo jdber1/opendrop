@@ -7,7 +7,7 @@ from opendrop.observer import types
 from opendrop.observer.bases import Observer, Observation, ObserverPreview, ObserverProvider, ObserverType
 
 
-def image_paths_invalid(image_paths: List[str]):
+def get_invalid_image_paths(image_paths: List[str]) -> Optional[str]:
     for image_path in image_paths:
         if cv2.imread(image_path) is None:
             return image_path
@@ -20,7 +20,7 @@ class ImageSlideshowObserver(Observer):
                 'image_paths is empty'
             )
 
-        invalid_image_path = image_paths_invalid(image_paths)
+        invalid_image_path = get_invalid_image_paths(image_paths)
         if invalid_image_path is not None :
             raise ValueError(
                 '{!r} is not a valid image path'.format(invalid_image_path)
