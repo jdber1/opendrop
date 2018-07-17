@@ -51,8 +51,8 @@ class Binding(Generic[TxT]):
         # functools.partial object).
         del self._on_new_tx_conns
 
-    def _hdl_new_tx(self, bn: Bindable[TxT], tx: TxT) -> None:
-        target = self._get_other(bn)
+    def _hdl_new_tx(self, from_: Bindable[TxT], tx: TxT) -> None:
+        target = self._get_other(from_)
 
         # Block the event connection connected to `target_bn.on_new_tx` as we don't want to be notified about the change
         # we are about to apply to `target_bn`, otherwise we end up in an infinite feedback loop.
