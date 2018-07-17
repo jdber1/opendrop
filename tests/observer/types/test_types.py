@@ -3,7 +3,6 @@ import inspect
 import pkgutil
 
 from opendrop import observer
-
 from opendrop.observer.bases import ObserverProvider
 
 OBSERVERS_PKG = observer.types
@@ -32,7 +31,7 @@ def get_providers(mod):
 # `ObserverType`
 def test_types_count():
     scraped_providers_count = len(get_providers(OBSERVERS_PKG))
-    observer_type_count = len(observer.types.get_types())
+    observer_type_count = len(observer.types.get_all_types())
 
     assert(scraped_providers_count == observer_type_count)
 

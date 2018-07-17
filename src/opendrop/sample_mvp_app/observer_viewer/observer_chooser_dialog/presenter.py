@@ -27,10 +27,10 @@ class ObserverConfigRequest(Model):
 
 class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooserDialogView]):
     def setup(self):
-        self.otypes = self.model.observer_types.get_types()  # type: List[Any]
+        self.o_types = self.model.observer_service.get_types()  # type: List[Any]
 
-        for i, otype in enumerate(self.otypes):
-            self.view.add_observer_type(str(i), otype.name)
+        for i, o_type in enumerate(self.o_types):
+            self.view.add_observer_type(str(i), o_type.name)
 
         self.config_view = None  # type: Optional[View]
         self.config_request = ObserverConfigRequest()  # type: ObserverConfigRequest
@@ -41,9 +41,9 @@ class CameraChooserDialogPresenter(Presenter[ObserverViewerModel, ICameraChooser
         self.view.events.on_request_close.connect(self.handle_request_close)
 
     def handle_type_combo_changed(self, active_id: str):
-        otype = self.otypes[int(active_id)]  # type: Any
+        o_type = self.o_types[int(active_id)]  # type: Any
 
-        config_view_cls = ObserverConfigView.get_view_for(otype)
+        config_view_cls = ObserverConfigView.get_view_for(o_type)
 
         if self.config_view is not None:
             self.config_view.close()

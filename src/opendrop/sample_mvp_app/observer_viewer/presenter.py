@@ -1,10 +1,9 @@
 from typing import Optional, Mapping, Any
 
-from opendrop.sample_mvp_app.observer_viewer.model import ObserverViewerModel
-
 from opendrop.mvp.Presenter import Presenter
 from opendrop.observer.bases import ObserverPreview
 from opendrop.sample_mvp_app.observer_viewer.iview import IObserverViewerView
+from opendrop.sample_mvp_app.observer_viewer.model import ObserverViewerModel
 from opendrop.sample_mvp_app.observer_viewer.observer_chooser_dialog.view import \
     CameraChooserDialogView
 
@@ -34,7 +33,7 @@ class ObserverViewerPresenter(Presenter[ObserverViewerModel, IObserverViewerView
             return
 
         self.observer_chosen = True
-        self.model.current_observer = self.model.observer_service.get(observer_type, **observer_opts)
+        self.model.current_observer = self.model.observer_service.new_observer_by_type(observer_type, **observer_opts)
 
     def clear_active_preview(self):
         if self.active_preview is not None:

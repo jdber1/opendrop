@@ -13,9 +13,9 @@ MY_OBSERVER = ObserverType('My Observer', MyObserverProvider)
 
 class TestObserverService:
     def setup(self):
-        self.os = ObserverService()
+        self.observer_service = ObserverService(types=[MY_OBSERVER])
 
-    def test_get(self):
-        self.os.get(MY_OBSERVER)
+    def test_new_observer_by_type(self):
+        self.observer_service.new_observer_by_type(MY_OBSERVER)
 
         MyObserverProvider.provide.assert_called_once_with()

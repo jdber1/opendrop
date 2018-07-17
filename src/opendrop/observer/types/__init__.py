@@ -7,7 +7,7 @@ from opendrop.utility.misc import recursive_load
 recursive_load('opendrop.observer.types')
 
 
-def get_types() -> List[ObserverType]:
+def get_all_types() -> List[ObserverType]:
     types = []
 
     for k, v in globals().items():

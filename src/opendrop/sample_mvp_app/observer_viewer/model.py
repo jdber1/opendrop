@@ -16,7 +16,7 @@ class ObserverViewerModel(Model):
         super().__init__()
 
         self.events = self._Events()
-        self.observer_service = ObserverService()  # type: ObserverService
+        self.observer_service = ObserverService(observer.types.get_all_types())  # type: ObserverService
         self.observer_types = observer.types  # type: observer.types
 
         self._current_observer = None  # type: Optional[Observer]
