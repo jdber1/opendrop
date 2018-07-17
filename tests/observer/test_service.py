@@ -16,6 +16,7 @@ class TestObserverService:
         self.observer_service = ObserverService(types=[MY_OBSERVER])
 
     def test_new_observer_by_type(self):
-        self.observer_service.new_observer_by_type(MY_OBSERVER)
+        my_opts = {'a': 1, 'b': 2}
+        self.observer_service.new_observer_by_type(MY_OBSERVER, **my_opts)
 
-        MyObserverProvider.provide.assert_called_once_with()
+        MyObserverProvider.provide.assert_called_once_with(**my_opts)
