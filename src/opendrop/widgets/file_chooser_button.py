@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional, Iterable
+from typing import Tuple, Optional, Iterable
 
 from gi.repository import Gtk, GObject
 
@@ -8,15 +8,21 @@ class FileChooserButton(Gtk.Button):
                  file_filter: Optional[Gtk.FileFilter] = None, select_multiple: bool = False):
         super().__init__(label=label)
 
-        self._filenames = tuple()  # type: Tuple[str]
+        self._no_files_label = label
+        self._file_paths = tuple()  # type: Tuple[str]
 
-        self.dialog_title = dialog_title  # type: str
-        self.file_filter = file_filter  # type: Optional[Gtk.FileFilter]
-        self.select_multiple = select_multiple # type: bool
+        self.dialog_title = dialog_title
+        self.file_filter = file_filter
+        self.select_multiple = select_multiple
 
-        self.connect('clicked', self.handle_clicked)
+        self._dialog_open = False
 
-    def handle_clicked(self, _) -> None:
+    def do_clicked(self) -> None:
+        if self._dialog_open:
+            return
+
+        self._dialog_open = True
+
         file_chooser_dialog = Gtk.FileChooserDialog(
             title=self.dialog_title,
             parent=self.get_toplevel(),
@@ -30,11 +36,15 @@ class FileChooserButton(Gtk.Button):
             ),
         )
 
+        def set_dialog_open_to_false(*_):
+            self._dialog_open = False
+
+        file_chooser_dialog.connect('destroy', set_dialog_open_to_false)
         file_chooser_dialog.show()
 
-        def handle_file_chooser_dialog_response(dialog: Gtk.FileChooserDialog, response: Gtk.ResponseType):
+        def hdl_file_chooser_dialog_response(dialog: Gtk.FileChooserDialog, response: Gtk.ResponseType):
             if response == Gtk.ResponseType.ACCEPT:
-                self.filenames = file_chooser_dialog.get_filenames()
+                self.file_paths = file_chooser_dialog.get_filenames()
 
             # Other possible responses are:
             #     Gtk.ResponseType.DELETE_EVENT
@@ -42,32 +52,24 @@ class FileChooserButton(Gtk.Button):
 
             dialog.destroy()
 
-        file_chooser_dialog.connect('response', handle_file_chooser_dialog_response)
+        file_chooser_dialog.connect('response', hdl_file_chooser_dialog_response)
 
-    @property
-    def filenames(self) -> Tuple[str]:
-        return self._filenames
+    @GObject.Property
+    def file_paths(self) -> Tuple[str]:
+        return self._file_paths
 
-    @filenames.setter
-    def filenames(self, value: Iterable[str]) -> None:
-        self._filenames = tuple(value)
+    @file_paths.setter
+    def file_paths(self, value: Iterable[str]) -> None:
+        self._file_paths = tuple(value)
 
-        if len(value) == 1:
+        value_len = len(self._file_paths)
+
+        if value_len == 0:
+            self.props.label = self._no_files_label
+        elif value_len == 1:
             self.props.label = 'File selected'
         else:
-            self.props.label = '{} files selected'.format(len(value))
+            self.props.label = '{} files selected'.format(value_len)
 
-        self.emit('changed')
-
-    @property
-    def filename(self) -> Optional[str]:
-        return self._filenames[0] if self._filenames else None
-
-    @filename.setter
-    def filename(self, value: str) -> None:
-        self._filenames = (value,)
-
-
-GObject.signal_new(
-    'changed', FileChooserButton, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT, ()
-)
+    get_file_paths = file_paths.fget
+    set_file_paths = file_paths.fset
