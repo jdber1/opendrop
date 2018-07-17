@@ -8,25 +8,25 @@ from opendrop.widgets.validated_entry import ValidatedEntry
 
 class FloatEntry(ValidatedEntry):
     # TODO: Remove this code duplication with IntegerEntry
-    _min = None  # type: Optional[int]
-    _max = None  # type: Optional[int]
+    _lower = None  # type: Optional[int]
+    _upper = None  # type: Optional[int]
     _default = None  # type: Optional[int]
 
     @GObject.Property
-    def min(self) -> Optional[int]:
-        return self._min
+    def lower(self) -> Optional[int]:
+        return self._lower
 
-    @min.setter
-    def min(self, value: Optional[int]) -> None:
-        self._min = value
+    @lower.setter
+    def lower(self, value: Optional[int]) -> None:
+        self._lower = value
 
     @GObject.Property
-    def max(self) -> Optional[int]:
-        return self._max
+    def upper(self) -> Optional[int]:
+        return self._upper
 
-    @max.setter
-    def max(self, value: Optional[int]) -> None:
-        self._max = value
+    @upper.setter
+    def upper(self, value: Optional[int]) -> None:
+        self._upper = value
 
     @GObject.Property
     def default(self) -> Optional[int]:
@@ -43,18 +43,18 @@ class FloatEntry(ValidatedEntry):
 
             return None
 
-        if self.min is not None:
-            value = max(value, self.min)
+        if self.lower is not None:
+            value = max(value, self.lower)
 
-        if self.max is not None:
-            value = min(value, self.max)
+        if self.upper is not None:
+            value = min(value, self.upper)
 
         return value
 
     def validate(self, text: str) -> bool:
-        if '+' in text and self.max is not None and self.max < 0:
+        if '+' in text and self.upper is not None and self.upper < 0:
             return False
-        elif '-' in text and self.min is not None and self.min >= 0:
+        elif '-' in text and self.lower is not None and self.lower >= 0:
             return False
 
         try:
