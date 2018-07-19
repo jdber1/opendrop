@@ -231,7 +231,7 @@ def test_binding_with_mitm():
         def alert(self, tx):
             self._bcast_tx(tx)
 
-    class MyMITM(BindingMITM[int]):
+    class MyMITM(BindingMITM[int, int]):
         def to_dst(self, tx: int) -> int:
             checkpoints.append(('to_dst', tx))
             return tx + 1
@@ -283,7 +283,7 @@ def test_atomic_binding_mitm_inheriting():
                 ('{.name}._raw_set'.format(self), value)
             )
 
-    class MyMITM(AtomicBindingMITM[int]):
+    class MyMITM(AtomicBindingMITM[int, int]):
         def _atomic_to_dst(self, value: int) -> int:
             checkpoints.append(('_atomic_to_dst', value))
             return value + 1
