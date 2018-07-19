@@ -39,7 +39,7 @@ class Bindable(Generic[TxT]):
         pass
 
 
-# AbstractAtomicBindable
+# AtomicBindable
 
 class AtomicBindableTx(Generic[VT]):
     def __init__(self, value: VT):
@@ -53,7 +53,7 @@ class AtomicBindableTx(Generic[VT]):
 
 
 class AtomicBindablePropertyAdapter(Generic[VT]):
-    def __init__(self, bn_getter: Callable[[Any], 'AbstractAtomicBindable[VT]']):
+    def __init__(self, bn_getter: Callable[[Any], 'AtomicBindable[VT]']):
         self._bn_getter = bn_getter
 
     def __get__(self, instance, owner) -> VT:
@@ -66,7 +66,7 @@ class AtomicBindablePropertyAdapter(Generic[VT]):
         self._bn_getter(instance).set(value)
 
 
-class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
+class AtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
     property_adapter = AtomicBindablePropertyAdapter
 
     def __init__(self, *args, **kwargs):
@@ -76,7 +76,7 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
 
     @staticmethod
     def create_tx(value: VT) -> AtomicBindableTx[VT]:
-        """Create and return a new transaction that when applied to another AbstractAtomicBindable `bn`, should set the
+        """Create and return a new transaction that when applied to another AtomicBindable `bn`, should set the
         value that `bn` is storing to `value`.
         """
         return AtomicBindableTx(value)
@@ -92,7 +92,7 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
         self._value_changed(value, bcast_tx=bcast_tx)
 
     def poke(self) -> None:
-        """Force this AbstractAtomicBindable (AAB) to fire its `on_new_tx` event with a transaction representing the
+        """Force this AtomicBindable (AAB) to fire its `on_new_tx` event with a transaction representing the
         current value of this AAB. Also fires its `on_changed` event. Usually called when the underlying value of this
         AAB has changed, but this change was not made using AAB.set().
         """
@@ -123,9 +123,9 @@ class AbstractAtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
         pass
 
 
-# AtomicBindable
+# AtomicBindableVar
 
-class AtomicBindable(AbstractAtomicBindable[VT]):
+class AtomicBindableVar(AtomicBindable[VT]):
     def __init__(self, initial: VT):
         super().__init__()
         self._value = initial
@@ -139,7 +139,7 @@ class AtomicBindable(AbstractAtomicBindable[VT]):
 
 # AtomicBindableAdapter
 
-class AtomicBindableAdapter(AbstractAtomicBindable[VT]):
+class AtomicBindableAdapter(AtomicBindable[VT]):
     def __init__(self, getter: Optional[Callable[[], VT]] = None, setter: Optional[Callable[[VT], None]] = None):
         super().__init__()
 

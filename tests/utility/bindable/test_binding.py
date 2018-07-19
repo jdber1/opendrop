@@ -1,7 +1,7 @@
 import gc
 import weakref
 
-from opendrop.utility.bindable.bindable import Bindable, AbstractAtomicBindable
+from opendrop.utility.bindable.bindable import Bindable, AtomicBindable
 from opendrop.utility.bindable.binding import Binding, BindingMITM, AtomicBindingMITM
 
 
@@ -267,7 +267,7 @@ def test_binding_with_mitm():
 def test_atomic_binding_mitm_inheriting():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable):
+    class MyAtomicBindable(AtomicBindable):
         def __init__(self, name):
             super().__init__()
             self.name = name
@@ -324,7 +324,7 @@ def test_atomic_binding_mitm_inheriting():
 def test_atomic_binding_mitm_functional_api():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable):
+    class MyAtomicBindable(AtomicBindable):
         def __init__(self, name):
             super().__init__()
             self.name = name

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Union, Optional
 
 from opendrop.mvp.Model import Model
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AbstractAtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
 
 T = TypeVar('T')
 
@@ -133,16 +133,16 @@ class BurgerOrder(Model):
         self.bn_bacon.on_changed.connect(self.bn_order_cost.poke)
         self.bn_meal_size.on_changed.connect(self.bn_order_cost.poke)
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def cheese_slices(self): return self.bn_cheese_slices
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def bacon(self): return self.bn_bacon
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def meal_size(self): return self.bn_meal_size
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def order_cost(self): return self.bn_order_cost
 
     def _calculate_order_cost(self):

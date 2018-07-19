@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from pytest import raises
 
-from opendrop.utility.bindable.bindable import Bindable, AbstractAtomicBindable, AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import Bindable, AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
 
 
 def test_bindable_send_tx():
@@ -100,12 +100,12 @@ def test_bindable_apply_tx():
     ]
 
 
-# AbstractAtomicBindable tests.
+# AtomicBindable tests.
 
-def test_abstract_atomic_bn_get_and_set():
+def test_atomic_bn_get_and_set():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             checkpoints.append(('_raw_get',))
             return 4
@@ -133,10 +133,10 @@ def test_abstract_atomic_bn_get_and_set():
     ]
 
 
-def test_abstract_atomic_bn_apply_tx():
+def test_atomic_bn_apply_tx():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             pass
 
@@ -159,10 +159,10 @@ def test_abstract_atomic_bn_apply_tx():
     ]
 
 
-def test_abstract_atomic_bn_export():
+def test_atomic_bn_export():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             checkpoints.append(('_raw_get',))
             return 9
@@ -184,10 +184,10 @@ def test_abstract_atomic_bn_export():
     ]
 
 
-def test_abstract_atomic_bn_poke():
+def test_atomic_bn_poke():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             checkpoints.append(('_raw_get',))
             return 3
@@ -204,14 +204,14 @@ def test_abstract_atomic_bn_poke():
     ]
 
 
-def test_abstract_atomic_bn_property_adapter():
+def test_atomic_bn_property_adapter():
     checkpoints = []
 
     class MyClass:
         def __init__(self, bn):
             self.bn = bn
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             checkpoints.append(('_raw_get',))
             return 3
@@ -219,7 +219,7 @@ def test_abstract_atomic_bn_property_adapter():
         def _raw_set(self, v):
             checkpoints.append(('_raw_set', v))
 
-    prop_descriptor = AbstractAtomicBindable.property_adapter(lambda self: self.bn)
+    prop_descriptor = AtomicBindable.property_adapter(lambda self: self.bn)
 
     obj = MyClass(bn=MyAtomicBindable())
 
@@ -232,10 +232,10 @@ def test_abstract_atomic_bn_property_adapter():
     ]
 
 
-def test_abstract_atomic_bn_changed_event():
+def test_atomic_bn_changed_event():
     checkpoints = []
 
-    class MyAtomicBindable(AbstractAtomicBindable[int]):
+    class MyAtomicBindable(AtomicBindable[int]):
         def _raw_get(self):
             pass
 
@@ -259,20 +259,20 @@ def test_abstract_atomic_bn_changed_event():
     ]
 
 
-# AtomicBindable tests.
+# AtomicBindableVar tests.
 
-def test_atomic_bn_initialise():
-    bn = AtomicBindable(0)
-    assert isinstance(bn, AbstractAtomicBindable)
+def test_atomic_bn_var_initialise():
+    bn = AtomicBindableVar(0)
+    assert isinstance(bn, AtomicBindable)
 
 
-def test_atomic_bn_get():
-    bn = AtomicBindable(4)
+def test_atomic_bn_var_get():
+    bn = AtomicBindableVar(4)
     assert bn.get() == 4
 
 
-def test_atomic_bn_set():
-    bn = AtomicBindable(0)
+def test_atomic_bn_var_set():
+    bn = AtomicBindableVar(0)
     bn.set(7)
     assert bn.get() == 7
 
@@ -281,7 +281,7 @@ def test_atomic_bn_set():
 
 def test_atomic_bn_adapter_initialise():
     bn = AtomicBindableAdapter()
-    assert isinstance(bn, AbstractAtomicBindable)
+    assert isinstance(bn, AtomicBindable)
 
 
 def test_atomic_bn_adapter_get():

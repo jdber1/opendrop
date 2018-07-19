@@ -3,7 +3,7 @@ from gi.repository import Gtk
 from opendrop.gtk_specific.GtkWindowView import GtkWindowView
 from opendrop.mvp.View import View
 from opendrop.sample_mvp_app.burger_example.iview import IBurgerExampleView
-from opendrop.utility.bindable.bindable import AbstractAtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
 from opendrop.utility.events import Event
 
 
@@ -108,19 +108,19 @@ class BurgerExampleView(GtkWindowView, IBurgerExampleView):
     def add_meal_size(self, display: str) -> None:
         self.meal_size_input.append(id=display, text=display)
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def cheese_slices(self) -> int:
         return self.bn_cheese_slices
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def bacon(self) -> int:
         return self.bn_bacon
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def meal_size(self) -> int:
         return self.bn_meal_size
 
-    @AbstractAtomicBindable.property_adapter
+    @AtomicBindable.property_adapter
     def meal_size(self) -> int:
         return self.bn_order_cost
 
