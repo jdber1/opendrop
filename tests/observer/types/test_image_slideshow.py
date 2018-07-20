@@ -8,7 +8,6 @@ import pytest
 from pytest import raises
 
 from opendrop.observer.types.image_slideshow import ImageSlideshowObserver, ImageSlideshowObserverPreview
-
 from tests import samples
 
 
@@ -79,7 +78,7 @@ class TestImageSlideshowObserverPreview:
 
         cb = Mock()
 
-        self.preview.events.on_update.connect(cb)
+        self.preview.on_update.connect(cb)
 
         self.preview.show(IMAGE_INDEX_TO_SHOW)
 

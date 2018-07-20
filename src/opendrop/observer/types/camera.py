@@ -97,7 +97,7 @@ class CameraObserverPreview(ObserverPreview):
         if delta < self._frame_interval:
             await asyncio.sleep(self._frame_interval - delta)
         else:
-            self.events.on_update.fire(self._cam.capture())
+            self.on_update.fire(self._cam.capture())
             self._last_update = now
 
         self._schedule_step()

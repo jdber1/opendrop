@@ -30,13 +30,9 @@ class Observer:
         return self._o_type
 
 
-class Observation:  # make sure to list the events in the class doc
-    class _Events:
-        def __init__(self):
-            self.on_ready = Event()
-
+class Observation:
     def __init__(self, volatile: bool = False) -> None:
-        self.events = self._Events()
+        self.on_ready = Event()  # emits: (image: np.ndarray)
 
         self.timestamp = None
         self.volatile = volatile
@@ -56,7 +52,7 @@ class Observation:  # make sure to list the events in the class doc
 
         self._sweep_waiters()
 
-        self.events.on_ready.fire(image)
+        self.on_ready.fire(image)
 
     def cancel(self) -> None:
         if self.cancelled:
@@ -116,12 +112,8 @@ class Observation:  # make sure to list the events in the class doc
 
 
 class ObserverPreview:
-    class _Events:
-        def __init__(self):
-            self.on_update = Event()
-
     def __init__(self, observer: Observer):
-        self.events = self._Events()
+        self.on_update = Event()  # emits: (preview_image: np.ndarray)
 
     @abstractmethod
     def close(self): pass

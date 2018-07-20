@@ -1,10 +1,9 @@
 import asyncio
+import time
 from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-import time
-
 from pytest import raises
 
 from opendrop.observer.bases import Observation
@@ -137,7 +136,7 @@ class TestCameraObserverPreview:
             # Check that the frame passed to the callback matches the image in the camera class
             frame_matches = (frame == self.cam_cls.IMAGE).all()
 
-        self.cam_preview.events.on_update.connect(cb)
+        self.cam_preview.on_update.connect(cb)
 
         # Wait a short period so 'on_update' is fired
         await asyncio.sleep(0.01)
@@ -156,7 +155,7 @@ class TestCameraObserverPreview:
 
             num_frames += 1
 
-        self.cam_preview.events.on_update.connect(cb)
+        self.cam_preview.on_update.connect(cb)
 
         for wait, fps in zip(WAIT, FPS):
             self.cam_preview.fps = fps
@@ -181,7 +180,7 @@ class TestCameraObserverPreview:
 
         cb = Mock()
 
-        self.cam_preview.events.on_update.connect(cb)
+        self.cam_preview.on_update.connect(cb)
 
         # Wait a short period of time so 'on_update' even has a chance of being fired
         await asyncio.sleep(EPSILON)
