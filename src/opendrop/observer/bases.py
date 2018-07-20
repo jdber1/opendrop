@@ -11,6 +11,8 @@ from opendrop.utility.events import Event
 
 
 class Observer:
+    _o_type = None  # type: Optional[ObserverType]
+
     @abstractmethod
     def timelapse(self, timestamps: Sequence[float]) -> List['Observation']:
         pass
@@ -18,6 +20,14 @@ class Observer:
     @abstractmethod
     def preview(self) -> 'ObserverPreview':
         pass
+
+    def _register_type(self, o_type: 'ObserverType') -> None:
+        assert self._o_type is None
+        self._o_type = o_type
+
+    @property
+    def type(self) -> 'ObserverType':
+        return self._o_type
 
 
 class Observation:  # make sure to list the events in the class doc

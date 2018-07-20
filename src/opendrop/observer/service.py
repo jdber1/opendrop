@@ -9,7 +9,9 @@ class ObserverService:
 
     def new_observer_by_type(self, o_type: ObserverType, **opts) -> Observer:
         assert o_type in self._types
-        return o_type._provider.provide(**opts)
+        observer = o_type._provider.provide(**opts)
+        observer._register_type(o_type)
+        return observer
 
     def get_types(self) -> Tuple[ObserverType]:
         return self._types
