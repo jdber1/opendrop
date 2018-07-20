@@ -5,8 +5,8 @@ from gi.repository import Gtk, GObject
 
 class FileChooserButton(Gtk.Button):
     def __init__(self, label: str = 'Choose files', dialog_title: str = 'Select files',
-                 file_filter: Optional[Gtk.FileFilter] = None, select_multiple: bool = False):
-        super().__init__(label=label)
+                 file_filter: Optional[Gtk.FileFilter] = None, select_multiple: bool = False, *args, **kwargs):
+        super().__init__(label=label, *args, **kwargs)
 
         self._no_files_label = label
         self._file_paths = tuple()  # type: Tuple[str]
