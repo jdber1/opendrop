@@ -81,7 +81,7 @@ class PreviewViewer(Gtk.DrawingArea):
     @preview.setter
     def preview(self, value: ObserverPreview) -> None:
         if self.preview is not None:
-            self.preview.on_update.disconnect(self._handle_preview_on_update)
+            self.preview.on_update.disconnect_by_func(self._handle_preview_on_update)
 
         if value is not None:
             value.on_update.connect(self._handle_preview_on_update)
