@@ -81,10 +81,10 @@ class PreviewViewer(Gtk.DrawingArea):
     @preview.setter
     def preview(self, value: ObserverPreview) -> None:
         if self.preview is not None:
-            self.preview.on_update.disconnect_by_func(self._handle_preview_on_update)
+            self.preview.on_changed.disconnect_by_func(self._handle_preview_on_changed)
 
         if value is not None:
-            value.on_update.connect(self._handle_preview_on_update)
+            value.on_changed.connect(self._handle_preview_on_changed)
 
         self._preview = value
         self._buffer = None
@@ -145,7 +145,7 @@ class PreviewViewer(Gtk.DrawingArea):
         Gdk.cairo_set_source_pixbuf(cr, pixbuf_from_array(im), *im_draw_offset)
         cr.paint()
 
-    def _handle_preview_on_update(self, image: np.ndarray) -> None:
-        self._buffer = image
+    def _handle_preview_on_changed(self) -> None:
+        self._buffer = self.preview.buffer
 
         self.queue_draw()

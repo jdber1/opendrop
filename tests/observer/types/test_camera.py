@@ -1,5 +1,6 @@
 import asyncio
 import time
+from copy import copy
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -122,26 +123,24 @@ class TestCameraObserverPreview:
         self.cam_preview = CameraObserverPreview(self.cam_observer)
 
     @pytest.mark.asyncio
-    async def test_on_update(self):
+    async def test_on_changed(self):
         # Set `fps` to None, i.e. maximum fps
         self.cam_preview.fps = None
 
-        cb_called, frame_matches = False, False
+        checkpoints = []
 
-        def cb(frame):
-            nonlocal cb_called, frame_matches
+        def cb():
+            checkpoints.append(
+                ('cb', copy(self.cam_preview.buffer))
+            )
 
-            cb_called = True
+        self.cam_preview.on_changed.connect(cb)
 
-            # Check that the frame passed to the callback matches the image in the camera class
-            frame_matches = (frame == self.cam_cls.IMAGE).all()
-
-        self.cam_preview.on_update.connect(cb)
-
-        # Wait a short period so 'on_update' is fired
+        # Wait a short period so 'on_changed' is fired
         await asyncio.sleep(0.01)
 
-        assert cb_called and frame_matches
+        assert checkpoints[0][0] == 'cb'
+        assert (checkpoints[0][1] == self.cam_cls.IMAGE).all()
 
     @pytest.mark.asyncio
     async def test_fps(self):
@@ -150,12 +149,12 @@ class TestCameraObserverPreview:
         FPS = [30, 0]
         WAIT = [0.5] * len(FPS)
 
-        def cb(frame):
+        def cb():
             nonlocal num_frames
 
             num_frames += 1
 
-        self.cam_preview.on_update.connect(cb)
+        self.cam_preview.on_changed.connect(cb)
 
         for wait, fps in zip(WAIT, FPS):
             self.cam_preview.fps = fps
@@ -167,7 +166,7 @@ class TestCameraObserverPreview:
 
     @pytest.mark.asyncio
     async def test_close(self):
-        EPSILON = 0.01
+        EPSILON = 0.1
 
         self.cam_preview.close()
 
@@ -180,9 +179,9 @@ class TestCameraObserverPreview:
 
         cb = Mock()
 
-        self.cam_preview.on_update.connect(cb)
+        self.cam_preview.on_changed.connect(cb)
 
-        # Wait a short period of time so 'on_update' even has a chance of being fired
+        # Wait a short period of time so 'on_changed' has a chance of being fired
         await asyncio.sleep(EPSILON)
 
         cb.assert_not_called()
@@ -207,7 +206,6 @@ class TestCameraObservation:
         assert self.cam_cls.teardown_count == 0
         self.o.cancel()
         assert self.cam_cls.teardown_count == 1
-
 
     @pytest.mark.asyncio
     async def test_cancel_after_loaded(self):

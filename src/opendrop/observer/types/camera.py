@@ -80,12 +80,23 @@ class CameraObserverPreview(ObserverPreview):
 
         self.alive = True  # type: bool
 
+        self._buffer = np.zeros(shape=(0, 0, 3))  # type: np.ndarray
+        self._buffer_stale = True
+
         self._cam = observer.acquire_camera()  # type: ICamera
         self._frame_interval = 0  # type: float
         self._step_task = None  # type: Optional[Task]
         self._last_update = 0  # type: float
 
         self._schedule_step()
+
+    @property
+    def buffer(self) -> np.ndarray:
+        if self._buffer_stale:
+            self._buffer = self._cam.capture()
+            self._buffer_stale = False
+
+        return self._buffer
 
     async def _step(self) -> None:
         if self._frame_interval is None:
@@ -94,11 +105,15 @@ class CameraObserverPreview(ObserverPreview):
         now = asyncio.get_event_loop().time()
         delta = now - self._last_update
 
+        # Delete `now` so we don't accidentally use it after we sleep, since `now` will no longer be now.
+        del now
+
         if delta < self._frame_interval:
             await asyncio.sleep(self._frame_interval - delta)
-        else:
-            self.on_update.fire(self._cam.capture())
-            self._last_update = now
+
+        self._buffer_stale = True
+        self.on_changed.fire()
+        self._last_update = asyncio.get_event_loop().time()
 
         self._schedule_step()
 

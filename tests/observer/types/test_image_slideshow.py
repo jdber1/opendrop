@@ -78,13 +78,14 @@ class TestImageSlideshowObserverPreview:
 
         cb = Mock()
 
-        self.preview.on_update.connect(cb)
+        self.preview.on_changed.connect(cb)
 
         self.preview.show(IMAGE_INDEX_TO_SHOW)
 
         await asyncio.sleep(0.001)
 
-        assert (cb.call_args[0] == IMAGES[IMAGE_INDEX_TO_SHOW]).all()
+        cb.assert_called_once_with()
+        assert (self.preview.buffer == IMAGES[IMAGE_INDEX_TO_SHOW]).all()
 
     def teardown(self):
         self.preview.close()

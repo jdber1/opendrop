@@ -78,14 +78,20 @@ class ImageSlideshowObserverPreview(ObserverPreview):
     def __init__(self, observer: ImageSlideshowObserver):
         super().__init__(observer)
 
+        self._index = 0
         self._observer = observer
+
+    @property
+    def buffer(self) -> np.ndarray:
+        return self._observer.get_image(self._index)
 
     @property
     def num_images(self) -> int:
         return self._observer.num_images
 
     def show(self, index: int):
-        self.on_update.fire(self._observer.get_image(index))
+        self._index = index
+        self.on_changed.fire()
 
     def close(self):
         # No need to do any clean up

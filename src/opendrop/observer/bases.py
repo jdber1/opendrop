@@ -113,10 +113,15 @@ class Observation:
 
 class ObserverPreview:
     def __init__(self, observer: Observer):
-        self.on_update = Event()  # emits: (preview_image: np.ndarray)
+        self.on_changed = Event()  # emits: (preview_image: np.ndarray)
 
     @abstractmethod
     def close(self): pass
+
+    @property
+    @abstractmethod
+    def buffer(self) -> np.ndarray:
+        """Pixel array (should be rgb) of the current preview"""
 
 
 class ObserverProvider:
