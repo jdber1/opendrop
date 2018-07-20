@@ -133,7 +133,7 @@ class CameraObserverPreview(ObserverPreview):
 
     def close(self) -> None:
         if not self.alive:
-            raise ValueError('Preview is already closed')
+            return
 
         self.alive = False
 
