@@ -1,10 +1,11 @@
 from abc import abstractmethod
-from typing import Any, Generic, TypeVar, Sequence, Optional, Callable
+from typing import Any, Generic, TypeVar, Sequence, Optional, Callable, Type
 
 from opendrop.utility.events import Event, EventConnection
 
 TxT = TypeVar('TxT')
 VT = TypeVar('VT')
+T = TypeVar('T')
 
 
 # Bindable
@@ -52,17 +53,17 @@ class AtomicBindableTx(Generic[VT]):
         return self.value == other.value
 
 
-class AtomicBindablePropertyAdapter(Generic[VT]):
-    def __init__(self, bn_getter: Callable[[Any], 'AtomicBindable[VT]']):
+class AtomicBindablePropertyAdapter(Generic[T, VT]):
+    def __init__(self, bn_getter: Callable[[T], 'AtomicBindable[VT]']):
         self._bn_getter = bn_getter
 
-    def __get__(self, instance, owner) -> VT:
+    def __get__(self, instance: T, owner: Type[T]) -> VT:
         if instance is None:
             return self
 
         return self._bn_getter(instance).get()
 
-    def __set__(self, instance, value) -> None:
+    def __set__(self, instance: T, value: VT) -> None:
         self._bn_getter(instance).set(value)
 
 
