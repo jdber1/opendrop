@@ -1,8 +1,7 @@
 import asyncio
 
-import pytest
-
 import gi
+import pytest
 
 gi.require_version('Gtk', '3.0')
 
