@@ -15,15 +15,13 @@ class FileChooserButton(Gtk.Button):
         self.file_filter = file_filter
         self.select_multiple = select_multiple
 
-        self._dialog_open = False
+        self._active_dialog = None  # type: Optional[Gtk.FileChooserDialog]
 
     def do_clicked(self) -> None:
-        if self._dialog_open:
+        if self._active_dialog is not None:
             return
 
-        self._dialog_open = True
-
-        file_chooser_dialog = Gtk.FileChooserDialog(
+        self._active_dialog = Gtk.FileChooserDialog(
             title=self.dialog_title,
             parent=self.get_toplevel(),
             modal=True,
@@ -36,15 +34,11 @@ class FileChooserButton(Gtk.Button):
             ),
         )
 
-        def set_dialog_open_to_false(*_):
-            self._dialog_open = False
-
-        file_chooser_dialog.connect('destroy', set_dialog_open_to_false)
-        file_chooser_dialog.show()
+        self._active_dialog.connect('destroy', lambda *_: setattr(self, '_active_dialog', None))
 
         def hdl_file_chooser_dialog_response(dialog: Gtk.FileChooserDialog, response: Gtk.ResponseType):
             if response == Gtk.ResponseType.ACCEPT:
-                self.file_paths = file_chooser_dialog.get_filenames()
+                self.file_paths = dialog.get_filenames()
 
             # Other possible responses are:
             #     Gtk.ResponseType.DELETE_EVENT
@@ -52,7 +46,8 @@ class FileChooserButton(Gtk.Button):
 
             dialog.destroy()
 
-        file_chooser_dialog.connect('response', hdl_file_chooser_dialog_response)
+        self._active_dialog.connect('response', hdl_file_chooser_dialog_response)
+        self._active_dialog.show()
 
     @GObject.Property
     def file_paths(self) -> Tuple[str]:
