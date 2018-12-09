@@ -1,7 +1,7 @@
 from typing import Sequence
 
 import numpy as np
-from gi.repository import GdkPixbuf, GLib
+from gi.repository import GdkPixbuf
 
 
 def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
