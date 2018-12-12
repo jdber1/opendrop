@@ -27,7 +27,7 @@ class Speaker(Generic[K]):
 
 
 class Moderator(Generic[K]):
-    def __init__(self):
+    def __init__(self) -> None:
         self._active_speaker = None  # type: Optional[K]
         self._key_to_speakers = {}  # type: MutableMapping[K, Speaker]
 
