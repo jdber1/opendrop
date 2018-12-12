@@ -29,7 +29,7 @@ class Speaker(Generic[K]):
 class Moderator(Generic[K]):
     def __init__(self) -> None:
         self._active_speaker = None  # type: Optional[K]
-        self._key_to_speakers = {}  # type: MutableMapping[K, Speaker]
+        self._key_to_speaker = {}  # type: MutableMapping[K, Speaker]
 
     @property
     def active_speaker(self) -> Optional[K]:
@@ -41,7 +41,7 @@ class Moderator(Generic[K]):
         if key is None:
             raise ValueError('Identifying key cannot be None')
 
-        self._key_to_speakers[key] = spk
+        self._key_to_speaker[key] = spk
         spk._moderator = self
 
     def _handle_speaker_request_activate_speaker(self, src_key: K, activate_key: K) -> None:
@@ -57,7 +57,7 @@ class Moderator(Generic[K]):
             return True
 
         # The 'actual' active speaker, not the key used to identify it
-        active_speaker = self._key_to_speakers[self._active_speaker]
+        active_speaker = self._key_to_speaker[self._active_speaker]
 
         block = False if force else await active_speaker.do_request_deactivate()
 
@@ -72,7 +72,7 @@ class Moderator(Generic[K]):
         otherwise. Pass force=True to force any currently active speaker to be deactivated, preventing it from blocking
         the deactivation. To deactivate the current active speaker only, without activating another speaker, use
         key=None."""
-        if key is not None and key not in self._key_to_speakers:
+        if key is not None and key not in self._key_to_speaker:
             raise ValueError('No speaker identified by `{}`'.format(key))
 
         deactivation_success = await self._deactivate_active_speaker(force)
@@ -81,7 +81,7 @@ class Moderator(Generic[K]):
             return False
 
         if key is not None:
-            desired_speaker = self._key_to_speakers[key]
+            desired_speaker = self._key_to_speaker[key]
             desired_speaker.do_activate()
 
         self._active_speaker = key
