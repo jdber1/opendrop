@@ -293,7 +293,7 @@ def test_atomic_bn_adapter_get():
 def test_atomic_bn_adapter_get_without_getter():
     bn = AtomicBindableAdapter()
 
-    with raises(ValueError):
+    with raises(AttributeError):
         bn.get()
 
 
@@ -313,7 +313,7 @@ def test_atomic_bn_adapter_set():
 def test_atomic_bn_adapter_set_without_setter():
     bn = AtomicBindableAdapter()
 
-    with raises(ValueError):
+    with raises(AttributeError):
         bn.set(9)
 
 

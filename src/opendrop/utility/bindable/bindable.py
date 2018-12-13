@@ -150,12 +150,12 @@ class AtomicBindableAdapter(AtomicBindable[VT]):
 
     def _raw_get(self) -> VT:
         if self.getter is None:
-            raise ValueError("Unreadable bindable (no getter)")
+            raise AttributeError("Unreadable bindable (no getter)")
 
         return self.getter()
 
     def _raw_set(self, value: VT) -> None:
         if self.setter is None:
-            raise ValueError("Can't set bindable (no setter)", self, value)
+            raise AttributeError("Can't set bindable (no setter)", self, value)
 
         self.setter(value)
