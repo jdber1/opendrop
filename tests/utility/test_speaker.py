@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from opendrop.utility.speaker import Speaker, Moderator
@@ -51,13 +53,16 @@ def test_moderator_active_speaker_value_after_instantiate():
     mod = Moderator()
 
     assert mod.active_speaker is None
+    assert mod.bn_active_speaker.get() is None
 
 
 def test_moderator_active_speaker_readonly():
     mod = Moderator()
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         mod.active_speaker = 1
+    with pytest.raises(ValueError):
+        mod.bn_active_speaker.set(1)
 
 
 def test_moderator_add_speaker():
@@ -83,13 +88,17 @@ async def test_moderator_activate_speaker():
     mod = Moderator()
     my_spk = MySpeaker()
     mod.add_speaker(0, my_spk)
+    cb = Mock()
+    mod.bn_active_speaker.on_changed.connect(cb, immediate=True)
 
     # Activate the speaker
     success = await mod.activate_speaker(0)
 
     assert success
     assert my_spk.log == [MySpeaker.LOG_ACTIVATE]
+    cb.assert_called_once_with()
     assert mod.active_speaker == 0
+    assert mod.bn_active_speaker.get() == 0
 
 
 @pytest.mark.asyncio
@@ -106,12 +115,16 @@ async def test_moderator_deactivate_active_speaker():
     my_spk = MySpeaker()
     mod.add_speaker(0, my_spk)
     await mod.activate_speaker(0)
+    cb = Mock()
+    mod.bn_active_speaker.on_changed.connect(cb, immediate=True)
 
     # Deactivate the current active speaker
     await mod.activate_speaker(None)
 
     assert my_spk.log == [MySpeaker.LOG_ACTIVATE, MySpeaker.LOG_REQUEST_DEACTIVATE, MySpeaker.LOG_DEACTIVATE]
+    cb.assert_called_once_with()
     assert mod.active_speaker is None
+    assert mod.bn_active_speaker.get() is None
 
 
 @pytest.mark.asyncio
@@ -125,13 +138,18 @@ async def test_moderator_activate_speaker_but_current_active_speaker_blocks():
     # Activate the blocking speaker
     await mod.activate_speaker(0)
 
+    cb = Mock()
+    mod.bn_active_speaker.on_changed.connect(cb, immediate=True)
+
     # Try to activate another speaker
     success = await mod.activate_speaker(0)
 
     assert success is False
     assert my_blocking_spk.log == [MyBlockingSpeaker.LOG_ACTIVATE, MyBlockingSpeaker.LOG_BLOCK_DEACTIVATION_REQUEST]
     assert my_spk.log == []
+    cb.assert_not_called()
     assert mod.active_speaker == 0
+    assert mod.bn_active_speaker.get() == 0
 
 
 @pytest.mark.asyncio
@@ -145,10 +163,15 @@ async def test_moderator_activate_speaker_with_force():
     # Activate the blocking speaker
     await mod.activate_speaker(0)
 
+    cb = Mock()
+    mod.bn_active_speaker.on_changed.connect(cb, immediate=True)
+
     # Try to activate another speaker
     success = await mod.activate_speaker(1, force=True)
 
     assert success
     assert my_blocking_spk.log == [MyBlockingSpeaker.LOG_ACTIVATE, MyBlockingSpeaker.LOG_DEACTIVATE]
     assert my_spk.log == [MySpeaker.LOG_ACTIVATE]
+    cb.assert_called_once_with()
     assert mod.active_speaker == 1
+    assert mod.bn_active_speaker.get() == 1

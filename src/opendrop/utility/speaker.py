@@ -1,5 +1,6 @@
-from typing import Generic, TypeVar, Optional, MutableMapping, Callable, List
+from typing import Generic, TypeVar, Optional, MutableMapping
 
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindablePropertyAdapter
 
 K = TypeVar('K')
 
@@ -29,10 +30,14 @@ class Speaker(Generic[K]):
 class Moderator(Generic[K]):
     def __init__(self) -> None:
         self._active_speaker = None  # type: Optional[K]
+        self.bn_active_speaker = AtomicBindableAdapter(self._get_active_speaker)  # type: AtomicBindable[Optional[K]]
         self._key_to_speaker = {}  # type: MutableMapping[K, Speaker]
 
-    @property
+    @AtomicBindablePropertyAdapter
     def active_speaker(self) -> Optional[K]:
+        return self.bn_active_speaker
+
+    def _get_active_speaker(self) -> Optional[K]:
         """Return the key that identifies the currently active Speaker, return None if no Speaker is currently active.
         """
         return self._active_speaker
@@ -85,4 +90,5 @@ class Moderator(Generic[K]):
             desired_speaker.do_activate()
 
         self._active_speaker = key
+        self.bn_active_speaker.poke()
         return True
