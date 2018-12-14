@@ -29,18 +29,18 @@ class Speaker(Generic[K]):
 
 class Moderator(Generic[K]):
     def __init__(self) -> None:
-        self._active_speaker = None  # type: Optional[K]
-        self.bn_active_speaker = AtomicBindableAdapter(self._get_active_speaker)  # type: AtomicBindable[Optional[K]]
+        self._active_speaker_key = None  # type: Optional[K]
+        self.bn_active_speaker_key = AtomicBindableAdapter(self._get_active_speaker_key)  # type: AtomicBindable[Optional[K]]
         self._key_to_speaker = {}  # type: MutableMapping[K, Speaker]
 
     @AtomicBindablePropertyAdapter
-    def active_speaker(self) -> Optional[K]:
-        return self.bn_active_speaker
+    def active_speaker_key(self) -> Optional[K]:
+        return self.bn_active_speaker_key
 
-    def _get_active_speaker(self) -> Optional[K]:
+    def _get_active_speaker_key(self) -> Optional[K]:
         """Return the key that identifies the currently active Speaker, return None if no Speaker is currently active.
         """
-        return self._active_speaker
+        return self._active_speaker_key
 
     def add_speaker(self, key: K, spk: Speaker) -> None:
         if key is None:
@@ -50,19 +50,19 @@ class Moderator(Generic[K]):
         spk._moderator = self
 
     def _handle_speaker_request_activate_speaker(self, src_key: K, activate_key: K) -> None:
-        if self.active_speaker is not src_key:
+        if self.active_speaker_key is not src_key:
             return
 
-        self.activate_speaker(activate_key)
+        self.activate_speaker_by_key(activate_key)
 
     async def _deactivate_active_speaker(self, force: bool) -> bool:
         """Deactivate the currently active Speaker (if it exists), returns True if successful and False otherwise. This
         method will not update the `_active_speaker` attribute."""
-        if self._active_speaker is None:
+        if self._active_speaker_key is None:
             return True
 
         # The 'actual' active speaker, not the key used to identify it
-        active_speaker = self._key_to_speaker[self._active_speaker]
+        active_speaker = self._key_to_speaker[self._active_speaker_key]
 
         block = False if force else await active_speaker.do_request_deactivate()
 
@@ -72,7 +72,7 @@ class Moderator(Generic[K]):
         active_speaker.do_deactivate()
         return True
 
-    async def activate_speaker(self, key: Optional[K], force: bool = False) -> bool:
+    async def activate_speaker_by_key(self, key: Optional[K], force: bool = False) -> bool:
         """Activate the speaker identified by key, return True if desired speaker is successfully activated, and False
         otherwise. Pass force=True to force any currently active speaker to be deactivated, preventing it from blocking
         the deactivation. To deactivate the current active speaker only, without activating another speaker, use
@@ -89,6 +89,6 @@ class Moderator(Generic[K]):
             desired_speaker = self._key_to_speaker[key]
             desired_speaker.do_activate()
 
-        self._active_speaker = key
-        self.bn_active_speaker.poke()
+        self._active_speaker_key = key
+        self.bn_active_speaker_key.poke()
         return True
