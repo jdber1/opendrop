@@ -5,7 +5,7 @@ from gi.repository import Gtk, Gdk
 
 from opendrop.app.app import AppGUI, AppGUIFactory
 from opendrop.app.header import HeaderView, HeaderPresenter
-from opendrop.gtk_specific.stack import StackModel, StackView, StackPresenter
+from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Moderator
 
 

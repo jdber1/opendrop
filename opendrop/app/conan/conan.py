@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 
-from opendrop.gtk_specific.gtk_widget_view import GtkWidgetView
-from opendrop.gtk_specific.stack import StackModel
+from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.component.stack import StackModel
 from opendrop.utility.speaker import Speaker, Moderator
 
 

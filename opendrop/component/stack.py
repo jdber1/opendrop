@@ -2,7 +2,7 @@ from typing import Generic, TypeVar, MutableMapping, Optional, Sequence
 
 from gi.repository import Gtk
 
-from opendrop.gtk_specific.gtk_widget_view import GtkWidgetView
+from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindablePropertyAdapter
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
 from opendrop.utility.events import Event

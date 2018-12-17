@@ -4,8 +4,8 @@ from typing import Optional
 from gi.repository import Gtk
 
 from opendrop.app.app import AppSpeakerID
-from opendrop.gtk_specific.gtk_widget_view import GtkWidgetView
-from opendrop.gtk_specific.stack import StackModel
+from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.component.stack import StackModel
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Speaker, Moderator
 

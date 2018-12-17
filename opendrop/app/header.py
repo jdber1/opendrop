@@ -3,7 +3,7 @@ import asyncio
 from gi.repository import Gtk, GdkPixbuf
 
 from opendrop.app.app import AppSpeakerID
-from opendrop.gtk_specific.gtk_widget_view import GtkWidgetView
+from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.res import res
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM

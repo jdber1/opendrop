@@ -3,7 +3,7 @@ import warnings
 from abc import abstractmethod, ABC
 from enum import Enum
 
-from opendrop.gtk_specific.stack import StackModel
+from opendrop.component.stack import StackModel
 from opendrop.utility.speaker import Moderator, Speaker
 
 

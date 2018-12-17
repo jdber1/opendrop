@@ -3,8 +3,8 @@ from unittest.mock import Mock, call
 import pytest
 from gi.repository import Gtk
 
-from opendrop.gtk_specific.gtk_widget_view import GtkWidgetView
-from opendrop.gtk_specific.stack import StackModel, StackView, StackPresenter
+from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.component.stack import StackModel, StackView, StackPresenter
 
 
 # Tests for StackModel

@@ -4,7 +4,7 @@ from opendrop.app.app import AppSpeakerFactory, AppSpeakerID
 from opendrop.app.conan.conan import ConanSpeaker
 from opendrop.app.ift.ift import IFTSpeaker
 from opendrop.app.main_menu.main_menu import MainMenuSpeaker
-from opendrop.gtk_specific.stack import StackModel
+from opendrop.component.stack import StackModel
 from opendrop.utility.speaker import Speaker
 
 
