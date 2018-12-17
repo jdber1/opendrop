@@ -12,7 +12,8 @@ from opendrop.vendor.glibcoro import glibcoro
 def main():
     glibcoro.install()
     default_app_speakers_factory = DefaultAppSpeakersFactory()
-    app = App(DefaultAppGUIFactory(), default_app_speakers_factory)
+    default_app_gui_factory = DefaultAppGUIFactory()
+    app = App(default_app_gui_factory, default_app_speakers_factory)
     app.run()
 
 
