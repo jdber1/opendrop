@@ -1,0 +1,56 @@
+glibcoro makes the [GLib/GTK](https://developer.gnome.org/references)
+event loop compatible with Python’s
+[`asyncio`](https://docs.python.org/3/library/asyncio.html) framework.
+Since the latter is a standard part of the language, code written to
+work with it has the potential to become “event-loop agnostic”, which
+means it should be possible to have it work unchanged with other
+event-loop frameworks, like GLib/GTK.
+
+There are already so many event-loop frameworks--every GUI toolkit has
+one! So why did the Python developers create yet another one? Because
+Python 3.5 introduces *coroutines*, which make it much simpler to
+write a concurrent task as a single linear block of code, instead of
+having to break it up into a chain of separate callbacks. We already
+have threading for concurrently running multiple execution contexts,
+but that is notoriously prone to bugs. Because coroutines have to
+explicitly yield control, the potential for race conditions is much
+reduced.
+
+
+Using glibcoro
+==============
+
+If you are already familiar with `asyncio`, then `glibcoro` is
+very easy to use: at the top of your program, merely import the
+`glibcoro` module and call its `install()` function to have it
+set itself as the default `asyncio` event loop:
+
+    import glibcoro
+    glibcoro.install()
+
+All the rest of your code can now use the usual `asyncio` APIs,
+only instead of running under the default `BaseEventLoop` provided
+by `asyncio`, they will be running under the GLib event loop.
+
+
+Implementation Status
+=====================
+
+While coroutine execution and timed tasks are fully functional,
+`glibcoro` is not a complete replacement for `asyncio.BaseEventLoop`
+as yet. Missing functionality includes support for asynchronous
+network connections, sockets and subprocess invocation, as well as
+multiple event loops on separate threads. Though I’m not sure I really
+want to support threading...
+
+
+Further Examples
+================
+
+Example source code showing `glibcoro` in action is available in
+my `glibcoro_examples` repo ([GitLab](https://gitlab.com/ldo/glibcoro_examples),
+[GitHub](https://github.com/ldo/glibcoro_examples)).
+
+
+Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
+2017 November 2
