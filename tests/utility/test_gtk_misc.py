@@ -7,7 +7,7 @@ gi.require_version('GdkPixbuf', '2.0')
 
 from gi.repository import GdkPixbuf
 
-from opendrop.gtk_specific.misc import pixbuf_from_array
+from opendrop.utility.gtk_misc import pixbuf_from_array
 from tests import samples
 
 SAMPLES_DIR = os.path.dirname(samples.__file__)
