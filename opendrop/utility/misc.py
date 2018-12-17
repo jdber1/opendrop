@@ -1,9 +1,8 @@
 import importlib
 import inspect
 import pkgutil
-from enum import Enum
 from types import ModuleType
-from typing import Union, Optional, Any, Type, List, Iterable, TypeVar
+from typing import Union, Type, List, Iterable, TypeVar
 
 T = TypeVar('T')
 
@@ -38,20 +37,3 @@ def get_classes_in_modules(m: Union[Iterable[ModuleType], ModuleType], cls: T) -
             clses.append(attr)
 
     return clses
-
-
-# No longer used by anything, probably delete in the future
-class EnumBuilder:
-    def __init__(self, value: str, type: Optional[type] = None) -> None:
-        self._value = value
-        self._type = type
-        self._names = {}
-
-    def add(self, name: str, val: Any) -> None:
-        self._names[name] = val
-
-    def remove(self, name: str) -> None:
-        del self._names[name]
-
-    def build(self):
-        return Enum(self._value, names=self._names, type=self._type)
