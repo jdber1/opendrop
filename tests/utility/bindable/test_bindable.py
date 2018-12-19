@@ -1,8 +1,11 @@
 from unittest.mock import Mock
 
+import pytest
 from pytest import raises
 
-from opendrop.utility.bindable.bindable import Bindable, AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import Bindable, AtomicBindable, AtomicBindableVar, AtomicBindableAdapter, \
+    MutableSequenceBindable, MutableSequenceBindableSetItemTx, MutableSequenceBindableDelItemTx, \
+    MutableSequenceBindableInsertTx
 
 
 def test_bindable_send_tx():
@@ -328,3 +331,170 @@ def test_atomic_bn_initialise_with_getter_and_setter():
 
     assert bn.getter == getter
     assert bn.setter == setter
+
+
+# Test MutableSequenceBindable
+class MyMSB(MutableSequenceBindable):
+    LOG_REAL_SETITEM = 'LOG_REAL_SETITEM'
+    LOG_REAL_GETITEM = 'LOG_REAL_GETITEM'
+    LOG_REAL_DELITEM = 'LOG_REAL_DELITEM'
+    LOG_REAL_INSERT = 'LOG_REAL_INSERT'
+
+    def __init__(self):
+        super().__init__()
+
+        # Used for testing.
+        self.log = []
+
+    def _real_setitem(self, i, v):
+        self.log.append((self.LOG_REAL_SETITEM, i, v))
+
+    def _real_getitem(self, i):
+        self.log.append((self.LOG_REAL_GETITEM, i))
+
+    def _real_delitem(self, i):
+        self.log.append((self.LOG_REAL_DELITEM, i))
+
+    def _real_insert(self, i, v):
+        self.log.append((self.LOG_REAL_INSERT, i, v))
+
+    def __len__(self) -> int:
+        return 0
+
+
+@pytest.mark.parametrize('tx, expect_i, expect_v', [
+    (MutableSequenceBindableSetItemTx(0, 'my value'), 0, 'my value')
+])
+def test_mutable_sequence_bindable_setitem_tx_silent_apply(tx, expect_i, expect_v):
+    msb = MyMSB()
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    hdl_setitem = Mock()
+    msb.on_setitem.connect(hdl_setitem, immediate=True)
+
+    # Apply the tx
+    tx.silent_apply(msb)
+
+    hdl_new_tx.assert_not_called()
+    hdl_setitem.assert_called_once_with(expect_i, expect_v)
+    assert msb.log == [(MyMSB.LOG_REAL_SETITEM, expect_i, expect_v)]
+
+
+@pytest.mark.parametrize('tx, expect_i', [
+    (MutableSequenceBindableDelItemTx(0), 0)
+])
+def test_mutable_sequence_bindable_delitem_tx_silent_apply(tx, expect_i):
+    msb = MyMSB()
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    hdl_delitem = Mock()
+    msb.on_delitem.connect(hdl_delitem, immediate=True)
+
+    # Apply the tx
+    tx.silent_apply(msb)
+
+    hdl_new_tx.assert_not_called()
+    hdl_delitem.assert_called_once_with(expect_i)
+    assert msb.log == [(MyMSB.LOG_REAL_DELITEM, expect_i)]
+
+
+@pytest.mark.parametrize('tx, expect_i, expect_v', [
+    (MutableSequenceBindableInsertTx(0, 'my value'), 0, 'my value')
+])
+def test_mutable_sequence_bindable_insert_tx_silent_apply(tx, expect_i, expect_v):
+    msb = MyMSB()
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    hdl_insert = Mock()
+    msb.on_insert.connect(hdl_insert, immediate=True)
+
+    # Apply the tx
+    tx.silent_apply(msb)
+
+    hdl_new_tx.assert_not_called()
+    hdl_insert.assert_called_once_with(expect_i, expect_v)
+    assert msb.log == [(MyMSB.LOG_REAL_INSERT, expect_i, expect_v)]
+
+
+def test_mutable_sequence_bindable_setitem():
+    msb = MyMSB()
+    hdl_setitem = Mock()
+    msb.on_setitem.connect(hdl_setitem, immediate=True)
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+
+    # Call __setitem__
+    msb.__setitem__(0, 'a string')
+
+    hdl_setitem.assert_called_once_with(0, 'a string')
+    assert msb.log == [(MyMSB.LOG_REAL_SETITEM, 0, 'a string')]
+    assert hdl_new_tx.call_args is not None
+    test_mutable_sequence_bindable_setitem_tx_silent_apply(hdl_new_tx.call_args[0][0], 0, 'a string')
+
+
+def test_mutable_sequence_bindable_getitem():
+    msb = MyMSB()
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+
+    # Call __getitem__
+    msb.__getitem__(0)
+
+    hdl_new_tx.assert_not_called()
+    assert msb.log == [(MyMSB.LOG_REAL_GETITEM, 0)]
+
+
+def test_mutable_sequence_bindable_delitem():
+    msb = MyMSB()
+    hdl_delitem = Mock()
+    msb.on_delitem.connect(hdl_delitem, immediate=True)
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+
+    # Call __delitem__
+    msb.__delitem__(0)
+
+    hdl_delitem.assert_called_once_with(0)
+    assert msb.log == [(MyMSB.LOG_REAL_DELITEM, 0)]
+    assert hdl_new_tx.call_args is not None
+    test_mutable_sequence_bindable_delitem_tx_silent_apply(hdl_new_tx.call_args[0][0], 0)
+
+
+def test_mutable_sequence_bindable_insert():
+    msb = MyMSB()
+    hdl_insert = Mock()
+    msb.on_insert.connect(hdl_insert, immediate=True)
+    hdl_new_tx = Mock()
+    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+
+    # Call __delitem__
+    msb.insert(0, 'a string')
+
+    hdl_insert.assert_called_once_with(0, 'a string')
+    assert msb.log == [(MyMSB.LOG_REAL_INSERT, 0, 'a string')]
+    assert hdl_new_tx.call_args is not None
+    test_mutable_sequence_bindable_insert_tx_silent_apply(hdl_new_tx.call_args[0][0], 0, 'a string')
+
+
+def test_mutable_sequence_bindable_export():
+    class MyMSBToTestExport(MyMSB):
+        def __init__(self, lst) -> None:
+            super().__init__()
+            self._list = list(lst)
+
+        def _real_getitem(self, i):
+            super()._real_getitem(i)
+            return self._list[i]
+
+        def __len__(self):
+            return len(self._list)
+
+    l0 = MyMSBToTestExport([1, 2, 4, 8])
+    l1 = MyMSB()
+
+    # Export l0
+    export_tx = l0._export()
+    # Apply export_tx onto l1
+    l1._apply_tx(export_tx)
+
+    assert set(l1.log) == {(MyMSB.LOG_REAL_INSERT, i, v) for i, v in enumerate([1, 2, 4, 8])}
