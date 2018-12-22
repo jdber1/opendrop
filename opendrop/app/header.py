@@ -13,35 +13,23 @@ from opendrop.utility.speaker import Moderator
 
 
 class HeaderView(GtkWidgetView[Gtk.Grid]):
-    STYLE = '''
-        .bg-gainsboro {
-            background-color: gainsboro
-        }
-    '''
-
     def __init__(self) -> None:
-        self.widget = Gtk.Grid()
-        self.widget.get_style_context().add_class('bg-gainsboro')
-        widget_style_provider = Gtk.CssProvider()
-        widget_style_provider.load_from_data(bytes(self.STYLE, encoding='utf-8'))
-        self.widget.get_style_context().add_provider(widget_style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.widget = Gtk.HeaderBar(hexpand=True)
 
         self.bn_header_title = AtomicBindableAdapter()  # type: AtomicBindable[str]
         self.bn_return_to_menu_btn_visible = AtomicBindableAdapter()  # type: AtomicBindable[bool]
 
         self.on_return_to_menu_btn_clicked = Event()
 
+        link_atomic_bn_adapter_to_g_prop(self.bn_header_title, self.widget, 'title')
+
         logo_path = res/'images'/'logo_wide.png'
         logo_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(str(logo_path), width=100, height=-1)
         logo_wgt = Gtk.Image(pixbuf=logo_pixbuf, margin=5)
-        self.widget.attach(logo_wgt, 0, 0, 1, 1)
-
-        header_title_lbl = Gtk.Label(hexpand=True)
-        link_atomic_bn_adapter_to_g_prop(self.bn_header_title, header_title_lbl, 'label')
-        self.widget.attach(header_title_lbl, 1, 0, 1, 1)
+        self.widget.pack_start(logo_wgt)
 
         return_to_menu_btn = Gtk.Button(label='Return to menu')
-        self.widget.attach(return_to_menu_btn, 2, 0, 1, 1)
+        self.widget.pack_end(return_to_menu_btn)
         return_to_menu_btn.connect('clicked', lambda *_: self.on_return_to_menu_btn_clicked.fire())
         link_atomic_bn_adapter_to_g_prop(self.bn_return_to_menu_btn_visible, return_to_menu_btn, 'visible')
 
