@@ -25,18 +25,18 @@ class DefaultAppSpeakersFactory(AppSpeakerFactory):
 
     def create_main_menu(self) -> MainMenuSpeaker:
         if self._content_stack is None:
-            raise ValueError('content_model dependency not provided')
+            raise ValueError('content_stack dependency not provided')
 
         return MainMenuSpeaker(self._content_stack)
 
     def create_ift(self) -> IFTSpeaker:
         if self._content_stack is None:
-            raise ValueError('content_model dependency not provided')
+            raise ValueError('content_stack dependency not provided')
 
         return IFTSpeaker(self._content_stack)
 
     def create_conan(self) -> ConanSpeaker:
         if self._content_stack is None:
-            raise ValueError('content_model dependency not provided')
+            raise ValueError('content_stack dependency not provided')
 
         return ConanSpeaker(self._content_stack)
