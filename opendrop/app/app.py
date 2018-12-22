@@ -16,15 +16,15 @@ class AppSpeakerID(Enum):
         self.header_title = header_title
 
 
-class AppGUI(ABC):
+class AppPresentedView(ABC):
     @abstractmethod
     def destroy(self) -> None:
         """Destroy the GUI."""
 
 
-class AppGUIFactory(ABC):
+class AppPresentedViewFactory(ABC):
     @abstractmethod
-    def create(self, main_mod: Moderator, content_stack: StackModel) -> AppGUI:
+    def create(self, main_mod: Moderator, content_stack: StackModel) -> AppPresentedView:
         pass
 
 
@@ -39,13 +39,13 @@ class AppSpeakerFactory(ABC):
 
 
 class App:
-    def __init__(self, app_gui_factory: AppGUIFactory, speaker_factory: AppSpeakerFactory) -> None:
+    def __init__(self, app_presented_view_factory: AppPresentedViewFactory, speaker_factory: AppSpeakerFactory) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._main_mod = Moderator()
         self._content_stack = StackModel()
 
-        self._gui = app_gui_factory.create(self._main_mod, self._content_stack)
+        self._gui = app_presented_view_factory.create(self._main_mod, self._content_stack)
 
         speaker_factory.set_content_stack(self._content_stack)
         for key in AppSpeakerID:

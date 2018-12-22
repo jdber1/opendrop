@@ -3,13 +3,13 @@ from typing import MutableSequence, Callable
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.app import AppGUI, AppGUIFactory
+from opendrop.app.app import AppPresentedView, AppPresentedViewFactory
 from opendrop.app.header import HeaderView, HeaderPresenter
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Moderator
 
 
-class DefaultAppGUI(AppGUI):
+class DefaultAppPresentedView(AppPresentedView):
     def __init__(self, main_mod: Moderator, content_stack: StackModel):
         # Private attributes
         self._loop = asyncio.get_event_loop()
@@ -55,6 +55,6 @@ class DefaultAppGUI(AppGUI):
             f()
 
 
-class DefaultAppGUIFactory(AppGUIFactory):
-    def create(self, main_mod: Moderator, content_stack: StackModel) -> DefaultAppGUI:
-        return DefaultAppGUI(main_mod, content_stack)
+class DefaultAppPresentedViewFactory(AppPresentedViewFactory):
+    def create(self, main_mod: Moderator, content_stack: StackModel) -> DefaultAppPresentedView:
+        return DefaultAppPresentedView(main_mod, content_stack)
