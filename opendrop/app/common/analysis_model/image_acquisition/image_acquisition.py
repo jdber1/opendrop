@@ -28,8 +28,9 @@ class ImageAcquisition(Generic[T]):
         self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindable[Optional[ImageAcquisitionImpl]]
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
-        """Return a tuple, with the first element being a sequence of futures which will be resolved to each image, and
-        the second element being a sequence of estimated timestamps for when the futures will be resolved."""
+        """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
+        image and the image's timestamp, and the second element being a sequence of estimated unix timestamps for when
+        the futures will be resolved."""
         if self.impl is None:
             raise ValueError('No implementation chosen yet')
 
