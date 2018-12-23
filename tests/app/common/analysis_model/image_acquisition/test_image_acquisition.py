@@ -49,28 +49,40 @@ class MyImAcqImplType(ImageAcquisitionImplType):
 
 
 def test_im_acq_initial_impl():
-    im_acq = ImageAcquisition(MyImAcqImplType)
+    im_acq = ImageAcquisition()
 
+    assert im_acq.type is None
+    assert im_acq.bn_type.get() is None
     assert im_acq.impl is None
     assert im_acq.bn_impl.get() is None
 
 
-def test_im_acq_change_type():
-    im_acq = ImageAcquisition(MyImAcqImplType)
-    cb = Mock()
-    im_acq.bn_impl.on_changed.connect(cb, immediate=True)
+@pytest.mark.parametrize('mode', [0, 1])
+def test_im_acq_change_type(mode):
+    im_acq = ImageAcquisition()
+    hdl_im_acq_bn_type_changed = Mock()
+    im_acq.bn_type.on_changed.connect(hdl_im_acq_bn_type_changed, immediate=True)
+    hdl_im_acq_bn_impl_changed = Mock()
+    im_acq.bn_impl.on_changed.connect(hdl_im_acq_bn_impl_changed, immediate=True)
 
-    # Change type
-    im_acq.change_type(MyImAcqImplType.MOCK0)
+    # Change type (using two ways)
+    if mode == 0:
+        im_acq.type = MyImAcqImplType.MOCK0
+    else:
+        im_acq.bn_type.set(MyImAcqImplType.MOCK0)
 
-    cb.assert_called_once_with()
+    hdl_im_acq_bn_type_changed.assert_called_once_with()
+    assert im_acq.type is MyImAcqImplType.MOCK0
+    assert im_acq.bn_type.get() is MyImAcqImplType.MOCK0
+
+    hdl_im_acq_bn_impl_changed.assert_called_once_with()
     assert im_acq.impl in MyImAcqImplType.MOCK0.created_impls
     assert im_acq.bn_impl.get() in MyImAcqImplType.MOCK0.created_impls
 
 
 def test_im_acq_acquire_images():
-    im_acq = ImageAcquisition(MyImAcqImplType)
-    im_acq.change_type(MyImAcqImplType.MOCK0)
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
 
     # Clear the log.
     im_acq.impl.log = []
@@ -83,15 +95,15 @@ def test_im_acq_acquire_images():
 
 
 def test_im_acq_acquire_images_when_impl_is_none():
-    im_acq = ImageAcquisition(MyImAcqImplType)
+    im_acq = ImageAcquisition()
 
     with pytest.raises(ValueError):
         im_acq.acquire_images()
 
 
 def test_im_acq_create_preview():
-    im_acq = ImageAcquisition(MyImAcqImplType)
-    im_acq.change_type(MyImAcqImplType.MOCK0)
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
 
     # Clear the log.
     im_acq.impl.log = []
@@ -104,15 +116,15 @@ def test_im_acq_create_preview():
 
 
 def test_im_acq_create_preview_when_impl_is_none():
-    im_acq = ImageAcquisition(MyImAcqImplType)
+    im_acq = ImageAcquisition()
 
     with pytest.raises(ValueError):
         im_acq.create_preview()
 
 
 def test_im_acq_get_model_errors():
-    im_acq = ImageAcquisition(MyImAcqImplType)
-    im_acq.change_type(MyImAcqImplType.MOCK0)
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
 
     # Clear the log.
     im_acq.impl.log = []
@@ -125,7 +137,7 @@ def test_im_acq_get_model_errors():
 
 
 def test_im_acq_get_model_errors_when_impl_is_none():
-    im_acq = ImageAcquisition(MyImAcqImplType)
+    im_acq = ImageAcquisition()
 
     with pytest.raises(ValueError):
         im_acq.get_model_errors()

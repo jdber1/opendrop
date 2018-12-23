@@ -1,6 +1,6 @@
 from asyncio import Future
 from enum import Enum
-from typing import Generic, TypeVar, Type, Callable, Optional, Tuple, Any, Sequence
+from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
 
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindablePropertyAdapter
@@ -23,9 +23,11 @@ T = TypeVar('T', bound=ImageAcquisitionImplType)
 
 
 class ImageAcquisition(Generic[T]):
-    def __init__(self, types: Type[T]) -> None:
+    def __init__(self) -> None:
+        self._type = None  # type: Optional[T]
         self._impl = None  # type: Optional[ImageAcquisitionImpl]
         self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindable[Optional[ImageAcquisitionImpl]]
+        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindable[Optional[T]]
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
@@ -55,8 +57,16 @@ class ImageAcquisition(Generic[T]):
 
         return self.impl.get_model_errors()
 
-    def change_type(self, new_type: T) -> None:
+    @AtomicBindablePropertyAdapter
+    def type(self) -> AtomicBindable[Optional[T]]:
+        return self.bn_type
+
+    def _get_type(self) -> Optional[T]:
+        return self._type
+
+    def _set_type(self, new_type: T) -> None:
         self._set_impl(new_type.impl_factory())
+        self._type = new_type
 
     @AtomicBindablePropertyAdapter
     def impl(self) -> AtomicBindable[Optional[ImageAcquisitionImpl]]:
