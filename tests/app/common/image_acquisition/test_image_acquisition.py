@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from opendrop.app.common.analysis_model.image_acquisition import ImageAcquisition, \
+from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImplType, ImageAcquisitionImpl
 
 
