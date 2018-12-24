@@ -7,7 +7,8 @@ from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAda
 
 
 class ImageAcquisitionImplType(Enum):
-    def __init__(self, impl_factory: Callable[[], 'ImageAcquisitionImpl']) -> None:
+    def __init__(self, display_name: str, impl_factory: Callable[[], 'ImageAcquisitionImpl']) -> None:
+        self.display_name = display_name
         self.impl_factory = impl_factory
 
 

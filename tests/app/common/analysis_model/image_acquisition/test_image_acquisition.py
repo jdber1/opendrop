@@ -39,7 +39,7 @@ def mock0_impl_factory():
 
 
 class MyImAcqImplType(ImageAcquisitionImplType):
-    MOCK0 = (mock0_impl_factory,)
+    MOCK0 = ('Mock 0', mock0_impl_factory,)
 
     def __init__(self, *args, **kwargs):
         ImageAcquisitionImplType.__init__(self, *args, **kwargs)
