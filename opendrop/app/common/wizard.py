@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from opendrop.utility.bindable.bindable import AtomicBindable
 from opendrop.utility.bindable.binding import Binding
@@ -26,10 +26,10 @@ class WizardPositionView(ABC):
 
 
 class WizardPositionPresenter:
-    def __init__(self, wizard_mod: Moderator, keys: List[WizardPageID], view: WizardPositionView) -> None:
+    def __init__(self, wizard_mod: Moderator, pages: Sequence[WizardPageID], view: WizardPositionView) -> None:
         view.clear()
 
-        for k in keys:
+        for k in pages:
             view.add_key(k)
 
         self.__data_bindings = [
