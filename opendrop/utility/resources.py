@@ -3,14 +3,14 @@ from abc import abstractmethod
 from typing import Any, Generic, List, Set, Type, TypeVar
 
 
-class IResource:
+class Resource:
     @abstractmethod
     def teardown(self) -> None: pass
 
     def release(self) -> None: pass
 
 
-T = TypeVar('T', bound=IResource)
+T = TypeVar('T', bound=Resource)
 
 
 class ResourceToken(Generic[T]):
@@ -60,7 +60,7 @@ class ResourceToken(Generic[T]):
 
             token = self  # type: ResourceToken[T]
 
-            def __init__(self, target: IResource) -> None:
+            def __init__(self, target: Resource) -> None:
                 self._target = target  # type: T
                 self.released = False  # type: bool
 

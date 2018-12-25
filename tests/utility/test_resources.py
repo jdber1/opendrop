@@ -1,15 +1,15 @@
+import gc
 from unittest.mock import patch, Mock
 
-import gc
 import pytest
 from pytest import raises
 
-from opendrop.utility.resources import IResource, ResourceToken
+from opendrop.utility.resources import Resource, ResourceToken
 
 
 @pytest.fixture
 def TestResource():
-    class TestResource(IResource):
+    class TestResource(Resource):
         init_count = 0
         destroy_count = 0
 
