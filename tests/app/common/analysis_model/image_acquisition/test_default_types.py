@@ -1,0 +1,488 @@
+import asyncio
+import time
+from itertools import zip_longest
+from pathlib import Path
+from unittest.mock import Mock
+
+import cv2
+import numpy as np
+import pytest
+
+from opendrop.app.common.analysis_model.image_acquisition.default_types import \
+    BaseImageSequenceImageAcquisitionImpl, LocalImagesImageAcquisitionImpl, BaseCameraImageAcquisitionImpl, Camera, \
+    CameraCaptureError
+from tests import samples
+
+EPSILON_FOR_TIME = 0.1
+
+SAMPLE_IMAGES_DIR = Path(samples.__file__).parent/'images'
+
+MOCK_IMAGE_0 = np.zeros((16, 16, 3))
+MOCK_IMAGE_1 = MOCK_IMAGE_0.copy()
+MOCK_IMAGE_1[0, 0, 0] = 1
+MOCK_IMAGE_2 = MOCK_IMAGE_0.copy()
+MOCK_IMAGE_2[0, 0, 0] = 1
+
+
+async def _test_acquire_images_ret_val_images(acquire_images_ret_val, expected_imgs):
+    for fut, est, expected_img in zip_longest(*acquire_images_ret_val, expected_imgs):
+        img, img_timestamp = await fut
+        assert (img == expected_img).all()
+
+
+async def _test_acquire_images_ret_val_timestamps(acquire_images_ret_val, expected_img_timestamps):
+    for fut, est, expected_img_timestamp in zip_longest(*acquire_images_ret_val, expected_img_timestamps):
+        img, img_timestamp = await fut
+        assert abs(img_timestamp - expected_img_timestamp) < EPSILON_FOR_TIME
+
+
+def _test_acquire_images_ret_val_est_timestamps(acquire_images_ret_val, expected_est_timestamps):
+    for est, expected_est in zip_longest(acquire_images_ret_val[1], expected_est_timestamps):
+        assert abs(est - expected_est) < EPSILON_FOR_TIME
+
+
+@pytest.mark.parametrize('imgs', [
+    [MOCK_IMAGE_0],
+    [MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2]
+])
+@pytest.mark.asyncio
+async def test_base_image_seq_setting_images(imgs):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = imgs
+
+    baseimgs_impl.bn_frame_interval.set(1)
+
+    await _test_acquire_images_ret_val_images(baseimgs_impl.acquire_images(), imgs)
+
+
+@pytest.mark.parametrize('imgs', [
+    [MOCK_IMAGE_0],
+    [MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2]
+])
+@pytest.mark.asyncio
+async def test_base_image_seq_impl_frame_interval(imgs):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = imgs
+    baseimgs_impl.bn_frame_interval.set(12.345)
+
+    expected_img_timestamps = [i * 12.345 for i in range(len(imgs))]
+    await _test_acquire_images_ret_val_timestamps(baseimgs_impl.acquire_images(), expected_img_timestamps)
+
+
+@pytest.mark.parametrize('frame_interval', [
+    None, 0, -1.2
+])
+def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval(frame_interval):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = [MOCK_IMAGE_0, MOCK_IMAGE_1]
+    baseimgs_impl.bn_frame_interval.set(frame_interval)
+
+    # Frame interval must be > 0 and not None
+    with pytest.raises(ValueError):
+        baseimgs_impl.acquire_images()
+
+
+@pytest.mark.parametrize('frame_interval', [
+    None, 0, -1.2
+])
+def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval_but_only_one_image(frame_interval):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = [MOCK_IMAGE_0]
+    baseimgs_impl.bn_frame_interval.set(frame_interval)
+
+    # Since only one image, should ignore frame_interval value.
+    baseimgs_impl.acquire_images()
+
+
+def test_base_image_seq_impl_acquire_images_with_no_images():
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = []
+    baseimgs_impl.bn_frame_interval.set(1)
+
+    # _images can't be empty
+    with pytest.raises(ValueError):
+        baseimgs_impl.acquire_images()
+
+
+# Test LocalImagesImageAcquisitionImpl
+
+@pytest.mark.parametrize('img_paths', [
+    [SAMPLE_IMAGES_DIR/'image0.png'],
+    [SAMPLE_IMAGES_DIR/'image0.png',
+     SAMPLE_IMAGES_DIR/'image1.png',
+     SAMPLE_IMAGES_DIR/'image2.png']
+])
+def test_local_images_load_image_paths(img_paths):
+    expected_imgs = [cv2.imread(str(img_path)) for img_path in img_paths]
+
+    locimgs_impl = LocalImagesImageAcquisitionImpl()
+    locimgs_impl.load_image_paths(img_paths)
+
+    for actual_img, expected_img in zip_longest(locimgs_impl._images, expected_imgs):
+        assert (actual_img == expected_img).all()
+
+
+def test_base_image_seq_impl_load_nonexistent_image():
+    local_images = LocalImagesImageAcquisitionImpl()
+    with pytest.raises(ValueError):
+        local_images.load_image_paths([SAMPLE_IMAGES_DIR/'this_image_does_not_exist.png'])
+
+
+def test_local_images_last_loaded_paths():
+    paths_to_load = (SAMPLE_IMAGES_DIR/'image0.png', SAMPLE_IMAGES_DIR/'image1.png')
+    local_images = LocalImagesImageAcquisitionImpl()
+
+    # Assert last loaded paths is initially an empty sequence
+    assert tuple(local_images.bn_last_loaded_paths.get()) == ()
+
+    # Load some images.
+    local_images.load_image_paths(paths_to_load)
+
+    # Assert last loaded paths is correct.
+    assert tuple(local_images.bn_last_loaded_paths.get()) == paths_to_load
+
+    # Use a sequence of strings for the path to load.
+    local_images.load_image_paths(tuple(map(str, paths_to_load)))
+
+    # Last loaded paths should still be a sequence of Path objects.
+    assert tuple(local_images.bn_last_loaded_paths.get()) == paths_to_load
+
+
+def test_base_images_preview_is_initially_alive():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = images
+
+    preview = base_images.create_preview()
+    assert preview.bn_alive.get() is True
+
+
+def test_base_images_preview_config_num_images():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = images
+
+    preview = base_images.create_preview()
+    assert preview.config.bn_num_images.get() == len(images)
+
+
+def test_base_images_preview_config_index():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = images
+
+    preview = base_images.create_preview()
+
+    for i, image in enumerate(images):
+        preview.config.bn_index.set(i)
+        assert (preview.bn_image.get() == image).all()
+
+
+def test_base_images_preview_config_index_set_outside_range():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = images
+
+    preview = base_images.create_preview()
+
+    with pytest.raises(ValueError):
+        preview.config.bn_index.set(3)
+
+
+def test_base_images_create_preview_when_no_images():
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = None
+
+    with pytest.raises(ValueError):
+        base_images.create_preview()
+
+
+def test_base_images_create_preview_when_images_is_empty_sequence():
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = []
+
+    with pytest.raises(ValueError):
+        base_images.create_preview()
+
+
+def test_base_images_preview_destroy():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+    base_images = BaseImageSequenceImageAcquisitionImpl()
+    base_images._images = images
+    preview = base_images.create_preview()
+
+    # Destroy the preview
+    preview.destroy()
+
+    # Nothing really needs to happen, we just need to make sure the method exists.
+
+
+# Test BaseCameraImageAcquisitionImpl
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_images():
+    class MyCamera(Camera):
+        def __init__(self):
+            self._images = [MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2]
+
+        def capture(self):
+            return self._images.pop(0)
+
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = MyCamera()
+    base_camera.bn_num_frames.set(2)
+    base_camera.bn_frame_interval.set(0.01)
+
+    await _test_acquire_images_ret_val_images(base_camera.acquire_images(), [MOCK_IMAGE_0, MOCK_IMAGE_1])
+
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_timestamps():
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = Mock()
+    base_camera.bn_num_frames.set(2)
+    base_camera.bn_frame_interval.set(1)
+
+    now = time.time()
+    expected_img_timestamps = [now, now + base_camera.bn_frame_interval.get()]
+
+    acquire_images_ret_val = base_camera.acquire_images()
+    await _test_acquire_images_ret_val_timestamps(acquire_images_ret_val, expected_img_timestamps)
+    _test_acquire_images_ret_val_est_timestamps(acquire_images_ret_val, expected_img_timestamps)
+
+
+@pytest.mark.parametrize('frame_interval', [
+    None, 0, -1.2
+])
+def test_base_camera_acquire_images_with_invalid_frame_interval(frame_interval):
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = Mock()
+    base_camera.bn_num_frames.set(2)
+    base_camera.bn_frame_interval.set(frame_interval)
+
+    # Frame interval must be > 0 and not None
+    with pytest.raises(ValueError):
+        base_camera.acquire_images()
+
+
+@pytest.mark.parametrize('frame_interval', [
+    None, 0, -1.2
+])
+def test_base_camera_acquire_images_with_invalid_frame_interval_but_only_one_image(frame_interval):
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = Mock()
+    base_camera.bn_num_frames.set(1)
+    base_camera.bn_frame_interval.set(frame_interval)
+
+    # Since capturing only one image, should ignore frame_interval value.
+    base_camera.acquire_images()
+
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_cancel_futures():
+    mock_camera = Mock()
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    base_camera.bn_num_frames.set(3)
+    base_camera.bn_frame_interval.set(0.01)
+    futs, _ = base_camera.acquire_images()
+
+    for fut in futs:
+        fut.cancel()
+
+    await asyncio.sleep(0.5)
+
+    mock_camera.capture.assert_not_called()
+
+
+def test_base_camera_acquire_images_with_camera_none():
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = None
+    base_camera.bn_num_frames.set(3)
+    base_camera.bn_frame_interval.set(1)
+
+    with pytest.raises(ValueError):
+        base_camera.acquire_images()
+
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_with_camera_that_cannot_capture():
+    mock_camera = Mock()
+    mock_camera.capture.side_effect = CameraCaptureError
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    base_camera.bn_num_frames.set(3)
+    base_camera.bn_frame_interval.set(0.01)
+
+    for fut in base_camera.acquire_images()[0]:
+        with pytest.raises(CameraCaptureError):
+            await fut
+
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_with_camera_that_can_somtimes_capture():
+    mock_camera = Mock()
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    base_camera.bn_num_frames.set(5)
+    base_camera.bn_frame_interval.set(0.01)
+
+    futs = base_camera.acquire_images()[0]
+
+    for fut in futs[:1]:
+        await fut
+
+    # Simulate the camera failing
+    mock_camera.capture.side_effect = CameraCaptureError
+
+    for fut in futs[1:2]:
+        with pytest.raises(CameraCaptureError):
+            await fut
+
+    # Simulate the camera working again
+    mock_camera.capture.side_effect = None
+
+    for fut in futs[2:]:
+        await fut
+
+
+@pytest.mark.asyncio
+async def test_base_camera_acquire_images_remove_camera_while_futures_pending():
+    mock_camera = Mock()
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    base_camera.bn_num_frames.set(3)
+    base_camera.bn_frame_interval.set(0.1)
+    futs, _ = base_camera.acquire_images()
+
+    base_camera._camera = None
+
+    for fut in futs:
+        with pytest.raises(asyncio.CancelledError):
+            await fut
+
+
+def test_base_camera_create_preview():
+    mock_camera = Mock()
+    mock_camera.capture.return_value = MOCK_IMAGE_0
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+
+    preview = base_camera.create_preview()
+    assert preview.bn_alive.get() is True
+
+    assert (preview.bn_image.get() == MOCK_IMAGE_0).all()
+
+
+def test_base_camera_create_preview_with_camera_none():
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = None
+
+    with pytest.raises(ValueError):
+        base_camera.create_preview()
+
+
+def test_base_camera_create_preview_with_camera_that_cannot_capture():
+    mock_camera = Mock()
+    mock_camera.capture.side_effect = CameraCaptureError
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+
+    with pytest.raises(ValueError):
+        base_camera.create_preview()
+
+
+@pytest.mark.asyncio
+async def test_base_camera_create_preview_image():
+    MIN_FPS = 10
+
+    mock_camera = Mock()
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    preview = base_camera.create_preview()
+
+    cb = Mock()
+    preview.bn_image.on_changed.connect(cb, immediate=True)
+
+    mock_camera.capture.reset_mock()
+
+    await asyncio.sleep(0.5)
+
+    # Preview image should be retrieved from the camera lazily.
+    mock_camera.capture.assert_not_called()
+    # Retrieve image, this should capture a new image from the camera.
+    preview.bn_image.get()
+
+    await asyncio.sleep(0.5)
+
+    # Retrieve another image.
+    preview.bn_image.get()
+
+    assert cb.call_count > MIN_FPS
+    assert mock_camera.capture.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_base_camera_preview_destroy():
+    mock_camera = Mock()
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    preview = base_camera.create_preview()
+
+    cb = Mock()
+    preview.bn_image.on_changed.connect(cb, immediate=True)
+
+    preview.destroy()
+    assert preview.bn_alive.get() is False
+
+    cb.reset_mock()
+    mock_camera.capture.reset_mock()
+
+    await asyncio.sleep(0.5)
+
+    # Retrieve an image after preview destroyed
+    preview.bn_image.get()
+
+    cb.assert_not_called()
+    mock_camera.capture.assert_not_called()
+
+
+def test_base_camera_preview_dies_after_camera_is_set_to_none():
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = Mock()
+    preview = base_camera.create_preview()
+
+    base_camera._camera = None
+    assert preview.bn_alive.get() is False
+
+
+@pytest.mark.asyncio
+async def test_base_camera_preview_ignores_capture_error():
+    mock_camera = Mock()
+    mock_camera.capture.return_value = MOCK_IMAGE_0
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+    preview = base_camera.create_preview()
+
+    # Simulate the camera continuously failing to capture.
+    mock_camera.capture.return_value = MOCK_IMAGE_1
+    mock_camera.capture.side_effect = CameraCaptureError
+
+    cb = Mock()
+    preview.bn_image.on_changed.connect(cb, immediate=True)
+
+    await asyncio.sleep(0.2)
+
+    # The preview image should be the last image successfully captured by the camera.
+    assert (preview.bn_image.get() == MOCK_IMAGE_0).all()
+
+    # Simulate the camera working again.
+    mock_camera.capture.side_effect = None
+
+    await asyncio.sleep(0.2)
+
+    assert (preview.bn_image.get() == MOCK_IMAGE_1).all()
