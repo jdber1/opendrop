@@ -10,6 +10,7 @@ class MockImAcqImpl(ImageAcquisitionImpl):
     LOG_ACQUIRE_IMAGES = 'LOG_ACQUIRE_IMAGES'
     LOG_CREATE_PREVIEW = 'LOG_CREATE_PREVIEW'
     LOG_GET_MODEL_ERRORS = 'LOG_GET_MODEL_ERRORS'
+    LOG_DESTROY = 'LOG_DESTROY'
 
     acquire_images_return_val = (list(range(5)), list(range(5)))
     create_preview_return_val = object()
@@ -31,6 +32,9 @@ class MockImAcqImpl(ImageAcquisitionImpl):
         self.log.append(self.LOG_GET_MODEL_ERRORS)
         return self.get_model_errors_return_val
 
+    def destroy(self):
+        self.log.append(self.LOG_DESTROY)
+
 
 def mock0_impl_factory():
     impl = MockImAcqImpl()
@@ -40,6 +44,7 @@ def mock0_impl_factory():
 
 class MyImAcqImplType(ImageAcquisitionImplType):
     MOCK0 = ('Mock 0', mock0_impl_factory,)
+    MOCK1 = ('Mock 1', MockImAcqImpl,)
 
     def __init__(self, *args, **kwargs):
         ImageAcquisitionImplType.__init__(self, *args, **kwargs)
@@ -78,6 +83,19 @@ def test_im_acq_change_type(mode):
     hdl_im_acq_bn_impl_changed.assert_called_once_with()
     assert im_acq.impl in MyImAcqImplType.MOCK0.created_impls
     assert im_acq.bn_impl.get() in MyImAcqImplType.MOCK0.created_impls
+
+
+def test_im_acq_change_type_destroys_previous_impl():
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
+
+    old_impl = im_acq.impl
+
+    # Change to another implementation type
+    im_acq.type = MyImAcqImplType.MOCK1
+
+    # Assert that the old implementation was destroyed
+    assert MockImAcqImpl.LOG_DESTROY in old_impl.log
 
 
 def test_im_acq_acquire_images():

@@ -19,6 +19,9 @@ class ImageAcquisitionImpl:
     def create_preview(self) -> Tuple[AtomicBindable[Image], Any]:
         """Implementation of create_preview()"""
 
+    def destroy(self) -> None:
+        """Destroy this object, perform any necessary cleanup tasks."""
+
 
 T = TypeVar('T', bound=ImageAcquisitionImplType)
 
@@ -77,5 +80,9 @@ class ImageAcquisition(Generic[T]):
         return self._impl
 
     def _set_impl(self, new_impl: Optional[ImageAcquisitionImpl]) -> None:
+        old_impl = self._impl
+        if old_impl is not None:
+            old_impl.destroy()
+
         self._impl = new_impl
         self.bn_impl.poke()
