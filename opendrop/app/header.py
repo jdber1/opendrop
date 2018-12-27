@@ -2,7 +2,7 @@ import asyncio
 
 from gi.repository import Gtk, GdkPixbuf
 
-from opendrop.app.app import AppSpeakerID
+from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.res import res
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable

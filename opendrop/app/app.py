@@ -1,31 +1,15 @@
 import asyncio
 import warnings
 from abc import abstractmethod, ABC
-from enum import Enum
 
-from opendrop.component.stack import StackModel
+from gi.repository import Gtk, Gdk
+
+from opendrop.app.app_speaker_id import AppSpeakerID
+from opendrop.app.header import HeaderView, HeaderPresenter
+from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.component.stack import StackModel, StackView, StackPresenter
+from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator, Speaker
-
-
-class AppSpeakerID(Enum):
-    MAIN_MENU = ('Main Menu',)
-    IFT = ('Interfacial Tension Analysis',)
-    CONAN = ('Contact Angle Analysis',)
-
-    def __init__(self, header_title: str) -> None:
-        self.header_title = header_title
-
-
-class AppPresentedView(ABC):
-    @abstractmethod
-    def destroy(self) -> None:
-        """Destroy the GUI."""
-
-
-class AppPresentedViewFactory(ABC):
-    @abstractmethod
-    def create(self, main_mod: Moderator, content_stack: StackModel) -> AppPresentedView:
-        pass
 
 
 class AppSpeakerFactory(ABC):
@@ -38,14 +22,74 @@ class AppSpeakerFactory(ABC):
         """Provide the speaker that will be identified by `key`"""
 
 
+class AppView(GtkWidgetView[Gtk.Window]):
+    def __init__(self) -> None:
+        self.widget = Gtk.Window()
+
+        body = Gtk.Grid()
+        self.widget.add(body)
+
+        self.content_view = StackView()
+        body.attach(self.content_view.widget, 0, 1, 1, 1)
+
+        self.header_view = HeaderView()
+        body.attach(self.header_view.widget, 0, 0, 1, 1)
+
+        self.widget.show_all()
+
+        self.on_request_close_window = Event()
+        self.widget.connect('delete-event', self._hdl_window_delete_event)
+
+    def _hdl_window_delete_event(self, window: Gtk.Window, data: Gdk.Event) -> bool:
+        self.on_request_close_window.fire()
+
+        # Return True to prevent the window from closing.
+        return True
+
+    def destroy(self) -> None:
+        self.widget.destroy()
+
+
+class AppPresenter:
+    def __init__(self, main_mod: Moderator, content_stack: StackModel, view: AppView) -> None:
+        self._loop = asyncio.get_event_loop()
+
+        self._main_mod = main_mod
+        self._content_stack = content_stack
+        self._view = view
+
+        self._content_presenter = StackPresenter(self._content_stack, self._view.content_view)
+        self._header_presenter = HeaderPresenter(self._main_mod, self._view.header_view)
+
+        self.__event_connections = [
+            self._view.on_request_close_window.connect(self._hdl_view_request_close_window, immediate=True)
+        ]
+
+    def _hdl_view_request_close_window(self) -> None:
+        self._sever_model_and_view()
+
+        # Change active speaker key to None, this tells App to end the application.
+        self._loop.create_task(
+            self._main_mod.activate_speaker_by_key(None)
+        )
+
+    def _sever_model_and_view(self) -> None:
+        self._content_presenter.destroy()
+        self._header_presenter.destroy()
+
+        for ec in self.__event_connections:
+            ec.disconnect()
+
+
 class App:
-    def __init__(self, app_presented_view_factory: AppPresentedViewFactory, speaker_factory: AppSpeakerFactory) -> None:
+    def __init__(self, speaker_factory: AppSpeakerFactory) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._main_mod = Moderator()
         self._content_stack = StackModel()
 
-        self._gui = app_presented_view_factory.create(self._main_mod, self._content_stack)
+        self._app_view = AppView()
+        self._app_presenter = AppPresenter(self._main_mod, self._content_stack, self._app_view)
 
         speaker_factory.set_content_stack(self._content_stack)
         for key in AppSpeakerID:
@@ -67,5 +111,5 @@ class App:
         self._loop.run_forever()
 
     def destroy(self) -> None:
-        self._gui.destroy()
+        self._app_view.destroy()
         self._loop.stop()
