@@ -9,6 +9,7 @@ from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
 from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.app.ift.footer import FooterView
+from opendrop.app.ift.page.phys_params import PhysicalParametersSpeaker
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Speaker, Moderator
@@ -71,6 +72,13 @@ class IFTSpeaker(Speaker):
             ImageAcquisitionSpeaker(self._image_acquisition, self._wizard_content_stack)
         )
         self._wizard_pages.append(IFTWizardPageID.IMAGE_ACQUISITION)
+
+        # Physical parameters
+        self._wizard_mod.add_speaker(
+            IFTWizardPageID.PHYS_PARAMS,
+            PhysicalParametersSpeaker()
+        )
+        self._wizard_pages.append(IFTWizardPageID.PHYS_PARAMS)
 
     def do_activate(self):
         self._loop.create_task(self._do_activate())
