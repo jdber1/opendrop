@@ -150,6 +150,8 @@ class StackPresenter(Generic[KeyType, ChildType]):
         )
 
     def destroy(self) -> None:
+        self.stack_view.clear()
+
         for ec in self.__event_connections:
             ec.disconnect()
         for db in self.__data_bindings:

@@ -384,6 +384,7 @@ def test_stack_view_set_visible_child_to_none():
 
 # Tests for StackPresenter
 
+# todo: This class is not useful, its uses should be replaced with a Mock object.
 class MockStackView:
     LOG_ADD_CHILD = 'LOG_ADD_CHILD'
     LOG_REMOVE_CHILD = 'LOG_REMOVE_CHILD'
@@ -536,6 +537,9 @@ def test_stack_presenter_destroy():
 
     # Destroy the presenter
     stack_presenter.destroy()
+
+    # Make sure the view is cleared after the presenter is destroyed.
+    mock_stack_view.log.remove(MockStackView.LOG_CLEAR)
 
     # Add a new child.
     child2 = object()
