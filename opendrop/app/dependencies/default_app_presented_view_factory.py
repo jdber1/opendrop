@@ -39,7 +39,7 @@ class DefaultAppPresentedView(AppPresentedView):
         header_presenter = HeaderPresenter(self._main_mod, header_view)
         self._destroy_funcs.append(header_presenter.destroy)
 
-    def _hdl_window_delete_event(self, window: Gtk.Window, data: Gdk.Event):
+    def _hdl_window_delete_event(self, window: Gtk.Window, data: Gdk.Event) -> bool:
         # Change active speaker key to None, this tells App to end the application.
         self._loop.create_task(self._main_mod.activate_speaker_by_key(None))
 
