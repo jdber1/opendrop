@@ -3,11 +3,12 @@ from typing import Any, Callable, MutableSequence
 
 from gi.repository import Gtk
 
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.analysis_model.image_acquisition.default_types import DefaultImageAcquisitionImplType
+from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
 from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
+from opendrop.app.ift.footer import FooterView
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Speaker, Moderator
@@ -31,6 +32,13 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
         # Main content area
         self.content_stack_view = StackView()
         self.widget.attach(self.content_stack_view.widget, 1, 0, 1, 1)
+
+        # Footer separator
+        self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 2, 1)
+
+        # Footer
+        self.footer = FooterView()
+        self.widget.attach(self.footer.widget, 0, 2, 2, 1)
 
         self.widget.show_all()
 
