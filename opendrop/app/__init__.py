@@ -11,7 +11,7 @@ if __name__ == '__main__':
     gi.require_version('Gdk', '3.0')
 
     from opendrop.app.app import App
-    from opendrop.app.dependencies.default_speaker_factory import DefaultAppSpeakersFactory
+    from opendrop.app.default_speaker_factory import DefaultAppSpeakersFactory
 
     from opendrop.vendor.glibcoro import glibcoro
 
