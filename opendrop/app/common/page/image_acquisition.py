@@ -15,8 +15,8 @@ from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_p
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Speaker
 from opendrop.widgets.file_chooser_button import FileChooserButton
-from opendrop.widgets.integer_entry import IntegerEntry
 from opendrop.widgets.float_entry import FloatEntry
+from opendrop.widgets.integer_entry import IntegerEntry
 
 # Dependency injection configuration stuff.
 
@@ -70,11 +70,6 @@ class LocalImagesImageAcquisitionImplView(GtkWidgetView[Gtk.Grid]):
          min-height: 0px;
          min-width: 0px;
          padding: 6px 4px 6px 4px;
-    }
-
-    .no-pad {
-        min-height: 0px;
-        min-width: 0px;
     }
     '''
 
@@ -179,11 +174,6 @@ class USBCameraImageAcquisitionImplView(GtkWidgetView[Gtk.Grid]):
     
     .error-label {
         color: red;
-    }
-
-    .no-pad {
-        min-height: 0px;
-        min-width: 0px;
     }
     '''
 
