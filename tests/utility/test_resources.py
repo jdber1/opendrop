@@ -129,3 +129,21 @@ def _test_object_proxy(proxy, target_cls):
     assert isinstance(proxy, target_cls)
     assert issubclass(type(proxy), target_cls)
     assert type(proxy) == target_cls
+
+
+def test_resource_init_raises_exception():
+    class ExceptionRaisingResource(Resource):
+        def __init__(self):
+            raise ValueError
+
+        def teardown(self) -> None:
+            pass
+
+    res_token = ResourceToken(ExceptionRaisingResource)
+
+    assert res_token._references == 0
+
+    with pytest.raises(ValueError):
+        res_token.acquire()
+
+    assert res_token._references == 0
