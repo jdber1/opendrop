@@ -66,14 +66,12 @@ class AppPresenter:
         ]
 
     def _hdl_view_request_close_window(self) -> None:
-        self._sever_model_and_view()
-
         # Change active speaker key to None, this tells App to end the application.
         self._loop.create_task(
             self._main_mod.activate_speaker_by_key(None)
         )
 
-    def _sever_model_and_view(self) -> None:
+    def destroy(self) -> None:
         self._content_presenter.destroy()
         self._header_presenter.destroy()
 
@@ -111,5 +109,6 @@ class App:
         self._loop.run_forever()
 
     def destroy(self) -> None:
+        self._app_presenter.destroy()
         self._app_view.destroy()
         self._loop.stop()
