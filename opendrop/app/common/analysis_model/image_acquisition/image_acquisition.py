@@ -23,15 +23,27 @@ class ImageAcquisitionImpl:
         """Destroy this object, perform any necessary cleanup tasks."""
 
 
-T = TypeVar('T', bound=ImageAcquisitionImplType)
+ConfigType = TypeVar('ConfigType')
 
 
-class ImageAcquisition(Generic[T]):
+class ImageAcquisitionPreview(Generic[ConfigType]):
+    bn_alive = None  # type: AtomicBindable[bool]
+    bn_image = None  # type: AtomicBindable[Image]
+    config = None  # type: ConfigType
+
+    def destroy(self) -> None:
+        """Perform clean up any routines and destroy this preview, cannot be undone."""
+
+
+ImplType = TypeVar('ImplType', bound=ImageAcquisitionImplType)
+
+
+class ImageAcquisition(Generic[ImplType]):
     def __init__(self) -> None:
-        self._type = None  # type: Optional[T]
+        self._type = None  # type: Optional[ImplType]
         self._impl = None  # type: Optional[ImageAcquisitionImpl]
         self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindable[Optional[ImageAcquisitionImpl]]
-        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindable[Optional[T]]
+        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindable[Optional[ImplType]]
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
@@ -47,9 +59,7 @@ class ImageAcquisition(Generic[T]):
 
         return futs, tims
 
-    def create_preview(self) -> Tuple[AtomicBindable[Image], Any]:
-        """Return a tuple, first element is an AtomicBindable that provides the current preview image and the second
-        element is a configuration object that is used to configure the first element."""
+    def create_preview(self) -> ImageAcquisitionPreview:
         if self.impl is None:
             raise ValueError('No implementation chosen yet')
 
@@ -62,13 +72,13 @@ class ImageAcquisition(Generic[T]):
         return self.impl.get_model_errors()
 
     @AtomicBindablePropertyAdapter
-    def type(self) -> AtomicBindable[Optional[T]]:
+    def type(self) -> AtomicBindable[Optional[ImplType]]:
         return self.bn_type
 
-    def _get_type(self) -> Optional[T]:
+    def _get_type(self) -> Optional[ImplType]:
         return self._type
 
-    def _set_type(self, new_type: T) -> None:
+    def _set_type(self, new_type: ImplType) -> None:
         self._set_impl(new_type.impl_factory())
         self._type = new_type
 
