@@ -104,6 +104,19 @@ def test_base_image_seq_impl_acquire_images_with_no_images():
         baseimgs_impl.acquire_images()
 
 
+@pytest.mark.parametrize('_images, expected_images', [
+    (None, tuple()),
+    ((MOCK_IMAGE_0,), (MOCK_IMAGE_0,)),
+    ([MOCK_IMAGE_0, MOCK_IMAGE_1], (MOCK_IMAGE_0, MOCK_IMAGE_1)),
+
+])
+def test_base_image_seq_impl_images_prop(_images, expected_images):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = _images
+
+    assert baseimgs_impl.images == expected_images
+
+
 # Test LocalImagesImageAcquisitionImpl
 
 @pytest.mark.parametrize('img_paths', [

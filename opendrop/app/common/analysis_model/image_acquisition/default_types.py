@@ -99,6 +99,10 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
 
         return ImageSequenceImageAcquisitionPreview(list(self._images))
 
+    @property
+    def images(self) -> Sequence[Image]:
+        return tuple(self._images) if self._images is not None else tuple()
+
 
 class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
     def __init__(self) -> None:
