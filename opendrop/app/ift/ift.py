@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Callable, MutableSequence
+from typing import Any, Callable, MutableSequence, Sequence
 
 from gi.repository import Gtk
 
@@ -51,59 +51,66 @@ class IFTSpeaker(Speaker):
         self._loop = asyncio.get_event_loop()
         self._cleanup_tasks = []  # type: MutableSequence[Callable[[], Any]]
 
-        self._image_acquisition = ImageAcquisition()
-        # Set the default image acquisition implementation to be 'local images'
-        self._image_acquisition.type = DefaultImageAcquisitionImplType.LOCAL_IMAGES
-
-        self._parent_content_stack = parent_content_stack
         self._root_view = IFTRootView()
-        self._root_view_cskey = object()
-        self._parent_content_stack.add_child(self._root_view_cskey, self._root_view)
-
-        self._wizard_mod = Moderator()
-        self._wizard_content_stack = StackModel()
-        self._wizard_pages = []  # type: MutableSequence[IFTWizardPageID]
-        self._create_wizard_pages()
-
-    def _create_wizard_pages(self) -> None:
-        # Image acquisition speaker
-        self._wizard_mod.add_speaker(
-            IFTWizardPageID.IMAGE_ACQUISITION,
-            ImageAcquisitionSpeaker(self._image_acquisition, self._wizard_content_stack)
-        )
-        self._wizard_pages.append(IFTWizardPageID.IMAGE_ACQUISITION)
-
-        # Physical parameters
-        self._wizard_mod.add_speaker(
-            IFTWizardPageID.PHYS_PARAMS,
-            PhysicalParametersSpeaker()
-        )
-        self._wizard_pages.append(IFTWizardPageID.PHYS_PARAMS)
+        self._root_view_stack_key = object()
+        self._root_view_parent_stack = parent_content_stack
+        self._root_view_parent_stack.add_child(self._root_view_stack_key, self._root_view)
 
     def do_activate(self):
         self._loop.create_task(self._do_activate())
 
     async def _do_activate(self):
+        # Create the analysis models
+        # Image acquisition
+        image_acquisition = ImageAcquisition()
+        self._cleanup_tasks.append(image_acquisition.destroy)
+        # Set the default image acquisition implementation to be 'local images'
+        image_acquisition.type = DefaultImageAcquisitionImplType.LOCAL_IMAGES
+
+        # Create the wizard
+        self._wizard_mod = Moderator()
+        self._wizard_content_model = StackModel()
+        page_order = self._create_wizard_pages(self._wizard_mod, self._wizard_content_model, image_acquisition)
+
+        # Activate the first page of the wizard
+        await self._wizard_mod.activate_speaker_by_key(page_order[0])
+        self._cleanup_tasks.append(lambda: self._loop.create_task(self._wizard_mod.activate_speaker_by_key(None)))
+
+        # Create core UI presenters
         # WizardPositionPresenter
-        wiz_pos_presenter = WizardPositionPresenter(self._wizard_mod, self._wizard_pages,
-                                                    self._root_view.wizard_position_view)
+        wiz_pos_presenter = WizardPositionPresenter(self._wizard_mod, page_order, self._root_view.wizard_position_view)
         self._cleanup_tasks.append(wiz_pos_presenter.destroy)
 
         # StackPresenter
-        content_stack_presenter = StackPresenter(self._wizard_content_stack, self._root_view.content_stack_view)
+        content_stack_presenter = StackPresenter(self._wizard_content_model, self._root_view.content_stack_view)
         self._cleanup_tasks.append(content_stack_presenter.destroy)
 
-        # Activate the first page of the wizard
-        await self._wizard_mod.activate_speaker_by_key(self._wizard_pages[0])
-
         # Make root view visible.
-        self._parent_content_stack.visible_child_key = self._root_view_cskey
+        self._root_view_parent_stack.visible_child_key = self._root_view_stack_key
 
     def do_deactivate(self):
-        # Set the active wizard page/speaker to None to deactivate the currently active speaker/page.
-        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(None))
-
         for f in self._cleanup_tasks:
             f()
 
         self._cleanup_tasks = []
+
+    @staticmethod
+    def _create_wizard_pages(wizard_mod: Moderator, wizard_content_model: StackModel,
+                             image_acquisition: ImageAcquisition) -> Sequence[IFTWizardPageID]:
+        page_order = []  # type: MutableSequence[IFTWizardPageID]
+
+        # Image acquisition speaker
+        wizard_mod.add_speaker(
+            IFTWizardPageID.IMAGE_ACQUISITION,
+            ImageAcquisitionSpeaker(image_acquisition, wizard_content_model)
+        )
+        page_order.append(IFTWizardPageID.IMAGE_ACQUISITION)
+
+        # Physical parameters
+        wizard_mod.add_speaker(
+            IFTWizardPageID.PHYS_PARAMS,
+            PhysicalParametersSpeaker()
+        )
+        page_order.append(IFTWizardPageID.PHYS_PARAMS)
+
+        return page_order
