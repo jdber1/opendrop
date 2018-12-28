@@ -294,25 +294,25 @@ class USBCameraImageAcquisitionImplView(GtkWidgetView[Gtk.Grid]):
         self._change_camera_btn.get_style_context().add_class('small-pad')
         camera_container.add(self._change_camera_btn)
 
-        num_images_lbl = Gtk.Label('Number of images to capture:', xalign=0)
-        self.widget.attach(num_images_lbl, 0, 1, 1, 1)
+        num_frames_lbl = Gtk.Label('Number of images to capture:', xalign=0)
+        self.widget.attach(num_frames_lbl, 0, 1, 1, 1)
 
-        num_frames_entry_container = Gtk.Grid()
-        self.widget.attach_next_to(num_frames_entry_container, num_images_lbl, Gtk.PositionType.RIGHT, 1, 1)
+        num_frames_inp_container = Gtk.Grid()
+        self.widget.attach_next_to(num_frames_inp_container, num_frames_lbl, Gtk.PositionType.RIGHT, 1, 1)
 
-        num_frames_entry = IntegerEntry(lower=0, width_chars=6)
-        num_frames_entry.get_style_context().add_class('small-pad')
-        num_frames_entry_container.add(num_frames_entry)
+        num_frames_inp = IntegerEntry(lower=1, width_chars=6)
+        num_frames_inp.get_style_context().add_class('small-pad')
+        num_frames_inp_container.add(num_frames_inp)
 
         frame_interval_lbl = Gtk.Label('Frame interval (s):', xalign=0)
         self.widget.attach(frame_interval_lbl, 0, 2, 1, 1)
 
-        frame_interval_entry_container = Gtk.Grid()
-        self.widget.attach_next_to(frame_interval_entry_container, frame_interval_lbl, Gtk.PositionType.RIGHT, 1, 1)
+        frame_interval_inp_container = Gtk.Grid()
+        self.widget.attach_next_to(frame_interval_inp_container, frame_interval_lbl, Gtk.PositionType.RIGHT, 1, 1)
 
-        frame_interval_entry = FloatEntry(lower=0, width_chars=6)
-        frame_interval_entry.get_style_context().add_class('small-pad')
-        frame_interval_entry_container.add(frame_interval_entry)
+        frame_interval_inp = FloatEntry(lower=0, width_chars=6)
+        frame_interval_inp.get_style_context().add_class('small-pad')
+        frame_interval_inp_container.add(frame_interval_inp)
 
         self.widget.show_all()
 
@@ -325,8 +325,8 @@ class USBCameraImageAcquisitionImplView(GtkWidgetView[Gtk.Grid]):
         self.bn_num_frames = AtomicBindableAdapter()
         self.bn_frame_interval = AtomicBindableAdapter()
 
-        link_atomic_bn_adapter_to_g_prop(self.bn_num_frames, num_frames_entry, 'value')
-        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval, frame_interval_entry, 'value')
+        link_atomic_bn_adapter_to_g_prop(self.bn_num_frames, num_frames_inp, 'value')
+        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval, frame_interval_inp, 'value')
 
         self._active_change_camera_dialog_view = None  # type: Optional[USBCameraImageAcquisitionImplView.ChangeCameraDialogView]
 
