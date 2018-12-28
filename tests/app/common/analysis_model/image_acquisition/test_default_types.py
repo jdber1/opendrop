@@ -295,6 +295,23 @@ def test_base_camera_acquire_images_with_invalid_frame_interval_but_only_one_ima
     base_camera.acquire_images()
 
 
+@pytest.mark.parametrize('num_frames', [
+    None, -1, 0
+])
+def test_base_camera_acquire_images_with_invalid_num_frames(num_frames):
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = Mock()
+    # Set a valid frame_interval
+    base_camera.bn_frame_interval.set(1)
+
+    # Set an invalid num_frames
+    base_camera.bn_num_frames.set(num_frames)
+
+    # num_frames must be > 0 and not None
+    with pytest.raises(ValueError):
+        base_camera.acquire_images()
+
+
 @pytest.mark.asyncio
 async def test_base_camera_acquire_images_cancel_futures():
     mock_camera = Mock()

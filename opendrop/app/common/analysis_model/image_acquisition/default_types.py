@@ -262,6 +262,10 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
             raise ValueError("_camera can't be None")
 
         num_frames = self.bn_num_frames.get()
+
+        if num_frames is None or num_frames <= 0:
+            raise ValueError('num_frames must be > 0 and not None, currently: {}'.format(num_frames))
+
         frame_interval = self.bn_frame_interval.get()
 
         if frame_interval is None or frame_interval <= 0:
