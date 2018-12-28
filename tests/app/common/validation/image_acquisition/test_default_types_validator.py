@@ -25,6 +25,7 @@ def test_base_image_sequence_image_acquisition_impl_validator_checks_images(imag
 
 
 @pytest.mark.parametrize('frame_interval, expected_valid', [
+    (None, False),
     (-12.3, False),
     (0, False),
     (1, True)
@@ -57,6 +58,7 @@ def test_base_camera_image_acquisition_impl_validator_checks_camera(camera, expe
 
 
 @pytest.mark.parametrize('num_frames, expected_valid', [
+    (None, False),
     (-1, False),
     (0, False),
     (1, True)
@@ -74,6 +76,7 @@ def test_base_camera_image_acquisition_impl_validator_checks_camera(num_frames, 
 
 
 @pytest.mark.parametrize('frame_interval, expected_valid', [
+    (None, False),
     (-1.23, False),
     (0, False),
     (1.23, True)

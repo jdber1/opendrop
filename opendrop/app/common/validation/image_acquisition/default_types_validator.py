@@ -40,7 +40,7 @@ class BaseImageSequenceImageAcquisitionImplValidator(ImageAcquisitionImplValidat
         if len(target.images) == 0:
             return False
 
-        if target.bn_frame_interval.get() <= 0:
+        if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
             return False
 
         return True
@@ -58,10 +58,10 @@ class BaseCameraImageAcquisitionImplValidator(ImageAcquisitionImplValidator):
         if target._camera is None:
             return False
 
-        if target.bn_num_frames.get() <= 0:
+        if target.bn_num_frames.get() is None or target.bn_num_frames.get() <= 0:
             return False
 
-        if target.bn_frame_interval.get() <= 0:
+        if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
             return False
 
         return True
