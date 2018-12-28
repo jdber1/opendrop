@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindablePropertyAdapter
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
 
 
 class ImageAcquisitionImplType(Enum):
@@ -45,6 +45,10 @@ class ImageAcquisition(Generic[ImplType]):
         self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindable[Optional[ImageAcquisitionImpl]]
         self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindable[Optional[ImplType]]
 
+    # Property adapters for atomic bindables.
+    type = AtomicBindable.property_adapter(lambda self: self.bn_type)
+    impl = AtomicBindable.property_adapter(lambda self: self.bn_impl)
+
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
         image and the image's timestamp, and the second element being a sequence of estimated unix timestamps for when
@@ -65,20 +69,12 @@ class ImageAcquisition(Generic[ImplType]):
 
         return self.impl.create_preview()
 
-    @AtomicBindablePropertyAdapter
-    def type(self) -> AtomicBindable[Optional[ImplType]]:
-        return self.bn_type
-
     def _get_type(self) -> Optional[ImplType]:
         return self._type
 
     def _set_type(self, new_type: ImplType) -> None:
         self._set_impl(new_type.impl_factory())
         self._type = new_type
-
-    @AtomicBindablePropertyAdapter
-    def impl(self) -> AtomicBindable[Optional[ImageAcquisitionImpl]]:
-        return self.bn_impl
 
     def _get_impl(self) -> Optional[ImageAcquisitionImpl]:
         return self._impl

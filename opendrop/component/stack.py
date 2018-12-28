@@ -3,7 +3,7 @@ from typing import Generic, TypeVar, MutableMapping, Optional, Sequence
 from gi.repository import Gtk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindablePropertyAdapter
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
 from opendrop.utility.events import Event
 
@@ -23,6 +23,9 @@ class StackModel(Generic[KeyType, ChildType]):
         self.on_child_removed = Event()
 
         self._key_to_child = {}  # type: MutableMapping[KeyType, ChildType]
+
+    # Property adapters for atomic bindables.
+    visible_child_key = AtomicBindable.property_adapter(lambda self: self.bn_visible_child_key)
 
     def add_child(self, key: KeyType, child: ChildType) -> None:
         if key is None:
@@ -70,10 +73,6 @@ class StackModel(Generic[KeyType, ChildType]):
     @property
     def children(self) -> Sequence[ChildType]:
         return list(self._key_to_child.values())
-
-    @AtomicBindablePropertyAdapter
-    def visible_child_key(self) -> AtomicBindable[Optional[KeyType]]:
-        return self.bn_visible_child_key
 
     def _get_visible_child_key(self) -> Optional[KeyType]:
         return self._visible_child_key
