@@ -55,9 +55,20 @@ class SidebarWizardPositionView(WizardPositionView, GtkWidgetView[Gtk.Box]):
 
         self._active_key = key
 
-    @staticmethod
-    def _new_label(title: str) -> Gtk.Widget:
-        return Gtk.Label(label=title, xalign=0)
+    # todo: the next three methods are not very object oriented.
+    def _new_label(self, title: str) -> Gtk.Widget:
+        lbl = Gtk.Label(label=title, xalign=0)
+
+        # Set the size request of the label to its maximum possible size when inactive/active, this should stop the
+        # sidebar from resizing its width when the largest child label becomes inactive/active.
+        self._format_label_active(lbl, title)
+        max_width = lbl.get_layout().get_size().width/1000
+        self._format_label_inactive(lbl, title)
+        max_width = max(max_width, lbl.get_layout().get_size().width/1000)
+
+        lbl.set_size_request(int(max_width + 1), -1)
+
+        return lbl
 
     @staticmethod
     def _format_label_active(lbl: Gtk.Label, title: str) -> None:
