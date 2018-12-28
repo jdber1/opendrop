@@ -65,12 +65,6 @@ class ImageAcquisition(Generic[ImplType]):
 
         return self.impl.create_preview()
 
-    def get_model_errors(self) -> Sequence:
-        if self.impl is None:
-            raise ValueError('No implementation chosen yet')
-
-        return self.impl.get_model_errors()
-
     @AtomicBindablePropertyAdapter
     def type(self) -> AtomicBindable[Optional[ImplType]]:
         return self.bn_type
