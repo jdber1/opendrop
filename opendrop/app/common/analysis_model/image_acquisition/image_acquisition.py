@@ -90,3 +90,7 @@ class ImageAcquisition(Generic[ImplType]):
 
         self._impl = new_impl
         self.bn_impl.poke()
+
+    def destroy(self) -> None:
+        if self._impl is not None:
+            self._impl.destroy()

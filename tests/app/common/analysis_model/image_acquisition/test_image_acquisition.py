@@ -132,3 +132,23 @@ def test_im_acq_create_preview_when_impl_is_none():
 
     with pytest.raises(ValueError):
         im_acq.create_preview()
+
+
+def test_im_acq_destroy():
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
+
+    impl = im_acq.impl
+
+    # Destroy im_acq
+    im_acq.destroy()
+
+    # Assert that the current implementation was also destroyed
+    assert MockImAcqImpl.LOG_DESTROY in impl.log
+
+
+def test_im_acq_destroy_when_no_impl_chosen():
+    im_acq = ImageAcquisition()
+
+    # Make sure that im_acq can still be destroyed, even if no implementation has been chosen.
+    im_acq.destroy()
