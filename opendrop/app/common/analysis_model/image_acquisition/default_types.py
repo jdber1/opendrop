@@ -12,8 +12,8 @@ import numpy as np
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionImplType, \
     ImageAcquisitionImpl, ImageAcquisitionPreview
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable, \
-    Bindable
+from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, BaseAtomicBindable, \
+    Bindable, AtomicBindable, AtomicBindableTx
 from opendrop.utility.events import Event, EventConnection
 
 T = TypeVar('T')
@@ -141,8 +141,8 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
     POKE_IDLE_INTERVAL = 0.05
 
     # These two classes are kind of a bodge, ImageBindable is compatible to being used as a read-only
-    # AtomicBindable[Image].
-    class ImageBindableTx:
+    # BaseAtomicBindable[Image].
+    class ImageBindableTx(AtomicBindableTx[Image]):
         def __init__(self, src_bn: 'CameraImageAcquisitionPreview.ImageBindable') -> None:
             self._src_bn = src_bn
 
@@ -150,11 +150,10 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
         def value(self) -> Image:
             return self._src_bn.get()
 
-    class ImageBindable(Bindable['CameraImageAcquisitionPreview.ImageBindableTx']):
+    class ImageBindable(AtomicBindable[Image]):
         def __init__(self, preview: 'CameraImageAcquisitionPreview') -> None:
             super().__init__()
             self._preview = preview
-            self.on_changed = Event()
 
         def get(self) -> Image:
             return self._preview._get_image()
@@ -164,15 +163,15 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
 
         def poke(self) -> None:
             self.on_changed.fire()
-            self._bcast_tx(self.create_tx())
+            self._bcast_tx(self._create_tx())
 
-        def create_tx(self) -> 'CameraImageAcquisitionPreview.ImageBindableTx':
+        def _create_tx(self) -> 'CameraImageAcquisitionPreview.ImageBindableTx':
             return CameraImageAcquisitionPreview.ImageBindableTx(self)
 
         def _export(self) -> 'CameraImageAcquisitionPreview.ImageBindableTx':
-            return self.create_tx()
+            return self._create_tx()
 
-        def _raw_apply_tx(self, tx: 'CameraImageAcquisitionPreview.ImageBindableTx')\
+        def _raw_apply_tx(self, tx: 'CameraImageAcquisitionPreview.ImageBindableTx') \
                 -> Optional[Sequence['CameraImageAcquisitionPreview.ImageBindableTx']]:
             raise NotImplementedError
 
@@ -185,8 +184,8 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
         self._alive = True
         self._poke_image_loop_timer_handle = None  # type: Optional[asyncio.TimerHandle]
 
-        self.bn_alive = AtomicBindableAdapter(self._get_alive)  # type: AtomicBindable[bool]
-        self.bn_image = self.ImageBindable(self)  # type: AtomicBindable[Image]
+        self.bn_alive = AtomicBindableAdapter(self._get_alive)  # type: AtomicBindableAdapter[bool]
+        self.bn_image = self.ImageBindable(self)  # type: CameraImageAcquisitionPreview.ImageBindable[Image]
 
         self.__event_connections = [
             self._src_impl._on_camera_changed.connect(self._hdl_src_impl_camera_changed, immediate=True)
@@ -379,7 +378,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
     def __init__(self):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
-        self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindable[Optional[int]]
+        self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindableAdapter[Optional[int]]
         self._camera_alive_changed_event_connection = None  # type: Optional[EventConnection]
 
     def open_camera(self, cam_idx: int) -> None:

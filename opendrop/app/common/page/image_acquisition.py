@@ -11,7 +11,8 @@ from opendrop.app.common.validation.image_acquisition.validator import ImageAcqu
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel
 from opendrop.mytypes import Destroyable
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, BaseAtomicBindable, \
+    AtomicBindable
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
@@ -243,10 +244,10 @@ class USBCameraImageAcquisitionImplView(GtkWidgetView[Gtk.Grid]):
             self.on_request_close_window = Event()
             self.widget.connect('delete-event', self._hdl_widget_delete_event)
 
-            self.bn_camera_index = AtomicBindableAdapter()  # type: AtomicBindable[int]
+            self.bn_camera_index = AtomicBindableAdapter()  # type: AtomicBindableAdapter[int]
             link_atomic_bn_adapter_to_g_prop(self.bn_camera_index, camera_index_inp, 'value')
 
-            self.bn_camera_inp_text = AtomicBindableAdapter()  # type: AtomicBindable[str]
+            self.bn_camera_inp_text = AtomicBindableAdapter()  # type: AtomicBindableAdapter[str]
             link_atomic_bn_adapter_to_g_prop(self.bn_camera_inp_text, camera_index_inp, 'text')
 
             self.bn_connect_btn_sensitive = AtomicBindableAdapter()
@@ -478,7 +479,7 @@ class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        self.bn_actual_user_input_impl_type = AtomicBindableAdapter()  # type: AtomicBindable[Optional[str]]
+        self.bn_actual_user_input_impl_type = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[str]]
         link_atomic_bn_adapter_to_g_prop(self.bn_actual_user_input_impl_type, self._user_input_impl_type_combobox,
                                          'active-id')
         self.bn_user_input_impl_type = AtomicBindableVar(None)  # type: AtomicBindable[Optional[ImageAcquisitionImplType]]

@@ -2,7 +2,7 @@ from typing import Callable, Optional
 
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindableAdapter
 
 
 class ImageAcquisitionImplValidator:
@@ -19,7 +19,7 @@ class ImageAcquisitionValidator:
         self._subvalidator = None  # type: Optional[ImageAcquisitionImplValidator]
         self._create_subvalidator_for_impl = create_subvalidator_for_impl
 
-        self.bn_subvalidator = AtomicBindableAdapter(self._get_subvalidator)  # type: AtomicBindable[ImageAcquisitionImplValidator]
+        self.bn_subvalidator = AtomicBindableAdapter(self._get_subvalidator)  # type: AtomicBindableAdapter[ImageAcquisitionImplValidator]
 
         self._target.bn_impl.on_changed.connect(self._hdl_target_impl_changed, immediate=True)
         self._hdl_target_impl_changed()

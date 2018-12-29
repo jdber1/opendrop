@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional, Sequence
 
-from opendrop.utility.bindable.bindable import AtomicBindable
+from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindable
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.speaker import Moderator
 

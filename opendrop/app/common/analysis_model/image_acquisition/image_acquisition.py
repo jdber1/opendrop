@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindableAdapter, AtomicBindable
 
 
 class ImageAcquisitionImplType(Enum):
@@ -16,7 +16,7 @@ class ImageAcquisitionImpl:
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         """Implementation of acquire_images()"""
 
-    def create_preview(self) -> Tuple[AtomicBindable[Image], Any]:
+    def create_preview(self) -> Tuple[BaseAtomicBindable[Image], Any]:
         """Implementation of create_preview()"""
 
     def destroy(self) -> None:
@@ -42,8 +42,8 @@ class ImageAcquisition(Generic[ImplType]):
     def __init__(self) -> None:
         self._type = None  # type: Optional[ImplType]
         self._impl = None  # type: Optional[ImageAcquisitionImpl]
-        self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindable[Optional[ImageAcquisitionImpl]]
-        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindable[Optional[ImplType]]
+        self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindableAdapter[Optional[ImageAcquisitionImpl]]
+        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindableAdapter[Optional[ImplType]]
 
     # Property adapters for atomic bindables.
     type = AtomicBindable.property_adapter(lambda self: self.bn_type)

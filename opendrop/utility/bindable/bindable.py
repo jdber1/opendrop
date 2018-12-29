@@ -43,8 +43,7 @@ class Bindable(Generic[TxT]):
 # AtomicBindable
 
 class AtomicBindableTx(Generic[VT]):
-    def __init__(self, value: VT):
-        self.value = value
+    value = None  # type: VT
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, AtomicBindableTx):
@@ -53,34 +52,50 @@ class AtomicBindableTx(Generic[VT]):
         return self.value == other.value
 
 
-class AtomicBindablePropertyAdapter(Generic[T, VT]):
-    def __init__(self, bn_getter: Callable[[T], 'AtomicBindable[VT]']):
-        self._bn_getter = bn_getter
+class AtomicBindable(Bindable[AtomicBindableTx[VT]]):
+    class _AtomicBindablePropertyAdapter(Generic[T, VT]):
+        def __init__(self, bn_getter: Callable[[T], 'AtomicBindable[VT]']):
+            self._bn_getter = bn_getter
 
-    def __get__(self, instance: T, owner: Type[T]) -> VT:
-        if instance is None:
-            return self
+        def __get__(self, instance: T, owner: Type[T]) -> VT:
+            if instance is None:
+                return self
 
-        return self._bn_getter(instance).get()
+            return self._bn_getter(instance).get()
 
-    def __set__(self, instance: T, value: VT) -> None:
-        self._bn_getter(instance).set(value)
+        def __set__(self, instance: T, value: VT) -> None:
+            self._bn_getter(instance).set(value)
 
-
-class AtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
-    property_adapter = AtomicBindablePropertyAdapter
+    property_adapter = _AtomicBindablePropertyAdapter
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.on_changed = Event()  # emits: ()
+        self.on_changed = Event()
 
+    @abstractmethod
+    def get(self) -> VT:
+        """Get the value of this atomic bindable"""
+
+    @abstractmethod
+    def set(self, value: VT) -> None:
+        """Set the value of this atomic bindable"""
+
+
+# BaseAtomicBindable
+
+class BaseAtomicBindableTx(AtomicBindableTx[VT]):
+    def __init__(self, value: VT):
+        self.value = value
+
+
+class BaseAtomicBindable(AtomicBindable[VT]):
     @staticmethod
     def create_tx(value: VT) -> AtomicBindableTx[VT]:
-        """Create and return a new transaction that when applied to another AtomicBindable `bn`, should set the
+        """Create and return a new transaction that when applied to another BaseAtomicBindable `bn`, should set the
         value that `bn` is storing to `value`.
         """
-        return AtomicBindableTx(value)
+        return BaseAtomicBindableTx(value)
 
     def get(self) -> VT:
         return self._raw_get()
@@ -93,9 +108,9 @@ class AtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
         self._value_changed(value, bcast_tx=bcast_tx)
 
     def poke(self) -> None:
-        """Force this AtomicBindable (AAB) to fire its `on_new_tx` event with a transaction representing the
-        current value of this AAB. Also fires its `on_changed` event. Usually called when the underlying value of this
-        AAB has changed, but this change was not made using AAB.set().
+        """Force this BaseAtomicBindable (BAB) to fire its `on_new_tx` event with a transaction representing the
+        current value of this BAB. Also fires its `on_changed` event. Usually called when the underlying value of this
+        BAB has changed, but this change was not made using BAB.set().
         """
         self._value_changed(self._raw_get(), bcast_tx=True)
 
@@ -126,7 +141,7 @@ class AtomicBindable(Generic[VT], Bindable[AtomicBindableTx[VT]]):
 
 # AtomicBindableVar
 
-class AtomicBindableVar(AtomicBindable[VT]):
+class AtomicBindableVar(BaseAtomicBindable[VT]):
     def __init__(self, initial: VT):
         super().__init__()
         self._value = initial
@@ -140,7 +155,7 @@ class AtomicBindableVar(AtomicBindable[VT]):
 
 # AtomicBindableAdapter
 
-class AtomicBindableAdapter(AtomicBindable[VT]):
+class AtomicBindableAdapter(BaseAtomicBindable[VT]):
     def __init__(self, getter: Optional[Callable[[], VT]] = None, setter: Optional[Callable[[VT], None]] = None):
         super().__init__()
 
