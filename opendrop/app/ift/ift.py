@@ -8,8 +8,9 @@ from opendrop.app.common.analysis_model.image_acquisition.image_acquisition impo
 from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
 from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
+from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.footer import FooterView, FooterPresenter
-from opendrop.app.ift.page.phys_params import PhysicalParametersSpeaker
+from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Speaker, Moderator
@@ -61,16 +62,21 @@ class IFTSpeaker(Speaker):
 
     async def _do_activate(self):
         # Create the analysis models
+
         # Image acquisition
         image_acquisition = ImageAcquisition()
         self._cleanup_tasks.append(image_acquisition.destroy)
         # Set the default image acquisition implementation to be 'local images'
         image_acquisition.type = DefaultImageAcquisitionImplType.LOCAL_IMAGES
 
+        # Physical parameters
+        phys_params_factory = IFTPhysicalParametersFactory()
+
         # Create the wizard
         self._wizard_mod = Moderator()
         self._wizard_content_model = StackModel()
-        page_order = self._create_wizard_pages(self._wizard_mod, self._wizard_content_model, image_acquisition)
+        page_order = self._create_wizard_pages(self._wizard_mod, self._wizard_content_model, image_acquisition,
+                                               phys_params_factory)
 
         # Activate the first page of the wizard
         await self._wizard_mod.activate_speaker_by_key(page_order[0])
@@ -100,7 +106,8 @@ class IFTSpeaker(Speaker):
 
     @staticmethod
     def _create_wizard_pages(wizard_mod: Moderator, wizard_content_model: StackModel,
-                             image_acquisition: ImageAcquisition) -> Sequence[IFTWizardPageID]:
+                             image_acquisition: ImageAcquisition, phys_params_factory: IFTPhysicalParametersFactory) \
+            -> Sequence[IFTWizardPageID]:
         page_order = []  # type: MutableSequence[IFTWizardPageID]
 
         # Image acquisition speaker
@@ -113,7 +120,7 @@ class IFTSpeaker(Speaker):
         # Physical parameters
         wizard_mod.add_speaker(
             IFTWizardPageID.PHYS_PARAMS,
-            PhysicalParametersSpeaker()
+            IFTPhysicalParametersSpeaker(phys_params_factory, wizard_content_model)
         )
         page_order.append(IFTWizardPageID.PHYS_PARAMS)
 
