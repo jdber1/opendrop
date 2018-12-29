@@ -7,10 +7,13 @@ from opendrop.app.common.analysis_model.image_acquisition.default_types import D
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
 from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
+from opendrop.app.common.validation.image_acquisition.default_types_validator import create_subvalidator_for_impl
+from opendrop.app.common.validation.image_acquisition.validator import ImageAcquisitionValidator
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.footer import FooterView, FooterPresenter
 from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
+from opendrop.app.ift.validation.phys_params_validator import IFTPhysicalParametersFactoryValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.utility.speaker import Speaker, Moderator
@@ -72,6 +75,10 @@ class IFTSpeaker(Speaker):
         # Physical parameters
         phys_params_factory = IFTPhysicalParametersFactory()
 
+        # Create validators
+        image_acquisition_validator = ImageAcquisitionValidator(create_subvalidator_for_impl, image_acquisition)
+        phys_params_factory_validator = IFTPhysicalParametersFactoryValidator(phys_params_factory)
+
         # Create the wizard
         self._wizard_mod = Moderator()
         self._wizard_content_model = StackModel()
@@ -92,7 +99,13 @@ class IFTSpeaker(Speaker):
         self._cleanup_tasks.append(content_stack_presenter.destroy)
 
         # FooterPresenter
-        footer_presenter = FooterPresenter(self._wizard_mod, page_order, self._root_view.footer_view)
+        footer_presenter = FooterPresenter(
+            wizard_mod=self._wizard_mod,
+            page_order=page_order,
+            validators={
+                IFTWizardPageID.IMAGE_ACQUISITION: image_acquisition_validator,
+                IFTWizardPageID.PHYS_PARAMS: phys_params_factory_validator},
+            view=self._root_view.footer_view)
         self._cleanup_tasks.append(footer_presenter.destroy)
 
         # Make root view visible.

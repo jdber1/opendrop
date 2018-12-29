@@ -1,7 +1,9 @@
 import asyncio
-from typing import Sequence, TypeVar, Generic, Optional
+from abc import abstractmethod
+from typing import Sequence, TypeVar, Generic, Optional, Mapping
 
 from gi.repository import Gtk, Gdk
+from typing_extensions import Protocol
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.events import Event
@@ -42,13 +44,22 @@ class FooterView(GtkWidgetView[Gtk.Box]):
 SomeWizardPageID = TypeVar('SpecificWizardPageID')
 
 
+class IValidator(Protocol):
+    @property
+    @abstractmethod
+    def is_valid(self) -> bool:
+        """Return the validity state of whatever is being validated."""
+
+
 class FooterPresenter(Generic[SomeWizardPageID]):
     def __init__(self, wizard_mod: Moderator[SomeWizardPageID], page_order: Sequence[SomeWizardPageID],
-                 view: FooterView) -> None:
+                 validators: Mapping[SomeWizardPageID, IValidator], view: FooterView) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._wizard_mod = wizard_mod
         self._page_order = page_order
+        self._validators = validators
+
         self._view = view
 
         self.__event_connections = [
@@ -57,6 +68,9 @@ class FooterPresenter(Generic[SomeWizardPageID]):
         ]
 
     def _hdl_view_next_btn_clicked(self) -> None:
+        if not self._is_page_valid(self._get_current_page_id()):
+            return
+
         next_page_id = self._get_next_page_id()
 
         if next_page_id is None:
@@ -72,10 +86,26 @@ class FooterPresenter(Generic[SomeWizardPageID]):
 
         self._loop.create_task(self._wizard_mod.activate_speaker_by_key(prev_page_id))
 
-    def _get_next_page_id(self) -> Optional[SomeWizardPageID]:
+    def _is_page_valid(self, page_id: SomeWizardPageID) -> bool:
+        try:
+            validator = self._validators[page_id]
+        except KeyError:
+            return True
+
+        return validator.is_valid
+
+    def _get_current_page_order_index(self) -> int:
+        current_page_id = self._get_current_page_id()
+        current_page_order_index = self._page_order.index(current_page_id)
+        return current_page_order_index
+
+    def _get_current_page_id(self) -> SomeWizardPageID:
         current_page_id = self._wizard_mod.active_speaker_key
         assert current_page_id is not None
-        current_page_order_index = self._page_order.index(current_page_id)
+        return current_page_id
+
+    def _get_next_page_id(self) -> Optional[SomeWizardPageID]:
+        current_page_order_index = self._get_current_page_order_index()
         next_page_order_index = current_page_order_index + 1
 
         try:
@@ -84,9 +114,7 @@ class FooterPresenter(Generic[SomeWizardPageID]):
             return None
 
     def _get_prev_page_id(self) -> Optional[SomeWizardPageID]:
-        current_page_id = self._wizard_mod.active_speaker_key
-        assert current_page_id is not None
-        current_page_order_index = self._page_order.index(current_page_id)
+        current_page_order_index = self._get_current_page_order_index()
         prev_page_order_index = current_page_order_index - 1
 
         if prev_page_order_index < 0:
