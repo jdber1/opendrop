@@ -46,7 +46,6 @@ class BaseImageSequenceImageAcquisitionImplValidator(ImageAcquisitionImplValidat
         return True
 
 
-@this_can_validate(USBCameraImageAcquisitionImpl)
 class BaseCameraImageAcquisitionImplValidator(ImageAcquisitionImplValidator):
     def __init__(self, target: BaseCameraImageAcquisitionImpl) -> None:
         self._target = target
@@ -65,3 +64,13 @@ class BaseCameraImageAcquisitionImplValidator(ImageAcquisitionImplValidator):
             return False
 
         return True
+
+
+@this_can_validate(USBCameraImageAcquisitionImpl)
+class USBCameraImageAcquisitionImplValidator(BaseCameraImageAcquisitionImplValidator):
+    @property
+    def is_valid(self) -> bool:
+        target = self._target  # type: USBCameraImageAcquisitionImpl
+        target.check_camera_still_working()
+
+        return super().is_valid
