@@ -354,7 +354,7 @@ class USBCamera(Camera):
             raise CameraCaptureError('VideoCapture is closed')
 
         start_time = time.time()
-        while True or (time.time() - start_time) < self._CAPTURE_TIMEOUT:
+        while (time.time() - start_time) < self._CAPTURE_TIMEOUT:
             success, image = self._vc.read()
 
             if success:
