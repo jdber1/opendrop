@@ -6,6 +6,8 @@ from opendrop.app.common.analysis_model.image_acquisition.default_types import D
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
+from opendrop.app.common.validation.image_acquisition.default_types_validator import create_subvalidator_for_impl
+from opendrop.app.common.validation.image_acquisition.validator import ImageAcquisitionValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel
 from opendrop.mytypes import Destroyable
@@ -44,7 +46,7 @@ def create_view_for_impl_type(impl_type: ImageAcquisitionImplType) -> GtkWidgetV
     try:
         return _impl_type_to_config_view_factory[impl_type]()
     except KeyError:
-        raise ValueError('Failed to create configuration view for impl. type `{}`'.format(typ))
+        raise ValueError('Failed to create configuration view for impl. type `{}`'.format(impl_type))
 
 
 def create_presenter_for_impl_and_view(impl: ImageAcquisitionImpl, view: Any) -> Destroyable:
