@@ -8,7 +8,7 @@ from opendrop.app.common.analysis_model.image_acquisition.image_acquisition impo
 from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
 from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
-from opendrop.app.ift.footer import FooterView
+from opendrop.app.ift.footer import FooterView, FooterPresenter
 from opendrop.app.ift.page.phys_params import PhysicalParametersSpeaker
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
@@ -84,6 +84,10 @@ class IFTSpeaker(Speaker):
         # StackPresenter
         content_stack_presenter = StackPresenter(self._wizard_content_model, self._root_view.content_stack_view)
         self._cleanup_tasks.append(content_stack_presenter.destroy)
+
+        # FooterPresenter
+        footer_presenter = FooterPresenter(self._wizard_mod, page_order, self._root_view.footer_view)
+        self._cleanup_tasks.append(footer_presenter.destroy)
 
         # Make root view visible.
         self._root_view_parent_stack.visible_child_key = self._root_view_stack_key
