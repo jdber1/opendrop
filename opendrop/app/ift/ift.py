@@ -11,7 +11,7 @@ from opendrop.app.common.validation.image_acquisition.default_types_validator im
 from opendrop.app.common.validation.image_acquisition.validator import ImageAcquisitionValidator
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
-from opendrop.app.ift.footer import FooterView, FooterPresenter
+from opendrop.app.ift.footer import FooterNavigatorView, FooterNavigatorPresenter
 from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
 from opendrop.app.ift.validation.phys_params_validator import IFTPhysicalParametersFactoryValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
@@ -42,7 +42,7 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
         self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 2, 1)
 
         # Footer
-        self.footer_view = FooterView()
+        self.footer_view = FooterNavigatorView()
         self.widget.attach(self.footer_view.widget, 0, 2, 2, 1)
 
         self.widget.show_all()
@@ -98,8 +98,8 @@ class IFTSpeaker(Speaker):
         content_stack_presenter = StackPresenter(self._wizard_content_model, self._root_view.content_stack_view)
         self._cleanup_tasks.append(content_stack_presenter.destroy)
 
-        # FooterPresenter
-        footer_presenter = FooterPresenter(
+        # FooterNavigatorPresenter
+        footer_presenter = FooterNavigatorPresenter(
             wizard_mod=self._wizard_mod,
             page_order=page_order,
             validators={

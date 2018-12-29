@@ -10,7 +10,7 @@ from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator
 
 
-class FooterView(GtkWidgetView[Gtk.Box]):
+class FooterNavigatorView(GtkWidgetView[Gtk.Box]):
     STYLE = '''
     .footer-nav-btn {
          min-height: 0px;
@@ -51,9 +51,9 @@ class IValidator(Protocol):
         """Return the validity state of whatever is being validated."""
 
 
-class FooterPresenter(Generic[SomeWizardPageID]):
+class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
     def __init__(self, wizard_mod: Moderator[SomeWizardPageID], page_order: Sequence[SomeWizardPageID],
-                 validators: Mapping[SomeWizardPageID, IValidator], view: FooterView) -> None:
+                 validators: Mapping[SomeWizardPageID, IValidator], view: FooterNavigatorView) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._wizard_mod = wizard_mod
