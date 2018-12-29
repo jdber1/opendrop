@@ -325,6 +325,7 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
 
 class USBCamera(Camera, Resource):
     _PRECAPTURE = 5
+    _CAPTURE_TIMEOUT = 0.5
 
     def __init__(self, cam_idx: int) -> None:
         self._vc = cv2.VideoCapture(cam_idx)
@@ -348,11 +349,14 @@ class USBCamera(Camera, Resource):
         if not self._vc.isOpened():
             raise ValueError('VideoCapture is closed')
 
-        while True:
+        start_time = time.time()
+        while True or (time.time() - start_time) < self._CAPTURE_TIMEOUT:
             success, image = self._vc.read()
 
             if success:
                 return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        raise CameraCaptureError
 
     def teardown(self) -> None:
         self._vc.release()
