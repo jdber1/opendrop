@@ -350,11 +350,8 @@ class USBCamera(Camera):
             success = self._vc.read()[0]
 
     def capture(self) -> np.ndarray:
-        if not self._vc.isOpened():
-            raise CameraCaptureError('VideoCapture is closed')
-
         start_time = time.time()
-        while (time.time() - start_time) < self._CAPTURE_TIMEOUT:
+        while self._vc.isOpened() and (time.time() - start_time) < self._CAPTURE_TIMEOUT:
             success, image = self._vc.read()
 
             if success:
