@@ -14,7 +14,7 @@ from opendrop.app.common.analysis_model.image_acquisition.image_acquisition impo
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable, \
     Bindable
-from opendrop.utility.events import Event
+from opendrop.utility.events import Event, EventConnection
 
 T = TypeVar('T')
 
@@ -360,9 +360,19 @@ class USBCamera(Camera):
         self.release()
         raise CameraCaptureError
 
+    def check_still_working(self) -> None:
+        start_time = time.time()
+        while self._vc.isOpened() and (time.time() - start_time) < self._CAPTURE_TIMEOUT:
+            success = self._vc.grab()
+            if success:
+                # Camera still works
+                return
+
+        self.release()
+
     def release(self) -> None:
-        self.alive = False
         self._vc.release()
+        self.alive = False
 
 
 class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
@@ -370,23 +380,60 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
         self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindable[Optional[int]]
+        self._camera_alive_changed_event_connection = None  # type: Optional[EventConnection]
 
     def open_camera(self, cam_idx: int) -> None:
         try:
-            old_camera = self._camera
             new_camera = USBCamera(cam_idx)
-
-            if old_camera is not None:
-                old_camera.release()
-
-            self._camera = new_camera
-            self._current_camera_index = cam_idx
-            self.bn_current_camera_index.poke()
         except ValueError:
             raise ValueError('Failed to open camera with camera index = {}'.format(cam_idx))
 
+        self.remove_current_camera(_poke_current_camera_index=False)
+
+        self._camera = new_camera
+        self._camera_alive_changed_event_connection = new_camera.bn_alive.on_changed \
+            .connect(self._hdl_camera_alive_changed, immediate=True)
+        self._current_camera_index = cam_idx
+        self.bn_current_camera_index.poke()
+
+    def remove_current_camera(self, _poke_current_camera_index: bool = True) -> None:
+        """Release and remove the current camera, if it exists. Specify `_poke_current_camera_index=False` to avoid
+        poking self.bn_current_camera_index."""
+        camera = self._camera
+
+        if camera is None:
+            return
+
+        if camera.alive:
+            camera.release()
+
+        assert self._camera_alive_changed_event_connection is not None
+        assert self._camera_alive_changed_event_connection.status is EventConnection.Status.CONNECTED
+        self._camera_alive_changed_event_connection.disconnect()
+
+        self._camera = None
+        self._camera_alive_changed_event_connection = None
+        self._current_camera_index = None
+
+        if _poke_current_camera_index:
+            self.bn_current_camera_index.poke()
+
+    def check_camera_still_working(self) -> None:
+        if self._camera is None:
+            # There is no camera to check
+            return
+
+        self._camera.check_still_working()
+
     def _get_current_camera_index(self) -> int:
         return self._current_camera_index
+
+    def _hdl_camera_alive_changed(self) -> None:
+        camera = self._camera
+        assert camera is not None
+
+        if camera.alive is False:
+            self.remove_current_camera()
 
     def destroy(self) -> None:
         if self._camera is not None:
@@ -394,10 +441,6 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
             self._camera = None
 
         super().destroy()
-
-    # todo:
-    # def check_camera_still_working(self):
-    #     pass
 
 
 class DefaultImageAcquisitionImplType(ImageAcquisitionImplType):
