@@ -4,7 +4,7 @@ import time
 from abc import abstractmethod
 from asyncio import Future
 from pathlib import Path
-from typing import Union, Sequence, MutableSequence, Tuple, Optional, Any, TypeVar, Generic, MutableMapping
+from typing import Union, Sequence, MutableSequence, Tuple, Optional, Any, TypeVar, Generic
 
 import cv2
 import numpy as np
@@ -15,7 +15,6 @@ from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable, \
     Bindable
 from opendrop.utility.events import Event
-from opendrop.utility.resources import Resource, ResourceToken
 
 T = TypeVar('T')
 
@@ -323,7 +322,7 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
             fut.set_exception(exc)
 
 
-class USBCamera(Camera, Resource):
+class USBCamera(Camera):
     _PRECAPTURE = 5
     _CAPTURE_TIMEOUT = 0.5
 
@@ -358,27 +357,20 @@ class USBCamera(Camera, Resource):
 
         raise CameraCaptureError
 
-    def teardown(self) -> None:
+    def release(self) -> None:
         self._vc.release()
 
 
 class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
-    _camera_tokens = {}  # type: MutableMapping[int, ResourceToken[USBCamera]]
-
     def __init__(self):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
         self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindable[Optional[int]]
 
     def open_camera(self, cam_idx: int) -> None:
-        if cam_idx not in self._camera_tokens:
-            self._camera_tokens[cam_idx] = ResourceToken(USBCamera, cam_idx=cam_idx)
-
-        token = self._camera_tokens[cam_idx]
-
         try:
             old_camera = self._camera
-            new_camera = token.acquire()
+            new_camera = USBCamera(cam_idx)
 
             if old_camera is not None:
                 old_camera.release()
@@ -389,7 +381,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
         except ValueError:
             raise ValueError('Failed to open camera with camera index = {}'.format(cam_idx))
 
-    def _get_current_camera_index(self):
+    def _get_current_camera_index(self) -> int:
         return self._current_camera_index
 
     def destroy(self) -> None:
