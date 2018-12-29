@@ -360,6 +360,7 @@ class USBCamera(Camera):
             if success:
                 return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+        self.release()
         raise CameraCaptureError
 
     def release(self) -> None:
