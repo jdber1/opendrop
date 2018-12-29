@@ -351,7 +351,7 @@ class USBCamera(Camera):
 
     def capture(self) -> np.ndarray:
         if not self._vc.isOpened():
-            raise ValueError('VideoCapture is closed')
+            raise CameraCaptureError('VideoCapture is closed')
 
         start_time = time.time()
         while True or (time.time() - start_time) < self._CAPTURE_TIMEOUT:
