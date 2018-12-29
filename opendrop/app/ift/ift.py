@@ -38,8 +38,8 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
         self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 2, 1)
 
         # Footer
-        self.footer = FooterView()
-        self.widget.attach(self.footer.widget, 0, 2, 2, 1)
+        self.footer_view = FooterView()
+        self.widget.attach(self.footer_view.widget, 0, 2, 2, 1)
 
         self.widget.show_all()
 
