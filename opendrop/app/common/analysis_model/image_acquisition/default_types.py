@@ -335,6 +335,11 @@ class USBCamera(Camera):
         for i in range(self._PRECAPTURE):
             self._vc.read()
 
+        self.bn_alive = AtomicBindableVar(True)
+
+    # Property adapters for atomic bindables
+    alive = AtomicBindable.property_adapter(lambda self: self.bn_alive)
+
     def wait_until_ready(self) -> None:
         success = False
 
@@ -358,6 +363,7 @@ class USBCamera(Camera):
         raise CameraCaptureError
 
     def release(self) -> None:
+        self.alive = False
         self._vc.release()
 
 
