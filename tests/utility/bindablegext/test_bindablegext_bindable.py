@@ -59,7 +59,7 @@ def test_link_atomic_bn_adapter_to_g_prop_apply_tx():
     conn0 = my_bn.on_new_tx.connect(cb0, immediate=True)
     conn1 = my_bn.on_new_tx.connect(cb1, immediate=True)
 
-    tx = AtomicBindableAdapter.create_tx(0)
+    tx = AtomicBindableAdapter._create_tx(0)
     my_bn._apply_tx(tx, block=(conn0,))
 
     cb0.assert_not_called()

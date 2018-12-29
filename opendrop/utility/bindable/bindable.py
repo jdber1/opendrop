@@ -90,23 +90,6 @@ class BaseAtomicBindableTx(AtomicBindableTx[VT]):
 
 
 class BaseAtomicBindable(AtomicBindable[VT]):
-    @staticmethod
-    def create_tx(value: VT) -> AtomicBindableTx[VT]:
-        """Create and return a new transaction that when applied to another BaseAtomicBindable `bn`, should set the
-        value that `bn` is storing to `value`.
-        """
-        return BaseAtomicBindableTx(value)
-
-    def get(self) -> VT:
-        return self._raw_get()
-
-    def set(self, value: VT) -> None:
-        self._set(value, bcast_tx=True)
-
-    def _set(self, value: VT, bcast_tx: bool) -> None:
-        self._raw_set(value)
-        self._value_changed(value, bcast_tx=bcast_tx)
-
     def poke(self) -> None:
         """Force this BaseAtomicBindable (BAB) to fire its `on_new_tx` event with a transaction representing the
         current value of this BAB. Also fires its `on_changed` event. Usually called when the underlying value of this
@@ -114,15 +97,34 @@ class BaseAtomicBindable(AtomicBindable[VT]):
         """
         self._value_changed(self._raw_get(), bcast_tx=True)
 
+    def _set(self, value: VT, bcast_tx: bool) -> None:
+        self._raw_set(value)
+        self._value_changed(value, bcast_tx=bcast_tx)
+
     def _value_changed(self, new_value: VT, bcast_tx: bool) -> None:
         self.on_changed.fire()
         if bcast_tx:
-            self._bcast_tx(self.create_tx(new_value))
+            self._bcast_tx(self._create_tx(new_value))
+
+    @staticmethod
+    def _create_tx(value: VT) -> AtomicBindableTx[VT]:
+        """Create and return a new transaction that when applied to another BaseAtomicBindable `bn`, should set the
+        value that `bn` is storing to `value`.
+        """
+        return BaseAtomicBindableTx(value)
+
+    # AtomicBindable abstract methods implementation:
+
+    def get(self) -> VT:
+        return self._raw_get()
+
+    def set(self, value: VT) -> None:
+        self._set(value, bcast_tx=True)
 
     # Bindable abstract methods implementation:
 
     def _export(self) -> AtomicBindableTx[VT]:
-        return self.create_tx(self._raw_get())
+        return self._create_tx(self._raw_get())
 
     def _raw_apply_tx(self, tx: AtomicBindableTx[VT]):
         self._set(tx.value, bcast_tx=False)

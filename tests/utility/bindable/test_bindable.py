@@ -132,7 +132,7 @@ def test_atomic_bn_get_and_set():
     bn.set(12)
     assert checkpoints == [
         ('_raw_set', 12),
-        ('hdl_new_tx', MyAtomicBindable.create_tx(12))
+        ('hdl_new_tx', MyAtomicBindable._create_tx(12))
     ]
 
 
@@ -149,7 +149,7 @@ def test_atomic_bn_apply_tx():
     def hdl_new_tx(tx):
         checkpoints.append(('hdl_new_tx', tx))
 
-    tx = MyAtomicBindable.create_tx(23)
+    tx = MyAtomicBindable._create_tx(23)
 
     bn = MyAtomicBindable()
     bn.on_new_tx.connect(hdl_new_tx, immediate=True)
@@ -183,7 +183,7 @@ def test_atomic_bn_export():
 
     assert checkpoints == [
         ('_raw_get',),
-        ('hdl_new_tx', MyAtomicBindable.create_tx(9))
+        ('hdl_new_tx', MyAtomicBindable._create_tx(9))
     ]
 
 
@@ -200,7 +200,7 @@ def test_atomic_bn_poke():
 
     bn = MyAtomicBindable()
 
-    assert bn._export() == MyAtomicBindable.create_tx(3)
+    assert bn._export() == MyAtomicBindable._create_tx(3)
 
     assert checkpoints == [
         ('_raw_get',)
@@ -252,7 +252,7 @@ def test_atomic_bn_changed_event():
     bn.on_changed.connect(hdl_changed, immediate=True)
 
     bn.set(123)
-    bn._apply_tx(MyAtomicBindable.create_tx(456))
+    bn._apply_tx(MyAtomicBindable._create_tx(456))
 
     assert checkpoints == [
         ('_raw_set', 123),

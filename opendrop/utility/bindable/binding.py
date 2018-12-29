@@ -111,11 +111,11 @@ class AtomicBindingMITM(Generic[SVT, DVT], BindingMITM[AtomicBindableTx[SVT], At
             self._atomic_to_src = to_src
 
     def to_dst(self, tx: AtomicBindableTx[SVT]) -> AtomicBindableTx[DVT]:
-        new_tx = BaseAtomicBindable.create_tx(self._atomic_to_dst(tx.value))
+        new_tx = BaseAtomicBindable._create_tx(self._atomic_to_dst(tx.value))
         return new_tx
 
     def to_src(self, tx: AtomicBindableTx[DVT]) -> AtomicBindableTx[SVT]:
-        new_tx = BaseAtomicBindable.create_tx(self._atomic_to_src(tx.value))
+        new_tx = BaseAtomicBindable._create_tx(self._atomic_to_src(tx.value))
         return new_tx
 
     def _atomic_to_dst(self, value: SVT) -> DVT:
