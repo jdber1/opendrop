@@ -34,11 +34,11 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
         self._index = 0
         self._images = images
 
-        self._bn_index = AtomicBindableAdapter(self._get_index, self._set_index)
-        self._bn_num_images = AtomicBindableAdapter(self._get_num_images)
+        self._bn_index = AtomicBindableAdapter(self._get_index, self._set_index)  # type: AtomicBindableAdapter[int]
+        self._bn_num_images = AtomicBindableAdapter(self._get_num_images)  # type: AtomicBindableAdapter[int]
 
-        self.bn_image = AtomicBindableAdapter(self._get_image)
-        self.bn_alive = AtomicBindableVar(True)
+        self.bn_image = AtomicBindableAdapter(self._get_image)  # type: AtomicBindableAdapter[Image]
+        self.bn_alive = AtomicBindableVar(True)  # type: AtomicBindable[bool]
         self.config = ImageSequenceImageAcquisitionPreviewConfig(self)
 
     def _get_image(self) -> Image:
@@ -53,6 +53,7 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
                              .format(new_index, self._get_num_images()))
 
         self._index = new_index
+        self.bn_image.poke()
 
     def _get_num_images(self) -> int:
         return len(self._images)
