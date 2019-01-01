@@ -127,6 +127,7 @@ def test_base_image_seq_impl_images_prop(_images, expected_images):
 ])
 def test_local_images_load_image_paths(img_paths):
     expected_imgs = [cv2.imread(str(img_path)) for img_path in img_paths]
+    expected_imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in expected_imgs]
 
     locimgs_impl = LocalImagesImageAcquisitionImpl()
     locimgs_impl.load_image_paths(img_paths)

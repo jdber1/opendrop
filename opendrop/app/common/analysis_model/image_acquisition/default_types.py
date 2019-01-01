@@ -119,6 +119,10 @@ class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
             img = cv2.imread(str(img_path))
             if img is None:
                 raise ValueError("Failed to load image from path '{}'".format(img_path))
+
+            # OpenCV loads image in BGR mode, but the rest of our app works with images in the RGB colourspace, so
+            # convert the loaded image appropriately.
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             imgs.append(img)
 
         self._images = imgs
