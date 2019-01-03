@@ -9,10 +9,12 @@ from opendrop.app.common.analysis_model.image_acquisition.image_acquisition impo
 class MockImAcqImpl(ImageAcquisitionImpl):
     LOG_ACQUIRE_IMAGES = 'LOG_ACQUIRE_IMAGES'
     LOG_CREATE_PREVIEW = 'LOG_CREATE_PREVIEW'
+    LOG_GET_IMAGE_SIZE_HINT = 'LOG_GET_IMAGE_SIZE_HINT'
     LOG_DESTROY = 'LOG_DESTROY'
 
     acquire_images_return_val = (list(range(5)), list(range(5)))
     create_preview_return_val = object()
+    get_image_size_hint_return_val = object()
 
     def __init__(self):
         # Used for testing.
@@ -25,6 +27,10 @@ class MockImAcqImpl(ImageAcquisitionImpl):
     def create_preview(self):
         self.log.append(self.LOG_CREATE_PREVIEW)
         return self.create_preview_return_val
+
+    def get_image_size_hint(self):
+        self.log.append(self.LOG_GET_IMAGE_SIZE_HINT)
+        return self.get_image_size_hint_return_val
 
     def destroy(self):
         self.log.append(self.LOG_DESTROY)
@@ -132,6 +138,27 @@ def test_im_acq_create_preview_when_impl_is_none():
 
     with pytest.raises(ValueError):
         im_acq.create_preview()
+
+
+def test_im_acq_get_image_size_hint():
+    im_acq = ImageAcquisition()
+    im_acq.type = MyImAcqImplType.MOCK0
+
+    # Clear the log.
+    im_acq.impl.log = []
+
+    # Get image size hint.
+    res = im_acq.get_image_size_hint()
+
+    assert im_acq.impl.log == [MockImAcqImpl.LOG_GET_IMAGE_SIZE_HINT]
+    assert res == MockImAcqImpl.get_image_size_hint_return_val
+
+
+def test_im_acq_get_image_size_hint_when_impl_is_none():
+    im_acq = ImageAcquisition()
+
+    with pytest.raises(ValueError):
+        im_acq.get_image_size_hint()
 
 
 def test_im_acq_destroy():
