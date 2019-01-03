@@ -2,7 +2,7 @@ from typing import MutableMapping, Optional
 
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.app.common.wizard import WizardPositionView, WizardPageID
+from opendrop.component.wizard.wizard import WizardPositionView, WizardPageID
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 

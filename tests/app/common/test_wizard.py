@@ -2,7 +2,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from opendrop.app.common.wizard import WizardPositionView, WizardPositionPresenter, WizardPageID
+from opendrop.component.wizard.wizard import WizardPositionView, WizardPositionPresenter, WizardPageID
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.speaker import Moderator
 

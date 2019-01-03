@@ -6,10 +6,8 @@ from gi.repository import Gtk
 from opendrop.app.common.analysis_model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.page.image_acquisition import ImageAcquisitionSpeaker
-from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionView
 from opendrop.app.common.validation.image_acquisition.default_types_validator import create_subvalidator_for_impl
 from opendrop.app.common.validation.image_acquisition.validator import ImageAcquisitionValidator
-from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.footer import FooterNavigatorView, FooterNavigatorPresenter
@@ -18,6 +16,8 @@ from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
 from opendrop.app.ift.validation.phys_params_validator import IFTPhysicalParametersFactoryValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
+from opendrop.component.wizard.sidebar import SidebarWizardPositionView
+from opendrop.component.wizard.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.utility.speaker import Speaker, Moderator
 
 
