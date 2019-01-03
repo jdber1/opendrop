@@ -114,6 +114,8 @@ class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
         return self._last_loaded_paths
 
     def load_image_paths(self, img_paths: Sequence[Union[Path, str]]) -> None:
+        img_paths = sorted(img_paths)
+
         imgs = []  # type: MutableSequence[np.ndarray]
         for img_path in img_paths:
             img = cv2.imread(str(img_path))

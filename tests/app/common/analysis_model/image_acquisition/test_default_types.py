@@ -121,12 +121,12 @@ def test_base_image_seq_impl_images_prop(_images, expected_images):
 
 @pytest.mark.parametrize('img_paths', [
     [SAMPLE_IMAGES_DIR/'image0.png'],
-    [SAMPLE_IMAGES_DIR/'image0.png',
-     SAMPLE_IMAGES_DIR/'image1.png',
-     SAMPLE_IMAGES_DIR/'image2.png']
+    [SAMPLE_IMAGES_DIR/'image2.png',
+     SAMPLE_IMAGES_DIR/'image0.png',
+     SAMPLE_IMAGES_DIR/'image1.png']
 ])
 def test_local_images_load_image_paths(img_paths):
-    expected_imgs = [cv2.imread(str(img_path)) for img_path in img_paths]
+    expected_imgs = [cv2.imread(str(img_path)) for img_path in sorted(img_paths)]
     expected_imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in expected_imgs]
 
     locimgs_impl = LocalImagesImageAcquisitionImpl()
