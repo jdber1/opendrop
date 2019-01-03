@@ -10,8 +10,10 @@ from opendrop.app.common.sidebar_wizard_pos_view import SidebarWizardPositionVie
 from opendrop.app.common.validation.image_acquisition.default_types_validator import create_subvalidator_for_impl
 from opendrop.app.common.validation.image_acquisition.validator import ImageAcquisitionValidator
 from opendrop.app.common.wizard import WizardPageID, WizardPositionPresenter
+from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.footer import FooterNavigatorView, FooterNavigatorPresenter
+from opendrop.app.ift.page.image_processing import IFTImageProcessingSpeaker
 from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
 from opendrop.app.ift.validation.phys_params_validator import IFTPhysicalParametersFactoryValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
@@ -75,6 +77,9 @@ class IFTSpeaker(Speaker):
         # Physical parameters
         phys_params_factory = IFTPhysicalParametersFactory()
 
+        # Image annotator
+        image_annotator = IFTImageAnnotator()
+
         # Create validators
         image_acquisition_validator = ImageAcquisitionValidator(create_subvalidator_for_impl, image_acquisition)
         phys_params_factory_validator = IFTPhysicalParametersFactoryValidator(phys_params_factory)
@@ -83,7 +88,7 @@ class IFTSpeaker(Speaker):
         self._wizard_mod = Moderator()
         self._wizard_content_model = StackModel()
         page_order = self._create_wizard_pages(self._wizard_mod, self._wizard_content_model, image_acquisition,
-                                               phys_params_factory)
+                                               phys_params_factory, image_annotator)
 
         # Activate the first page of the wizard
         await self._wizard_mod.activate_speaker_by_key(page_order[0])
@@ -119,7 +124,8 @@ class IFTSpeaker(Speaker):
 
     @staticmethod
     def _create_wizard_pages(wizard_mod: Moderator, wizard_content_model: StackModel,
-                             image_acquisition: ImageAcquisition, phys_params_factory: IFTPhysicalParametersFactory) \
+                             image_acquisition: ImageAcquisition, phys_params_factory: IFTPhysicalParametersFactory,
+                             image_annotator: IFTImageAnnotator) \
             -> Sequence[IFTWizardPageID]:
         page_order = []  # type: MutableSequence[IFTWizardPageID]
 
@@ -136,5 +142,12 @@ class IFTSpeaker(Speaker):
             IFTPhysicalParametersSpeaker(phys_params_factory, wizard_content_model)
         )
         page_order.append(IFTWizardPageID.PHYS_PARAMS)
+
+        # Image processing
+        wizard_mod.add_speaker(
+            IFTWizardPageID.IMAGE_PROCESSING,
+            IFTImageProcessingSpeaker(image_annotator, image_acquisition.create_preview, wizard_content_model)
+        )
+        page_order.append(IFTWizardPageID.IMAGE_PROCESSING)
 
         return page_order
