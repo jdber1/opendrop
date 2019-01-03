@@ -1,3 +1,4 @@
+from operator import itemgetter
 from typing import TypeVar, Generic, overload, Tuple, Any
 
 import numpy as np
@@ -108,3 +109,11 @@ class Rect2(Generic[NumericType]):
             return False
 
         return (self.p0 == other.p0) and (self.p1 == other.p1)
+
+    def is_intersecting(self, other: 'Rect2') -> bool:
+        """Return True if this Rect2 is intersecting with `other`. Return False if they do not intersect of if they are
+        only 'touching' (i.e. share edges but do not intersect)."""
+        if self.x1 > other.x0 and self.x0 < other.x1 and self.y1 > other.y0 and self.y0 < other.y1:
+            return True
+        else:
+            return False
