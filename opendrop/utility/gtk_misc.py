@@ -8,8 +8,8 @@ def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
     if not isinstance(image, np.ndarray):
         image = np.array(image)
 
-    # Assert that `image` has three channels
-    assert len(image.shape) == 3 and image.shape[-1] == 3
+    # Assert that `image` has three or four channels
+    assert len(image.shape) == 3 and (image.shape[-1] in (3, 4))
 
     # "Image data in 8-bit/sample packed format inside a `Glib.Bytes`"
     data = image.astype(np.uint8).tobytes()  # type: bytes
@@ -18,7 +18,7 @@ def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
     colorspace = GdkPixbuf.Colorspace.RGB  # type: GdkPixbuf.Colorspace
 
     # If the data has an opacity channel ?
-    has_alpha = False  # type: bool
+    has_alpha = (image.shape[-1] == 4)  # type: bool
 
     # The size in bits of each R, G, B component?
     bits_per_sample = 8  # type: int
@@ -30,7 +30,7 @@ def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
     height = image.shape[0]  # type: int
 
     # Basically the size of each row in bytes
-    rowstride = width * bits_per_sample/8 * 3  # type: int
+    rowstride = image.strides[0]  # type: int
 
     pixbuf = GdkPixbuf.Pixbuf.new_from_data(
         data,
