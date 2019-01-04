@@ -99,6 +99,13 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
 
         return ImageSequenceImageAcquisitionPreview(list(self._images))
 
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
+        if self._images is None or len(self._images) == 0:
+            return
+
+        first_image = self._images[0]
+        return first_image.shape[1::-1]
+
     @property
     def images(self) -> Sequence[Image]:
         return tuple(self._images) if self._images is not None else tuple()
@@ -142,6 +149,10 @@ class Camera:
     @abstractmethod
     def capture(self) -> np.ndarray:
         """Return the captured image."""
+
+    @abstractmethod
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
+        """Implementation of get_image_size_hint()"""
 
 
 class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
@@ -309,6 +320,13 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
 
         return CameraImageAcquisitionPreview(self, first_image)
 
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
+        camera = self._camera
+        if camera is None:
+            return
+
+        return camera.get_image_size_hint()
+
     @staticmethod
     def _cancel_handle_if_fut_cancelled(fut: Future, handle: asyncio.TimerHandle) -> None:
         if fut.cancelled():
@@ -365,6 +383,11 @@ class USBCamera(Camera):
 
         self.release()
         raise CameraCaptureError
+
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
+        width = self._vc.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = self._vc.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        return width, height
 
     def check_still_working(self) -> None:
         start_time = time.time()

@@ -19,7 +19,7 @@ class ImageAcquisitionImpl:
     def create_preview(self) -> Tuple[BaseAtomicBindable[Image], Any]:
         """Implementation of create_preview()"""
 
-    def get_image_size_hint(self) -> Tuple[int, int]:
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
         """Implementation of get_image_size_hint()"""
 
     def destroy(self) -> None:
@@ -72,8 +72,9 @@ class ImageAcquisition(Generic[ImplType]):
 
         return self.impl.create_preview()
 
-    def get_image_size_hint(self) -> Tuple[int, int]:
-        """Return the best guess of what size the acquired images will have."""
+    def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
+        """Return the best guess of what size the acquired images will have. If a sensible size cannot be determined,
+        return None."""
         if self.impl is None:
             raise ValueError('No implementation chosen yet')
 

@@ -105,6 +105,19 @@ def test_base_image_seq_acquire_images_with_no_images():
         baseimgs_impl.acquire_images()
 
 
+@pytest.mark.parametrize('images, expected_image_size_hint', [
+    (None, None),
+    (tuple(), None),
+    ((MOCK_IMAGE_0,), MOCK_IMAGE_0.shape[1::-1]),
+    ((MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2), MOCK_IMAGE_0.shape[1::-1]),
+])
+def test_base_image_seq_get_image_size_hint(images, expected_image_size_hint):
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+    image_size_hint = baseimgs_impl.get_image_size_hint()
+    assert image_size_hint == expected_image_size_hint
+
+
 @pytest.mark.parametrize('_images, expected_images', [
     (None, tuple()),
     ((MOCK_IMAGE_0,), (MOCK_IMAGE_0,)),
@@ -396,6 +409,21 @@ async def test_base_camera_acquire_images_remove_camera_while_futures_pending():
     for fut in futs:
         with pytest.raises(asyncio.CancelledError):
             await fut
+
+
+def test_base_camera_get_image_size_hint():
+    mock_camera = Mock()
+    mock_camera.get_image_size_hint.return_value = (123, 456)
+    base_camera = BaseCameraImageAcquisitionImpl()
+    base_camera._camera = mock_camera
+
+    assert base_camera.get_image_size_hint() == (123, 456)
+
+
+def test_base_camera_when_no_camera():
+    base_camera = BaseCameraImageAcquisitionImpl()
+
+    assert base_camera.get_image_size_hint() is None
 
 
 def test_base_camera_create_preview():
