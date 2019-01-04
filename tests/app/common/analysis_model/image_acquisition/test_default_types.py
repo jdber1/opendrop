@@ -41,6 +41,7 @@ def _test_acquire_images_ret_val_est_timestamps(acquire_images_ret_val, expected
         assert abs(est - expected_est) < EPSILON_FOR_TIME
 
 
+# Test BaseImageSequenceImageAcquisitionImpl
 @pytest.mark.parametrize('imgs', [
     [MOCK_IMAGE_0],
     [MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2]
@@ -60,7 +61,7 @@ async def test_base_image_seq_setting_images(imgs):
     [MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2]
 ])
 @pytest.mark.asyncio
-async def test_base_image_seq_impl_frame_interval(imgs):
+async def test_base_image_seq_frame_interval(imgs):
     baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
     baseimgs_impl._images = imgs
     baseimgs_impl.bn_frame_interval.set(12.345)
@@ -72,7 +73,7 @@ async def test_base_image_seq_impl_frame_interval(imgs):
 @pytest.mark.parametrize('frame_interval', [
     None, 0, -1.2
 ])
-def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval(frame_interval):
+def test_base_image_seq_acquire_images_with_invalid_frame_interval(frame_interval):
     baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
     baseimgs_impl._images = [MOCK_IMAGE_0, MOCK_IMAGE_1]
     baseimgs_impl.bn_frame_interval.set(frame_interval)
@@ -85,7 +86,7 @@ def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval(frame_in
 @pytest.mark.parametrize('frame_interval', [
     None, 0, -1.2
 ])
-def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval_but_only_one_image(frame_interval):
+def test_base_image_seq_acquire_images_with_invalid_frame_interval_but_only_one_image(frame_interval):
     baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
     baseimgs_impl._images = [MOCK_IMAGE_0]
     baseimgs_impl.bn_frame_interval.set(frame_interval)
@@ -94,7 +95,7 @@ def test_base_image_seq_impl_acquire_images_with_invalid_frame_interval_but_only
     baseimgs_impl.acquire_images()
 
 
-def test_base_image_seq_impl_acquire_images_with_no_images():
+def test_base_image_seq_acquire_images_with_no_images():
     baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
     baseimgs_impl._images = []
     baseimgs_impl.bn_frame_interval.set(1)
@@ -110,11 +111,84 @@ def test_base_image_seq_impl_acquire_images_with_no_images():
     ([MOCK_IMAGE_0, MOCK_IMAGE_1], (MOCK_IMAGE_0, MOCK_IMAGE_1)),
 
 ])
-def test_base_image_seq_impl_images_prop(_images, expected_images):
+def test_base_image_seq_images_prop(_images, expected_images):
     baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
     baseimgs_impl._images = _images
 
     assert baseimgs_impl.images == expected_images
+
+
+def test_base_image_seq_preview_is_initially_alive():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+
+    preview = baseimgs_impl.create_preview()
+    assert preview.bn_alive.get() is True
+
+
+def test_base_image_seq_preview_config_num_images():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+
+    preview = baseimgs_impl.create_preview()
+    assert preview.config.bn_num_images.get() == len(images)
+
+
+def test_base_image_seq_preview_config_index():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+
+    preview = baseimgs_impl.create_preview()
+
+    for i, image in enumerate(images):
+        preview.config.bn_index.set(i)
+        assert (preview.bn_image.get() == image).all()
+
+
+def test_base_image_seq_preview_config_index_set_outside_range():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+
+    preview = baseimgs_impl.create_preview()
+
+    with pytest.raises(ValueError):
+        preview.config.bn_index.set(3)
+
+
+def test_base_image_seq_create_preview_when_no_images():
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = None
+
+    with pytest.raises(ValueError):
+        baseimgs_impl.create_preview()
+
+
+def test_base_image_seq_create_preview_when_images_is_empty_sequence():
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = []
+
+    with pytest.raises(ValueError):
+        baseimgs_impl.create_preview()
+
+
+def test_base_image_seq_preview_destroy():
+    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
+    baseimgs_impl = BaseImageSequenceImageAcquisitionImpl()
+    baseimgs_impl._images = images
+    preview = baseimgs_impl.create_preview()
+
+    # Destroy the preview
+    preview.destroy()
+
+    # Nothing really needs to happen, we just need to make sure the method exists.
 
 
 # Test LocalImagesImageAcquisitionImpl
@@ -129,14 +203,14 @@ def test_local_images_load_image_paths(img_paths):
     expected_imgs = [cv2.imread(str(img_path)) for img_path in sorted(img_paths)]
     expected_imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in expected_imgs]
 
-    locimgs_impl = LocalImagesImageAcquisitionImpl()
-    locimgs_impl.load_image_paths(img_paths)
+    local_images = LocalImagesImageAcquisitionImpl()
+    local_images.load_image_paths(img_paths)
 
-    for actual_img, expected_img in zip_longest(locimgs_impl._images, expected_imgs):
+    for actual_img, expected_img in zip_longest(local_images._images, expected_imgs):
         assert (actual_img == expected_img).all()
 
 
-def test_base_image_seq_impl_load_nonexistent_image():
+def test_local_images_load_nonexistent_image_path():
     local_images = LocalImagesImageAcquisitionImpl()
     with pytest.raises(ValueError):
         local_images.load_image_paths([SAMPLE_IMAGES_DIR/'this_image_does_not_exist.png'])
@@ -160,79 +234,6 @@ def test_local_images_last_loaded_paths():
 
     # Last loaded paths should still be a sequence of Path objects.
     assert tuple(local_images.bn_last_loaded_paths.get()) == paths_to_load
-
-
-def test_base_images_preview_is_initially_alive():
-    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
-
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = images
-
-    preview = base_images.create_preview()
-    assert preview.bn_alive.get() is True
-
-
-def test_base_images_preview_config_num_images():
-    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
-
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = images
-
-    preview = base_images.create_preview()
-    assert preview.config.bn_num_images.get() == len(images)
-
-
-def test_base_images_preview_config_index():
-    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
-
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = images
-
-    preview = base_images.create_preview()
-
-    for i, image in enumerate(images):
-        preview.config.bn_index.set(i)
-        assert (preview.bn_image.get() == image).all()
-
-
-def test_base_images_preview_config_index_set_outside_range():
-    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
-
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = images
-
-    preview = base_images.create_preview()
-
-    with pytest.raises(ValueError):
-        preview.config.bn_index.set(3)
-
-
-def test_base_images_create_preview_when_no_images():
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = None
-
-    with pytest.raises(ValueError):
-        base_images.create_preview()
-
-
-def test_base_images_create_preview_when_images_is_empty_sequence():
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = []
-
-    with pytest.raises(ValueError):
-        base_images.create_preview()
-
-
-def test_base_images_preview_destroy():
-    images = (MOCK_IMAGE_0, MOCK_IMAGE_1, MOCK_IMAGE_2)
-    base_images = BaseImageSequenceImageAcquisitionImpl()
-    base_images._images = images
-    preview = base_images.create_preview()
-
-    # Destroy the preview
-    preview.destroy()
-
-    # Nothing really needs to happen, we just need to make sure the method exists.
 
 
 # Test BaseCameraImageAcquisitionImpl
