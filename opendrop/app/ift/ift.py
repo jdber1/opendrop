@@ -13,11 +13,13 @@ from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFac
 from opendrop.app.ift.footer import FooterNavigatorView, FooterNavigatorPresenter
 from opendrop.app.ift.page.image_processing import IFTImageProcessingSpeaker
 from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
+from opendrop.app.ift.validation.image_annotator_validator import IFTImageAnnotatorValidator
 from opendrop.app.ift.validation.phys_params_validator import IFTPhysicalParametersFactoryValidator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.component.wizard.sidebar import SidebarWizardPositionView
 from opendrop.component.wizard.wizard import WizardPageID, WizardPositionPresenter
+from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.speaker import Speaker, Moderator
 
 
@@ -80,9 +82,14 @@ class IFTSpeaker(Speaker):
         # Image annotator
         image_annotator = IFTImageAnnotator()
 
+        phys_params_image_annotator_needle_width_binding = \
+            Binding(phys_params_factory.bn_needle_width, image_annotator.bn_needle_width)
+        self._cleanup_tasks.append(phys_params_image_annotator_needle_width_binding.unbind)
+
         # Create validators
         image_acquisition_validator = ImageAcquisitionValidator(create_subvalidator_for_impl, image_acquisition)
         phys_params_factory_validator = IFTPhysicalParametersFactoryValidator(phys_params_factory)
+        image_annotator_validator = IFTImageAnnotatorValidator(image_annotator, image_acquisition.get_image_size_hint)
 
         # Create the wizard
         self._wizard_mod = Moderator()
@@ -109,7 +116,8 @@ class IFTSpeaker(Speaker):
             page_order=page_order,
             validators={
                 IFTWizardPageID.IMAGE_ACQUISITION: image_acquisition_validator,
-                IFTWizardPageID.PHYS_PARAMS: phys_params_factory_validator},
+                IFTWizardPageID.PHYS_PARAMS: phys_params_factory_validator,
+                IFTWizardPageID.IMAGE_PROCESSING: image_annotator_validator},
             view=self._root_view.footer_view)
         self._cleanup_tasks.append(footer_presenter.destroy)
 
