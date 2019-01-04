@@ -8,15 +8,20 @@ from opendrop.mytypes import Rect2
 
 
 @pytest.fixture
-def good_image_annotator_and_validator():
+def good_image_annotator():
     image_annotator = IFTImageAnnotator()
-    validator = IFTImageAnnotatorValidator(image_annotator, lambda: (100, 100))
 
     image_annotator.bn_drop_region_px.set(Rect2(x=10, y=20, w=30, h=40))
     image_annotator.bn_needle_region_px.set(Rect2(x=1, y=2, w=3, h=4))
     image_annotator.bn_needle_width.set(3)
 
-    return image_annotator, validator
+    return image_annotator
+
+
+@pytest.fixture
+def good_image_annotator_and_validator(good_image_annotator):
+    validator = IFTImageAnnotatorValidator(good_image_annotator, lambda: (100, 100))
+    return good_image_annotator, validator
 
 
 def test_validator_accepts_valid_data(good_image_annotator_and_validator):
@@ -52,6 +57,20 @@ def test_validator_checks_needle_region(good_image_annotator_and_validator, is_v
     image_annotator, validator = good_image_annotator_and_validator
 
     image_annotator.bn_needle_region_px.set(needle_region_px)
+
+    assert validator.is_valid is is_valid
+
+
+@pytest.mark.parametrize('is_valid, drop_region_px', [
+    (False, None),  # invalid because is None
+    (False, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
+    (True, Rect2(x=100, y=100, w=10, h=10)),  # assumed to be valid (not None and finite size) since no size hint.
+])
+def test_validator_checks_drop_region_when_no_size_hint(good_image_annotator, is_valid, drop_region_px):
+    image_annotator = good_image_annotator
+    validator = IFTImageAnnotatorValidator(image_annotator, lambda: None)
+
+    image_annotator.bn_drop_region_px.set(drop_region_px)
 
     assert validator.is_valid is is_valid
 
