@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Callable, MutableSequence, Sequence
+from typing import Any, Callable, MutableSequence, Sequence, TypeVar, Type, Optional, Union
 
 from gi.repository import Gtk
 
@@ -21,6 +21,20 @@ from opendrop.component.wizard.sidebar import SidebarWizardPositionView
 from opendrop.component.wizard.wizard import WizardPageID, WizardPositionPresenter
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.speaker import Speaker, Moderator
+
+
+T = TypeVar('T')
+U = TypeVar('U')
+
+
+def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Callable[..., Union[T, U]]:
+    def wrapper(*args, **kwargs) -> Union[T, U]:
+        try:
+            return func(*args, **kwargs)
+        except exc:
+            return default
+
+    return wrapper
 
 
 class IFTWizardPageID(WizardPageID):
@@ -114,8 +128,7 @@ class IFTSpeaker(Speaker):
         footer_presenter = FooterNavigatorPresenter(
             wizard_mod=self._wizard_mod,
             page_order=page_order,
-            validators={
-                IFTWizardPageID.IMAGE_ACQUISITION: image_acquisition_validator,
+            validators={IFTWizardPageID.IMAGE_ACQUISITION: image_acquisition_validator,
                 IFTWizardPageID.PHYS_PARAMS: phys_params_factory_validator,
                 IFTWizardPageID.IMAGE_PROCESSING: image_annotator_validator},
             view=self._root_view.footer_view)
@@ -154,7 +167,9 @@ class IFTSpeaker(Speaker):
         # Image processing
         wizard_mod.add_speaker(
             IFTWizardPageID.IMAGE_PROCESSING,
-            IFTImageProcessingSpeaker(image_annotator, image_acquisition.create_preview, wizard_content_model)
+            IFTImageProcessingSpeaker(
+                image_annotator, _try_except(image_acquisition.create_preview, exc=ValueError, default=None),
+                wizard_content_model)
         )
         page_order.append(IFTWizardPageID.IMAGE_PROCESSING)
 

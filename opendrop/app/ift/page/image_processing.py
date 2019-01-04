@@ -11,6 +11,7 @@ from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTI
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
     ImageAcquisitionPreviewConfigPresenter
+from opendrop.component.message_text_view import MessageTextView
 from opendrop.component.mouse_switch import MouseSwitchTarget, MouseSwitch
 from opendrop.component.stack import StackModel
 from opendrop.mytypes import Image, Rect2, Vector2
@@ -506,8 +507,8 @@ class IFTImageProcessingRootPresenter:
 
 class IFTImageProcessingSpeaker(Speaker):
     def __init__(self, image_annotator: IFTImageAnnotator,
-                 create_image_acquisition_preview: Callable[[], ImageAcquisitionPreview], content_stack: StackModel) \
-            -> None:
+                 create_image_acquisition_preview: Callable[[], Optional[ImageAcquisitionPreview]],
+                 content_stack: StackModel) -> None:
         super().__init__()
 
         self._image_annotator = image_annotator
@@ -518,17 +519,26 @@ class IFTImageProcessingSpeaker(Speaker):
         self._root_view = IFTImageProcessingRootView()
         self._root_presenter = None  # type: Optional[IFTImageProcessingRootPresenter]
 
+        self._no_preview_view = MessageTextView('Failed to create image acquisition preview.')
+
         self._root_view_stack_key = object()
         self._content_stack.add_child(self._root_view_stack_key, self._root_view)
 
+        self._no_preview_view_stack_key = object()
+        self._content_stack.add_child(self._no_preview_view_stack_key, self._no_preview_view)
+
     def do_activate(self) -> None:
-        image_acquisition_preview = self._create_image_acquisition_preview()
+        preview = self._create_image_acquisition_preview()
+        if preview is None:
+            self._content_stack.visible_child_key = self._no_preview_view_stack_key
+            return
+
         self._root_presenter = IFTImageProcessingRootPresenter(
-            self._image_annotator, image_acquisition_preview, self._root_view)
+            self._image_annotator, preview, self._root_view)
 
         # Make root view visible.
         self._content_stack.visible_child_key = self._root_view_stack_key
 
     def do_deactivate(self) -> None:
-        assert self._root_presenter is not None
-        self._root_presenter.destroy()
+        if self._root_presenter is not None:
+            self._root_presenter.destroy()
