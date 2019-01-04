@@ -6,6 +6,8 @@ from gi.repository import Gtk, Gdk
 from typing_extensions import Protocol
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter
+from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator
 
@@ -40,8 +42,11 @@ class FooterNavigatorView(GtkWidgetView[Gtk.Box]):
         self.on_back_btn_clicked = Event()
         back_btn.connect('clicked', lambda *_: self.on_back_btn_clicked.fire())
 
+        self.bn_back_btn_visible = AtomicBindableAdapter()
+        self.bn_next_btn_visible = AtomicBindableAdapter()
 
-SomeWizardPageID = TypeVar('SpecificWizardPageID')
+        link_atomic_bn_adapter_to_g_prop(self.bn_back_btn_visible, back_btn, 'visible')
+        link_atomic_bn_adapter_to_g_prop(self.bn_next_btn_visible, next_btn, 'visible')
 
 
 class IValidator(Protocol):
@@ -49,6 +54,9 @@ class IValidator(Protocol):
     @abstractmethod
     def is_valid(self) -> bool:
         """Return the validity state of whatever is being validated."""
+
+
+SomeWizardPageID = TypeVar('SpecificWizardPageID')
 
 
 class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
@@ -64,8 +72,15 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
 
         self.__event_connections = [
             self._view.on_next_btn_clicked.connect(self._hdl_view_next_btn_clicked, immediate=True),
-            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked, immediate=True)
+            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked, immediate=True),
+            self._wizard_mod.bn_active_speaker_key.on_changed.connect(self._update_view_nav_buttons_visibility,
+                                                                      immediate=True)
         ]
+
+        self._update_view_nav_buttons_visibility()
+
+    def _change_page(self, page_id: SomeWizardPageID) -> None:
+        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(page_id))
 
     def _hdl_view_next_btn_clicked(self) -> None:
         if not self._is_page_valid(self._get_current_page_id()):
@@ -76,7 +91,7 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
         if next_page_id is None:
             return
 
-        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(next_page_id))
+        self._change_page(next_page_id)
 
     def _hdl_view_back_btn_clicked(self) -> None:
         prev_page_id = self._get_prev_page_id()
@@ -84,7 +99,11 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
         if prev_page_id is None:
             return
 
-        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(prev_page_id))
+        self._change_page(prev_page_id)
+
+    def _update_view_nav_buttons_visibility(self) -> None:
+        self._view.bn_back_btn_visible.set(self._get_prev_page_id() is not None)
+        self._view.bn_next_btn_visible.set(self._get_next_page_id() is not None)
 
     def _is_page_valid(self, page_id: SomeWizardPageID) -> bool:
         try:
