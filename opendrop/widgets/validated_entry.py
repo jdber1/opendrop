@@ -47,6 +47,7 @@ class ValidatedEntry(Gtk.Entry, Gtk.Editable):
             return
 
         self.get_buffer().delete_text(start_pos, end_pos - start_pos)
+        self.notify('value')
 
     def do_insert_text(self, insert_text: str, length: int, position: int) -> int:
         old_text = self.get_buffer().get_text()
@@ -54,10 +55,10 @@ class ValidatedEntry(Gtk.Entry, Gtk.Editable):
 
         if self.validate(new_text):
             self.get_buffer().insert_text(position, insert_text, length)
+            position += length
 
-            return position + length
-        else:
-            return position
+        self.notify('value')
+        return position
 
     def do_activate(self) -> None:
         self._poke_value()
