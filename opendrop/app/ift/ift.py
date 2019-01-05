@@ -128,9 +128,6 @@ class IFTSpeaker(Speaker):
         footer_presenter = FooterNavigatorPresenter(
             wizard_mod=self._wizard_mod,
             page_order=page_order,
-            validators={IFTWizardPageID.IMAGE_ACQUISITION: image_acquisition_validator,
-                IFTWizardPageID.PHYS_PARAMS: phys_params_factory_validator,
-                IFTWizardPageID.IMAGE_PROCESSING: image_annotator_validator},
             view=self._root_view.footer_view)
         self._cleanup_tasks.append(footer_presenter.destroy)
 

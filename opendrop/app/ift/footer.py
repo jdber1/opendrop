@@ -1,9 +1,7 @@
 import asyncio
-from abc import abstractmethod
-from typing import Sequence, TypeVar, Generic, Optional, Mapping
+from typing import Sequence, TypeVar, Generic, Optional
 
 from gi.repository import Gtk, Gdk
-from typing_extensions import Protocol
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter
@@ -49,24 +47,16 @@ class FooterNavigatorView(GtkWidgetView[Gtk.Box]):
         link_atomic_bn_adapter_to_g_prop(self.bn_next_btn_visible, next_btn, 'visible')
 
 
-class IValidator(Protocol):
-    @property
-    @abstractmethod
-    def is_valid(self) -> bool:
-        """Return the validity state of whatever is being validated."""
-
-
 SomeWizardPageID = TypeVar('SpecificWizardPageID')
 
 
 class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
     def __init__(self, wizard_mod: Moderator[SomeWizardPageID], page_order: Sequence[SomeWizardPageID],
-                 validators: Mapping[SomeWizardPageID, IValidator], view: FooterNavigatorView) -> None:
+                 view: FooterNavigatorView) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._wizard_mod = wizard_mod
         self._page_order = page_order
-        self._validators = validators
 
         self._view = view
 
@@ -83,9 +73,6 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
         self._loop.create_task(self._wizard_mod.activate_speaker_by_key(page_id))
 
     def _hdl_view_next_btn_clicked(self) -> None:
-        if not self._is_page_valid(self._get_current_page_id()):
-            return
-
         next_page_id = self._get_next_page_id()
 
         if next_page_id is None:
@@ -104,14 +91,6 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
     def _update_view_nav_buttons_visibility(self) -> None:
         self._view.bn_back_btn_visible.set(self._get_prev_page_id() is not None)
         self._view.bn_next_btn_visible.set(self._get_next_page_id() is not None)
-
-    def _is_page_valid(self, page_id: SomeWizardPageID) -> bool:
-        try:
-            validator = self._validators[page_id]
-        except KeyError:
-            return True
-
-        return validator.is_valid
 
     def _get_current_page_order_index(self) -> int:
         current_page_id = self._get_current_page_id()
