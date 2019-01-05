@@ -1,5 +1,7 @@
+import math
+
 import cv2
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 import numpy as np
 
@@ -44,7 +46,40 @@ def _get_needle_contours(needle_img: Image) -> np.ndarray:
 
 
 class IFTImageAnnotator:
-    def __init__(self) -> None:
+    class Validator:
+        def __init__(self, target: 'IFTImageAnnotator') -> None:
+            self._target = target
+
+        def check_is_valid(self) -> bool:
+            drop_region_px = self._target.bn_drop_region_px.get()
+            if drop_region_px is None or drop_region_px.size == (0, 0):
+                return False
+
+            needle_region_px = self._target.bn_needle_region_px.get()
+            if needle_region_px is None or needle_region_px.size == (0, 0):
+                return False
+
+            size_hint = self._target._get_image_size_hint()
+            if size_hint is not None:
+                image_extents = Rect2(pos=(0.0, 0.0), size=size_hint)
+                if not drop_region_px.is_intersecting(image_extents) or not needle_region_px.is_intersecting(
+                        image_extents):
+                    return False
+
+            needle_width = self._target.bn_needle_width.get()
+            if needle_width is None \
+                    or needle_width <= 0 \
+                    or needle_width == 0 \
+                    or math.isnan(needle_width) \
+                    or math.isinf(needle_width):
+                return False
+
+            return True
+
+    def __init__(self, get_image_size_hint: Callable[[], Optional[Tuple[int, int]]] = lambda: None) -> None:
+        # Used for validation
+        self._get_image_size_hint = get_image_size_hint
+
         self.bn_canny_min_thresh = AtomicBindableVar(30)  # type: AtomicBindable[int]
         self.bn_canny_max_thresh = AtomicBindableVar(60)  # type: AtomicBindable[int]
 
@@ -53,6 +88,8 @@ class IFTImageAnnotator:
 
         # Physical needle width is used to calculate the image scale.
         self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
+
+        self.validator = self.Validator(self)
 
     def apply_edge_detection(self, image: Image) -> Image:
         return cv2.Canny(image, self.bn_canny_min_thresh.get(), self.bn_canny_max_thresh.get())
