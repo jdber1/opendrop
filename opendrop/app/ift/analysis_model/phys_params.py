@@ -6,11 +6,25 @@ from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 
 
 class IFTPhysicalParametersFactory:
+    class Validator:
+        def __init__(self, target: 'IFTPhysicalParametersFactory') -> None:
+            self._target = target
+
+        def check_is_valid(self) -> bool:
+            try:
+                self._target.create_physical_parameters()
+            except ValueError:
+                return False
+
+            return True
+
     def __init__(self):
         self.bn_inner_density = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
         self.bn_outer_density = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
         self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
         self.bn_gravity = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
+
+        self.validator = self.Validator(self)
 
     # Property adapters for atomic bindables
     inner_density = AtomicBindable.property_adapter(lambda self: self.bn_inner_density)
