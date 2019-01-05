@@ -2,8 +2,15 @@ from asyncio import Future
 from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
 
+from typing_extensions import Protocol
+
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindableAdapter, AtomicBindable
+
+
+class IValidator(Protocol):
+    def check_is_valid(self) -> bool:
+        """Return true if valid."""
 
 
 class ImageAcquisitionImplType(Enum):
@@ -13,6 +20,8 @@ class ImageAcquisitionImplType(Enum):
 
 
 class ImageAcquisitionImpl:
+    validator = None  # type: IValidator
+
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         """Implementation of acquire_images()"""
 
@@ -42,11 +51,24 @@ ImplType = TypeVar('ImplType', bound=ImageAcquisitionImplType)
 
 
 class ImageAcquisition(Generic[ImplType]):
+    class Validator:
+        def __init__(self, target: 'ImageAcquisition') -> None:
+            self._target = target
+
+        def check_is_valid(self) -> bool:
+            if self._target.impl is None:
+                # Image acquisition has no chosen implementation, this is not valid.
+                return False
+
+            return self._target.impl.validator.check_is_valid()
+
     def __init__(self) -> None:
         self._type = None  # type: Optional[ImplType]
         self._impl = None  # type: Optional[ImageAcquisitionImpl]
         self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindableAdapter[Optional[ImageAcquisitionImpl]]
         self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindableAdapter[Optional[ImplType]]
+
+        self.validator = self.Validator(self)
 
     # Property adapters for atomic bindables.
     type = AtomicBindable.property_adapter(lambda self: self.bn_type)

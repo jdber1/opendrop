@@ -546,3 +546,135 @@ async def test_base_camera_preview_ignores_capture_error():
     await asyncio.sleep(0.2)
 
     assert (preview.bn_image.get() == MOCK_IMAGE_1).all()
+
+
+# Test validation
+
+@pytest.mark.parametrize('expected_valid, images', [
+    (False, None),
+    (False, tuple()),
+    (True, (Mock(),)),
+    (True, (Mock(), Mock()))
+])
+def test_base_image_sequence_image_acquisition_impl_validator_checks_images(expected_valid, images):
+    target = BaseImageSequenceImageAcquisitionImpl()
+
+    # Set a valid frame interval
+    target.bn_frame_interval.set(1)
+
+    # Set images to test value
+    target._images = images
+
+    assert target.validator.check_is_valid() is expected_valid
+
+
+@pytest.mark.parametrize('expected_valid, frame_interval', [
+    (False, None),
+    (False, -12.3),
+    (False, 0),
+    (True, 1)
+])
+def test_base_image_sequence_image_acquisition_impl_validator_checks_frame_interval(expected_valid, frame_interval):
+    target = BaseImageSequenceImageAcquisitionImpl()
+
+    # Set valid images of length > 1
+    target._images = [Mock(), Mock()]
+
+    # Set frame interval to test value
+    target.bn_frame_interval.set(frame_interval)
+
+    assert target.validator.check_is_valid() is expected_valid
+
+
+@pytest.mark.parametrize('invalid_frame_interval', [
+    None,
+    -12.3,
+    0
+])
+def test_base_image_sequence_image_acquisition_impl_validator_invalid_frame_interval_with_one_image \
+                (invalid_frame_interval):
+    target = BaseImageSequenceImageAcquisitionImpl()
+
+    # Set one valid image
+    target._images = [Mock()]
+
+    # Set frame interval to test value
+    target.bn_frame_interval.set(invalid_frame_interval)
+
+    assert target.validator.check_is_valid() is True
+
+
+@pytest.mark.parametrize('expected_valid, camera', [
+    (False, None),
+    (True, Mock())
+])
+def test_base_camera_image_acquisition_impl_validator_checks_camera(expected_valid, camera):
+    target = BaseCameraImageAcquisitionImpl()
+
+    # Set valid num_frames and frame_interval
+    target.bn_num_frames.set(2)
+    target.bn_frame_interval.set(1)
+
+    # Set camera to test value
+    target._camera = camera
+
+    assert target.validator.check_is_valid() is expected_valid
+
+
+@pytest.mark.parametrize('expected_valid, num_frames', [
+    (False, None),
+    (False, -1),
+    (False, 0),
+    (True, 1)
+])
+def test_base_camera_image_acquisition_impl_validator_checks_num_frames(expected_valid, num_frames):
+    target = BaseCameraImageAcquisitionImpl()
+
+    # Set valid camera and frame_interval
+    target._camera = Mock()
+    target.bn_frame_interval.set(1)
+
+    # Set num frames to test value
+    target.bn_num_frames.set(num_frames)
+
+    assert target.validator.check_is_valid() is expected_valid
+
+
+@pytest.mark.parametrize('expected_valid, frame_interval', [
+    (False, None),
+    (False, -1.23),
+    (False, 0),
+    (True, 1.23)
+])
+def test_base_camera_image_acquisition_impl_validator_checks_frame_interval(expected_valid, frame_interval):
+    target = BaseCameraImageAcquisitionImpl()
+
+    # Set valid camera
+    target._camera = Mock()
+    # Set num_frames > 1
+    target.bn_num_frames.set(2)
+
+    # Set frame interval to test value
+    target.bn_frame_interval.set(frame_interval)
+
+    assert target.validator.check_is_valid() is expected_valid
+
+
+@pytest.mark.parametrize('invalid_frame_interval', [
+    None,
+    -1.23,
+    0
+])
+def test_base_camera_image_acquisition_impl_validator_invalid_frame_interval_with_num_frames_equal_one \
+                (invalid_frame_interval):
+    target = BaseCameraImageAcquisitionImpl()
+
+    # Set valid camera
+    target._camera = Mock()
+    # Set num_frames to 1
+    target.bn_num_frames.set(1)
+
+    # Frame interval value should be ignored since only one frame to be captured
+    target.bn_frame_interval.set(invalid_frame_interval)
+
+    assert target.validator.check_is_valid() is True

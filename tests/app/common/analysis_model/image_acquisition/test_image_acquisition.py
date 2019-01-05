@@ -179,3 +179,28 @@ def test_im_acq_destroy_when_no_impl_chosen():
 
     # Make sure that im_acq can still be destroyed, even if no implementation has been chosen.
     im_acq.destroy()
+
+
+# Test validation
+
+def test_image_acquisition_validator_is_valid_when_im_acq_has_no_impl():
+    img_acq = ImageAcquisition()
+
+    assert img_acq.validator.check_is_valid() is False
+
+
+def test_image_acquisition_validator_is_valid_delegates_to_subvalidator():
+    mock_impl = Mock()
+    mock_impl_type = Mock()
+    mock_impl_type.impl_factory.return_value = mock_impl
+
+    expected_is_valid_value = Mock()
+    mock_impl.validator.check_is_valid.return_value = expected_is_valid_value
+
+    img_acq = ImageAcquisition()
+    img_acq.type = mock_impl_type
+
+    actual_is_valid_value = img_acq.validator.check_is_valid()
+
+    mock_impl.validator.check_is_valid.assert_called_once_with()
+    assert actual_is_valid_value == expected_is_valid_value

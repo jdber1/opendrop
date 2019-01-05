@@ -60,11 +60,29 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
 
 
 class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
+    class Validator:
+        def __init__(self, target: 'BaseImageSequenceImageAcquisitionImpl') -> None:
+            self._target = target
+
+        def check_is_valid(self) -> bool:
+            target = self._target
+
+            if len(target.images) == 0:
+                return False
+
+            if len(target.images) > 1:
+                if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
+                    return False
+
+            return True
+
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
         self._images = []  # type: MutableSequence[np.ndarray]
 
         self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[int]
+
+        self.validator = self.Validator(self)
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         images = self._images
@@ -256,6 +274,25 @@ CameraType = TypeVar('CameraType', bound=Camera)
 
 
 class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
+    class Validator:
+        def __init__(self, target: 'BaseCameraImageAcquisitionImpl') -> None:
+            self._target = target
+
+        def check_is_valid(self) -> bool:
+            target = self._target
+
+            if target._camera is None:
+                return False
+
+            if target.bn_num_frames.get() is None or target.bn_num_frames.get() <= 0:
+                return False
+
+            if target.bn_num_frames.get() > 1:
+                if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
+                    return False
+
+            return True
+
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
 
@@ -263,6 +300,8 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         self._on_camera_changed = Event()
         self.bn_num_frames = AtomicBindableVar(1)  # type: AtomicBindable[int]
         self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[float]
+
+        self.validator = self.Validator(self)
 
     @property
     def _camera(self) -> Optional[CameraType]:
@@ -405,6 +444,13 @@ class USBCamera(Camera):
 
 
 class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
+    class Validator(BaseCameraImageAcquisitionImpl.Validator):
+        def check_is_valid(self) -> bool:
+            target = self._target  # type: USBCameraImageAcquisitionImpl
+            target.check_camera_still_working()
+
+            return super().check_is_valid()
+
     def __init__(self):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
