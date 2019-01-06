@@ -35,10 +35,8 @@ class IntegerEntry(ValidatedEntry):
         self._default = value
 
     def restrict(self, value: Optional[int]) -> Optional[int]:
+        value = self.default if value is None else value
         if value is None:
-            if self.default is not None:
-                return self.restrict(self.default)
-
             return None
 
         if self.lower is not None:
