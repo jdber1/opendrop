@@ -20,6 +20,7 @@ from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
 from opendrop.utility.gtk_misc import pixbuf_from_array
+from opendrop.utility.misc import clamp
 from opendrop.utility.speaker import Speaker
 from opendrop.widgets.canny_parameters import CannyParameters
 from opendrop.widgets.layered_drawing_area.layered_drawing_area import LayeredDrawingArea
@@ -108,8 +109,8 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
         def _do_mouse_button_release(self, coord: Vector2) -> None:
             valid_widget_region = self._valid_widget_region
             if valid_widget_region is not None and not valid_widget_region.contains_point(coord):
-                coord = (min(max(coord[0], valid_widget_region.x0), valid_widget_region.x1),
-                         min(max(coord[1], valid_widget_region.y0), valid_widget_region.y1))
+                coord = (clamp(coord[0], valid_widget_region.x0, valid_widget_region.x1),
+                         clamp(coord[1], valid_widget_region.y0, valid_widget_region.y1))
 
             image_coord = self._image_coord_from_widget_coord(coord)
             if image_coord is None:
@@ -121,8 +122,8 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             valid_widget_region = self._valid_widget_region
             if valid_widget_region is not None and not valid_widget_region.contains_point(coord):
                 self._mouse_switch_target.cursor_name = None
-                coord = (min(max(coord[0], valid_widget_region.x0), valid_widget_region.x1),
-                         min(max(coord[1], valid_widget_region.y0), valid_widget_region.y1))
+                coord = (clamp(coord[0], valid_widget_region.x0, valid_widget_region.x1),
+                         clamp(coord[1], valid_widget_region.y0, valid_widget_region.y1))
             else:
                 self._mouse_switch_target.cursor_name = 'crosshair'
 
