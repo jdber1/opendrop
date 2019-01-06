@@ -581,7 +581,9 @@ class IFTImageProcessingRootPresenter:
         self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
 
     def destroy(self) -> None:
-        self._preview_config_presenter.destroy()
+        if self._preview_config_presenter is not None:
+            self._preview_config_presenter.destroy()
+
         self._drop_region_presenter.destroy()
         self._needle_region_presenter.destroy()
         self._edge_detection_overlay_presenter.destroy()
