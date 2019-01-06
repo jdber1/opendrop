@@ -542,3 +542,4 @@ class IFTImageProcessingSpeaker(Speaker):
     def do_deactivate(self) -> None:
         if self._root_presenter is not None:
             self._root_presenter.destroy()
+            self._root_presenter = None
