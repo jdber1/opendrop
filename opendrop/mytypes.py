@@ -110,6 +110,14 @@ class Rect2(Generic[NumericType]):
 
         return (self.p0 == other.p0) and (self.p1 == other.p1)
 
+    def contains_point(self, point: Vector2, include_boundary: bool = True):
+        if include_boundary and (self.x0 <= point[0] <= self.x1 and self.y0 <= point[1] <= self.y1):
+            return True
+        elif self.x0 < point[0] < self.x1 and self.y0 < point[1] < self.y1:
+            return True
+
+        return False
+
     def is_intersecting(self, other: 'Rect2') -> bool:
         """Return True if this Rect2 is intersecting with `other`. Return False if they do not intersect of if they are
         only 'touching' (i.e. share edges but do not intersect)."""
