@@ -37,3 +37,11 @@ def get_classes_in_modules(m: Union[Iterable[ModuleType], ModuleType], cls: T) -
             clses.append(attr)
 
     return clses
+
+
+def clamp(x: float, lower: float, upper: float) -> float:
+    """Return `lower` if `x < lower`,
+              `upper` if `x > upper` and
+              `x`     if `lower < x < upper`
+    """
+    return max(min(x, upper), lower)

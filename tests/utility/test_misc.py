@@ -1,6 +1,9 @@
+import math
 import sys
 
-from opendrop.utility.misc import recursive_load, get_classes_in_modules
+import pytest
+
+from opendrop.utility.misc import recursive_load, get_classes_in_modules, clamp
 from tests.samples import dummy_pkg
 
 
@@ -28,3 +31,21 @@ def test_recursive_load():
         dummy_pkg.subpkg,
         dummy_pkg.subpkg.module_b
     }
+
+
+@pytest.mark.parametrize(
+    '        x,     lower,    upper, expected', [
+    (       -5,       -10,       -1,       -5),
+    (        5,         1,       10,        5),
+    (       11,         1,       10,       10),
+    (       -5,         1,       10,        1),
+    ( math.nan,         1,       10, math.nan),
+    ( math.inf,         1,       10,       10),
+    (-math.inf,         1,       10,        1),
+    ( math.inf, -math.inf, math.inf, math.inf),
+    (      123, -math.inf, math.inf,      123)])
+def test_clamp(x, lower, upper, expected):
+    if math.isnan(expected):
+        assert math.isnan(clamp(x, lower, upper))
+    else:
+        assert clamp(x, lower, upper) == expected
