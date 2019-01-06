@@ -57,16 +57,16 @@ class FloatEntry(ValidatedEntry):
 
         try:
             v = self.t_from_str(text)
-
-            if math.isnan(v):
-                return False
-
-            return True
-        except (TypeError, ValueError):
+        except ValueError:
             if text in ('+', '-', '.'):
                 return True
+            else:
+                return False
 
+        if v is not None and math.isnan(v):
             return False
+
+        return True
 
     def t_from_str(self, text: str) -> Optional[float]:
         if text == '':
