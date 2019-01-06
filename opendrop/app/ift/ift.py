@@ -11,6 +11,7 @@ from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFac
 from opendrop.app.ift.footer import FooterNavigatorView, FooterNavigatorPresenter
 from opendrop.app.ift.page.image_processing import IFTImageProcessingSpeaker
 from opendrop.app.ift.page.phys_params import IFTPhysicalParametersSpeaker
+from opendrop.app.ift.page.results import IFTResultsSpeaker
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.component.wizard.sidebar import SidebarWizardPositionView
@@ -159,5 +160,14 @@ class IFTSpeaker(Speaker):
                 wizard_content_model)
         )
         page_order.append(IFTWizardPageID.IMAGE_PROCESSING)
+
+        # Results
+        wizard_mod.add_speaker(
+            IFTWizardPageID.RESULTS,
+            IFTResultsSpeaker(
+                wizard_content_model
+            )
+        )
+        page_order.append(IFTWizardPageID.RESULTS)
 
         return page_order
