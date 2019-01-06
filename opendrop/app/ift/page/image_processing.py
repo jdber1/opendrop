@@ -4,7 +4,7 @@ from typing import Optional, Callable, Tuple
 
 import cv2
 import numpy as np
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionPreview
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
@@ -15,7 +15,7 @@ from opendrop.component.message_text_view import MessageTextView
 from opendrop.component.mouse_switch import MouseSwitchTarget, MouseSwitch
 from opendrop.component.stack import StackModel
 from opendrop.mytypes import Image, Rect2, Vector2
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
@@ -78,6 +78,10 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             self._layer = layer
             self._widget_coord_from_image_coord = widget_coord_from_image_coord
             self._image_coord_from_widget_coord = image_coord_from_widget_coord
+            self._mouse_switch_target = mouse_switch_target
+            self._mouse_switch_target.cursor_name = 'crosshair'
+
+            self._valid_widget_region = None  # type: Optional[Rect2]
 
             self._region_cache = None  # type: Optional[Rect2]
             self.bn_region = AtomicBindableAdapter(setter=self._set_region)
@@ -86,11 +90,15 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             self.on_define_stop = Event()
             self.on_define_move = Event()
 
-            mouse_switch_target.do_mouse_button_press = self._do_mouse_button_press
-            mouse_switch_target.do_mouse_button_release = self._do_mouse_button_release
-            mouse_switch_target.do_mouse_move = self._do_mouse_move
+            self._mouse_switch_target.do_mouse_button_press = self._do_mouse_button_press
+            self._mouse_switch_target.do_mouse_button_release = self._do_mouse_button_release
+            self._mouse_switch_target.do_mouse_move = self._do_mouse_move
 
         def _do_mouse_button_press(self, coord: Vector2) -> None:
+            valid_widget_region = self._valid_widget_region
+            if valid_widget_region is not None and not valid_widget_region.contains_point(coord):
+                return
+
             image_coord = self._image_coord_from_widget_coord(coord)
             if image_coord is None:
                 return
@@ -98,6 +106,11 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             self.on_define_start.fire(image_coord)
 
         def _do_mouse_button_release(self, coord: Vector2) -> None:
+            valid_widget_region = self._valid_widget_region
+            if valid_widget_region is not None and not valid_widget_region.contains_point(coord):
+                coord = (min(max(coord[0], valid_widget_region.x0), valid_widget_region.x1),
+                         min(max(coord[1], valid_widget_region.y0), valid_widget_region.y1))
+
             image_coord = self._image_coord_from_widget_coord(coord)
             if image_coord is None:
                 return
@@ -105,6 +118,14 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             self.on_define_stop.fire(image_coord)
 
         def _do_mouse_move(self, coord: Vector2) -> None:
+            valid_widget_region = self._valid_widget_region
+            if valid_widget_region is not None and not valid_widget_region.contains_point(coord):
+                self._mouse_switch_target.cursor_name = None
+                coord = (min(max(coord[0], valid_widget_region.x0), valid_widget_region.x1),
+                         min(max(coord[1], valid_widget_region.y0), valid_widget_region.y1))
+            else:
+                self._mouse_switch_target.cursor_name = 'crosshair'
+
             image_coord = self._image_coord_from_widget_coord(coord)
             if image_coord is None:
                 return
@@ -129,6 +150,38 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
 
         def _redraw_region(self) -> None:
             self._set_region(self._region_cache)
+
+    class ErrorsView:
+        def __init__(self, view: 'IFTImageProcessingRootView') -> None:
+            self._view = view
+
+            self.bn_drop_region_err_msg = AtomicBindableAdapter(
+                setter=self._set_drop_region_err_msg)  # type: AtomicBindable[Optional[str]]
+            self.bn_needle_region_err_msg = AtomicBindableAdapter(
+                setter=self._set_needle_region_err_msg)  # type: AtomicBindable[Optional[str]]
+
+            self.bn_drop_region_touched = AtomicBindableVar(False)
+            self.bn_needle_region_touched = AtomicBindableVar(False)
+
+        def reset_touches(self) -> None:
+            self.bn_drop_region_touched.set(False)
+            self.bn_needle_region_touched.set(False)
+
+        def touch_all(self) -> None:
+            self.bn_drop_region_touched.set(True)
+            self.bn_needle_region_touched.set(True)
+
+        def _set_drop_region_err_msg(self, err_msg: Optional[str]) -> None:
+            if err_msg is not None:
+                self._view._drop_region_mode_inp.get_style_context().add_class('error')
+            else:
+                self._view._drop_region_mode_inp.get_style_context().remove_class('error')
+
+        def _set_needle_region_err_msg(self, err_msg: Optional[str]) -> None:
+            if err_msg is not None:
+                self._view._needle_region_mode_inp.get_style_context().add_class('error')
+            else:
+                self._view._needle_region_mode_inp.get_style_context().remove_class('error')
 
     STYLE = '''
     .small-pad {
@@ -202,11 +255,9 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
 
         # Drop region mouse switch target
         self._drop_mouse_switch_targ = MouseSwitchTarget()
-        self._drop_mouse_switch_targ.cursor_name = 'crosshair'
 
         # Needle region mouse switch target
         self._needle_mouse_switch_targ = MouseSwitchTarget()
-        self._needle_mouse_switch_targ.cursor_name = 'crosshair'
 
         self.widget.attach(Gtk.HSeparator(), 0, 1, 1, 1)
 
@@ -241,7 +292,6 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             widget_coord_from_image_coord=preview_image_lyr.draw_coord_from_source_coord,
             image_coord_from_widget_coord=preview_image_lyr.source_coord_from_draw_coord,
             mouse_switch_target=self._drop_mouse_switch_targ)
-        preview_image_lyr.connect('notify::last-draw-extents', lambda *_: self.drop_region_view._redraw_region())
 
         # Define needle region view
         self.needle_region_view = IFTImageProcessingRootView.DefineRegionView(
@@ -249,7 +299,15 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             widget_coord_from_image_coord=preview_image_lyr.draw_coord_from_source_coord,
             image_coord_from_widget_coord=preview_image_lyr.source_coord_from_draw_coord,
             mouse_switch_target=self._needle_mouse_switch_targ)
-        preview_image_lyr.connect('notify::last-draw-extents', lambda *_: self.needle_region_view._redraw_region())
+
+        def _hdl_preview_image_lyr_notify_last_draw_extents(preview_image_lyr: PixbufLayer, pspec: GObject.GParamSpec) \
+                -> None:
+            self.drop_region_view._redraw_region()
+            self.needle_region_view._redraw_region()
+            self.drop_region_view._valid_widget_region = preview_image_lyr.props.last_draw_extents
+            self.needle_region_view._valid_widget_region = preview_image_lyr.props.last_draw_extents
+
+        preview_image_lyr.connect('notify::last-draw-extents', _hdl_preview_image_lyr_notify_last_draw_extents)
 
         # Canny parameters view
         self.canny_parameters_view = IFTImageProcessingRootView.CannyParametersWrapperView(canny_parameters)
@@ -264,6 +322,8 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
         
         self._hdl_needle_region_mode_inp_toggled_notify_id = self._needle_region_mode_inp.connect(
             'toggled', self._hdl_needle_region_mode_inp_toggled)
+
+        self.errors_view = self.ErrorsView(self)
 
     def _hdl_drop_region_mode_inp_toggled(self, widget: Gtk.ToggleButton) -> None:
         if widget.props.active:
@@ -438,6 +498,39 @@ class IFTImageProcessingRootPresenter:
             for db in self.__data_bindings:
                 db.unbind()
 
+    class ErrorsPresenter:
+        def __init__(self, validator: IFTImageAnnotator.Validator, view: IFTImageProcessingRootView.ErrorsView) -> None:
+            self._validator = validator
+            self._view = view
+
+            self.__event_connections = [
+                self._validator.bn_drop_region_px_err_msg.on_changed.connect(self._update_errors, immediate=True),
+                self._validator.bn_needle_region_px_err_msg.on_changed.connect(self._update_errors, immediate=True),
+
+                self._view.bn_drop_region_touched.on_changed.connect(self._update_errors, immediate=True),
+                self._view.bn_needle_region_touched.on_changed.connect(self._update_errors, immediate=True),
+            ]
+
+            self._view.reset_touches()
+            self._update_errors()
+
+        def _update_errors(self) -> None:
+            drop_region_err_msg = None  # type: Optional[str]
+            needle_region_err_msg = None  # type: Optional[str]
+
+            if self._view.bn_drop_region_touched.get():
+                drop_region_err_msg = self._validator.bn_drop_region_px_err_msg.get()
+
+            if self._view.bn_needle_region_touched.get():
+                needle_region_err_msg = self._validator.bn_needle_region_px_err_msg.get()
+
+            self._view.bn_drop_region_err_msg.set(drop_region_err_msg)
+            self._view.bn_needle_region_err_msg.set(needle_region_err_msg)
+
+        def destroy(self) -> None:
+            for ec in self.__event_connections:
+                ec.disconnect()
+
     def __init__(self, image_annotator: IFTImageAnnotator, preview: ImageAcquisitionPreview,
                  view: IFTImageProcessingRootView) -> None:
         self._image_annotator = image_annotator
@@ -458,6 +551,7 @@ class IFTImageProcessingRootPresenter:
             self._image_annotator, self._view.canny_parameters_view)
         self._edge_detection_overlay_presenter = IFTImageProcessingRootPresenter.EdgeDetectionOverlayPresenter(
             self._image_annotator, self._preview, self._view.edge_detection_overlay_view)
+        self._errors_presenter = self.ErrorsPresenter(self._image_annotator.validator, self._view.errors_view)
 
         self.__event_connections = [
             self._drop_region_presenter.on_new_region_defined.connect(
@@ -487,16 +581,12 @@ class IFTImageProcessingRootPresenter:
         self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
 
     def destroy(self) -> None:
-        if self._preview_config_presenter is not None:
-            self._preview_config_presenter.destroy()
-        if self._drop_region_presenter is not None:
-            self._drop_region_presenter.destroy()
-        if self._needle_region_presenter is not None:
-            self._needle_region_presenter.destroy()
-        if self._edge_detection_overlay_presenter is not None:
-            self._edge_detection_overlay_presenter.destroy()
-        if self._canny_edge_detection_presenter is not None:
-            self._canny_edge_detection_presenter.destroy()
+        self._preview_config_presenter.destroy()
+        self._drop_region_presenter.destroy()
+        self._needle_region_presenter.destroy()
+        self._edge_detection_overlay_presenter.destroy()
+        self._canny_edge_detection_presenter.destroy()
+        self._errors_presenter.destroy()
 
         for ec in self.__event_connections:
             ec.disconnect()
@@ -538,6 +628,14 @@ class IFTImageProcessingSpeaker(Speaker):
 
         # Make root view visible.
         self._content_stack.visible_child_key = self._root_view_stack_key
+
+    async def do_request_deactivate(self) -> bool:
+        is_valid = self._image_annotator.validator.check_is_valid()
+        if is_valid:
+            return False
+
+        self._root_view.errors_view.touch_all()
+        return True
 
     def do_deactivate(self) -> None:
         if self._root_presenter is not None:

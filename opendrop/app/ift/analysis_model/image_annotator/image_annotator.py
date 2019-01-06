@@ -8,7 +8,7 @@ import numpy as np
 from opendrop.iftcalc.analyser import IFTImageAnnotations
 from opendrop.mytypes import Rect2, Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
 
 
 def _get_drop_contour(drop_img: Image) -> np.ndarray:
@@ -50,6 +50,12 @@ class IFTImageAnnotator:
         def __init__(self, target: 'IFTImageAnnotator') -> None:
             self._target = target
 
+            self.bn_drop_region_px_err_msg = AtomicBindableAdapter(self._get_drop_region_px_err_msg)
+            self._target.bn_drop_region_px.on_changed.connect(self.bn_drop_region_px_err_msg.poke, immediate=True)
+
+            self.bn_needle_region_px_err_msg = AtomicBindableAdapter(self._get_needle_region_px_err_msg)
+            self._target.bn_needle_region_px.on_changed.connect(self.bn_needle_region_px_err_msg.poke, immediate=True)
+
         def check_is_valid(self) -> bool:
             drop_region_px = self._target.bn_drop_region_px.get()
             if drop_region_px is None or drop_region_px.size == (0, 0):
@@ -75,6 +81,24 @@ class IFTImageAnnotator:
                 return False
 
             return True
+
+        def _get_drop_region_px_err_msg(self) -> Optional[str]:
+            drop_region_px = self._target.bn_drop_region_px.get()
+            if drop_region_px is None:
+                return 'Drop region cannot be empty'
+
+            size_hint = self._target._get_image_size_hint()
+            if size_hint is not None and not drop_region_px.is_intersecting(Rect2(pos=(0.0, 0.0), size=size_hint)):
+                return 'Drop region is outside of image extents'
+
+        def _get_needle_region_px_err_msg(self) -> Optional[str]:
+            needle_region_px = self._target.bn_needle_region_px.get()
+            if needle_region_px is None:
+                return 'Needle region cannot be empty'
+
+            size_hint = self._target._get_image_size_hint()
+            if size_hint is not None and not needle_region_px.is_intersecting(Rect2(pos=(0.0, 0.0), size=size_hint)):
+                return 'Needle region is outside of image extents'
 
     def __init__(self, get_image_size_hint: Callable[[], Optional[Tuple[int, int]]] = lambda: None) -> None:
         # Used for validation
