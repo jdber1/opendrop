@@ -89,7 +89,7 @@ class IFTSpeaker(Speaker):
         phys_params_factory = IFTPhysicalParametersFactory()
 
         # Image annotator
-        image_annotator = IFTImageAnnotator()
+        image_annotator = IFTImageAnnotator(image_acquisition.get_image_size_hint)
 
         phys_params_image_annotator_needle_width_binding = \
             Binding(phys_params_factory.bn_needle_width, image_annotator.bn_needle_width)
