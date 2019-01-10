@@ -9,6 +9,7 @@ from opendrop.iftcalc import IFTImageAnnotations
 from opendrop.mytypes import Rect2, Image
 from opendrop.utility import mycv
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
+from .needle_width import get_needle_width_from_contours
 
 
 def _get_drop_contour(drop_img: Image) -> np.ndarray:
@@ -29,8 +30,8 @@ def _get_drop_contour(drop_img: Image) -> np.ndarray:
     return drop_contour
 
 
-def _get_needle_contours(needle_img: Image) -> np.ndarray:
-    if not len(needle_img.shape) == 2:
+def _get_needle_contours(needle_img: Image) -> Tuple[np.ndarray, np.ndarray]:
+    if len(needle_img.shape) == 2:
         pass  # Do nothing, we need the image to be grayscale
     elif len(needle_img.shape) == 3 and needle_img.shape[-1] == 3:
         needle_img = cv2.cvtColor(needle_img, code=cv2.COLOR_RGB2GRAY)
@@ -40,7 +41,7 @@ def _get_needle_contours(needle_img: Image) -> np.ndarray:
     found_contours = mycv.find_contours(needle_img)
 
     # Assume the needle side-contours are the two longest contours found.
-    needle_contours = found_contours[:2]
+    needle_contours = tuple(found_contours[:2])
 
     return needle_contours
 
@@ -110,7 +111,7 @@ class IFTImageAnnotator:
         self.bn_drop_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
         self.bn_needle_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
 
-        # Physical needle width is used to calculate the image scale.
+        # Physical needle width (in metres) is used to calculate the image scale.
         self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
 
         self.validator = self.Validator(self)
@@ -118,11 +119,26 @@ class IFTImageAnnotator:
     def apply_edge_detection(self, image: Image) -> Image:
         return cv2.Canny(image, self.bn_canny_min_thresh.get(), self.bn_canny_max_thresh.get())
 
-    def get_drop_contour(self, image: Image) -> np.ndarray:
-        pass
-
-    def get_needle_contour(self, image: Image) -> Tuple[np.ndarray, np.ndarray]:
-        pass
-
     def annotate_image(self, image: Image) -> IFTImageAnnotations:
-        pass
+        image = self.apply_edge_detection(image)
+
+        drop_region_px = self.bn_drop_region_px.get()
+        needle_region_px = self.bn_needle_region_px.get()
+
+        drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
+        needle_image = image[needle_region_px.y0:needle_region_px.y1, needle_region_px.x0:needle_region_px.x1]
+
+        drop_contour_px = _get_drop_contour(drop_image)
+        needle_contours_px = _get_needle_contours(needle_image)
+
+        needle_width_px = get_needle_width_from_contours(needle_contours_px)
+        needle_width = self.bn_needle_width.get()
+        m_per_px = needle_width/needle_width_px
+
+        return IFTImageAnnotations(
+            m_per_px=m_per_px,
+            needle_region_px=needle_region_px,
+            drop_region_px=drop_region_px,
+            drop_contour_px=drop_contour_px,
+            needle_contours_px=needle_contours_px
+        )
