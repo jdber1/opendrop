@@ -2,7 +2,7 @@ import math
 from numbers import Number
 from typing import Optional
 
-from opendrop.iftcalc.analyser import IFTPhysicalParameters
+from opendrop.iftcalc import IFTPhysicalParameters
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
 
 

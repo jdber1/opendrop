@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Callable
 
 import numpy as np
 
-from opendrop.iftcalc.analyser import IFTImageAnnotations
+from opendrop.iftcalc import IFTImageAnnotations
 from opendrop.mytypes import Rect2, Image
 from opendrop.utility import mycv
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
