@@ -232,37 +232,6 @@ class TestEvent:
         with raises(ValueError):
             self.event.connect(cb, immediate=True)
 
-    # # Deprecated
-    # @pytest.mark.asyncio
-    # async def test_fire_and_disconnect_before_invoked(self):
-    #     cb = Mock()
-    #
-    #     self.event.connect(cb)
-    #     self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-    #
-    #     # Disconnect the function before it is actually invoked, since the event has not yet reached stage 1 invocation.
-    #     self.event.disconnect_by_func(cb)
-    #
-    #     await asyncio.sleep(0)
-    #     cb.assert_not_called()
-
-    # # Deprecated
-    # @pytest.mark.asyncio
-    # async def test_fire_and_disconnect_before_invoked_with_coroutine(self):
-    #     cb = Mock()
-    #
-    #     async def cb_(*args, **kwargs):
-    #         cb(*args, **kwargs)
-    #
-    #     self.event.connect(cb_)
-    #     self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-    #
-    #     # Disconnect the coroutine while it is still waiting to be executed by the event loop.
-    #     self.event.disconnect_by_func(cb_)
-    #
-    #     await asyncio.sleep(0)
-    #     cb.assert_not_called()
-
     @pytest.mark.asyncio
     async def test_connect_and_fire_coroutine(self):
         cb = Mock()
@@ -318,32 +287,6 @@ class TestEvent:
         await asyncio.sleep(0.1)
 
         assert checkpoint == 1
-
-    # # Deprecated
-    # @pytest.mark.asyncio
-    # async def test_handler_that_disconnects_others(self):
-    #     flags = 0
-    #
-    #     async def cb0():
-    #         nonlocal flags
-    #         flags ^= 1
-    #
-    #         self.event.disconnect_by_func(cb1)
-    #         self.event.disconnect_by_func(cb2)
-    #
-    #     async def cb1():
-    #         nonlocal flags
-    #         flags ^= 2
-    #
-    #     async def cb2():
-    #         nonlocal flags
-    #         flags ^= 4
-    #
-    #     for cb in cb0, cb1, cb2: self.event.connect(cb)
-    #     self.event.fire()
-    #     await asyncio.sleep(0.1)
-    #
-    #     assert flags == 1
 
     @pytest.mark.asyncio
     async def test_await_syntax(self):
@@ -438,24 +381,6 @@ class TestEvent:
         await asyncio.sleep(0)
 
         cb1.assert_called_once_with(*SAMPLE_ARGS)
-
-    # # Deprecated
-    # @pytest.mark.asyncio
-    # async def test_weak_ref_gc_before_invoked(self):
-    #     cb = Mock()
-    #
-    #     def cb_(*args, **kwargs):
-    #         cb(*args, **kwargs)
-    #
-    #     self.event.connect(cb_)
-    #     self.event.fire(*SAMPLE_ARGS)
-    #
-    #     del cb_
-    #     gc.collect()
-    #
-    #     await asyncio.sleep(0)
-    #
-    #     cb.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_strong_ref(self):
@@ -557,91 +482,6 @@ class TestEvent:
             assert self.event.num_connections == len(cbs) - i - 1
 
         assert self.event.num_connections == 0
-
-#
-# class TestEventSource:
-#     def setup(self):
-#         self.event_source = events.EventSource()
-#
-#         class MyClass:
-#             def __init__(self):
-#                 self.name0_event0_count = 0
-#                 self.name1_event0_count = 0
-#
-#             @events.handler('name0', 'on_event0')
-#             def handle_name0_event0(self):
-#                 self.name0_event0_count += 1
-#
-#             @events.handler('name1', 'on_event0', immediate=True)
-#             def handle_name1_event0(self):
-#                 self.name1_event0_count += 1
-#
-#         self.my_class = MyClass
-#         self.handlers_obj = MyClass()
-#
-#     @pytest.mark.asyncio
-#     async def test_connect_handlers(self):
-#         assert self.handlers_obj.name0_event0_count == 0 \
-#            and self.handlers_obj.name1_event0_count == 0
-#
-#         self.event_source.connect_handlers(self.handlers_obj, 'name0')
-#
-#         assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name0_event0)
-#         assert not self.event_source.on_event0.is_connected(self.handlers_obj.handle_name1_event0)
-#
-#         self.event_source.connect_handlers(self.handlers_obj, 'name1')
-#
-#         assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name0_event0)
-#         assert self.event_source.on_event0.is_connected(self.handlers_obj.handle_name1_event0)
-#
-#     def test_connect_with_immediate(self):
-#         self.event_source.connect_handlers(self.handlers_obj, 'name1')
-#
-#         self.event_source.on_event0.fire()
-#
-#         assert self.handlers_obj.name1_event0_count == 1
-#
-#     async def test_disconnect_handlers(self):
-#         self.event_source.connect_handlers(self.handlers_obj, 'name0')
-#
-#         self.event_source.fire('on_event0'); await asyncio.sleep(0)
-#
-#         assert self.handlers_obj.name0_event0_count == 1 \
-#            and self.handlers_obj.name1_event0_count == 0
-#
-#
-#         # Add in some new handler at runtime to make sure `disconnect_handlers()` doesn't throw HandlerNotConnected
-#         # exceptions
-#         self.handlers_obj.handle_name0_event1 = events.handler('name0', 'on_event1')(Mock())
-#
-#         self.event_source.disconnect_handlers(self.handlers_obj, 'name0')
-#
-#         self.event_source.fire('on_event0'); await asyncio.sleep(0)
-#
-#         assert self.handlers_obj.name0_event0_count == 1 \
-#            and self.handlers_obj.name1_event0_count == 0
-#
-#     @pytest.mark.asyncio
-#     async def test_reconnect_handlers(self):
-#         self.event_source.connect_handlers(self.handlers_obj, 'name0')
-#
-#         self.handlers_obj.handle_name0_event1 = events.handler('name0', 'on_event1')(Mock())
-#
-#         self.event_source.on_event1.fire(); await asyncio.sleep(0)
-#
-#         self.handlers_obj.handle_name0_event1.assert_not_called()
-#
-#         self.event_source.reconnect_handlers(self.handlers_obj, 'name0')
-#
-#         self.event_source.on_event1.fire(); await asyncio.sleep(0)
-#
-#         self.handlers_obj.handle_name0_event1.assert_called_once_with()
-#
-#     def test_get_event(self):
-#         event = self.event_source.my_event
-#
-#         assert isinstance(event, events.Event)
-#         assert event == self.event_source.my_event == self.event_source['my_event']
 
 
 @pytest.mark.skip
