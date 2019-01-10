@@ -1,0 +1,8 @@
+{
+  "inner_density": 1000,
+  "outer_density": 0,
+  "needle_width": 0.0007176,
+  "gravity": 9.8,
+  "needle_region": [407, 50, 203, 73],
+  "drop_region": [279, 185, 453, 503]
+}
