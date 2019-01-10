@@ -225,7 +225,12 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
             self._view.bn_selected_image_paths_err_msg.set(selected_image_paths_err_msg)
             self._view.bn_frame_interval_err_msg.set(frame_interval_err_msg)
 
+        def _clear_errors(self) -> None:
+            self._view.bn_selected_image_paths_err_msg.set(None)
+            self._view.bn_frame_interval_err_msg.set(None)
+
         def destroy(self) -> None:
+            self._clear_errors()
             for ec in self.__event_connections:
                 ec.disconnect()
 
@@ -651,7 +656,13 @@ class USBCameraImageAcquisitionImplPresenter:
             self._view.bn_num_frames_err_msg.set(num_frames_err_msg)
             self._view.bn_frame_interval_err_msg.set(frame_interval_err_msg)
 
+        def _clear_errors(self):
+            self._view.bn_current_camera_err_msg.set(None)
+            self._view.bn_num_frames_err_msg.set(None)
+            self._view.bn_frame_interval_err_msg.set(None)
+
         def destroy(self) -> None:
+            self._clear_errors()
             for ec in self.__event_connections:
                 ec.disconnect()
 

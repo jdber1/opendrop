@@ -215,7 +215,14 @@ class IFTPhysicalParametersRootPresenter:
             self._view.bn_needle_width_err_msg.set(needle_width_err_msg)
             self._view.bn_gravity_err_msg.set(gravity_err_msg)
 
+        def _clear_errors(self) -> None:
+            self._view.bn_inner_density_err_msg.set(None)
+            self._view.bn_outer_density_err_msg.set(None)
+            self._view.bn_needle_width_err_msg.set(None)
+            self._view.bn_gravity_err_msg.set(None)
+
         def destroy(self) -> None:
+            self._clear_errors()
             for ec in self.__event_connections:
                 ec.disconnect()
 

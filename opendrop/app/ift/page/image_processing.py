@@ -528,7 +528,12 @@ class IFTImageProcessingRootPresenter:
             self._view.bn_drop_region_err_msg.set(drop_region_err_msg)
             self._view.bn_needle_region_err_msg.set(needle_region_err_msg)
 
+        def _clear_errors(self) -> None:
+            self._view.bn_drop_region_err_msg.set(None)
+            self._view.bn_needle_region_err_msg.set(None)
+
         def destroy(self) -> None:
+            self._clear_errors()
             for ec in self.__event_connections:
                 ec.disconnect()
 
