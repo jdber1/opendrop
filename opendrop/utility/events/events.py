@@ -286,17 +286,14 @@ class Event:
             if conn in block: continue
             conn._invoke_handler(args, kwargs)
 
-    # Used for `await` syntax functionality.
-    def __iter__(self):
+    def wait(self) -> asyncio.Future:
         f = asyncio.get_event_loop().create_future()  # type: asyncio.Future
 
         # An implicit handler created to act as the callback to this event so that once fired, it will set its arguments
         # as the result of `f`.
         def handler(*args, **kwargs):
             if kwargs:
-                warnings.warn(
-                    'Keyword arguments not supported with `await <event>` syntax, ignoring keyword arguments.'
-                )
+                warnings.warn('Keyword arguments not supported by Event.wait(), ignoring keyword arguments.')
 
             if len(args) == 0:
                 args = None
@@ -312,40 +309,9 @@ class Event:
             f.cancel()
 
         # Keep a strong reference to `handler` in `f` so that `handler` won't be garbage collected before `f` is done.
-        f.__Event_await_implicit_callback = handler
+        f.__Event_wait_implicit_handler_ref = handler
 
         conn = self.connect(handler, once=True)
-
-        # We should actually hold a reference to `f` from this Event, however the `on_disconnect()` closure actually
-        # holds a reference to it, and we are now setting `conn._on_disconnected` to `on_disconnect()` which will hold
-        # a reference to the closure, and `conn` is in turned referred to by this event through `self.__connections`.
-        # So, indirectly, this event will end up holding a reference to `f`. This implementation is a little brittle
-        # to be honest.
-        #
-        # We want to maintain a reference to `f` so that the following example works:
-        #   async def main():
-        #       event = Event()
-        #       res = None
-        #
-        #       async def inner():
-        #           nonlocal res
-        #           res = await event
-        #           print('done')
-        #
-        #       asyncio.get_event_loop().create_task(inner())  # No reference held to this task
-        #       await asyncio.sleep(0)
-        #
-        #       # If there are no references to `f`, then the above task would be garbage collected and we would get
-        #       # a 'Task was destroyed but it is pending!' error message, the rest of `inner()` also would not execute.
-        #       gc.collect()
-        #       event.fire(123)
-        #       await asyncio.sleep(0.1)
-        #       assert res == 123
-        #
-        #   asyncio.get_event_loop().run_until_complete(main())
-
         conn._on_disconnected = on_disconnect
 
-        return f.__await__()
-
-    __await__ = __iter__
+        return f

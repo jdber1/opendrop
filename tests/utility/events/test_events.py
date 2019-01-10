@@ -288,72 +288,22 @@ class TestEvent:
 
         assert checkpoint == 1
 
+    @pytest.mark.parametrize('fire_args, fire_kwargs, expected_result', [
+        (tuple(), {}, None),
+        (('abc',), {}, 'abc'),
+        (('abc', 123), {}, ('abc', 123)),
+        (('abc', 123), {'foo': 'bar'}, ('abc', 123))])
     @pytest.mark.asyncio
-    async def test_await_syntax(self):
-        res = None
-
-        async def main():
-            nonlocal res
-            res = await self.event
-
-        # Don't hold a reference to the task created.
-        asyncio.get_event_loop().create_task(main())
-
-        # Let the event loop begin executing `main()` first so that it is stuck on the await.
-        await asyncio.sleep(0)
-
-        # Perform a garbage collection, the task created previously (for main()) should not be garbage collected,
-        # otherwise we will get a 'Task was destroyed but it is pending!' error message and the assertion at the end
-        # will fail.
-        gc.collect()
-
-        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await asyncio.sleep(0.1)
-
-        assert res == SAMPLE_ARGS
+    async def test_wait_and_event_fire(self, fire_args, fire_kwargs, expected_result):
+        fut = self.event.wait()
+        self.event.fire(*fire_args, **fire_kwargs)
+        assert await asyncio.wait_for(fut, timeout=0.1) == expected_result
 
     @pytest.mark.asyncio
-    async def test_await_syntax_when_fire_with_one_or_zero_arguments(self):
-        res = None
-
-        async def main():
-            nonlocal res
-            res = await self.event
-
-        for args, res_goal in zip((tuple(), (SAMPLE_ONE_ARG,)), (None, SAMPLE_ONE_ARG)):
-            main_task = asyncio.get_event_loop().create_task(main())
-            await asyncio.sleep(0)
-            wait_for_main = asyncio.wait_for(main_task, timeout=0.1)
-            self.event.fire(*args)
-            await wait_for_main
-            assert res == res_goal
-
-    @pytest.mark.asyncio
-    async def test_await_with_disconnect_all(self):
-        cancelled = False
-
-        async def main():
-            nonlocal cancelled
-
-            try:
-                await self.event
-            except asyncio.CancelledError:
-                cancelled = True
-
-        main_task = asyncio.get_event_loop().create_task(main())
-
-        # Yield to begin execution of `main()` so that it reaches the await statement, and pauses there.
-        await asyncio.sleep(0)
-
-        wait_for_f = asyncio.wait_for(main_task, timeout=0.1)
-
-        # Disconnect all handlers, which should disconnect the implicit handler automatically created and connected
-        # when using the `await <event>` syntax. This should throw an `asyncio.CancelledError` to `main()`, so that
-        # `main()` doesn't just wait endlessly.
+    async def test_wait_and_event_disconnect_all(self):
+        fut = self.event.wait()
         self.event.disconnect_all()
-        await wait_for_f
-
-        assert cancelled
+        assert fut.cancelled() is True
 
     def test_weak_ref(self):
         cb = Mock()
