@@ -70,7 +70,15 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
         self._update_view_nav_buttons_visibility()
 
     def _change_page(self, page_id: SomeWizardPageID) -> None:
-        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(page_id))
+        current_index = self._page_order.index(self._get_current_page_id())
+        change_to_index = self._page_order.index(page_id)
+
+        if change_to_index > current_index:
+            validate_current_page = True
+        else:
+            validate_current_page = False
+
+        self._loop.create_task(self._wizard_mod.activate_speaker_by_key(page_id, force=(not validate_current_page)))
 
     def _hdl_view_next_btn_clicked(self) -> None:
         next_page_id = self._get_next_page_id()
@@ -92,18 +100,13 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
         self._view.bn_back_btn_visible.set(self._get_prev_page_id() is not None)
         self._view.bn_next_btn_visible.set(self._get_next_page_id() is not None)
 
-    def _get_current_page_order_index(self) -> int:
-        current_page_id = self._get_current_page_id()
-        current_page_order_index = self._page_order.index(current_page_id)
-        return current_page_order_index
-
     def _get_current_page_id(self) -> SomeWizardPageID:
         current_page_id = self._wizard_mod.active_speaker_key
         assert current_page_id is not None
         return current_page_id
 
     def _get_next_page_id(self) -> Optional[SomeWizardPageID]:
-        current_page_order_index = self._get_current_page_order_index()
+        current_page_order_index = self._page_order.index(self._get_current_page_id())
         next_page_order_index = current_page_order_index + 1
 
         try:
@@ -112,7 +115,7 @@ class FooterNavigatorPresenter(Generic[SomeWizardPageID]):
             return None
 
     def _get_prev_page_id(self) -> Optional[SomeWizardPageID]:
-        current_page_order_index = self._get_current_page_order_index()
+        current_page_order_index = self._page_order.index(self._get_current_page_id())
         prev_page_order_index = current_page_order_index - 1
 
         if prev_page_order_index < 0:
