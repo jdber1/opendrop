@@ -122,37 +122,26 @@ class StackPresenter(Generic[KeyType, ChildType]):
         self.stack_model = stack_model
         self.stack_view = stack_view
 
-        self.stack_view_visible_child_proxy_bindable = AtomicBindableAdapter(setter=self.stack_view.set_visible_child)
-
         self.__event_connections = [
-            self.stack_model.on_child_added.connect(self.hdl_stack_model_child_added, immediate=True),
-            self.stack_model.on_child_removed.connect(self.hdl_stack_model_child_removed, immediate=True)
-        ]
+            self.stack_model.on_child_added.connect(self._hdl_stack_model_child_added, immediate=True),
+            self.stack_model.on_child_removed.connect(self._hdl_stack_model_child_removed, immediate=True),
+            self.stack_model.bn_visible_child_key.on_changed.connect(self._update_view_visible_child, immediate=True)]
 
-        self.__data_bindings = [
-            Binding(self.stack_model.bn_visible_child_key, self.stack_view_visible_child_proxy_bindable,
-                    mitm=AtomicBindingMITM(
-                        to_dst=self.stack_model.get_child_from_key
-                    ))
-        ]
+        self._update_view_visible_child()
 
-    def hdl_stack_model_child_added(self, key: KeyType, child: ChildType) -> None:
+    def _hdl_stack_model_child_added(self, key: KeyType, child: ChildType) -> None:
         self.stack_view.add_child(child)
 
-    def hdl_stack_model_child_removed(self, key: KeyType, child: ChildType) -> None:
+    def _hdl_stack_model_child_removed(self, key: KeyType, child: ChildType) -> None:
         self.stack_view.remove_child(child)
 
-    def hdl_stack_model_bn_visible_child_changed(self) -> None:
+    def _update_view_visible_child(self) -> None:
         self.stack_view.set_visible_child(
             self.stack_model.get_child_from_key(
-                self.stack_model.visible_child_key
-            )
-        )
+                self.stack_model.visible_child_key))
 
     def destroy(self) -> None:
         self.stack_view.clear()
 
         for ec in self.__event_connections:
             ec.disconnect()
-        for db in self.__data_bindings:
-            db.unbind()
