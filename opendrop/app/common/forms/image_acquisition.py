@@ -6,6 +6,7 @@ from opendrop.app.common.analysis_model.image_acquisition.default_types import D
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
+from opendrop.app.common.forms import Form
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel
 from opendrop.mytypes import Destroyable
@@ -900,5 +901,37 @@ class ImageAcquisitionSpeaker(Speaker):
         return True
 
     def do_deactivate(self) -> None:
+        assert self._root_presenter is not None
+        self._root_presenter.destroy()
+
+
+class ImageAcquisitionForm(Form):
+    _AVAILABLE_IMAGE_ACQUISITION_TYPES = tuple(DefaultImageAcquisitionImplType)
+    _CONFIG_SUBVIEW_FACTORY = create_view_for_impl_type
+    _CONFIG_SUBPRESENTER_FACTORY = create_presenter_for_impl_and_view
+
+    def __init__(self, image_acquisition: ImageAcquisition) -> None:
+        self._image_acquisition = image_acquisition
+        self._root_view = ImageAcquisitionRootView(ImageAcquisitionSpeaker._CONFIG_SUBVIEW_FACTORY)
+        self._root_presenter = None  # type: Optional[ImageAcquisitionRootPresenter]
+
+    @property
+    def view(self) -> GtkWidgetView:
+        return self._root_view
+
+    def validate(self) -> bool:
+        is_valid = self._image_acquisition.validator.check_is_valid()
+        self._root_view.errors_view.touch_all()
+        return is_valid
+
+    def activate(self) -> None:
+        self._root_presenter = ImageAcquisitionRootPresenter(
+            image_acquisition=self._image_acquisition,
+            create_presenter_for_impl_and_view=ImageAcquisitionSpeaker._CONFIG_SUBPRESENTER_FACTORY,
+            available_types=ImageAcquisitionSpeaker._AVAILABLE_IMAGE_ACQUISITION_TYPES,
+            view=self._root_view
+        )
+
+    def deactivate(self) -> None:
         assert self._root_presenter is not None
         self._root_presenter.destroy()

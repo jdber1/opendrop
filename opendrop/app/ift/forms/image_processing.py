@@ -7,13 +7,14 @@ import numpy as np
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionPreview
+from opendrop.app.common.forms import Form
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
     ImageAcquisitionPreviewConfigPresenter
 from opendrop.component.message_text_view import MessageTextView
 from opendrop.component.mouse_switch import MouseSwitchTarget, MouseSwitch
-from opendrop.component.stack import StackModel
+from opendrop.component.stack import StackModel, StackView, StackPresenter
 from opendrop.mytypes import Image, Rect2, Vector2
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
@@ -603,49 +604,50 @@ class IFTImageProcessingRootPresenter:
             db.unbind()
 
 
-class IFTImageProcessingSpeaker(Speaker):
+class IFTImageProcessingForm(Form):
     def __init__(self, image_annotator: IFTImageAnnotator,
-                 create_image_acquisition_preview: Callable[[], Optional[ImageAcquisitionPreview]],
-                 content_stack: StackModel) -> None:
-        super().__init__()
-
+                 create_image_acquisition_preview: Callable[[], Optional[ImageAcquisitionPreview]]) -> None:
         self._image_annotator = image_annotator
         self._create_image_acquisition_preview = create_image_acquisition_preview
 
-        self._content_stack = content_stack
+        self._stack_view = StackView()
+        self._stack_model = StackModel()
+        self._stack_presenter = None  # type: Optional[StackPresenter]
 
-        self._root_view = IFTImageProcessingRootView()
-        self._root_presenter = None  # type: Optional[IFTImageProcessingRootPresenter]
+        self._image_processing_view = IFTImageProcessingRootView()
+        self._image_processing_presenter = None  # type: Optional[IFTImageProcessingRootPresenter]
+        self._stack_model.add_child(self._image_processing_view, self._image_processing_view)
 
         self._no_preview_view = MessageTextView('Failed to create image acquisition preview.')
+        self._stack_model.add_child(self._no_preview_view, self._no_preview_view)
 
-        self._root_view_stack_key = object()
-        self._content_stack.add_child(self._root_view_stack_key, self._root_view)
+    @property
+    def view(self) -> GtkWidgetView:
+        return self._stack_view
 
-        self._no_preview_view_stack_key = object()
-        self._content_stack.add_child(self._no_preview_view_stack_key, self._no_preview_view)
+    def validate(self) -> bool:
+        is_valid = self._image_annotator.validator.check_is_valid()
+        self._image_processing_view.errors_view.touch_all()
+        return is_valid
 
-    def do_activate(self) -> None:
+    def activate(self) -> None:
+        self._stack_presenter = StackPresenter(self._stack_model, self._stack_view)
+
         preview = self._create_image_acquisition_preview()
         if preview is None:
-            self._content_stack.visible_child_key = self._no_preview_view_stack_key
+            # Make error message view visible
+            self._stack_model.visible_child_key = self._no_preview_view
             return
 
-        self._root_presenter = IFTImageProcessingRootPresenter(
-            self._image_annotator, preview, self._root_view)
+        self._image_processing_presenter = IFTImageProcessingRootPresenter(
+            self._image_annotator, preview, self._image_processing_view)
 
-        # Make root view visible.
-        self._content_stack.visible_child_key = self._root_view_stack_key
+        # Make image processing view visible
+        self._stack_model.visible_child_key = self._image_processing_view
 
-    async def do_request_deactivate(self) -> bool:
-        is_valid = self._image_annotator.validator.check_is_valid()
-        if is_valid:
-            return False
+    def deactivate(self) -> None:
+        self._stack_presenter.destroy()
 
-        self._root_view.errors_view.touch_all()
-        return True
-
-    def do_deactivate(self) -> None:
-        if self._root_presenter is not None:
-            self._root_presenter.destroy()
-            self._root_presenter = None
+        if self._image_processing_presenter is not None:
+            self._image_processing_presenter.destroy()
+            self._image_processing_presenter = None

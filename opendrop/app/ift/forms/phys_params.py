@@ -2,13 +2,12 @@ from typing import Optional
 
 from gi.repository import Gtk, Gdk
 
+from opendrop.app.common.forms import Form
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.component.stack import StackModel
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
-from opendrop.utility.speaker import Speaker
 from opendrop.widgets.float_entry import FloatEntry
 
 
@@ -242,37 +241,28 @@ class IFTPhysicalParametersRootPresenter:
             db.unbind()
 
 
-class IFTPhysicalParametersSpeaker(Speaker):
-    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory, content_stack: StackModel) -> None:
-        super().__init__()
-
+class IFTPhysicalParametersForm(Form):
+    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory) -> None:
         self._phys_params_factory = phys_params_factory
-
-        self._content_stack = content_stack
 
         self._root_view = IFTPhysicalParametersRootView()
         self._root_presenter = None  # type: Optional[IFTPhysicalParametersRootPresenter]
 
-        self._root_view_stack_key = object()
-        self._content_stack.add_child(self._root_view_stack_key, self._root_view)
+    @property
+    def view(self) -> GtkWidgetView:
+        return self._root_view
 
-    def do_activate(self) -> None:
+    def validate(self) -> bool:
+        is_valid = self._phys_params_factory.validator.check_is_valid()
+        self._root_view.errors_view.touch_all()
+        return is_valid
+
+    def activate(self) -> None:
         self._root_presenter = IFTPhysicalParametersRootPresenter(
             phys_params_factory=self._phys_params_factory,
             view=self._root_view
         )
 
-        # Make root view visible.
-        self._content_stack.visible_child_key = self._root_view_stack_key
-
-    async def do_request_deactivate(self) -> bool:
-        is_valid = self._phys_params_factory.validator.check_is_valid()
-        if is_valid:
-            return False
-
-        self._root_view.errors_view.touch_all()
-        return True
-
-    def do_deactivate(self) -> None:
+    def deactivate(self) -> None:
         assert self._root_presenter is not None
         self._root_presenter.destroy()
