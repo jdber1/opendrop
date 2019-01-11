@@ -91,6 +91,7 @@ class StackModel(Generic[KeyType, ChildType]):
 class StackView(GtkWidgetView[Gtk.Stack]):
     def __init__(self) -> None:
         self.widget = Gtk.Stack()
+        self.widget.show()
 
     def add_child(self, view: GtkWidgetView) -> None:
         self.widget.add(view.widget)
