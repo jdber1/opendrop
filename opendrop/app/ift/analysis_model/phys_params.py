@@ -34,15 +34,11 @@ class IFTPhysicalParametersFactory:
             inner_density = self._target.bn_inner_density.get()
             if inner_density is None:
                 return 'Inner density cannot be empty'
-            elif not _is_positive_float(inner_density):
-                return 'Inner density must be greater than 0'
 
         def _get_outer_density_err_msg(self) -> Optional[str]:
             outer_density = self._target.bn_outer_density.get()
             if outer_density is None:
                 return 'Outer density cannot be empty'
-            elif not _is_positive_float(outer_density):
-                return 'Outer density must be greater than 0'
 
         def _get_needle_width_err_msg(self) -> Optional[str]:
             needle_width = self._target.bn_needle_width.get()
@@ -86,10 +82,17 @@ class IFTPhysicalParametersFactory:
         needle_width = self.needle_width
         gravity = self.gravity
 
-        for name, val in ({'inner_density': inner_density, 'outer_density': outer_density, 'needle_width': needle_width,
-                          'gravity': gravity}).items():
-            if val is None or math.isnan(val) or math.isinf(val) or (val <= 0):
-                raise ValueError('{} must be a positive real float, currently `{}`'.format(name, val))
+        if inner_density is None or not math.isfinite(inner_density) or inner_density < 0:
+            raise ValueError('inner_density must be a non-negative real float, currently `{}`'.format(inner_density))
+
+        if outer_density is None or not math.isfinite(outer_density) or outer_density < 0:
+            raise ValueError('outer_density must be a non-negative real float, currently `{}`'.format(outer_density))
+
+        if needle_width is None or not math.isfinite(needle_width) or needle_width <= 0:
+            raise ValueError('needle_width must be a positive real float, currently `{}`'.format(needle_width))
+
+        if gravity is None or not math.isfinite(gravity) or gravity <= 0:
+            raise ValueError('needle_width must be a positive real float, currently `{}`'.format(gravity))
 
         return IFTPhysicalParameters(
             inner_density,
