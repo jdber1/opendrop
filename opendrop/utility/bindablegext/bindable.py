@@ -44,6 +44,9 @@ class AtomicBindableAdapterGPropLink:
         self._bn.getter = None
         self._bn.setter = None
 
+    def __del__(self):
+        self.unlink()
+
 
 # Give the class a more 'function-y' sounding name.
 link_atomic_bn_adapter_to_g_prop = AtomicBindableAdapterGPropLink
