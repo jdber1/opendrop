@@ -1,3 +1,4 @@
+import weakref
 from typing import Any
 
 from gi.repository import GObject
@@ -18,12 +19,20 @@ class AtomicBindableAdapterGPropLink:
                     .format(bn)
             )
 
+        self._alive = True
         self._bn = bn
+
+        # For some reason, it seems like the GObject can be garbage collected before this object is garbage collected,
+        # the following workaround uses _g_obj_wr to check if g_obj has been garbage collected by seeing if _g_obj_wr()
+        # returns None.
         self._g_obj = g_obj
+        self._g_obj_wr = weakref.ref(g_obj)
+
         self._prop_name = prop_name
 
         bn.getter = self._getter
         bn.setter = self._setter
+
         self._hdl_g_obj_notify_id = self._g_obj.connect('notify::{}'.format(prop_name), self._hdl_g_obj_notify)
 
     def _getter(self) -> Any:
@@ -35,14 +44,25 @@ class AtomicBindableAdapterGPropLink:
         self._g_obj.handler_unblock(self._hdl_g_obj_notify_id)
 
     def _hdl_g_obj_notify(self, g_obj: GObject.Object, pspec: GObject.GParamSpec) -> None:
+        if not self._alive:
+            return
+
         self._bn.poke()
 
-    def unlink(self):
-        if self._g_obj.handler_is_connected(self._hdl_g_obj_notify_id):
+    @property
+    def _is_g_obj_garbage_collected(self) -> bool:
+        return self._g_obj_wr() is None
+
+    def unlink(self, *_):
+        if not self._alive:
+            return
+
+        if not self._is_g_obj_garbage_collected and self._g_obj.handler_is_connected(self._hdl_g_obj_notify_id):
             self._g_obj.disconnect(self._hdl_g_obj_notify_id)
 
         self._bn.getter = None
         self._bn.setter = None
+        self._alive = False
 
     def __del__(self):
         self.unlink()
