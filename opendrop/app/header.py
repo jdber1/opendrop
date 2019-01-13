@@ -5,7 +5,7 @@ from gi.repository import Gtk, GdkPixbuf
 from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.res import res
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, BaseAtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
