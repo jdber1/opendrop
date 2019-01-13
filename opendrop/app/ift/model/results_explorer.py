@@ -1,6 +1,6 @@
 from typing import Optional
 
-from opendrop.app.ift.analysis_model.analyser import IFTAnalysis, IFTDropAnalysis
+from opendrop.app.ift.model.analyser import IFTAnalysis, IFTDropAnalysis
 from opendrop.utility.bindable.bindable import ListBindable, MutableSequenceBindable
 
 

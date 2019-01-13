@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.content.image_acquisition import _ImageAcquisitionFormPresenter
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 

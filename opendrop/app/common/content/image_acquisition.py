@@ -2,9 +2,9 @@ from typing import Any, Generic, TypeVar, Callable, Optional, Sequence, MutableS
 
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.app.common.analysis_model.image_acquisition.default_types import DefaultImageAcquisitionImplType, \
+from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType, \
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable

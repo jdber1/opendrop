@@ -2,7 +2,7 @@ from typing import Optional
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
+from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding

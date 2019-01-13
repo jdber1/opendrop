@@ -10,7 +10,7 @@ from typing import Union, Sequence, MutableSequence, Tuple, Optional, Any, TypeV
 import cv2
 import numpy as np
 
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionImplType, \
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisitionImplType, \
     ImageAcquisitionImpl, ImageAcquisitionPreview
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter, \

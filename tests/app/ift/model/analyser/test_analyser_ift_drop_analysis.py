@@ -7,7 +7,7 @@ import pytest
 from scipy import interpolate
 from scipy.spatial import distance
 
-from opendrop.app.ift.analysis_model.analyser import IFTDropAnalysis, IFTImageAnnotations, IFTPhysicalParameters
+from opendrop.app.ift.model.analyser import IFTDropAnalysis, IFTImageAnnotations, IFTPhysicalParameters
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Rect2
 from opendrop.utility.events import Event

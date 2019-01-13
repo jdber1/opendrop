@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
+from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.mytypes import Rect2
 
 

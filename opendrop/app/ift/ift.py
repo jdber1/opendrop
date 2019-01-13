@@ -4,16 +4,16 @@ from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optiona
 
 from gi.repository import Gtk
 
-from opendrop.app.common.analysis_model.image_acquisition.default_types import DefaultImageAcquisitionImplType
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
+from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
 from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
-from opendrop.app.ift.analysis_model.analyser import IFTAnalysis
-from opendrop.app.ift.analysis_model.analysis_factory import IFTAnalysisFactory
-from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
-from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
-from opendrop.app.ift.analysis_model.results_explorer import IFTResultsExplorer
+from opendrop.app.ift.model.analyser import IFTAnalysis
+from opendrop.app.ift.model.analysis_factory import IFTAnalysisFactory
+from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
+from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
+from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
 from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
 from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter

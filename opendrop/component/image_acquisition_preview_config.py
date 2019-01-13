@@ -2,7 +2,7 @@ from typing import Optional, Callable, Any
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.common.analysis_model.image_acquisition.default_types import \
+from opendrop.app.common.model.image_acquisition.default_types import \
     ImageSequenceImageAcquisitionPreviewConfig
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable

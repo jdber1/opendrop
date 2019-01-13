@@ -1,6 +1,6 @@
 import cv2
 
-from opendrop.app.common.analysis_model.image_acquisition.default_types import USBCamera
+from opendrop.app.common.model.image_acquisition.default_types import USBCamera
 
 CAMERA_INDEX_TO_TEST = 0
 

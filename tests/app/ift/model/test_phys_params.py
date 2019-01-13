@@ -3,7 +3,7 @@ import math
 
 import pytest
 
-from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
+from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 
 
 def _is_valid_data(inner_density, outer_density, needle_width, gravity):

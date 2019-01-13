@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import pytest
 
-from opendrop.app.common.analysis_model.image_acquisition.default_types import \
+from opendrop.app.common.model.image_acquisition.default_types import \
     BaseImageSequenceImageAcquisitionImpl, LocalImagesImageAcquisitionImpl, BaseCameraImageAcquisitionImpl, Camera, \
     CameraCaptureError
 from tests import samples

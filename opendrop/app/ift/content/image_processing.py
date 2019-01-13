@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionPreview
-from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisitionPreview
+from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
     ImageAcquisitionPreviewConfigPresenter

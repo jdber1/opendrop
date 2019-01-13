@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from opendrop.app.ift.analysis_model.image_annotator.image_annotator import _get_drop_contour
+from opendrop.app.ift.model.image_annotator.image_annotator import _get_drop_contour
 
 IMAGE_FILE = Path(__file__).parent/'sample_drop_outline.png'
 

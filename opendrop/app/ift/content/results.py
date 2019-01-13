@@ -2,8 +2,8 @@ from typing import Optional
 
 from gi.repository import Gtk
 
-from opendrop.app.ift.analysis_model.analyser import IFTDropAnalysis
-from opendrop.app.ift.analysis_model.results_explorer import IFTResultsExplorer
+from opendrop.app.ift.model.analyser import IFTDropAnalysis
+from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
 
 
