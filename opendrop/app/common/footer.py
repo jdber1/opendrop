@@ -63,9 +63,15 @@ class LinearNavigatorFooterPresenter:
         self._update_view_nav_buttons_visibility()
 
     def _hdl_view_back_btn_clicked(self) -> None:
+        if self._back is None:
+            return
+
         self._back()
 
     def _hdl_view_next_btn_clicked(self) -> None:
+        if self._next is None:
+            return
+
         self._next()
 
     def _update_view_nav_buttons_visibility(self) -> None:
@@ -75,24 +81,3 @@ class LinearNavigatorFooterPresenter:
     def destroy(self) -> None:
         for ec in self.__event_connections:
             ec.disconnect()
-
-
-class LinearNavigatorFooter:
-    def __init__(self, *, back: Optional[Callable] = None, next: Optional[Callable] = None) -> None:
-        self._back = back
-        self._next = next
-
-        self._view = LinearNavigatorFooterView()
-        self._presenter = None  # type: Optional[LinearNavigatorFooterPresenter]
-
-    @property
-    def view(self) -> GtkWidgetView:
-        return self._view
-
-    def activate(self) -> None:
-        self._presenter = LinearNavigatorFooterPresenter(back=self._back, next=self._next, view=self._view)
-
-    def deactivate(self) -> None:
-        assert self._presenter is not None
-        self._presenter.destroy()
-        self._presenter = None
