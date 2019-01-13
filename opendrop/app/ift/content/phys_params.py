@@ -2,7 +2,6 @@ from typing import Optional
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.common.forms import Form
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
@@ -11,7 +10,7 @@ from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_p
 from opendrop.widgets.float_entry import FloatEntry
 
 
-class IFTPhysicalParametersRootView(GtkWidgetView[Gtk.Grid]):
+class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
     STYLE = '''
     .small-pad {
          min-height: 0px;
@@ -34,7 +33,7 @@ class IFTPhysicalParametersRootView(GtkWidgetView[Gtk.Grid]):
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     class ErrorsView:
-        def __init__(self, view: 'IFTPhysicalParametersRootView') -> None:
+        def __init__(self, view: 'IFTPhysicalParametersFormView') -> None:
             self._view = view
 
             self.bn_inner_density_err_msg = AtomicBindableAdapter(
@@ -156,6 +155,9 @@ class IFTPhysicalParametersRootView(GtkWidgetView[Gtk.Grid]):
         self.widget.show_all()
 
         # Bindables
+        self.bn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
+        link_atomic_bn_adapter_to_g_prop(self.bn_visible, self.widget, 'visible')
+
         self.bn_inner_density = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
         self.bn_outer_density = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
         self.bn_needle_width = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
@@ -169,10 +171,10 @@ class IFTPhysicalParametersRootView(GtkWidgetView[Gtk.Grid]):
         self.errors_view = self.ErrorsView(self)
 
 
-class IFTPhysicalParametersRootPresenter:
+class _IFTPhysicalParametersFormPresenter:
     class ErrorsPresenter:
         def __init__(self, validator: IFTPhysicalParametersFactory.Validator,
-                     view: IFTPhysicalParametersRootView.ErrorsView) -> None:
+                     view: IFTPhysicalParametersFormView.ErrorsView) -> None:
             self._validator = validator
             self._view = view
 
@@ -225,7 +227,7 @@ class IFTPhysicalParametersRootPresenter:
             for ec in self.__event_connections:
                 ec.disconnect()
 
-    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory, view: IFTPhysicalParametersRootView) -> None:
+    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
         self._errors_presenter = self.ErrorsPresenter(phys_params_factory.validator, view.errors_view)
         self.__data_bindings = [
             Binding(phys_params_factory.bn_inner_density, view.bn_inner_density),
@@ -241,28 +243,48 @@ class IFTPhysicalParametersRootPresenter:
             db.unbind()
 
 
-class IFTPhysicalParametersForm(Form):
-    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory) -> None:
-        self._phys_params_factory = phys_params_factory
+class IFTPhysicalParametersFormPresenter:
+    def __init__(self, phys_params: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
+        self._phys_params = phys_params
+        self._enabled = False
+        self._destroyed = False
 
-        self._root_view = IFTPhysicalParametersRootView()
-        self._root_presenter = None  # type: Optional[IFTPhysicalParametersRootPresenter]
+        self._root_view = view
+        self._root_presenter = None  # type: Optional[_IFTPhysicalParametersFormPresenter]
 
-    @property
-    def view(self) -> GtkWidgetView:
-        return self._root_view
+        self.__event_connections = []
 
     def validate(self) -> bool:
-        is_valid = self._phys_params_factory.validator.check_is_valid()
+        is_valid = self._phys_params.validator.check_is_valid()
         self._root_view.errors_view.touch_all()
         return is_valid
 
-    def activate(self) -> None:
-        self._root_presenter = IFTPhysicalParametersRootPresenter(
-            phys_params_factory=self._phys_params_factory,
-            view=self._root_view
-        )
+    def enter(self) -> None:
+        if self._enabled or self._destroyed:
+            return
 
-    def deactivate(self) -> None:
-        assert self._root_presenter is not None
+        self._root_presenter = _IFTPhysicalParametersFormPresenter(
+            phys_params_factory=self._phys_params,
+            view=self._root_view)
+        self._enabled = True
+
+    def leave(self) -> None:
+        if not self._enabled or self._destroyed:
+            return
+
+        # Reset the highlighted errors.
+        self._root_view.errors_view.reset_touches()
         self._root_presenter.destroy()
+
+        self._enabled = False
+
+    def destroy(self) -> None:
+        assert not self._destroyed
+
+        if self._enabled:
+            self.leave()
+
+        for ec in self.__event_connections:
+            ec.disconnect()
+
+        self._destroyed = True

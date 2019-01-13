@@ -1,28 +1,30 @@
 import asyncio
-import functools
-from typing import Any, Callable, MutableSequence, Sequence, TypeVar, Type, Union
+from operator import attrgetter
+from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional
 
 from gi.repository import Gtk
 
 from opendrop.app.common.analysis_model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
-from opendrop.app.common.forms import Form
-from opendrop.app.common.forms.image_acquisition import ImageAcquisitionForm
-from opendrop.app.common.page.extra import ActivePageIndicatorSidebarPresenter
-from opendrop.app.common.page.page import Page
-from opendrop.app.common.sidebar import WizardSidebarView
+from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
+from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter
+from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
+from opendrop.app.ift.analysis_model.analysis_factory import IFTAnalysisFactory
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
-from opendrop.app.common.footer import LinearNavigatorFooter
-from opendrop.app.ift.forms.image_processing import IFTImageProcessingForm
-from opendrop.app.ift.forms.phys_params import IFTPhysicalParametersForm
-from opendrop.app.ift.forms.results import IFTResultsPageContent
+from opendrop.app.ift.analysis_model.results_explorer import IFTResultsExplorer
+from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
+from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
+from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.component.stack import StackModel, StackView, StackPresenter
+from opendrop.component.stack import StackModel, StackView
 from opendrop.component.wizard.wizard import WizardPageID
+from opendrop.iftcalc.analyser import IFTAnalysis
+from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.events import EventConnection
+from opendrop.utility.option import MutuallyExclusiveOptions
 from opendrop.utility.speaker import Speaker
-from opendrop.utility.switch import Switch, RadioSwitchCoordinator
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -49,51 +51,225 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
     def __init__(self) -> None:
         self.widget = Gtk.Grid()
 
+        # Page views
+        self.content_image_acquisition = ImageAcquisitionFormView()
+        self.footer_image_acquisition = LinearNavigatorFooterView()
+
+        self.content_phys_params = IFTPhysicalParametersFormView()
+        self.footer_phys_params = LinearNavigatorFooterView()
+
+        self.content_image_processing = IFTImageProcessingFormView()
+        self.footer_image_processing = LinearNavigatorFooterView()
+
+        self.content_results = IFTResultsView()
+        self.footer_results = LinearNavigatorFooterView()
+
         # Sidebar
-        self.sidebar_view = WizardSidebarView()
+        self.sidebar_view = TasksSidebarView(attrgetter('title'))  # type: TasksSidebarView[IFTWizardPageID]
         self.widget.attach(self.sidebar_view.widget, 0, 0, 1, 1)
 
-        # Main content area
-        self.content_stack_view = StackView()
-        self.widget.attach(self.content_stack_view.widget, 1, 0, 1, 1)
+        # Main content container
+        self._content_view = StackView()
+        self.widget.attach(self._content_view.widget, 1, 0, 1, 1)
 
-        # Footer separator
+        self._content_view.add_child(self.content_image_acquisition)
+        self._content_view.add_child(self.content_phys_params)
+        self._content_view.add_child(self.content_image_processing)
+        self._content_view.add_child(self.content_results)
+
+        # Main content and Footer separator
         self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 2, 1)
 
-        # Footer
-        self.footer_stack_view = StackView()
-        self.widget.attach(self.footer_stack_view.widget, 0, 2, 2, 1)
+        # Footer container
+        self._footer_view = StackView()
+        self.widget.attach(self._footer_view.widget, 0, 2, 2, 1)
+
+        self._footer_view.add_child(self.footer_image_acquisition)
+        self._footer_view.add_child(self.footer_phys_params)
+        self._footer_view.add_child(self.footer_image_processing)
+        self._footer_view.add_child(self.footer_results)
 
         self.widget.show_all()
 
+    active_content_view = property()
+    active_footer_view = property()
 
-class PagesPresenter:
-    def __init__(self, pages: Sequence[Page], content_stack_view: StackView, footer_stack_view: StackView) -> None:
-        self._pages = pages
-        self._content_stack_view = content_stack_view
-        self._footer_stack_view = footer_stack_view
+    @active_content_view.setter
+    def active_content_view(self, view: GtkWidgetView) -> None:
+        self._content_view.set_visible_child(view)
 
-        self._content_stack_model = StackModel()
-        self._footer_stack_model = StackModel()
+    @active_footer_view.setter
+    def active_footer_view(self, view: GtkWidgetView) -> None:
+        self._footer_view.set_visible_child(view)
 
-        for page in self._pages:
-            self._content_stack_model.add_child(page, page.content_view)
-            self._footer_stack_model.add_child(page, page.footer_view)
-            page.control_switch.on_turned_on.connect(functools.partial(self._hdl_page_turned_on, page),
-                                                     strong_ref=True, immediate=True)
-            if page.control_switch.is_on:
-                self._hdl_page_turned_on(page)
 
-        self._content_stack_presenter = StackPresenter(self._content_stack_model, self._content_stack_view)
-        self._footer_stack_presenter = StackPresenter(self._footer_stack_model, self._footer_stack_view)
+class IfThen:
+    def __init__(self, cond: Callable, then: Callable) -> None:
+        self._cond = cond
+        self._then = then
 
-    def _hdl_page_turned_on(self, page: Page) -> None:
-        self._content_stack_model.visible_child_key = page
-        self._footer_stack_model.visible_child_key = page
+    def __call__(self) -> None:
+        if self._cond():
+            self._then()
+
+
+class IfThenElse:
+    def __init__(self, cond: Callable, then: Callable, else_: Callable) -> None:
+        self._cond = cond
+        self._then = then
+        self._else = else_
+
+    def __call__(self) -> None:
+        if self._cond():
+            self._then()
+        else:
+            self._else()
+
+
+class IFTRootPresenter:
+    def __init__(self, image_acquisition: ImageAcquisition, phys_params: IFTPhysicalParametersFactory,
+                 image_annotator: IFTImageAnnotator, create_analysis: Callable[[], IFTAnalysis],
+                 results_explorer: IFTResultsExplorer, view: IFTRootView):
+        self._view = view
+        self._create_analysis = create_analysis
+        self._results_explorer = results_explorer
+
+        self.__cleanup_tasks = []
+        event_connections = []  # type: MutableSequence[EventConnection]
+
+        self._page_option_image_acquisition = AtomicBindableVar(False)
+        self._page_option_phys_params = AtomicBindableVar(False)
+        self._page_option_image_processing = AtomicBindableVar(False)
+        self._page_option_results = AtomicBindableVar(False)
+
+        # Manage options so that only one can be set to True at a time.
+        MutuallyExclusiveOptions((
+            self._page_option_image_acquisition,
+            self._page_option_phys_params,
+            self._page_option_image_processing,
+            self._page_option_results))
+
+        # Main content
+        # Image acquisition
+        self._content_image_acquisition = ImageAcquisitionFormPresenter(
+            image_acquisition=image_acquisition,
+            view=self._view.content_image_acquisition)
+        self.__cleanup_tasks.append(self._content_image_acquisition.destroy)
+
+        # Physical parameters
+        self._content_phys_params = IFTPhysicalParametersFormPresenter(
+            phys_params=phys_params,
+            view=self._view.content_phys_params)
+        self.__cleanup_tasks.append(self._content_phys_params.destroy)
+
+        # Image processing
+        self._content_image_processing = IFTImageProcessingFormPresenter(
+            image_annotator=image_annotator,
+            create_image_acquisition_preview=_try_except(
+                func=image_acquisition.create_preview,
+                exc=ValueError, default=None),
+            view=self._view.content_image_processing)
+        self.__cleanup_tasks.append(self._content_image_processing.destroy)
+
+        # Results
+        self._content_results = IFTResultsPresenter(
+            results_explorer=results_explorer,
+            view=self._view.content_results)
+        self.__cleanup_tasks.append(self._content_results.destroy)
+
+        # Footer
+        # Image acquisition
+        self._footer_image_acquisition = LinearNavigatorFooterPresenter(
+            back=None,
+            next=IfThen(cond=self._content_image_acquisition.validate,
+                        then=lambda: self._page_option_phys_params.set(True)),
+            view=self._view.footer_image_acquisition)
+        self.__cleanup_tasks.append(self._footer_image_acquisition.destroy)
+
+        # Physical parameters
+        self._footer_phys_params = LinearNavigatorFooterPresenter(
+            back=lambda: self._page_option_image_acquisition.set(True),
+            next=IfThen(cond=self._content_phys_params.validate,
+                        then=lambda: self._page_option_image_processing.set(True)),
+            view=self._view.footer_phys_params)
+        self.__cleanup_tasks.append(self._footer_phys_params.destroy)
+
+        # Image processing
+        self._footer_image_processing = LinearNavigatorFooterPresenter(
+            back=lambda: self._page_option_phys_params.set(True),
+            next=IfThen(cond=self._content_image_processing.validate,
+                        then=self._user_wants_to_start_analysis),
+            view=self._view.footer_image_processing)
+        self.__cleanup_tasks.append(self._footer_image_processing.destroy)
+
+        # Sidebar
+        self._sidebar_presenter = TasksSidebarPresenter(
+            task_and_is_active=(
+                (IFTWizardPageID.IMAGE_ACQUISITION, self._page_option_image_acquisition),
+                (IFTWizardPageID.PHYS_PARAMS, self._page_option_phys_params),
+                (IFTWizardPageID.IMAGE_PROCESSING, self._page_option_image_processing),
+                (IFTWizardPageID.RESULTS, self._page_option_results)),
+            view=self._view.sidebar_view)
+        self.__cleanup_tasks.append(self._sidebar_presenter.destroy)
+
+        event_connections.extend([
+            self._page_option_image_acquisition.on_changed.connect(self._hdl_page_option_image_acquisition_changed,
+                                                                   immediate=True),
+            self._page_option_phys_params.on_changed.connect(self._hdl_page_option_phys_params_changed,
+                                                             immediate=True),
+            self._page_option_image_processing.on_changed.connect(self._hdl_page_option_image_processing_changed,
+                                                                  immediate=True),
+            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed,
+                                                         immediate=True),
+        ])
+
+        self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
+
+        # Activate the first page.
+        self._page_option_image_acquisition.set(True)
+
+    def _hdl_page_option_image_acquisition_changed(self) -> None:
+        if self._page_option_image_acquisition.get() is True:
+            self._content_image_acquisition.enter()
+            self._view.active_content_view = self._view.content_image_acquisition
+            self._view.active_footer_view = self._view.footer_image_acquisition
+        else:
+            self._content_image_acquisition.leave()
+
+    def _hdl_page_option_phys_params_changed(self) -> None:
+        if self._page_option_phys_params.get() is True:
+            self._content_phys_params.enter()
+            self._view.active_content_view = self._view.content_phys_params
+            self._view.active_footer_view = self._view.footer_phys_params
+        else:
+            self._content_phys_params.leave()
+
+    def _hdl_page_option_image_processing_changed(self) -> None:
+        if self._page_option_image_processing.get() is True:
+            self._content_image_processing.enter()
+            self._view.active_content_view = self._view.content_image_processing
+            self._view.active_footer_view = self._view.footer_image_processing
+        else:
+            self._content_image_processing.leave()
+
+    def _hdl_page_option_results_changed(self) -> None:
+        if self._page_option_results.get() is True:
+            self._content_results.enter()
+            self._view.active_content_view = self._view.content_results
+            self._view.active_footer_view = self._view.footer_results
+        else:
+            pass
+            self._content_results.leave()
+
+    def _user_wants_to_start_analysis(self) -> None:
+        analysis = self._create_analysis()
+        self._results_explorer.analysis = analysis
+        self._page_option_results.set(True)
 
     def destroy(self) -> None:
-        self._content_stack_presenter.destroy()
-        self._footer_stack_presenter.destroy()
+        for f in self.__cleanup_tasks:
+            f()
+        self.__cleanup_tasks = []
 
 
 class IFTSpeaker(Speaker):
@@ -101,9 +277,11 @@ class IFTSpeaker(Speaker):
         super().__init__()
 
         self._loop = asyncio.get_event_loop()
-        self._cleanup_tasks = []  # type: MutableSequence[Callable[[], Any]]
+        self.__cleanup_tasks = []  # type: MutableSequence[Callable[[], Any]]
 
         self._root_view = IFTRootView()
+        self._root_presenter = None  # type: Optional[IFTRootPresenter]
+
         self._root_view_stack_key = object()
         self._root_view_parent_stack = parent_content_stack
         self._root_view_parent_stack.add_child(self._root_view_stack_key, self._root_view)
@@ -116,8 +294,9 @@ class IFTSpeaker(Speaker):
 
         # Image acquisition
         image_acquisition = ImageAcquisition()
-        self._cleanup_tasks.append(image_acquisition.destroy)
-        # Set the default image acquisition implementation to be 'local images'
+        self.__cleanup_tasks.append(image_acquisition.destroy)
+
+        # Set the initial image acquisition implementation to be 'local images'
         image_acquisition.type = DefaultImageAcquisitionImplType.LOCAL_IMAGES
 
         # Physical parameters
@@ -126,95 +305,28 @@ class IFTSpeaker(Speaker):
         # Image annotator
         image_annotator = IFTImageAnnotator(image_acquisition.get_image_size_hint)
 
-        phys_params_image_annotator_needle_width_binding = \
-            Binding(phys_params_factory.bn_needle_width, image_annotator.bn_needle_width)
-        self._cleanup_tasks.append(phys_params_image_annotator_needle_width_binding.unbind)
+        tmp = Binding(phys_params_factory.bn_needle_width, image_annotator.bn_needle_width)
+        self.__cleanup_tasks.append(tmp.unbind)
 
-        # Create the wizard pages
-        pages = self._create_wizard_pages(image_acquisition, phys_params_factory, image_annotator)
+        # Analysis factory
+        analysis_factory = IFTAnalysisFactory(image_acquisition, phys_params_factory, image_annotator)
 
-        # Manage each page's control switch so that only one can be 'on' at a time.
-        RadioSwitchCoordinator([page.control_switch for page in pages])
+        # Results explorer
+        results_explorer = IFTResultsExplorer()
 
-        # Activate the first page
-        pages[0].control_switch.on()
-
-        # Create core UI presenters
-        pages_presenter = PagesPresenter(pages, self._root_view.content_stack_view, self._root_view.footer_stack_view)
-        self._cleanup_tasks.append(pages_presenter.destroy)
-
-        # Sidebar
-        sidebar_presenter = ActivePageIndicatorSidebarPresenter(pages, self._root_view.sidebar_view)
-        self._cleanup_tasks.append(sidebar_presenter.destroy)
+        self._root_presenter = IFTRootPresenter(
+            image_acquisition=image_acquisition,
+            phys_params=phys_params_factory,
+            image_annotator=image_annotator,
+            create_analysis=analysis_factory.create_analysis,
+            results_explorer=results_explorer,
+            view=self._root_view)
+        self.__cleanup_tasks.append(self._root_presenter.destroy)
 
         # Make root view visible.
         self._root_view_parent_stack.visible_child_key = self._root_view_stack_key
 
     def do_deactivate(self):
-        for f in self._cleanup_tasks:
+        for f in self.__cleanup_tasks:
             f()
-
-        self._cleanup_tasks = []
-
-    @staticmethod
-    def _create_wizard_pages(image_acquisition: ImageAcquisition, phys_params_factory: IFTPhysicalParametersFactory,
-                             image_annotator: IFTImageAnnotator) \
-            -> Sequence[Page]:
-        # Page control switches
-        image_acquisition_page_switch = Switch()
-        phys_params_page_switch = Switch()
-        image_processing_page_switch = Switch()
-        results_page_switch = Switch()
-
-        # Page contents
-        image_acquisition_form = ImageAcquisitionForm(image_acquisition)
-        phys_params_form = IFTPhysicalParametersForm(phys_params_factory)
-        image_processing_form = IFTImageProcessingForm(
-            image_annotator, _try_except(image_acquisition.create_preview, exc=ValueError, default=None))
-        results_page_content = IFTResultsPageContent()
-
-        class ValidateFormThenDoThis:
-            def __init__(self, form: Form, then: Callable) -> None:
-                self._form = form
-                self._then = then
-
-            def __call__(self) -> None:
-                if self._form.validate():
-                    self._then()
-
-        # Page footers
-        image_acquisition_footer = LinearNavigatorFooter(
-            next=ValidateFormThenDoThis(image_acquisition_form, then=phys_params_page_switch.on))
-        phys_params_footer = LinearNavigatorFooter(
-            next=ValidateFormThenDoThis(phys_params_form, then=image_processing_page_switch.on),
-            back=image_acquisition_page_switch.on)
-        image_processing_footer = LinearNavigatorFooter(
-            next=ValidateFormThenDoThis(image_processing_form, then=results_page_switch.on),
-            back=phys_params_page_switch.on)
-        results_page_footer = LinearNavigatorFooter(
-            back=image_processing_page_switch.on
-        )
-
-        pages = [
-            Page(
-                name='Image acquisition',
-                control_switch=image_acquisition_page_switch,
-                content=image_acquisition_form,
-                footer=image_acquisition_footer),
-            Page(
-                name='Physical parameters',
-                control_switch=phys_params_page_switch,
-                content=phys_params_form,
-                footer=phys_params_footer),
-            Page(
-                name='Image processing',
-                control_switch=image_processing_page_switch,
-                content=image_processing_form,
-                footer=image_processing_footer),
-            Page(
-                name='Results',
-                control_switch=results_page_switch,
-                content=results_page_content,
-                footer=results_page_footer)]
-
-        return pages
+        self.__cleanup_tasks = []

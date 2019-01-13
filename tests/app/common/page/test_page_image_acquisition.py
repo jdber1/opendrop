@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
-from opendrop.app.common.page.image_acquisition import ImageAcquisitionRootPresenter
+from opendrop.app.common.content.image_acquisition import _ImageAcquisitionFormPresenter
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 
 
@@ -9,7 +9,7 @@ def test_root_presenter_connects_new_image_acquisition_impl_to_child_view():
     image_acquisition = ImageAcquisition()
     mock_view = Mock()
     mock_create_presenter_for_impl_and_view = Mock()
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
 
     mock_child_view = Mock()
     mock_image_acquisition_impl_type = Mock()
@@ -44,7 +44,7 @@ def test_root_presenter_connects_existing_image_acquisition_impl_to_child_view()
     image_acquisition.type = mock_image_acquisition_impl_type
 
     # Then initialise the presenter
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
 
     # Assert that root presenter tells root view to show configuration view of the existing type
     mock_view.configure_for.assert_called_once_with(mock_image_acquisition_impl_type)
@@ -59,7 +59,7 @@ def test_root_presenter_initialised_with_image_acquisition_with_no_impl():
     mock_create_presenter_for_impl_and_view = Mock()
 
     # Initialise the presenter
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), mock_view)
 
     # Assert that root presenter did not tell the view to show the configuration view for an implementation of `None`.
     mock_view.configure_for.assert_not_called()
@@ -73,7 +73,7 @@ def test_root_presenter_destroys_old_impl_presenter():
     mock_old_presenter = Mock()
     mock_create_presenter_for_impl_and_view = Mock(return_value=mock_old_presenter)
 
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), Mock())
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), Mock())
 
     # Change the image acquisition type.
     image_acquisition.type = Mock()
@@ -91,7 +91,7 @@ def test_root_presenter_destroys_old_impl_presenter():
 def test_root_presenter_tells_view_of_available_types():
     mock_impl_types = (Mock(), Mock(), Mock())
     mock_view = Mock()
-    presenter = ImageAcquisitionRootPresenter(Mock(), Mock(), mock_impl_types, mock_view)
+    presenter = _ImageAcquisitionFormPresenter(Mock(), Mock(), mock_impl_types, mock_view)
 
     mock_view.set_available_types.assert_called_once_with(mock_impl_types)
 
@@ -104,7 +104,7 @@ def test_root_presenter_syncs_view_user_input_impl_type():
     mock_impl_type_0 = Mock()
     image_acquisition.type = mock_impl_type_0
 
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, Mock(), Mock(), mock_view)
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, Mock(), Mock(), mock_view)
 
     # Assert that root presenter syncs image acquisition existing type.
     assert mock_view.bn_user_input_impl_type.get() is mock_impl_type_0
@@ -127,7 +127,7 @@ def test_root_presenter_destroy():
     image_acquisition = ImageAcquisition()
     mock_view = Mock()
     mock_view.bn_user_input_impl_type = AtomicBindableVar(None)
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, Mock(), Mock(), mock_view)
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, Mock(), Mock(), mock_view)
 
     # Destroy the presenter.
     presenter.destroy()
@@ -151,7 +151,7 @@ def test_root_presenter_destroy_with_impl_presenter():
     mock_old_presenter = Mock()
     mock_create_presenter_for_impl_and_view = Mock(return_value=mock_old_presenter)
 
-    presenter = ImageAcquisitionRootPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), Mock())
+    presenter = _ImageAcquisitionFormPresenter(image_acquisition, mock_create_presenter_for_impl_and_view, Mock(), Mock())
 
     # Change the image acquisition type.
     image_acquisition.type = Mock()

@@ -125,6 +125,9 @@ class IFTImageAnnotator:
         drop_region_px = self.bn_drop_region_px.get()
         needle_region_px = self.bn_needle_region_px.get()
 
+        drop_region_px = drop_region_px.as_type(int)
+        needle_region_px = needle_region_px.as_type(int)
+
         drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
         needle_image = image[needle_region_px.y0:needle_region_px.y1, needle_region_px.x0:needle_region_px.x1]
 

@@ -6,15 +6,12 @@ from opendrop.app.common.analysis_model.image_acquisition.default_types import D
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
-from opendrop.app.common.forms import Form
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.component.stack import StackModel
 from opendrop.mytypes import Destroyable
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
-from opendrop.utility.speaker import Speaker
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
@@ -718,7 +715,7 @@ class USBCameraImageAcquisitionImplPresenter:
 ImplType = TypeVar('ImplType', bound=ImageAcquisitionImplType)
 
 
-class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
+class ImageAcquisitionFormView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
     STYLE = '''
     .small-combobox .combo {
         min-height: 0px;
@@ -731,7 +728,7 @@ class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     class ErrorsView:
-        def __init__(self, view: 'ImageAcquisitionRootView') -> None:
+        def __init__(self, view: 'ImageAcquisitionFormView') -> None:
             self._view = view
 
         def reset_touches(self) -> None:
@@ -748,7 +745,8 @@ class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
 
             subview.errors_view.touch_all()
 
-    def __init__(self, create_view_for_impl_type: Callable[[ImageAcquisitionImplType], GtkWidgetView]) -> None:
+    def __init__(self, create_view_for_impl_type: Callable[[ImageAcquisitionImplType], GtkWidgetView] = create_view_for_impl_type) \
+            -> None:
         self.widget = Gtk.Grid(margin=10, column_spacing=10, row_spacing=10)
 
         self._create_view_for_impl_type = create_view_for_impl_type
@@ -769,6 +767,9 @@ class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
         self.widget.attach(self._config_subview_container, 0, 2, 3, 1)
 
         self.widget.show_all()
+
+        self.bn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
+        link_atomic_bn_adapter_to_g_prop(self.bn_visible, self.widget, 'visible')
 
         self.bn_actual_user_input_impl_type = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[str]]
         link_atomic_bn_adapter_to_g_prop(self.bn_actual_user_input_impl_type, self._user_input_impl_type_combobox,
@@ -817,10 +818,10 @@ class ImageAcquisitionRootView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
             self._combobox_id_to_impl_type[impl_type.name] = impl_type
 
 
-class ImageAcquisitionRootPresenter(Generic[ImplType]):
+class _ImageAcquisitionFormPresenter(Generic[ImplType]):
     def __init__(self, image_acquisition: ImageAcquisition,
                  create_presenter_for_impl_and_view: Callable[[ImageAcquisitionImpl, Any], Destroyable],
-                 available_types: Sequence[ImplType], view: ImageAcquisitionRootView) -> None:
+                 available_types: Sequence[ImplType], view: ImageAcquisitionFormView) -> None:
         self._image_acquisition = image_acquisition
         self._create_presenter_for_impl_and_view = create_presenter_for_impl_and_view
         self._current_subpresenter = None  # type: Optional[Destroyable]
@@ -864,74 +865,45 @@ class ImageAcquisitionRootPresenter(Generic[ImplType]):
             self._current_subpresenter.destroy()
 
 
-class ImageAcquisitionSpeaker(Speaker):
+class ImageAcquisitionFormPresenter:
     _AVAILABLE_IMAGE_ACQUISITION_TYPES = tuple(DefaultImageAcquisitionImplType)
-    _CONFIG_SUBVIEW_FACTORY = create_view_for_impl_type
     _CONFIG_SUBPRESENTER_FACTORY = create_presenter_for_impl_and_view
 
-    def __init__(self, image_acquisition: ImageAcquisition, content_stack: StackModel) -> None:
-        super().__init__()
-
+    def __init__(self, image_acquisition: ImageAcquisition, view: ImageAcquisitionFormView) -> None:
         self._image_acquisition = image_acquisition
-        self._content_stack = content_stack
-
-        self._root_view = ImageAcquisitionRootView(ImageAcquisitionSpeaker._CONFIG_SUBVIEW_FACTORY)
-        self._root_presenter = None  # type: Optional[ImageAcquisitionRootPresenter]
-
-        self._root_view_cskey = object()
-        self._content_stack.add_child(self._root_view_cskey, self._root_view)
-
-    def do_activate(self) -> None:
-        self._root_presenter = ImageAcquisitionRootPresenter(
-            image_acquisition=self._image_acquisition,
-            create_presenter_for_impl_and_view=ImageAcquisitionSpeaker._CONFIG_SUBPRESENTER_FACTORY,
-            available_types=ImageAcquisitionSpeaker._AVAILABLE_IMAGE_ACQUISITION_TYPES,
-            view=self._root_view
-        )
-
-        # Make root view visible.
-        self._content_stack.visible_child_key = self._root_view_cskey
-
-    async def do_request_deactivate(self) -> bool:
-        is_valid = self._image_acquisition.validator.check_is_valid()
-        if is_valid:
-            return False
-
-        self._root_view.errors_view.touch_all()
-        return True
-
-    def do_deactivate(self) -> None:
-        assert self._root_presenter is not None
-        self._root_presenter.destroy()
-
-
-class ImageAcquisitionForm(Form):
-    _AVAILABLE_IMAGE_ACQUISITION_TYPES = tuple(DefaultImageAcquisitionImplType)
-    _CONFIG_SUBVIEW_FACTORY = create_view_for_impl_type
-    _CONFIG_SUBPRESENTER_FACTORY = create_presenter_for_impl_and_view
-
-    def __init__(self, image_acquisition: ImageAcquisition) -> None:
-        self._image_acquisition = image_acquisition
-        self._root_view = ImageAcquisitionRootView(ImageAcquisitionSpeaker._CONFIG_SUBVIEW_FACTORY)
-        self._root_presenter = None  # type: Optional[ImageAcquisitionRootPresenter]
-
-    @property
-    def view(self) -> GtkWidgetView:
-        return self._root_view
+        self._root_view = view
+        self._root_presenter = None  # type: Optional[_ImageAcquisitionFormPresenter]
+        self._destroyed = False
+        self._enabled = False
 
     def validate(self) -> bool:
         is_valid = self._image_acquisition.validator.check_is_valid()
         self._root_view.errors_view.touch_all()
         return is_valid
 
-    def activate(self) -> None:
-        self._root_presenter = ImageAcquisitionRootPresenter(
-            image_acquisition=self._image_acquisition,
-            create_presenter_for_impl_and_view=ImageAcquisitionSpeaker._CONFIG_SUBPRESENTER_FACTORY,
-            available_types=ImageAcquisitionSpeaker._AVAILABLE_IMAGE_ACQUISITION_TYPES,
-            view=self._root_view
-        )
+    def enter(self) -> None:
+        if self._enabled or self._destroyed:
+            return
 
-    def deactivate(self) -> None:
+        self._root_presenter = _ImageAcquisitionFormPresenter(
+            image_acquisition=self._image_acquisition,
+            create_presenter_for_impl_and_view=ImageAcquisitionFormPresenter._CONFIG_SUBPRESENTER_FACTORY,
+            available_types=ImageAcquisitionFormPresenter._AVAILABLE_IMAGE_ACQUISITION_TYPES,
+            view=self._root_view)
+        self._enabled = True
+
+    def leave(self) -> None:
+        if not self._enabled or self._destroyed:
+            return
+
         assert self._root_presenter is not None
         self._root_presenter.destroy()
+        self._enabled = False
+
+    def destroy(self) -> None:
+        assert not self._destroyed
+
+        if self._enabled:
+            self.leave()
+
+        self._destroyed = True

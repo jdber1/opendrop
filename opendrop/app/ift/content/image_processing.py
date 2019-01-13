@@ -7,7 +7,6 @@ import numpy as np
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisitionPreview
-from opendrop.app.common.forms import Form
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
@@ -22,7 +21,6 @@ from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_p
 from opendrop.utility.events import Event
 from opendrop.utility.gtk_misc import pixbuf_from_array
 from opendrop.utility.misc import clamp
-from opendrop.utility.speaker import Speaker
 from opendrop.widgets.canny_parameters import CannyParameters
 from opendrop.widgets.layered_drawing_area.layered_drawing_area import LayeredDrawingArea
 from opendrop.widgets.layered_drawing_area.pixbuf_layer import PixbufLayer
@@ -31,7 +29,14 @@ from opendrop.widgets.layered_drawing_area.rectangle_layer import RectangleLayer
 MaybeTransformationVector2 = Callable[[Vector2], Optional[Vector2]]
 
 
-class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
+class IFTImageProcessingFormView(StackView):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.bn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
+        link_atomic_bn_adapter_to_g_prop(self.bn_visible, self.widget, 'visible')
+
+
+class _ActualView(GtkWidgetView[Gtk.Grid]):
     class DefineRegionMode(Enum):
         NONE = 0
         DROP = 1
@@ -154,7 +159,7 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
             self._set_region(self._region_cache)
 
     class ErrorsView:
-        def __init__(self, view: 'IFTImageProcessingRootView') -> None:
+        def __init__(self, view: '_ActualView') -> None:
             self._view = view
 
             self.bn_drop_region_err_msg = AtomicBindableAdapter(
@@ -283,20 +288,20 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
         self.image_acquisition_preview_config_view.widget.show()
 
         # Image acquisition preview view
-        self.image_acquisition_preview_view = IFTImageProcessingRootView.ImageView(preview_image_lyr)
+        self.image_acquisition_preview_view = _ActualView.ImageView(preview_image_lyr)
 
         # Edge detection overlay view
-        self.edge_detection_overlay_view = IFTImageProcessingRootView.EdgeDetectionOverlayView(edge_det_overlay_lyr)
+        self.edge_detection_overlay_view = _ActualView.EdgeDetectionOverlayView(edge_det_overlay_lyr)
 
         # Define drop region view
-        self.drop_region_view = IFTImageProcessingRootView.DefineRegionView(
+        self.drop_region_view = _ActualView.DefineRegionView(
             layer=drop_region_lyr,
             widget_coord_from_image_coord=preview_image_lyr.draw_coord_from_source_coord,
             image_coord_from_widget_coord=preview_image_lyr.source_coord_from_draw_coord,
             mouse_switch_target=self._drop_mouse_switch_targ)
 
         # Define needle region view
-        self.needle_region_view = IFTImageProcessingRootView.DefineRegionView(
+        self.needle_region_view = _ActualView.DefineRegionView(
             layer=needle_region_lyr,
             widget_coord_from_image_coord=preview_image_lyr.draw_coord_from_source_coord,
             image_coord_from_widget_coord=preview_image_lyr.source_coord_from_draw_coord,
@@ -312,10 +317,10 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
         preview_image_lyr.connect('notify::last-draw-extents', _hdl_preview_image_lyr_notify_last_draw_extents)
 
         # Canny parameters view
-        self.canny_parameters_view = IFTImageProcessingRootView.CannyParametersWrapperView(canny_parameters)
+        self.canny_parameters_view = _ActualView.CannyParametersWrapperView(canny_parameters)
 
         # Bindable properties
-        self._define_region_mode = IFTImageProcessingRootView.DefineRegionMode.NONE
+        self._define_region_mode = _ActualView.DefineRegionMode.NONE
         self.bn_define_region_mode = AtomicBindableAdapter(self._get_define_region_mode, self._set_define_region_mode)
 
         # Event wiring
@@ -329,34 +334,34 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
 
     def _hdl_drop_region_mode_inp_toggled(self, widget: Gtk.ToggleButton) -> None:
         if widget.props.active:
-            self.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.DROP)
+            self.bn_define_region_mode.set(_ActualView.DefineRegionMode.DROP)
         else:
-            self.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
+            self.bn_define_region_mode.set(_ActualView.DefineRegionMode.NONE)
 
     def _hdl_needle_region_mode_inp_toggled(self, widget: Gtk.ToggleButton) -> None:
         if widget.props.active:
-            self.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NEEDLE)
+            self.bn_define_region_mode.set(_ActualView.DefineRegionMode.NEEDLE)
         else:
-            self.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
+            self.bn_define_region_mode.set(_ActualView.DefineRegionMode.NONE)
 
-    def _get_define_region_mode(self) -> 'IFTImageProcessingRootView.DefineRegionMode':
+    def _get_define_region_mode(self) -> '_ActualView.DefineRegionMode':
         return self._define_region_mode
 
-    def _set_define_region_mode(self, mode: 'IFTImageProcessingRootView.DefineRegionMode') -> None:
+    def _set_define_region_mode(self, mode: '_ActualView.DefineRegionMode') -> None:
         self._define_region_mode = mode
 
         self._drop_region_mode_inp.handler_block(self._hdl_drop_region_mode_inp_toggled_notify_id)
         self._needle_region_mode_inp.handler_block(self._hdl_needle_region_mode_inp_toggled_notify_id)
 
-        if mode is IFTImageProcessingRootView.DefineRegionMode.NONE:
+        if mode is _ActualView.DefineRegionMode.NONE:
             self._drop_region_mode_inp.props.active = False
             self._needle_region_mode_inp.props.active = False
             self._define_region_mouse_switch.target = None
-        elif mode is IFTImageProcessingRootView.DefineRegionMode.DROP:
+        elif mode is _ActualView.DefineRegionMode.DROP:
             self._drop_region_mode_inp.props.active = True
             self._needle_region_mode_inp.props.active = False
             self._define_region_mouse_switch.target = self._drop_mouse_switch_targ
-        elif mode is IFTImageProcessingRootView.DefineRegionMode.NEEDLE:
+        elif mode is _ActualView.DefineRegionMode.NEEDLE:
             self._drop_region_mode_inp.props.active = False
             self._needle_region_mode_inp.props.active = True
             self._define_region_mouse_switch.target = self._needle_mouse_switch_targ
@@ -365,10 +370,10 @@ class IFTImageProcessingRootView(GtkWidgetView[Gtk.Grid]):
         self._needle_region_mode_inp.handler_unblock(self._hdl_needle_region_mode_inp_toggled_notify_id)
 
 
-class IFTImageProcessingRootPresenter:
+class _ActualPresenter:
     class CannyEdgeDetectionPresenter:
         def __init__(self, image_annotator: IFTImageAnnotator,
-                     view: IFTImageProcessingRootView.CannyParametersWrapperView)\
+                     view: _ActualView.CannyParametersWrapperView)\
                 -> None:
             self._image_annotator = image_annotator
             self._view = view
@@ -384,7 +389,7 @@ class IFTImageProcessingRootPresenter:
 
     class EdgeDetectionOverlayPresenter:
         def __init__(self, image_annotator: IFTImageAnnotator, preview: ImageAcquisitionPreview,
-                     view: IFTImageProcessingRootView.EdgeDetectionOverlayView) \
+                     view: _ActualView.EdgeDetectionOverlayView) \
                 -> None:
             self._loop = asyncio.get_event_loop()
 
@@ -454,7 +459,7 @@ class IFTImageProcessingRootPresenter:
 
     class DefineRegionPresenter:
         def __init__(self, model_bn_region: AtomicBindable[Optional[Rect2]],
-                     view: IFTImageProcessingRootView.DefineRegionView) -> None:
+                     view: _ActualView.DefineRegionView) -> None:
             self._model_bn_region = model_bn_region
             self._view = view
 
@@ -501,7 +506,7 @@ class IFTImageProcessingRootPresenter:
                 db.unbind()
 
     class ErrorsPresenter:
-        def __init__(self, validator: IFTImageAnnotator.Validator, view: IFTImageProcessingRootView.ErrorsView) -> None:
+        def __init__(self, validator: IFTImageAnnotator.Validator, view: _ActualView.ErrorsView) -> None:
             self._validator = validator
             self._view = view
 
@@ -539,7 +544,7 @@ class IFTImageProcessingRootPresenter:
                 ec.disconnect()
 
     def __init__(self, image_annotator: IFTImageAnnotator, preview: ImageAcquisitionPreview,
-                 view: IFTImageProcessingRootView) -> None:
+                 view: _ActualView) -> None:
         self._image_annotator = image_annotator
         self._preview = preview
         self._view = view
@@ -550,13 +555,13 @@ class IFTImageProcessingRootPresenter:
         config_view_impl = self._view.image_acquisition_preview_config_view.impl
 
         self._preview_config_presenter = ImageAcquisitionPreviewConfigPresenter(preview_config, config_view_impl)
-        self._drop_region_presenter = IFTImageProcessingRootPresenter.DefineRegionPresenter(
+        self._drop_region_presenter = _ActualPresenter.DefineRegionPresenter(
             self._image_annotator.bn_drop_region_px, self._view.drop_region_view)
-        self._needle_region_presenter = IFTImageProcessingRootPresenter.DefineRegionPresenter(
+        self._needle_region_presenter = _ActualPresenter.DefineRegionPresenter(
             self._image_annotator.bn_needle_region_px, self._view.needle_region_view)
-        self._canny_edge_detection_presenter = IFTImageProcessingRootPresenter.CannyEdgeDetectionPresenter(
+        self._canny_edge_detection_presenter = _ActualPresenter.CannyEdgeDetectionPresenter(
             self._image_annotator, self._view.canny_parameters_view)
-        self._edge_detection_overlay_presenter = IFTImageProcessingRootPresenter.EdgeDetectionOverlayPresenter(
+        self._edge_detection_overlay_presenter = _ActualPresenter.EdgeDetectionOverlayPresenter(
             self._image_annotator, self._preview, self._view.edge_detection_overlay_view)
         self._errors_presenter = self.ErrorsPresenter(self._image_annotator.validator, self._view.errors_view)
 
@@ -572,20 +577,20 @@ class IFTImageProcessingRootPresenter:
         ]
 
         if self._image_annotator.bn_drop_region_px.get() is None:
-            self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.DROP)
+            self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.DROP)
         elif self._image_annotator.bn_needle_region_px.get() is None:
-            self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NEEDLE)
+            self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.NEEDLE)
         else:
-            self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
+            self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.NONE)
 
     def _hdl_drop_region_presenter_new_region_defined(self) -> None:
         if self._image_annotator.bn_needle_region_px.get() is None:
-            self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NEEDLE)
+            self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.NEEDLE)
         else:
-            self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
+            self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.NONE)
 
     def _hdl_needle_region_presenter_new_region_defined(self) -> None:
-        self._view.bn_define_region_mode.set(IFTImageProcessingRootView.DefineRegionMode.NONE)
+        self._view.bn_define_region_mode.set(_ActualView.DefineRegionMode.NONE)
 
     def destroy(self) -> None:
         if self._preview_config_presenter is not None:
@@ -604,50 +609,68 @@ class IFTImageProcessingRootPresenter:
             db.unbind()
 
 
-class IFTImageProcessingForm(Form):
+class IFTImageProcessingFormPresenter:
     def __init__(self, image_annotator: IFTImageAnnotator,
-                 create_image_acquisition_preview: Callable[[], Optional[ImageAcquisitionPreview]]) -> None:
+                 create_image_acquisition_preview: Callable[[], Optional[ImageAcquisitionPreview]],
+                 view: IFTImageProcessingFormView) -> None:
         self._image_annotator = image_annotator
         self._create_image_acquisition_preview = create_image_acquisition_preview
 
-        self._stack_view = StackView()
-        self._stack_model = StackModel()
-        self._stack_presenter = None  # type: Optional[StackPresenter]
+        self._enabled = False
+        self._destroyed = False
 
-        self._image_processing_view = IFTImageProcessingRootView()
-        self._image_processing_presenter = None  # type: Optional[IFTImageProcessingRootPresenter]
-        self._stack_model.add_child(self._image_processing_view, self._image_processing_view)
+        self._container_view = view
+        self._container_model = StackModel()
+        self._container_presenter = None  # type: Optional[StackPresenter]
+
+        self._image_processing_view = _ActualView()
+        self._image_processing_presenter = None  # type: Optional[_ActualPresenter]
+        self._container_model.add_child(self._image_processing_view, self._image_processing_view)
 
         self._no_preview_view = MessageTextView('Failed to create image acquisition preview.')
-        self._stack_model.add_child(self._no_preview_view, self._no_preview_view)
-
-    @property
-    def view(self) -> GtkWidgetView:
-        return self._stack_view
+        self._container_model.add_child(self._no_preview_view, self._no_preview_view)
 
     def validate(self) -> bool:
         is_valid = self._image_annotator.validator.check_is_valid()
         self._image_processing_view.errors_view.touch_all()
         return is_valid
 
-    def activate(self) -> None:
-        self._stack_presenter = StackPresenter(self._stack_model, self._stack_view)
+    def enter(self) -> None:
+        if self._enabled or self._destroyed:
+            return
+
+        self._container_presenter = StackPresenter(self._container_model, self._container_view)
 
         preview = self._create_image_acquisition_preview()
         if preview is None:
             # Make error message view visible
-            self._stack_model.visible_child_key = self._no_preview_view
+            self._container_model.visible_child_key = self._no_preview_view
+            self._enabled = True
             return
 
-        self._image_processing_presenter = IFTImageProcessingRootPresenter(
+        self._image_processing_presenter = _ActualPresenter(
             self._image_annotator, preview, self._image_processing_view)
 
         # Make image processing view visible
-        self._stack_model.visible_child_key = self._image_processing_view
+        self._container_model.visible_child_key = self._image_processing_view
+        self._enabled = True
 
-    def deactivate(self) -> None:
-        self._stack_presenter.destroy()
+    def leave(self) -> None:
+        if not self._enabled or self._destroyed:
+            return
+
+        self._container_presenter.destroy()
 
         if self._image_processing_presenter is not None:
             self._image_processing_presenter.destroy()
             self._image_processing_presenter = None
+
+        self._enabled = False
+
+    def destroy(self) -> None:
+        assert not self._destroyed
+
+        if self._enabled:
+            self.leave()
+
+        self._destroyed = True
