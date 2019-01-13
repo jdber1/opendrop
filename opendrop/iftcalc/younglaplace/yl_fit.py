@@ -182,7 +182,8 @@ class YoungLaplaceFit:
                 R = (ssr - ssr_next) / (δ @ (-2*v - A.T@δ))
 
                 if R < ρ:  # Slow convergence
-                    ν = clamp(2 - (ssr_next - ssr) / δ @ v, lower=2, upper=10)
+                    ν = 2 - (ssr_next - ssr) / (δ @ v)
+                    ν = clamp(ν, lower=2, upper=10)
 
                     if λ == 0:
                         λ_c = 1 / abs(A_plus_λdiagA_inv).max()
