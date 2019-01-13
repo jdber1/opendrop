@@ -1,5 +1,4 @@
-from operator import itemgetter
-from typing import TypeVar, Generic, overload, Tuple, Any
+from typing import TypeVar, Generic, overload, Tuple, Any, Callable
 
 import numpy as np
 from typing_extensions import Protocol
@@ -13,6 +12,7 @@ class Destroyable(Protocol):
 
 
 NumericType = TypeVar('NT', int, float, complex)
+SomeNumericType = TypeVar('SomeNumericType', int, float, complex)
 
 Vector2 = Tuple[float, float]
 
@@ -99,6 +99,9 @@ class Rect2(Generic[NumericType]):
     @property
     def size(self) -> Tuple[NumericType, NumericType]:
         return self.w, self.h
+
+    def as_type(self, cast: Callable[[NumericType], SomeNumericType]) -> 'Rect2[SomeNumericType]':
+        return Rect2(x0=cast(self.x0), y0=cast(self.y0), x1=cast(self.x1), y1=cast(self.y1))
 
     def __repr__(self) -> str:
         return '{class_name}(x0={self.x0}, y0={self.y0}, x1={self.x1}, y1={self.y1})' \
