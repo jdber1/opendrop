@@ -9,6 +9,7 @@ from opendrop.app.common.analysis_model.image_acquisition.image_acquisition impo
 from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
 from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
+from opendrop.app.ift.analysis_model.analyser import IFTAnalysis
 from opendrop.app.ift.analysis_model.analysis_factory import IFTAnalysisFactory
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
@@ -19,7 +20,7 @@ from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView
 from opendrop.component.wizard.wizard import WizardPageID
-from opendrop.iftcalc.analyser import IFTAnalysis
+from opendrop.mytypes import Rect2
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.events import EventConnection

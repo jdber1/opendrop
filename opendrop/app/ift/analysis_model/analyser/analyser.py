@@ -11,11 +11,11 @@ from typing import Tuple, Callable, Optional, IO, Union, Iterable, Type, Sequenc
 import numpy as np
 
 from opendrop import si_typing as si
+from opendrop.iftcalc import phys_props
+from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
-from . import phys_props
-from .types import IFTPhysicalParameters, IFTImageAnnotations
-from .younglaplace.yl_fit import YoungLaplaceFit
+from .container import IFTPhysicalParameters, IFTImageAnnotations
 
 
 # Helper functions

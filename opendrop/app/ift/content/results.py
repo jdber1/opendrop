@@ -2,9 +2,9 @@ from typing import Optional
 
 from gi.repository import Gtk
 
+from opendrop.app.ift.analysis_model.analyser import IFTDropAnalysis
 from opendrop.app.ift.analysis_model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.iftcalc.analyser import IFTDropAnalysis
 
 
 class IFTResultsView(GtkWidgetView[Gtk.Grid]):

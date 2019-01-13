@@ -1,6 +1,5 @@
-from opendrop.iftcalc.analyser import IFTAnalysis
-
 from opendrop.app.common.analysis_model.image_acquisition.image_acquisition import ImageAcquisition
+from opendrop.app.ift.analysis_model.analyser import IFTAnalysis
 from opendrop.app.ift.analysis_model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.analysis_model.phys_params import IFTPhysicalParametersFactory
 
