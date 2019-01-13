@@ -1,15 +1,19 @@
+import asyncio
+import functools
 import io
 import math
+import time
+from asyncio import Future
 from enum import Enum
 from operator import attrgetter
-from typing import Tuple, Callable, Optional, IO, Union, Iterable, Type
+from typing import Tuple, Callable, Optional, IO, Union, Iterable, Type, Sequence, MutableMapping
 
 import numpy as np
 
+from opendrop import si_typing as si
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
 from . import phys_props
-from opendrop import si_typing as si
 from .types import IFTPhysicalParameters, IFTImageAnnotations
 from .younglaplace.yl_fit import YoungLaplaceFit
 
@@ -26,6 +30,8 @@ def bl_tl_coords_swap(height: float, x: Union[float, Iterable[float]], y: Union[
     x, y = np.array((x, y))
     return np.array((x, height - y))
 
+
+# Classes
 
 class IFTDropAnalysis:
     class Status(Enum):
@@ -323,3 +329,80 @@ class IFTDropAnalysis:
             return None
 
         return yl_fit.residuals
+
+
+class IFTAnalysis:
+    def __init__(self, observations_and_est_resolve_time: Tuple[Sequence[Future], Sequence[float]],
+                 phys_params: IFTPhysicalParameters, annotate_image: Callable[[Image], IFTImageAnnotations]) -> None:
+        self._loop = asyncio.get_event_loop()
+
+        self._observations = observations_and_est_resolve_time[0]
+        self._phys_params = phys_params
+        self._annotate_image = annotate_image
+
+        self._drops = []
+        self._time_start = time.time()
+        self._time_est_complete = max(observations_and_est_resolve_time[1])
+
+        self._start_fit_tasks = {}  # type: MutableMapping[IFTDropAnalysis, asyncio.Task]
+
+        self.bn_done = AtomicBindableAdapter(self._get_done)
+        self.bn_progress = AtomicBindableAdapter(self._get_progress)
+        self.bn_time_start = AtomicBindableAdapter(lambda: self._time_start)
+        self.bn_time_est_complete = AtomicBindableAdapter(lambda: self._time_est_complete)
+
+        for i, observation in enumerate(self._observations):
+            drop = IFTDropAnalysis(phys_params)
+            drop.bn_status.on_changed.connect(functools.partial(self._hdl_drop_status_changed, drop), strong_ref=True)
+            self._drops.append(drop)
+
+            observation.add_done_callback(functools.partial(self._hdl_observation_resolved, idx=i))
+
+    def cancel(self):
+        for observation in self._observations:
+            observation.cancel()
+
+        for drop in self._drops:
+            if drop.status.terminal:
+                continue
+
+            if drop.status is not IFTDropAnalysis.Status.FITTING and drop in self._start_fit_tasks:
+                start_fit_task = self._start_fit_tasks[drop]
+                start_fit_task.cancel()
+
+            drop.cancel()
+
+    @property
+    def drops(self) -> Sequence[IFTDropAnalysis]:
+        return tuple(self._drops)
+
+    def _get_progress(self) -> float:
+        num_drops_done = 0
+        for drop in self._drops:
+            if drop.status is IFTDropAnalysis.Status.FINISHED:
+                num_drops_done += 1
+
+        return num_drops_done/len(self._drops)
+
+    def _get_done(self) -> bool:
+        for drop in self._drops:
+            if not drop.status.terminal:
+                return False
+
+        return True
+
+    def _hdl_observation_resolved(self, observation_fut: Future, idx: int) -> None:
+        drop = self._drops[idx]
+        if observation_fut.cancelled():
+            drop.cancel()
+
+        if drop.status.terminal:
+            return
+
+        image, image_timestamp = observation_fut.result()
+        drop._give_image(image, image_timestamp, self._annotate_image(image))
+        self._start_fit_tasks[drop] = self._loop.create_task(drop._start_fit())
+
+    def _hdl_drop_status_changed(self, drop: IFTDropAnalysis) -> None:
+        self.bn_progress.on_changed.fire()
+        self.bn_done.on_changed.fire()
