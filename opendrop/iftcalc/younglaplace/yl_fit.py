@@ -179,16 +179,15 @@ class YoungLaplaceFit:
             δ = -A_plus_λdiagA_inv @ v
 
             if self._lmf_step > 0:
-                R = (ssr - ssr_next) / (δ @ (-2*v - A.T@δ))
+                R = (ssr - ssr_next) / (δ @ (-2*v - A@δ))
 
                 if R < ρ:  # Slow convergence
                     ν = 2 - (ssr_next - ssr) / (δ @ v)
                     ν = clamp(ν, lower=2, upper=10)
 
                     if λ == 0:
-                        λ_c = 1 / abs(A_plus_λdiagA_inv).max()
+                        λ_c = 1 / (np.linalg.norm(np.linalg.inv(A), np.inf))
                         λ = λ_c
-
                         ν /= 2
 
                     λ *= ν
