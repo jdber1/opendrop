@@ -3,7 +3,7 @@ import functools
 import numpy as np
 from scipy import integrate
 
-from opendrop import si_typing as si
+from opendrop import sityping as si
 from opendrop.iftcalc.younglaplace import de
 
 

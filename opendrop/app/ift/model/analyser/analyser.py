@@ -10,7 +10,7 @@ from typing import Tuple, Callable, Optional, IO, Union, Iterable, Type, Sequenc
 
 import numpy as np
 
-from opendrop import si_typing as si
+from opendrop import sityping as si
 from opendrop.iftcalc import phys_props
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
