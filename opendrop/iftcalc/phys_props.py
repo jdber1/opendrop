@@ -4,7 +4,7 @@ import numpy as np
 from scipy import integrate
 
 from opendrop import sityping as si
-from opendrop.iftcalc.younglaplace import de
+from .younglaplace import de
 
 
 # Memoize using a least-recently-used cache.
