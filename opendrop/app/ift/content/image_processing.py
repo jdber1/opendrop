@@ -266,7 +266,7 @@ class _ActualView(GtkWidgetView[Gtk.Grid]):
         # Needle region mouse switch target
         self._needle_mouse_switch_targ = MouseSwitchTarget()
 
-        self.widget.attach(Gtk.HSeparator(), 0, 1, 1, 1)
+        self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
 
         form_ctn = Gtk.Grid(margin=10, row_spacing=10)
         self.widget.attach(form_ctn, 0, 2, 1, 1)
