@@ -6,7 +6,7 @@ import traceback
 from enum import IntEnum, Enum
 from math import cos, sin
 from os.path import devnull
-from typing import Optional, Tuple, Union, Iterable, IO, Callable, overload
+from typing import Optional, Tuple, Union, Iterable, Callable, overload
 
 import numpy as np
 from scipy import integrate, interpolate as sp_interpolate
@@ -92,7 +92,7 @@ class YoungLaplaceFit:
             return ' | '.join(present_flag_names)
 
     # Contour must have coordinates with y-axis pointing upwards (opposite gravity).
-    def __init__(self, contour: np.ndarray, log_file: IO = open(devnull, 'w')) -> None:
+    def __init__(self, contour: np.ndarray, log_file=open(devnull, 'w')) -> None:
         self.on_params_changed = Event()
 
         self._contour = contour[contour[:, 1].argsort()]  # type: np.ndarray
