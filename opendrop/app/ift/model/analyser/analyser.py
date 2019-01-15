@@ -96,7 +96,21 @@ class IFTDropAnalysis:
         self.bn_log = AtomicBindableVar('')
         self._log_shim = self.LogShim(write=lambda s: self.bn_log.set(self.bn_log.get() + s))
 
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))
+    # Property adapters for bindables (type annotations are not strictly correct but is a bit of a hack to allow PyCharm
+    # recognise the types)
+    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: IFTDropAnalysis.Status
+    image = AtomicBindable.property_adapter(attrgetter('bn_image'))  # type: Image
+    image_annotations = AtomicBindable.property_adapter(attrgetter('bn_image_annotations'))  # type: IFTImageAnnotations
+    image_timestamp = AtomicBindable.property_adapter(attrgetter('bn_image_timestamp'))  # type: float
+    objective = AtomicBindable.property_adapter(attrgetter('bn_objective'))  # type: float
+    apex_coords_px = AtomicBindable.property_adapter(attrgetter('bn_apex_coords_px'))  # type: Tuple[int, int]
+    apex_radius = AtomicBindable.property_adapter(attrgetter('bn_apex_radius'))  # type: si.Length
+    apex_rot = AtomicBindable.property_adapter(attrgetter('bn_apex_rot'))  # type: float
+    interfacial_tension = AtomicBindable.property_adapter(attrgetter('bn_interfacial_tension'))  # type: si.SurfaceTension
+    volume = AtomicBindable.property_adapter(attrgetter('bn_volume'))  # type: si.Volume
+    surface_area = AtomicBindable.property_adapter(attrgetter('bn_surface_area'))  # type: si.Area
+    worthington = AtomicBindable.property_adapter(attrgetter('bn_worthington'))  # type: float
+    log = AtomicBindable.property_adapter(attrgetter('bn_log'))  # type: str
 
     def _give_image(self, image: Image, image_timestamp: float, image_annotations: IFTImageAnnotations) -> None:
         if self._status is not self.Status.WAITING_FOR_IMAGE:
