@@ -1,6 +1,6 @@
 import asyncio
 import math
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 
 import numpy as np
 import pytest
@@ -272,7 +272,7 @@ class TestDropAnalysisReadyToFit:
         expected_contour[:, 1] *= -1
         expected_contour[:, 1] += image_annotations.drop_region_px.h
 
-        mock_yl_fit_factory.assert_called_once_with(NumpyEqualsAll(expected_contour), drop_analysis.log)
+        mock_yl_fit_factory.assert_called_once_with(NumpyEqualsAll(expected_contour), ANY)
 
         # Assert mock_yl_fit.optimise() was called.
         mock_yl_fit.optimise.assert_called_once_with()

@@ -1,12 +1,11 @@
 import asyncio
 import functools
-import io
 import math
 import time
 from asyncio import Future
 from enum import Enum
 from operator import attrgetter
-from typing import Tuple, Callable, Optional, IO, Union, Iterable, Type, Sequence, MutableMapping
+from typing import Tuple, Callable, Optional, Union, Iterable, Type, Sequence, MutableMapping, Any
 
 import numpy as np
 
@@ -14,7 +13,7 @@ from opendrop import sityping as si
 from opendrop.iftcalc import phys_props
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from .container import IFTPhysicalParameters, IFTImageAnnotations
 
 
@@ -45,6 +44,10 @@ class IFTDropAnalysis:
 
         def __init__(self, id_: int, terminal: bool) -> None:
             self.terminal = terminal
+
+    class LogShim:
+        def __init__(self, write: Callable[[str], Any]) -> None:
+            self.write = write
 
     def __init__(self, phys_params: IFTPhysicalParameters, create_yl_fit: Type[YoungLaplaceFit] = YoungLaplaceFit,
                  calculate_ift: Callable = phys_props.calculate_ift,
@@ -89,7 +92,8 @@ class IFTDropAnalysis:
         self.bn_drop_contour_fit_residuals = AtomicBindableAdapter(self._get_drop_contour_fit_residuals)
 
         # Log
-        self._log = io.StringIO()
+        self.bn_log = AtomicBindableVar('')
+        self._log_shim = self.LogShim(write=lambda s: self.bn_log.set(self.bn_log.get() + s))
 
     status = AtomicBindable.property_adapter(attrgetter('bn_status'))
 
@@ -123,7 +127,7 @@ class IFTDropAnalysis:
         drop_contour_px = image_annotations.drop_contour_px
         drop_contour_px = bl_tl_coords_swap(drop_region_height, *drop_contour_px.T).T
 
-        self._yl_fit = self._create_yl_fit(drop_contour_px, self._log)
+        self._yl_fit = self._create_yl_fit(drop_contour_px, self._log_shim)
         self._status = IFTDropAnalysis.Status.FITTING
 
         await self._yl_fit.optimise()
@@ -188,10 +192,6 @@ class IFTDropAnalysis:
         contour_xy -= self._get_apex_pos_px()
 
         return contour_xy
-
-    @property
-    def log(self) -> IO:
-        return self._log
 
     @property
     def _status(self) -> 'IFTDropAnalysis.Status':
