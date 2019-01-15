@@ -121,12 +121,8 @@ class IFTDropAnalysis:
                              .format(self.Status.READY_TO_FIT, self._status))
 
         image_annotations = self._image_annotations
-
-        # Drop contour, in units of metres
-        drop_region_height = image_annotations.drop_region_px.h
-
         drop_contour_px = image_annotations.drop_contour_px
-        drop_contour_px = bl_tl_coords_swap(drop_region_height, *drop_contour_px.T).T
+        drop_contour_px = bl_tl_coords_swap(self._image.shape[0], *drop_contour_px.T).T
 
         self._yl_fit = self._create_yl_fit(drop_contour_px, self._log_shim)
         self._status = IFTDropAnalysis.Status.FITTING
@@ -182,9 +178,7 @@ class IFTDropAnalysis:
         contour_xy = yl_fit.xy_from_rz(*contour_rz.T).T
         contour_xy += (yl_fit.apex_x, yl_fit.apex_y)
 
-        drop_region_px = self._image_annotations.drop_region_px
-        contour_xy = bl_tl_coords_swap(drop_region_px.h, *contour_xy.T).T
-        contour_xy += drop_region_px.pos
+        contour_xy = bl_tl_coords_swap(self._image.shape[0], *contour_xy.T).T
         contour_xy -= self._get_apex_pos_px()
 
         return contour_xy
@@ -308,9 +302,7 @@ class IFTDropAnalysis:
         apex_pos = yl_fit.apex_x, yl_fit.apex_y
 
         # Convert to image coordinates
-        drop_region_px = self._image_annotations.drop_region_px
-        apex_pos = bl_tl_coords_swap(drop_region_px.h, *apex_pos).astype(int)
-        apex_pos += drop_region_px.pos
+        apex_pos = bl_tl_coords_swap(self._image.shape[0], *apex_pos).astype(int)
 
         return tuple(apex_pos)
 

@@ -131,7 +131,10 @@ class IFTImageAnnotator:
         needle_image = image[needle_region_px.y0:needle_region_px.y1, needle_region_px.x0:needle_region_px.x1]
 
         drop_contour_px = _get_drop_contour(drop_image)
+        drop_contour_px += drop_region_px.pos
+
         needle_contours_px = _get_needle_contours(needle_image)
+        needle_contours_px = tuple(contour + needle_region_px.pos for contour in needle_contours_px)  # type: Tuple[np.ndarray, np.ndarray]
 
         needle_width_px = get_needle_width_from_contours(needle_contours_px)
         needle_width = self.bn_needle_width.get()

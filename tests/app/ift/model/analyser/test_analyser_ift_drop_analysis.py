@@ -90,9 +90,10 @@ def phys_params():
     return IFTPhysicalParameters(1000, 0, 0.7176, 9.8)
 
 
-@pytest.fixture
-def image_and_annotations():
-    image = Mock()
+@pytest.fixture(params=[
+    water_in_air001_data])
+def image_and_annotations(request):
+    image = request.param.image
     image_timestamp = 321
     annotations = IFTImageAnnotations(
         m_per_px=1.234,
@@ -208,7 +209,7 @@ class TestDropAnalysisJustInitialised:
         await asyncio.wait_for(wait_for_these, 0.1)
 
         assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.READY_TO_FIT
-        assert drop_analysis.bn_image.get() == image
+        assert (drop_analysis.bn_image.get() == image).all()
         assert drop_analysis.bn_image_timestamp.get() == image_timestamp
         assert drop_analysis.bn_image_annotations.get() == image_annotations
 
@@ -270,7 +271,7 @@ class TestDropAnalysisReadyToFit:
         image_annotations = drop_analysis.bn_image_annotations.get()
         expected_contour = image_annotations.drop_contour_px.copy()
         expected_contour[:, 1] *= -1
-        expected_contour[:, 1] += image_annotations.drop_region_px.h
+        expected_contour[:, 1] += drop_analysis.bn_image.get().shape[0]
 
         mock_yl_fit_factory.assert_called_once_with(NumpyEqualsAll(expected_contour), ANY)
 
@@ -371,8 +372,7 @@ class TestDropAnalysisFitting:
         await asyncio.wait_for(wait_for_these, 0.1)
 
     @pytest.mark.parametrize('samples', [
-        100, 150
-    ])
+        100, 150])
     def test_generate_drop_contour_fit(self, samples):
         drop_analysis = self.drop_analysis
         drop_data = self.drop_data
@@ -406,10 +406,8 @@ class TestDropAnalysisFitting:
         mock_yl_fit_apex_pos_px = mock_yl_fit.apex_x, mock_yl_fit.apex_y
 
         # Calculate expected_apex_pos_px
-        image_annotations = drop_analysis.bn_image_annotations.get()
-        drop_region_px = image_annotations.drop_region_px
-        expected_apex_pos_px = (int(mock_yl_fit_apex_pos_px[0]), int(drop_region_px.h - mock_yl_fit_apex_pos_px[1]))
-        expected_apex_pos_px = expected_apex_pos_px[0] + drop_region_px.x, expected_apex_pos_px[1] + drop_region_px.y
+        image = drop_analysis.bn_image.get()
+        expected_apex_pos_px = (int(mock_yl_fit_apex_pos_px[0]), int(image.shape[0] - mock_yl_fit_apex_pos_px[1]))
 
         apex_pos_px = drop_analysis.bn_apex_pos_px.get()
 
