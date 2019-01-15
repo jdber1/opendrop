@@ -1,7 +1,8 @@
-from typing import Optional
+from operator import attrgetter
+from typing import Optional, Sequence
 
 from opendrop.app.ift.model.analyser import IFTAnalysis, IFTDropAnalysis
-from opendrop.utility.bindable.bindable import ListBindable, MutableSequenceBindable
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
 
 
 class IFTResultsExplorer:
@@ -10,15 +11,15 @@ class IFTResultsExplorer:
 
     def __init__(self):
         self._analysis = None
-        self.individual_drops = ListBindable()  # type: MutableSequenceBindable[IFTDropAnalysis]
-        self.summary_data = None  # type: Optional[IFTResultsExplorer.SummaryData]
+        self.bn_individual_drops = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[IFTDropAnalysis]]
+        self.bn_summary_data = AtomicBindableVar(None)  # type: AtomicBindable[Optional[IFTResultsExplorer.SummaryData]]
+
+    individual_drops = AtomicBindable.property_adapter(attrgetter('bn_individual_drops'))
+    summary_data = AtomicBindable.property_adapter(attrgetter('bn_summary_data'))
 
     analysis = property()
 
     @analysis.setter
     def analysis(self, analysis: IFTAnalysis) -> None:
         self._analysis = analysis
-
-        self.individual_drops.clear()
-        for drop in self._analysis.drops:
-            self.individual_drops.insert(0, drop)
+        self.bn_individual_drops.set(tuple(self._analysis.drops))

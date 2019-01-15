@@ -1,14 +1,19 @@
 import functools
-from typing import MutableSequence, Optional
+import math
+from typing import MutableSequence, Optional, Sequence, MutableMapping, Callable
 
+import cv2
 import numpy as np
 from gi.repository import Gtk, Pango, Gdk
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 
+from opendrop.app.ift.model.analyser import IFTDropAnalysis
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.bindable.binding import Binding
 
 
 class DetailView(GtkWidgetView[Gtk.Grid]):
@@ -39,8 +44,8 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             sheet = Gtk.Grid(row_spacing=10, column_spacing=10)
             self.widget.attach(sheet, 0, 1, 1, 1)
 
-            ift_lbl = Gtk.Label('IFT (mN/m):', xalign=0)
-            sheet.attach(ift_lbl, 0, 0, 1, 1)
+            interfacial_tension_lbl = Gtk.Label('IFT (mN/m):', xalign=0)
+            sheet.attach(interfacial_tension_lbl, 0, 0, 1, 1)
 
             volume_lbl = Gtk.Label('Volume (mm²):', xalign=0)
             sheet.attach(volume_lbl, 0, 1, 1, 1)
@@ -62,8 +67,8 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             image_angle_lbl = Gtk.Label('Image angle:', xalign=0)
             sheet.attach(image_angle_lbl, 0, 7, 1, 1)
 
-            ift_val = Gtk.Label(xalign=0)
-            sheet.attach_next_to(ift_val, ift_lbl, Gtk.PositionType.RIGHT, 1, 1)
+            interfacial_tension_val = Gtk.Label(xalign=0)
+            sheet.attach_next_to(interfacial_tension_val, interfacial_tension_lbl, Gtk.PositionType.RIGHT, 1, 1)
 
             volume_val = Gtk.Label(xalign=0)
             sheet.attach_next_to(volume_val, volume_lbl, Gtk.PositionType.RIGHT, 1, 1)
@@ -87,12 +92,12 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
 
             # Wiring things up
 
-            self.bn_ift = AtomicBindableAdapter(
-                setter=lambda v: ift_val.set_text('{:.4g}'.format(v)))
+            self.bn_interfacial_tension = AtomicBindableAdapter(
+                setter=lambda v: interfacial_tension_val.set_text('{:.4g}'.format(v*1e3)))
             self.bn_volume = AtomicBindableAdapter(
-                setter=lambda v: volume_val.set_text('{:.4g}'.format(v)))
+                setter=lambda v: volume_val.set_text('{:.4g}'.format(v*1e9)))
             self.bn_surface_area = AtomicBindableAdapter(
-                setter=lambda v: surface_area_val.set_text('{:.4g}'.format(v)))
+                setter=lambda v: surface_area_val.set_text('{:.4g}'.format(v*1e6)))
             self.bn_worthington = AtomicBindableAdapter(
                 setter=lambda v: worthington_val.set_text('{:.4g}'.format(v)))
             self.bn_bond_number = AtomicBindableAdapter(
@@ -100,7 +105,7 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self.bn_apex_coords = AtomicBindableAdapter(
                 setter=lambda v: apex_coords_val.set_text('({0[0]:.4g}, {0[1]:.4g})'.format(v)))
             self.bn_image_angle = AtomicBindableAdapter(
-                setter=lambda v: image_angle_val.set_text('{:.4g}°'.format(v)))
+                setter=lambda v: image_angle_val.set_text('{:.4g}°'.format(math.degrees(v))))
 
     class DropContourAndResidualsView(GtkWidgetView[Gtk.Grid]):
         def __init__(self) -> None:
@@ -109,17 +114,17 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             stack = Gtk.Stack()
             self.widget.attach(stack, 0, 0, 1, 1)
 
-            self._drop_figure = Figure(tight_layout=True)
-            drop_figure_canvas = FigureCanvas(self._drop_figure)
-            drop_figure_canvas.props.hexpand = True
-            drop_figure_canvas.props.vexpand = True
-            stack.add_titled(drop_figure_canvas, name='Drop', title='Drop')
+            drop_fig = Figure(tight_layout=True)
+            self._drop_fig_canvas = FigureCanvas(drop_fig)
+            self._drop_fig_canvas.props.hexpand = True
+            self._drop_fig_canvas.props.vexpand = True
+            stack.add_titled(self._drop_fig_canvas, name='Drop', title='Drop')
 
-            self._residuals_figure = Figure(tight_layout=True)
-            residuals_figure_canvas = FigureCanvas(self._residuals_figure)
-            residuals_figure_canvas.props.hexpand = True
-            residuals_figure_canvas.props.vexpand = True
-            stack.add_titled(residuals_figure_canvas, name='Residuals', title='Residuals')
+            residuals_figure = Figure(tight_layout=True)
+            self._residuals_fig_canvas = FigureCanvas(residuals_figure)
+            self._residuals_fig_canvas.props.hexpand = True
+            self._residuals_fig_canvas.props.vexpand = True
+            stack.add_titled(self._residuals_fig_canvas, name='Residuals', title='Residuals')
 
             stack_switcher = Gtk.StackSwitcher(stack=stack, halign=Gtk.Align.CENTER, margin_left=10, margin_bottom=10,
                                                margin_right=10)
@@ -128,79 +133,58 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
 
             self.widget.show_all()
 
+            # Axes
+
+            self._drop_fig_ax = drop_fig.add_subplot(1, 1, 1)
+            self._drop_fig_ax.set_aspect('equal', 'box')
+            self._drop_fig_ax.xaxis.tick_top()
+            for item in (self._drop_fig_ax.get_xticklabels() + self._drop_fig_ax.get_yticklabels()):
+                item.set_fontsize(8)
+
+            self._drop_aximg = AxesImage(ax=self._drop_fig_ax)
+            # Place holder image
+            self._drop_aximg.set_data(np.zeros((1, 1, 3)))
+            self._drop_fig_ax.add_image(self._drop_aximg)
+            self._drop_contour_line = self._drop_fig_ax.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
+            self._drop_contour_fit_line = self._drop_fig_ax.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
+
+            self._residuals_figure_axes = residuals_figure.add_subplot(1, 1, 1)
+            for item in (self._residuals_figure_axes.get_xticklabels() + self._residuals_figure_axes.get_yticklabels()):
+                item.set_fontsize(8)
+
             # Wiring things up
-
-            self._drop_image = None  # type: Optional[Image]
-            self._drop_contour = None  # type: Optional[np.ndarray]
-            self._drop_contour_fit = None  # type: Optional[np.ndarray]
-            self._drop_contour_fit_residuals = None  # type: Optional[np.ndarray]
-
             self.bn_drop_image = AtomicBindableAdapter(setter=self._set_drop_image)
             self.bn_drop_contour = AtomicBindableAdapter(setter=self._set_drop_contour)
             self.bn_drop_contour_fit = AtomicBindableAdapter(setter=self._set_drop_contour_fit)
             self.bn_drop_contour_fit_residuals = AtomicBindableAdapter(setter=self._set_drop_contour_fit_residuals)
 
         def _set_drop_image(self, image: Optional[Image]) -> None:
-            self._drop_image = image
-            self._draw_drop()
+            # Use a scaled down image so it draws faster.
+            thumb_size = (min(400, image.shape[1]), min(400, image.shape[0]))
+            image_thumb = cv2.resize(image, dsize=thumb_size)
+            self._drop_aximg.set_data(image_thumb)
+
+            self._drop_aximg.set_extent((0, image.shape[1], image.shape[0], 0))
+            self._drop_fig_canvas.queue_draw()
 
         def _set_drop_contour(self, contour: Optional[np.ndarray]) -> None:
-            self._drop_contour = contour
-            self._draw_drop()
+            self._drop_contour_line.set_data(contour.T)
+            self._drop_fig_canvas.queue_draw()
 
         def _set_drop_contour_fit(self, contour: Optional[np.ndarray]) -> None:
-            self._drop_contour_fit = contour
-            self._draw_drop()
+            self._drop_contour_fit_line.set_data(contour.T)
+            self._drop_fig_canvas.queue_draw()
 
         def _set_drop_contour_fit_residuals(self, residuals: Optional[np.ndarray]) -> None:
-            self._drop_contour_fit_residuals = residuals
-            self._draw_residuals()
+            self._residuals_figure_axes.clear()
 
-        def _draw_drop(self) -> None:
-            self._drop_figure.clear()
-
-            drop_image = self._drop_image
-            drop_contour = self._drop_contour
-            drop_contour_fit = self._drop_contour_fit
-            if drop_image is None or drop_contour is None or drop_contour_fit is None:
-                self._drop_figure.canvas.draw()
-                return
-
-            drop_image_extents = np.array([0, drop_image.shape[1], drop_image.shape[0], 0])
-
-            axes = self._drop_figure.add_subplot(1, 1, 1)
-            axes.xaxis.tick_top()
-
-            for item in (axes.get_xticklabels() + axes.get_yticklabels()):
-                item.set_fontsize(8)
-
-            axes.imshow(drop_image, origin='upper', extent=drop_image_extents, aspect='equal')
-
-            axes.plot(*drop_contour.T, linestyle='-', color='#0080ff', linewidth=1.5)
-            axes.plot(*drop_contour_fit.T, linestyle='-', color='#ff0080', linewidth=1)
-
-            # Reset the limits as they may have been modified during the plotting of various contours
-            axes.set_xlim(drop_image_extents[:2])
-            axes.set_ylim(drop_image_extents[2:])
-
-            self._drop_figure.canvas.draw()
-
-        def _draw_residuals(self):
-            self._residuals_figure.clear()
-
-            residuals = self._drop_contour_fit_residuals
             if residuals is None:
-                self._drop_figure.canvas.draw()
+                self._residuals_fig_canvas.queue_draw()
                 return
 
-            axes = self._residuals_figure.add_subplot(1, 1, 1)
-
-            for item in (axes.get_xticklabels() + axes.get_yticklabels()):
-                item.set_fontsize(8)
-
+            axes = self._residuals_figure_axes
             axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-
-            self._residuals_figure.canvas.draw()
+            self._residuals_fig_canvas.queue_draw()
 
     class LogView(GtkWidgetView[Gtk.ScrolledWindow]):
         def __init__(self) -> None:
@@ -213,7 +197,6 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             # Wiring things up
 
             self.bn_log_text = AtomicBindableAdapter(setter=lambda v: log_text_view.get_buffer().set_text(v))
-
 
     def __init__(self) -> None:
         self.widget = Gtk.Grid(margin=10, column_spacing=10)
@@ -264,6 +247,7 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
         self.widget = Gtk.Grid()
 
         self._rows = []  # type: MutableSequence[MasterView.Row]
+        self._rows_cleanup_tasks = []  # type: MutableSequence[Callable]
 
         overview_lbl = Gtk.Label(xalign=0, margin=5)
         overview_lbl.set_markup('<b>Overview</b>')
@@ -300,6 +284,9 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
 
     def clear(self) -> None:
         self._rows = []
+        for f in self._rows_cleanup_tasks:
+            f()
+        self._rows_cleanup_tasks = []
         self.fits.clear()
 
     def new_row(self) -> 'MasterView.Row':
@@ -308,9 +295,11 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
 
         tree_iter = self.fits.append((frame_num, None, None))
         row_ref = Gtk.TreeRowReference(model=self.fits, path=self.fits.get_path(tree_iter))
+
         row = self.Row(self.fits, row_ref)
-        row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True,
-                                           immediate=True)
+        ec = row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True,
+                                                immediate=True)
+        self._rows_cleanup_tasks.append(ec.disconnect)
         self._rows.append(row)
 
         if len(self._rows) == 1:
@@ -341,7 +330,11 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
                     row.bn_selected.set(False)
             return
 
-        row = self._get_row_from_tree_iter(tree_iter)
+        try:
+            row = self._get_row_from_tree_iter(tree_iter)
+        except ValueError:
+            # Row no longer exists, perhaps this callback was called late.
+            return
 
         selection.handler_block(self._hdl_fits_view_selection_changed_id)
         row.bn_selected.set(True)
@@ -368,3 +361,183 @@ class IndividualFitView(GtkWidgetView[Gtk.Paned]):
         self.widget.pack2(self.master.widget, resize=False, shrink=False)
 
         self.widget.show_all()
+
+
+class DetailPresenter:
+    def __init__(self, drop: IFTDropAnalysis, view: DetailView) -> None:
+        self._drop = drop
+        self._view = view
+
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        params_view = self._view.parameters
+        log_view = self._view.log
+
+        data_bindings = [
+            Binding(self._drop.bn_interfacial_tension, params_view.bn_interfacial_tension),
+            Binding(self._drop.bn_volume, params_view.bn_volume),
+            Binding(self._drop.bn_surface_area, params_view.bn_surface_area),
+            Binding(self._drop.bn_worthington, params_view.bn_worthington),
+            Binding(self._drop.bn_bond_number, params_view.bn_bond_number),
+            Binding(self._drop.bn_apex_coords_px, params_view.bn_apex_coords),
+            Binding(self._drop.bn_apex_rot, params_view.bn_image_angle),
+            Binding(self._drop.bn_log, log_view.bn_log_text)]
+        self.__cleanup_tasks.extend([db.unbind for db in data_bindings])
+
+        event_connections = [
+            self._drop.bn_image_annotations.on_changed.connect(self._hdl_image_annotations_changed, immediate=True),
+            self._drop.on_drop_contour_fit_changed.connect(self._update_view_drop_contour_fit_and_residuals,
+                                                           immediate=True)]
+        self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
+
+        self._hdl_image_annotations_changed()
+        self._update_view_drop_contour_fit_and_residuals()
+
+    def _hdl_image_annotations_changed(self) -> None:
+        image_annotations = self._drop.image_annotations
+        if image_annotations is None:
+            return
+
+        drop_region_px = image_annotations.drop_region_px
+
+        image = self._drop.image
+        drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
+        self._view.drop_contour_and_residuals.bn_drop_image.set(drop_image)
+
+        drop_contour_px = image_annotations.drop_contour_px.copy()
+        drop_contour_px -= drop_region_px.pos
+        self._view.drop_contour_and_residuals.bn_drop_contour.set(drop_contour_px)
+
+    def _update_view_drop_contour_fit_and_residuals(self) -> None:
+        drop_contour_fit = self._drop.generate_drop_contour_fit(samples=50)
+        residuals = self._drop.drop_contour_fit_residuals
+        if drop_contour_fit is None or residuals is None:
+            return
+
+        drop_contour_fit += self._drop.apex_coords_px
+        drop_contour_fit -= self._drop.image_annotations.drop_region_px.pos
+
+        self._view.drop_contour_and_residuals.bn_drop_contour_fit.set(drop_contour_fit)
+        self._view.drop_contour_and_residuals.bn_drop_contour_fit_residuals.set(residuals)
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
+
+
+class MasterPresenter:
+    def __init__(self, drops: Sequence[IFTDropAnalysis], view: MasterView) -> None:
+        self._view = view
+
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._drop_to_row = {}  # type: MutableMapping[IFTDropAnalysis, MasterView.Row]
+        self.bn_selected = AtomicBindableVar(None)  # type: AtomicBindable[Optional[IFTDropAnalysis]]
+
+        self._view.clear()
+        self.add_drops(drops)
+
+    def add_drops(self, drops: Sequence[IFTDropAnalysis]) -> None:
+        for drop in drops:
+            self.add_drop(drop)
+
+    def add_drop(self, drop: IFTDropAnalysis) -> None:
+        row = self._view.new_row()
+        self._drop_to_row[drop] = row
+
+        event_connections = [
+            drop.bn_status.on_changed.connect(functools.partial(self._update_row_status_text, row, drop),
+                                              strong_ref=True, immediate=True),
+            drop.bn_log.on_changed.connect(functools.partial(self._update_row_log_text, row, drop), strong_ref=True,
+                                           immediate=True),
+            row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True,
+                                               immediate=True)]
+        self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
+
+        self._update_row_log_text(row, drop)
+        self._update_row_log_text(row, drop)
+        self._hdl_row_selected_changed(row)
+
+    def _update_row_status_text(self, row: MasterView.Row, drop: IFTDropAnalysis) -> None:
+        row.status_text = str(drop.status)
+
+    def _update_row_log_text(self, row: MasterView.Row, drop: IFTDropAnalysis) -> None:
+        log = drop.log
+
+        if log == '':
+            log_last_line = ''
+        else:
+            log_last_line = log.splitlines()[-1]
+
+        row.log_text = log_last_line
+
+    def _hdl_row_selected_changed(self, row: MasterView.Row) -> None:
+        if not row.bn_selected.get():
+            return
+
+        drop = self._drop_from_row(row)
+        self.bn_selected.set(drop)
+
+    def _drop_from_row(self, row: MasterView.Row) -> IFTDropAnalysis:
+        for candidate_drop, candidate_row in self._drop_to_row.items():
+            if candidate_row is row:
+                return candidate_drop
+        else:
+            raise ValueError('Could not find drop.')
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
+
+
+class IndividualFitPresenter:
+    def __init__(self, drops: Sequence[IFTDropAnalysis], view: IndividualFitView) -> None:
+        self._drops = drops
+        self._view = view
+
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._master = MasterPresenter(drops, self._view.master)
+        self._detail = None  # type: Optional[DetailPresenter]
+
+        event_connections = [
+            self._master.bn_selected.on_changed.connect(self._update_detail, immediate=True)]
+        self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
+
+        self._update_detail()
+
+    def _update_detail(self) -> None:
+        selected_drop = self._master.bn_selected.get()
+        if selected_drop is None:
+            return
+
+        self._detail_show_drop(selected_drop)
+
+    def _detail_show_drop(self, drop: IFTDropAnalysis) -> None:
+        if self._detail is not None:
+            self._detail.destroy()
+            self._detail = None
+
+        self._detail = DetailPresenter(drop, self._view.detail)
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+
+        for f in self.__cleanup_tasks:
+            f()
+
+        if self._master:
+            self._master.destroy()
+
+        if self._detail:
+            # destroy detail please
+            self._detail.destroy()
+
+        self.__destroyed = True
