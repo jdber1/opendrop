@@ -361,7 +361,7 @@ class TestDropAnalysisFitting:
             drop_analysis.bn_volume.on_changed.wait(),
             drop_analysis.bn_surface_area.on_changed.wait(),
             drop_analysis.bn_worthington.on_changed.wait(),
-            drop_analysis.bn_apex_pos_px.on_changed.wait(),
+            drop_analysis.bn_apex_coords_px.on_changed.wait(),
             drop_analysis.bn_apex_rot.on_changed.wait(),
             drop_analysis.bn_apex_radius.on_changed.wait(),
             drop_analysis.on_drop_contour_fit_changed.wait())
@@ -403,15 +403,16 @@ class TestDropAnalysisFitting:
         drop_analysis = self.drop_analysis
         mock_yl_fit = self.mock_yl_fit
 
-        mock_yl_fit_apex_pos_px = mock_yl_fit.apex_x, mock_yl_fit.apex_y
+        mock_yl_fit_apex_coords_px = mock_yl_fit.apex_x, mock_yl_fit.apex_y
 
         # Calculate expected_apex_pos_px
         image = drop_analysis.bn_image.get()
-        expected_apex_pos_px = (int(mock_yl_fit_apex_pos_px[0]), int(image.shape[0] - mock_yl_fit_apex_pos_px[1]))
+        expected_apex_coords_px = (int(mock_yl_fit_apex_coords_px[0]),
+                                   int(image.shape[0] - mock_yl_fit_apex_coords_px[1]))
 
-        apex_pos_px = drop_analysis.bn_apex_pos_px.get()
+        apex_coords_px = drop_analysis.bn_apex_coords_px.get()
 
-        assert tuple(apex_pos_px) == expected_apex_pos_px
+        assert tuple(apex_coords_px) == expected_apex_coords_px
 
     def test_interfacial_tension(self):
         drop_analysis = self.drop_analysis

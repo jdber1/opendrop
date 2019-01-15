@@ -82,7 +82,7 @@ class IFTDropAnalysis:
         # Outputs
         self.bn_objective = AtomicBindableAdapter(self._get_objective)
         self.bn_bond_number = AtomicBindableAdapter(self._get_bond_number)
-        self.bn_apex_pos_px = AtomicBindableAdapter(self._get_apex_pos_px)
+        self.bn_apex_coords_px = AtomicBindableAdapter(self._get_apex_coords_px)
         self.bn_apex_radius = AtomicBindableAdapter(self._get_apex_radius)
         self.bn_apex_rot = AtomicBindableAdapter(self._get_apex_rot)
         self.bn_interfacial_tension = AtomicBindableAdapter(self._get_interfacial_tension)
@@ -179,7 +179,7 @@ class IFTDropAnalysis:
         contour_xy += (yl_fit.apex_x, yl_fit.apex_y)
 
         contour_xy = bl_tl_coords_swap(self._image.shape[0], *contour_xy.T).T
-        contour_xy -= self._get_apex_pos_px()
+        contour_xy -= self._get_apex_coords_px()
 
         return contour_xy
 
@@ -223,7 +223,7 @@ class IFTDropAnalysis:
         self.bn_volume.poke()
         self.bn_surface_area.poke()
         self.bn_worthington.poke()
-        self.bn_apex_pos_px.poke()
+        self.bn_apex_coords_px.poke()
         self.bn_apex_radius.poke()
         self.bn_apex_rot.poke()
         self.on_drop_contour_fit_changed.fire()
@@ -294,17 +294,17 @@ class IFTDropAnalysis:
 
         return yl_fit.objective
 
-    def _get_apex_pos_px(self) -> Tuple[float, float]:
+    def _get_apex_coords_px(self) -> Tuple[float, float]:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return (math.nan, math.nan)
 
-        apex_pos = yl_fit.apex_x, yl_fit.apex_y
+        apex_coords = yl_fit.apex_x, yl_fit.apex_y
 
         # Convert to image coordinates
-        apex_pos = bl_tl_coords_swap(self._image.shape[0], *apex_pos).astype(int)
+        apex_coords = bl_tl_coords_swap(self._image.shape[0], *apex_coords).astype(int)
 
-        return tuple(apex_pos)
+        return tuple(apex_coords)
 
     def _get_apex_radius(self) -> si.Length:
         yl_fit = self._yl_fit
