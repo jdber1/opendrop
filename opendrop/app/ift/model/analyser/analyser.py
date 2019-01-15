@@ -292,10 +292,10 @@ class IFTDropAnalysis:
 
         return yl_fit.objective
 
-    def _get_apex_pos_px(self) -> Tuple[int, int]:
+    def _get_apex_pos_px(self) -> Tuple[float, float]:
         yl_fit = self._yl_fit
         if yl_fit is None:
-            return math.nan
+            return (math.nan, math.nan)
 
         apex_pos = yl_fit.apex_x, yl_fit.apex_y
 
