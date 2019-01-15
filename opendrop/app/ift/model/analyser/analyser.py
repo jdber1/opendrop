@@ -14,6 +14,7 @@ from opendrop.iftcalc import phys_props
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
+from opendrop.utility.events import Event
 from .container import IFTPhysicalParameters, IFTImageAnnotations
 
 
@@ -88,8 +89,8 @@ class IFTDropAnalysis:
         self.bn_volume = AtomicBindableAdapter(self._get_volume)
         self.bn_surface_area = AtomicBindableAdapter(self._get_surface_area)
         self.bn_worthington = AtomicBindableAdapter(self._get_worthington)
-        self.bn_drop_contour_fit = AtomicBindableAdapter(self.generate_drop_contour_fit)
-        self.bn_drop_contour_fit_residuals = AtomicBindableAdapter(self._get_drop_contour_fit_residuals)
+
+        self.on_drop_contour_fit_changed = Event()
 
         # Log
         self.bn_log = AtomicBindableVar('')
@@ -141,11 +142,6 @@ class IFTDropAnalysis:
         else:
             self._status = IFTDropAnalysis.Status.FINISHED
 
-    def _hdl_yl_fit_status_changed(self) -> None:
-        yl_fit_status = self._yl_fit.status
-        if yl_fit_status is YoungLaplaceFit.Status.FINISHED:
-            self._status = IFTDropAnalysis.Status.FINISHED
-
     def cancel(self) -> None:
         if self._status.terminal:
             # This is already at the end of its life.
@@ -157,7 +153,7 @@ class IFTDropAnalysis:
         else:
             self._status = self.Status.CANCELLED
 
-    def generate_drop_contour_fit(self, samples: int = 200) -> Optional[np.ndarray]:
+    def generate_drop_contour_fit(self, samples: int = 50) -> Optional[np.ndarray]:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return None
@@ -213,6 +209,19 @@ class IFTDropAnalysis:
         self._yl_fit_ = yl_fit
         self._yl_fit_.on_params_changed.connect(self._hdl_yl_fit_params_changed, immediate=True)
 
+    @property
+    def drop_contour_fit_residuals(self) -> Optional[np.ndarray]:
+        yl_fit = self._yl_fit
+        if yl_fit is None:
+            return None
+
+        return yl_fit.residuals
+
+    def _hdl_yl_fit_status_changed(self) -> None:
+        yl_fit_status = self._yl_fit.status
+        if yl_fit_status is YoungLaplaceFit.Status.FINISHED:
+            self._status = IFTDropAnalysis.Status.FINISHED
+
     def _hdl_yl_fit_params_changed(self) -> None:
         self.bn_objective.poke()
         self.bn_bond_number.poke()
@@ -223,8 +232,7 @@ class IFTDropAnalysis:
         self.bn_apex_pos_px.poke()
         self.bn_apex_radius.poke()
         self.bn_apex_rot.poke()
-        self.bn_drop_contour_fit.poke()
-        self.bn_drop_contour_fit_residuals.poke()
+        self.on_drop_contour_fit_changed.fire()
 
     def _get_bond_number(self) -> float:
         yl_fit = self._yl_fit
@@ -322,13 +330,6 @@ class IFTDropAnalysis:
             return math.nan
 
         return yl_fit.apex_rot
-
-    def _get_drop_contour_fit_residuals(self) -> Optional[np.ndarray]:
-        yl_fit = self._yl_fit
-        if yl_fit is None:
-            return None
-
-        return yl_fit.residuals
 
 
 class IFTAnalysis:

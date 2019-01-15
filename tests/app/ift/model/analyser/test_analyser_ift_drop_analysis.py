@@ -363,8 +363,7 @@ class TestDropAnalysisFitting:
             drop_analysis.bn_apex_pos_px.on_changed.wait(),
             drop_analysis.bn_apex_rot.on_changed.wait(),
             drop_analysis.bn_apex_radius.on_changed.wait(),
-            drop_analysis.bn_drop_contour_fit.on_changed.wait(),
-            drop_analysis.bn_drop_contour_fit_residuals.on_changed.wait())
+            drop_analysis.on_drop_contour_fit_changed.wait())
 
         mock_yl_fit.on_params_changed.fire()
 
@@ -469,12 +468,8 @@ class TestDropAnalysisFitting:
             drop_analysis.bn_volume.get(),
             phys_params.needle_width)
 
-    def test_drop_contour_fit(self):
-        drop_analysis = self.drop_analysis
-        assert (drop_analysis.bn_drop_contour_fit.get() == drop_analysis.generate_drop_contour_fit()).all()
-
     def test_drop_contour_fit_residuals(self):
         drop_analysis = self.drop_analysis
         mock_yl_fit = self.mock_yl_fit
 
-        assert drop_analysis.bn_drop_contour_fit_residuals.get() == mock_yl_fit.residuals
+        assert drop_analysis.drop_contour_fit_residuals == mock_yl_fit.residuals
