@@ -36,8 +36,8 @@ class MainMenuPresenter:
         self._view = view
 
         self.__event_connections = [
-            self._view.on_ift_btn_clicked.connect(self.hdl_view_ift_btn_clicked, immediate=True),
-            self._view.on_conan_btn_clicked.connect(self.hdl_view_conan_btn_clicked, immediate=True)
+            self._view.on_ift_btn_clicked.connect(self.hdl_view_ift_btn_clicked),
+            self._view.on_conan_btn_clicked.connect(self.hdl_view_conan_btn_clicked)
         ]
 
     def hdl_view_ift_btn_clicked(self) -> None:

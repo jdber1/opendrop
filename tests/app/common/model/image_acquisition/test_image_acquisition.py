@@ -66,9 +66,9 @@ def test_im_acq_initial_impl():
 def test_im_acq_change_type(mode):
     im_acq = ImageAcquisition()
     hdl_im_acq_bn_type_changed = Mock()
-    im_acq.bn_type.on_changed.connect(hdl_im_acq_bn_type_changed, immediate=True)
+    im_acq.bn_type.on_changed.connect(hdl_im_acq_bn_type_changed)
     hdl_im_acq_bn_impl_changed = Mock()
-    im_acq.bn_impl.on_changed.connect(hdl_im_acq_bn_impl_changed, immediate=True)
+    im_acq.bn_impl.on_changed.connect(hdl_im_acq_bn_impl_changed)
 
     # Change type (using two ways)
     if mode == 0:

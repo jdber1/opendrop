@@ -181,15 +181,15 @@ class _IFTPhysicalParametersFormPresenter:
             self._view = view
 
             self.__event_connections = [
-                self._validator.bn_inner_density_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_outer_density_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_needle_width_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_gravity_err_msg.on_changed.connect(self._update_errors, immediate=True),
+                self._validator.bn_inner_density_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_outer_density_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_needle_width_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_gravity_err_msg.on_changed.connect(self._update_errors),
 
-                self._view.bn_inner_density_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_outer_density_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_needle_width_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_gravity_touched.on_changed.connect(self._update_errors, immediate=True),
+                self._view.bn_inner_density_touched.on_changed.connect(self._update_errors),
+                self._view.bn_outer_density_touched.on_changed.connect(self._update_errors),
+                self._view.bn_needle_width_touched.on_changed.connect(self._update_errors),
+                self._view.bn_gravity_touched.on_changed.connect(self._update_errors),
             ]
 
             self._view.reset_touches()

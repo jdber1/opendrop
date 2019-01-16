@@ -41,7 +41,7 @@ class HeaderPresenter:
         self._view = view
 
         self.__event_connections = [
-            self._view.on_return_to_menu_btn_clicked.connect(self.hdl_view_return_to_menu_btn_clicked, immediate=True)
+            self._view.on_return_to_menu_btn_clicked.connect(self.hdl_view_return_to_menu_btn_clicked)
         ]
 
         self.__data_bindings = [

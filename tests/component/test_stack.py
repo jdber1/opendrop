@@ -20,9 +20,9 @@ def test_stack_model_add_child():
     stack_model = StackModel()
     child = object()
     cb0 = Mock()
-    stack_model.on_child_added.connect(cb0, immediate=True)
+    stack_model.on_child_added.connect(cb0)
     cb1 = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb1, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb1)
 
     # Add child.
     stack_model.add_child(0, child)
@@ -115,7 +115,7 @@ def test_stack_model_set_visible_child_key():
     child = object()
     stack_model.add_child(0, child)
     cb = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb)
 
     # Set the visible child.
     stack_model.visible_child_key = 0
@@ -143,7 +143,7 @@ def test_stack_model_set_visible_child_key_to_none():
     stack_model.add_child(0, child)
     stack_model.visible_child_key = 0
     cb = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb)
 
     # Set the visible child to None, i.e. make current visible child 'invisible'.
     stack_model.visible_child_key = None
@@ -158,7 +158,7 @@ def test_stack_model_remove_child():
     child = object()
     stack_model.add_child(0, child)
     cb = Mock()
-    stack_model.on_child_removed.connect(cb, immediate=True)
+    stack_model.on_child_removed.connect(cb)
 
     # Remove child.
     stack_model.remove_child(child)
@@ -171,7 +171,7 @@ def test_stack_model_remove_child_on_already_removed_child():
     stack_model.add_child(0, child)
     stack_model.remove_child(child)
     cb = Mock()
-    stack_model.on_child_removed.connect(cb, immediate=True)
+    stack_model.on_child_removed.connect(cb)
 
     # Remove child again.
     with pytest.raises(ValueError):
@@ -186,7 +186,7 @@ def test_stack_model_remove_nonexistent_child():
     child1 = object()
     stack_model.add_child(0, child0)
     cb = Mock()
-    stack_model.on_child_removed.connect(cb, immediate=True)
+    stack_model.on_child_removed.connect(cb)
 
     # Remove nonexistent child.
     with pytest.raises(ValueError):
@@ -204,9 +204,9 @@ def test_stack_model_remove_visible_child():
     def cb0(*_):
         nonlocal cb0_stack_model_visible_child
         cb0_stack_model_visible_child = stack_model.visible_child_key
-    stack_model.on_child_removed.connect(cb0, immediate=True)
+    stack_model.on_child_removed.connect(cb0)
     cb1 = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb1, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb1)
 
     # Remove the visible child.
     stack_model.remove_child(child)
@@ -225,7 +225,7 @@ def test_stack_model_remove_child_when_another_child_is_visible():
     stack_model.add_child(1, child1)
     stack_model.visible_child_key = 1
     cb = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb)
 
     # Remove the visible child.
     stack_model.remove_child(child0)
@@ -241,7 +241,7 @@ def test_stack_model_clear():
     for k, v in children.items():
         stack_model.add_child(k, v)
     cb = Mock()
-    stack_model.on_child_removed.connect(cb, immediate=True)
+    stack_model.on_child_removed.connect(cb)
 
     # Clear the stack.
     stack_model.clear()
@@ -257,7 +257,7 @@ def test_stack_model_clear_with_visible_child():
         stack_model.add_child(k, v)
     stack_model.visible_child_key = 0
     cb = Mock()
-    stack_model.bn_visible_child_key.on_changed.connect(cb, immediate=True)
+    stack_model.bn_visible_child_key.on_changed.connect(cb)
 
     # Clear the stack.
     stack_model.clear()

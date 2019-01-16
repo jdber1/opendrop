@@ -138,10 +138,9 @@ class GraphsPresenter:
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [
-            self._summary_data.bn_ift_data.on_changed.connect(self._check_if_enough_data_for_graphs, immediate=True),
-            self._summary_data.bn_volume_data.on_changed.connect(self._check_if_enough_data_for_graphs, immediate=True),
-            self._summary_data.bn_surface_area_data.on_changed.connect(self._check_if_enough_data_for_graphs,
-                                                                       immediate=True)]
+            self._summary_data.bn_ift_data.on_changed.connect(self._check_if_enough_data_for_graphs),
+            self._summary_data.bn_volume_data.on_changed.connect(self._check_if_enough_data_for_graphs),
+            self._summary_data.bn_surface_area_data.on_changed.connect(self._check_if_enough_data_for_graphs)]
         self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
     def _check_if_enough_data_for_graphs(self) -> None:

@@ -90,7 +90,7 @@ async def test_moderator_activate_speaker_by_key():
     my_spk = MySpeaker()
     mod.add_speaker(0, my_spk)
     cb = Mock()
-    mod.bn_active_speaker_key.on_changed.connect(cb, immediate=True)
+    mod.bn_active_speaker_key.on_changed.connect(cb)
 
     # Activate the speaker
     success = await mod.activate_speaker_by_key(0)
@@ -117,7 +117,7 @@ async def test_moderator_active_speaker_by_key_with_none_key():
     mod.add_speaker(0, my_spk)
     await mod.activate_speaker_by_key(0)
     cb = Mock()
-    mod.bn_active_speaker_key.on_changed.connect(cb, immediate=True)
+    mod.bn_active_speaker_key.on_changed.connect(cb)
 
     # Pass key=None, this should deactivate the current active speaker.
     await mod.activate_speaker_by_key(None)
@@ -140,7 +140,7 @@ async def test_moderator_activate_speaker_by_key_but_current_active_speaker_bloc
     await mod.activate_speaker_by_key(0)
 
     cb = Mock()
-    mod.bn_active_speaker_key.on_changed.connect(cb, immediate=True)
+    mod.bn_active_speaker_key.on_changed.connect(cb)
 
     # Try to activate another speaker
     success = await mod.activate_speaker_by_key(0)
@@ -165,7 +165,7 @@ async def test_moderator_activate_speaker_by_key_with_force():
     await mod.activate_speaker_by_key(0)
 
     cb = Mock()
-    mod.bn_active_speaker_key.on_changed.connect(cb, immediate=True)
+    mod.bn_active_speaker_key.on_changed.connect(cb)
 
     # Try to activate another speaker
     success = await mod.activate_speaker_by_key(1, force=True)

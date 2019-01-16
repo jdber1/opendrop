@@ -56,8 +56,8 @@ class LinearNavigatorFooterPresenter:
         self._view = view
 
         self.__event_connections = [
-            self._view.on_next_btn_clicked.connect(self._hdl_view_next_btn_clicked, immediate=True),
-            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked, immediate=True)
+            self._view.on_next_btn_clicked.connect(self._hdl_view_next_btn_clicked),
+            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked)
         ]
 
         self._update_view_nav_buttons_visibility()

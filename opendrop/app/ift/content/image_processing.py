@@ -399,10 +399,10 @@ class _ActualPresenter:
 
             self.__event_connections = [
                 self._image_annotator.bn_canny_min_thresh.on_changed.connect(
-                    self._update_overlay_progressive, immediate=True),
+                    self._update_overlay_progressive),
                 self._image_annotator.bn_canny_max_thresh.on_changed.connect(
-                    self._update_overlay_progressive, immediate=True),
-                self._preview.bn_image.on_changed.connect(self._update_overlay, immediate=True)
+                    self._update_overlay_progressive),
+                self._preview.bn_image.on_changed.connect(self._update_overlay)
             ]
 
             self._update_overlay_progressive_timer_handle = None  # type: Optional[asyncio.TimerHandle]
@@ -469,9 +469,9 @@ class _ActualPresenter:
             self.on_new_region_defined = Event()
 
             self.__event_connections = [
-                self._view.on_define_start.connect(self._hdl_view_define_start, immediate=True),
-                self._view.on_define_stop.connect(self._hdl_view_define_stop, immediate=True),
-                self._view.on_define_move.connect(self._hdl_view_define_move, immediate=True)
+                self._view.on_define_start.connect(self._hdl_view_define_start),
+                self._view.on_define_stop.connect(self._hdl_view_define_stop),
+                self._view.on_define_move.connect(self._hdl_view_define_move)
             ]
 
             self.__data_bindings = [
@@ -511,11 +511,11 @@ class _ActualPresenter:
             self._view = view
 
             self.__event_connections = [
-                self._validator.bn_drop_region_px_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_needle_region_px_err_msg.on_changed.connect(self._update_errors, immediate=True),
+                self._validator.bn_drop_region_px_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_needle_region_px_err_msg.on_changed.connect(self._update_errors),
 
-                self._view.bn_drop_region_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_needle_region_touched.on_changed.connect(self._update_errors, immediate=True),
+                self._view.bn_drop_region_touched.on_changed.connect(self._update_errors),
+                self._view.bn_needle_region_touched.on_changed.connect(self._update_errors),
             ]
 
             self._view.reset_touches()
@@ -567,9 +567,9 @@ class _ActualPresenter:
 
         self.__event_connections = [
             self._drop_region_presenter.on_new_region_defined.connect(
-                self._hdl_drop_region_presenter_new_region_defined, immediate=True),
+                self._hdl_drop_region_presenter_new_region_defined),
             self._needle_region_presenter.on_new_region_defined.connect(
-                self._hdl_needle_region_presenter_new_region_defined, immediate=True)
+                self._hdl_needle_region_presenter_new_region_defined)
         ]
 
         self.__data_bindings = [

@@ -13,8 +13,7 @@ class MutuallyExclusiveOptions:
         for option in self._options:
             if option.get() is True:
                 raise ValueError('Must be initialised with all options initially False')
-            ec = option.on_changed.connect(functools.partial(self._hdl_option_changed, option),
-                                           strong_ref=True, immediate=True)
+            ec = option.on_changed.connect(functools.partial(self._hdl_option_changed, option), strong_ref=True)
             self._cleanup_tasks.append(ec.disconnect)
 
     def _hdl_option_changed(self, option: AtomicBindable[bool]) -> None:

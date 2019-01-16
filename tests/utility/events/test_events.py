@@ -7,6 +7,7 @@ import pytest
 from pytest import raises
 
 from opendrop.utility import events
+from opendrop.utility.events import EventConnection
 
 SAMPLE_ARGS = (1, '2', [3], {4: 'four'}, object())
 SAMPLE_KWARGS = dict(a=1, b='2', c=object())
@@ -18,24 +19,54 @@ class TestEvent:
     def setup(self):
         self.event = events.Event()
 
-    @pytest.mark.asyncio
-    async def test_connect_and_fire(self):
+    def test_connect_and_fire(self):
         cb = Mock()
-
-        conn = self.event.connect(cb)
-        assert isinstance(conn, events.EventConnection)
+        self.event.connect(cb)
 
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-
-        # Handler should be invoked by the event loop, so should not have been called before this coroutine yields.
-        cb.assert_not_called()
-
-        await asyncio.sleep(0)
 
         cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
 
     @pytest.mark.asyncio
-    async def test_connect_once(self):
+    async def test_connect_with_loop(self):
+        cb = Mock()
+        mock_loop = Mock()
+        self.event.connect(cb, loop=mock_loop)
+
+        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
+
+        # Handler should be invoked by the event loop, so should not have been called yet.
+        cb.assert_not_called()
+
+        assert mock_loop.call_soon.call_count == 1
+        invoke_cb = mock_loop.call_soon.call_args[0][0]
+
+        invoke_cb()
+        cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
+
+    @pytest.mark.asyncio
+    async def test_connect_coroutine_with_loop(self):
+        cb = Mock()
+
+        async def cb_(*args, **kwargs):
+            await asyncio.sleep(0)
+            cb(*args, **kwargs)
+
+        mock_loop = Mock()
+        self.event.connect(cb_, loop=mock_loop)
+
+        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
+
+        # Handler should be invoked by the event loop, so should not have been called yet.
+        cb.assert_not_called()
+
+        assert mock_loop.create_task.call_count == 1
+        invoke_cb_coro = mock_loop.create_task.call_args[0][0]
+
+        await invoke_cb_coro
+        cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
+
+    def test_connect_once(self):
         cb0, cb1 = Mock(), Mock()
 
         self.event.connect(cb0, once=False)
@@ -43,7 +74,6 @@ class TestEvent:
 
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await asyncio.sleep(0.1)
 
         cb0.assert_has_calls(2 * (call(*SAMPLE_ARGS, **SAMPLE_KWARGS),))
         cb1.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
@@ -63,7 +93,7 @@ class TestEvent:
 
             self.event.fire()
 
-        self.event.connect(cb, once=True, immediate=True)
+        self.event.connect(cb, once=True)
         self.event.fire()
 
         assert cb_call_count == 1
@@ -84,34 +114,40 @@ class TestEvent:
 
         cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
 
-    @pytest.mark.asyncio
-    async def test_multiple_handlers(self):
+    def test_multiple_handlers(self):
         cbs = Mock(), Mock()
-
-        for cb in cbs: self.event.connect(cb)
+        for cb in cbs:
+            self.event.connect(cb)
 
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-
-        assert all(not cb.called for cb in cbs)
-        await asyncio.sleep(0)
 
         assert all(cb.call_args == call(*SAMPLE_ARGS, **SAMPLE_KWARGS) for cb in cbs)
 
     @pytest.mark.asyncio
     async def test_multiple_fires(self):
         cb = Mock()
-
         self.event.connect(cb)
 
         self.event.fire(*SAMPLE_ARGS)
         self.event.fire(**SAMPLE_KWARGS)
-        await asyncio.sleep(0)
 
         cb.assert_has_calls((call(*SAMPLE_ARGS), call(**SAMPLE_KWARGS)))
 
     @pytest.mark.asyncio
-    async def test_firing_order(self):
-        order = []
+    async def test_firing_order(self, event_loop):
+        class MyList(list):
+            def __init__(self, done_when_length_is):
+                super().__init__()
+                self.done = asyncio.Event()
+                self._done_when_length_is = done_when_length_is
+
+            def append(self, v):
+                super().append(v)
+
+                if len(self) == self._done_when_length_is:
+                    self.done.set()
+
+        order = MyList(done_when_length_is=6)
 
         def       cb0(): order.append(0)
         def       cb1(): order.append(1)
@@ -122,30 +158,38 @@ class TestEvent:
         def       cb6(): order.append(6)
 
         self.event.connect(cb3)
-        self.event.connect(cb0, immediate=True)
-        self.event.connect(cb1, immediate=True)
-        self.event.connect(cb2, immediate=True)
+        self.event.connect(cb0)
+        self.event.connect(cb1)
+        self.event.connect(cb2)
         self.event.connect(cb4)
-        self.event.connect(cb5)
-        self.event.connect(cb6)
+        self.event.connect(cb5, loop=event_loop)
+        self.event.connect(cb6, loop=event_loop)
 
         self.event.fire()
-        await asyncio.sleep(0)
+        await asyncio.wait_for(order.done.wait(), timeout=0.1)
 
         assert order == sorted(order)
 
-    @pytest.mark.asyncio
-    async def test_event_connection_disconnect(self):
+    def test_event_connection_disconnect(self):
         cb0, cb1 = Mock(), Mock()
-
         conn0 = self.event.connect(cb0)
         conn1 = self.event.connect(cb1)
 
         conn0.disconnect()
+        assert conn0.status is EventConnection.Status.DISCONNECTED
 
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await asyncio.sleep(0)
+        assert not cb0.called and cb1.call_args == call(*SAMPLE_ARGS, **SAMPLE_KWARGS)
 
+    def test_disconnect_by_func(self):
+        cb0, cb1 = Mock(), Mock()
+        conn0 = self.event.connect(cb0)
+        conn1 = self.event.connect(cb1)
+
+        self.event.disconnect_by_func(cb0)
+        assert conn0.status is EventConnection.Status.DISCONNECTED
+
+        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
         assert not cb0.called and cb1.call_args == call(*SAMPLE_ARGS, **SAMPLE_KWARGS)
 
     def test_event_connection_disconnect_when_not_connected(self):
@@ -155,40 +199,24 @@ class TestEvent:
         with raises(events.NotConnected):
             conn.disconnect()
 
-    @pytest.mark.asyncio
-    async def test_disconnect_by_func(self):
-        cb0, cb1 = Mock(), Mock()
-
-        for cb in cb0, cb1: self.event.connect(cb)
-
-        self.event.disconnect_by_func(cb0)
-
-        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await asyncio.sleep(0)
-
-        assert not cb0.called and cb1.call_args == call(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-
-    @pytest.mark.asyncio
-    async def test_event_disconnect_all(self):
+    def test_event_disconnect_all(self):
         cb0, cb1, cb2 = Mock(), Mock(), Mock()
+        for cb in cb0, cb1, cb2:
+            self.event.connect(cb)
 
-        for cb in cb0, cb1, cb2: self.event.connect(cb)
         self.event.disconnect_all()
 
         # Reconnect `cb2`.
         self.event.connect(cb2)
 
         self.event.fire(*SAMPLE_ARGS)
-        await asyncio.sleep(0)
 
         assert all(not cb.called for cb in (cb0, cb1))
         cb2.assert_called_once_with(*SAMPLE_ARGS)
 
     def test_disconnect_by_func_when_not_connected(self):
         cb = Mock()
-
-        self.event.connect(cb)
-        self.event.disconnect_by_func(cb)
+        self.event.connect(cb).disconnect()
 
         # Try disconnecting a function that used to be connected.
         with raises(events.NotConnected):
@@ -198,39 +226,16 @@ class TestEvent:
         with raises(events.NotConnected):
             self.event.disconnect_by_func(Mock())
 
-    @pytest.mark.asyncio
-    async def test_event_fire_ignore(self):
+    def test_event_fire_block_some_connections(self):
         cb0 = Mock()
         cb1 = Mock()
-
         conn0 = self.event.connect(cb0)
         conn1 = self.event.connect(cb1)
 
         self.event.fire_with_opts(SAMPLE_ARGS, block=(conn0,))
 
-        await asyncio.sleep(0)
-
         cb0.assert_not_called()
         cb1.assert_called_once_with(*SAMPLE_ARGS)
-
-    @pytest.mark.asyncio
-    async def test_fire_immediate(self):
-        cb = Mock()
-
-        self.event.connect(cb, immediate=True)
-        self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-
-        # Make sure the handler isn't called again for whatever reason.
-        await asyncio.sleep(0.1)
-        cb.assert_called_once_with(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-
-    @pytest.mark.asyncio
-    async def test_fire_immediate_with_coroutine(self):
-        async def cb(*args, **kwargs): pass
-
-        with raises(ValueError):
-            self.event.connect(cb, immediate=True)
 
     @pytest.mark.asyncio
     async def test_connect_and_fire_coroutine(self):
@@ -275,8 +280,9 @@ class TestEvent:
             nonlocal checkpoint
             checkpoint = 1
 
-            # Coroutine should exit here.
             conn.disconnect(_force=True)
+
+            # Coroutine should exit here.
             await asyncio.sleep(0)
 
             checkpoint = 2
@@ -294,18 +300,18 @@ class TestEvent:
         (('abc', 123), {}, ('abc', 123)),
         (('abc', 123), {'foo': 'bar'}, ('abc', 123))])
     @pytest.mark.asyncio
-    async def test_wait_and_event_fire(self, fire_args, fire_kwargs, expected_result):
+    async def test_wait(self, fire_args, fire_kwargs, expected_result):
         fut = self.event.wait()
         self.event.fire(*fire_args, **fire_kwargs)
         assert await asyncio.wait_for(fut, timeout=0.1) == expected_result
 
     @pytest.mark.asyncio
-    async def test_wait_and_event_disconnect_all(self):
+    async def test_wait_and_disconnect_all(self):
         fut = self.event.wait()
         self.event.disconnect_all()
         assert fut.cancelled() is True
 
-    def test_weak_ref(self):
+    def test_weak_ref_by_default(self):
         cb = Mock()
         cb_wref = weakref.ref(cb)
 
@@ -320,9 +326,8 @@ class TestEvent:
     async def test_weak_ref_scenario_2(self):
         # Miscellaneous test scenario 2
         cb0, cb1 = Mock(), Mock()
-
-        self.event.connect(cb0)
-        self.event.connect(cb1)
+        self.event.connect(cb0, strong_ref=False)
+        self.event.connect(cb1, strong_ref=False)
 
         del cb0
         gc.collect()
@@ -332,8 +337,7 @@ class TestEvent:
 
         cb1.assert_called_once_with(*SAMPLE_ARGS)
 
-    @pytest.mark.asyncio
-    async def test_strong_ref(self):
+    def test_strong_ref(self):
         cb = Mock()
         cb_wref = weakref.ref(cb)
 
@@ -343,59 +347,44 @@ class TestEvent:
         gc.collect()
 
         self.event.fire(*SAMPLE_ARGS)
-        await asyncio.sleep(0)
-
         cb_wref().assert_called_with(*SAMPLE_ARGS)
 
-    @pytest.mark.asyncio
-    async def test_event_ignore_args_connect(self):
+    def test_connect_with_ignore_args_true(self):
         cb = Mock()
-
         self.event.connect(cb, ignore_args=True)
 
         self.event.fire(*SAMPLE_ARGS, **SAMPLE_KWARGS)
-        await asyncio.sleep(0)
 
         cb.assert_called_once_with()
 
-    @pytest.mark.asyncio
-    async def test_weak_ref_with_method_type(self):
+    def test_weak_ref_with_method_type(self):
         cb = Mock()
 
         class ClassWithCallback:
-            def cb_(self, *args, **kwargs):
+            def cb(self, *args, **kwargs):
                 cb(*args, **kwargs)
 
         obj = ClassWithCallback()
-
-        self.event.connect(obj.cb_)
+        self.event.connect(obj.cb, strong_ref=False)
 
         gc.collect()
 
         self.event.fire(*SAMPLE_ARGS)
-        await asyncio.sleep(0)
-
         cb.assert_called_once_with(*SAMPLE_ARGS)
 
-    @pytest.mark.asyncio
-    async def test_is_func_connected(self):
+    def test_is_func_connected(self):
         cb = Mock()
 
         assert not self.event.is_func_connected(cb)
 
         self.event.fire()
-        await asyncio.sleep(0)
-
         cb.assert_not_called()
 
         self.event.connect(cb)
         assert self.event.is_func_connected(cb)
 
         self.event.fire(*SAMPLE_ARGS)
-        await asyncio.sleep(0)
-
         assert self.event.is_func_connected(cb)
-
         cb.assert_called_once_with(*SAMPLE_ARGS)
 
     def test_is_func_connected_with_coroutine(self):
@@ -417,7 +406,7 @@ class TestEvent:
         assert self.event.is_func_connected(obj0.cb) and not self.event.is_func_connected(obj1.cb)
 
     def test_event_num_connections(self):
-        cbs = [Mock() for i in range(5)]
+        cbs = [Mock() for _ in range(5)]
 
         assert self.event.num_connections == 0
 
@@ -430,5 +419,3 @@ class TestEvent:
         for i, cb in enumerate(cbs):
             self.event.disconnect_by_func(cb)
             assert self.event.num_connections == len(cbs) - i - 1
-
-        assert self.event.num_connections == 0

@@ -19,7 +19,7 @@ def test_bindable_send_tx():
     bn = MyBindable()
 
     cb = Mock()
-    bn.on_new_tx.connect(cb, immediate=True)
+    bn.on_new_tx.connect(cb)
 
     my_tx = object()
     bn._bcast_tx(my_tx)
@@ -50,7 +50,7 @@ def test_bindable_apply_tx():
         )
 
     bn = MyBindable()
-    hdl_new_tx_conn = bn.on_new_tx.connect(hdl_new_tx, immediate=True)
+    hdl_new_tx_conn = bn.on_new_tx.connect(hdl_new_tx)
 
     # Test _raw_apply_tx() returning None.
     tx = MyBindableTx(None)
@@ -92,7 +92,7 @@ def test_bindable_apply_tx():
             ('other_hdler', tx)
         )
 
-    bn.on_new_tx.connect(other_hdler, immediate=True)
+    bn.on_new_tx.connect(other_hdler)
 
     tx = MyBindableTx(None)
     bn._apply_tx(tx, block=(hdl_new_tx_conn,))
@@ -120,7 +120,7 @@ def test_atomic_bn_get_and_set():
         checkpoints.append(('hdl_new_tx', tx))
 
     bn = MyAtomicBindable()
-    bn.on_new_tx.connect(hdl_new_tx, immediate=True)
+    bn.on_new_tx.connect(hdl_new_tx)
 
     # Test get()
     assert bn.get() == 4
@@ -152,7 +152,7 @@ def test_atomic_bn_apply_tx():
     tx = MyAtomicBindable._create_tx(23)
 
     bn = MyAtomicBindable()
-    bn.on_new_tx.connect(hdl_new_tx, immediate=True)
+    bn.on_new_tx.connect(hdl_new_tx)
 
     bn._apply_tx(tx)
 
@@ -177,7 +177,7 @@ def test_atomic_bn_export():
         checkpoints.append(('hdl_new_tx', tx))
 
     bn = MyAtomicBindable()
-    bn.on_new_tx.connect(hdl_new_tx, immediate=True)
+    bn.on_new_tx.connect(hdl_new_tx)
 
     bn.poke()
 
@@ -249,7 +249,7 @@ def test_atomic_bn_changed_event():
         checkpoints.append(('hdl_changed',))
 
     bn = MyAtomicBindable()
-    bn.on_changed.connect(hdl_changed, immediate=True)
+    bn.on_changed.connect(hdl_changed)
 
     bn.set(123)
     bn._apply_tx(MyAtomicBindable._create_tx(456))
@@ -368,9 +368,9 @@ class MyMSB(MutableSequenceBindable):
 def test_mutable_sequence_bindable_setitem_tx_silent_apply(tx, expect_i, expect_v):
     msb = MyMSB()
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
     hdl_setitem = Mock()
-    msb.on_setitem.connect(hdl_setitem, immediate=True)
+    msb.on_setitem.connect(hdl_setitem)
 
     # Apply the tx
     tx.silent_apply(msb)
@@ -386,9 +386,9 @@ def test_mutable_sequence_bindable_setitem_tx_silent_apply(tx, expect_i, expect_
 def test_mutable_sequence_bindable_delitem_tx_silent_apply(tx, expect_i):
     msb = MyMSB()
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
     hdl_delitem = Mock()
-    msb.on_delitem.connect(hdl_delitem, immediate=True)
+    msb.on_delitem.connect(hdl_delitem)
 
     # Apply the tx
     tx.silent_apply(msb)
@@ -404,9 +404,9 @@ def test_mutable_sequence_bindable_delitem_tx_silent_apply(tx, expect_i):
 def test_mutable_sequence_bindable_insert_tx_silent_apply(tx, expect_i, expect_v):
     msb = MyMSB()
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
     hdl_insert = Mock()
-    msb.on_insert.connect(hdl_insert, immediate=True)
+    msb.on_insert.connect(hdl_insert)
 
     # Apply the tx
     tx.silent_apply(msb)
@@ -419,9 +419,9 @@ def test_mutable_sequence_bindable_insert_tx_silent_apply(tx, expect_i, expect_v
 def test_mutable_sequence_bindable_setitem():
     msb = MyMSB()
     hdl_setitem = Mock()
-    msb.on_setitem.connect(hdl_setitem, immediate=True)
+    msb.on_setitem.connect(hdl_setitem)
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
 
     # Call __setitem__
     msb.__setitem__(0, 'a string')
@@ -435,7 +435,7 @@ def test_mutable_sequence_bindable_setitem():
 def test_mutable_sequence_bindable_getitem():
     msb = MyMSB()
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
 
     # Call __getitem__
     msb.__getitem__(0)
@@ -447,9 +447,9 @@ def test_mutable_sequence_bindable_getitem():
 def test_mutable_sequence_bindable_delitem():
     msb = MyMSB()
     hdl_delitem = Mock()
-    msb.on_delitem.connect(hdl_delitem, immediate=True)
+    msb.on_delitem.connect(hdl_delitem)
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
 
     # Call __delitem__
     msb.__delitem__(0)
@@ -463,9 +463,9 @@ def test_mutable_sequence_bindable_delitem():
 def test_mutable_sequence_bindable_insert():
     msb = MyMSB()
     hdl_insert = Mock()
-    msb.on_insert.connect(hdl_insert, immediate=True)
+    msb.on_insert.connect(hdl_insert)
     hdl_new_tx = Mock()
-    msb.on_new_tx.connect(hdl_new_tx, immediate=True)
+    msb.on_new_tx.connect(hdl_new_tx)
 
     # Call __delitem__
     msb.insert(0, 'a string')

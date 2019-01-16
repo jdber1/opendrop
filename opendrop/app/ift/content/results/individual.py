@@ -342,8 +342,7 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
         row_ref = Gtk.TreeRowReference(model=self.fits, path=self.fits.get_path(tree_iter))
 
         row = self.Row(self.fits, row_ref)
-        ec = row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True,
-                                                immediate=True)
+        ec = row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True)
         self._rows_cleanup_tasks.append(ec.disconnect)
         self._rows.append(row)
 
@@ -431,10 +430,9 @@ class DetailPresenter:
         self.__cleanup_tasks.extend([db.unbind for db in data_bindings])
 
         event_connections = [
-            self._drop.bn_status.on_changed.connect(self._hdl_drop_status_changed, immediate=True),
-            self._drop.bn_image_annotations.on_changed.connect(self._hdl_image_annotations_changed, immediate=True),
-            self._drop.on_drop_contour_fit_changed.connect(self._update_view_drop_contour_fit_and_residuals,
-                                                           immediate=True)]
+            self._drop.bn_status.on_changed.connect(self._hdl_drop_status_changed),
+            self._drop.bn_image_annotations.on_changed.connect(self._hdl_image_annotations_changed),
+            self._drop.on_drop_contour_fit_changed.connect(self._update_view_drop_contour_fit_and_residuals)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
         self._hdl_drop_status_changed()
@@ -511,11 +509,9 @@ class MasterPresenter:
 
         event_connections = [
             drop.bn_status.on_changed.connect(functools.partial(self._update_row_status_text, row, drop),
-                                              strong_ref=True, immediate=True),
-            drop.bn_log.on_changed.connect(functools.partial(self._update_row_log_text, row, drop), strong_ref=True,
-                                           immediate=True),
-            row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True,
-                                               immediate=True)]
+                                              strong_ref=True),
+            drop.bn_log.on_changed.connect(functools.partial(self._update_row_log_text, row, drop), strong_ref=True),
+            row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
         self._update_row_status_text(row, drop)
@@ -568,7 +564,7 @@ class IndividualFitPresenter:
         self._detail = None  # type: Optional[DetailPresenter]
 
         event_connections = [
-            self._master.bn_selected.on_changed.connect(self._update_detail, immediate=True)]
+            self._master.bn_selected.on_changed.connect(self._update_detail)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
         self._update_detail()

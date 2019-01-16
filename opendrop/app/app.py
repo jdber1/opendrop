@@ -62,7 +62,7 @@ class AppPresenter:
         self._header_presenter = HeaderPresenter(self._main_mod, self._view.header_view)
 
         self.__event_connections = [
-            self._view.on_request_close_window.connect(self._hdl_view_request_close_window, immediate=True)
+            self._view.on_request_close_window.connect(self._hdl_view_request_close_window)
         ]
 
     def _hdl_view_request_close_window(self) -> None:

@@ -466,7 +466,7 @@ async def test_base_camera_create_preview_image():
     preview = base_camera.create_preview()
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb, immediate=True)
+    preview.bn_image.on_changed.connect(cb)
 
     mock_camera.capture.reset_mock()
 
@@ -494,7 +494,7 @@ async def test_base_camera_preview_destroy():
     preview = base_camera.create_preview()
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb, immediate=True)
+    preview.bn_image.on_changed.connect(cb)
 
     preview.destroy()
     assert preview.bn_alive.get() is False
@@ -533,7 +533,7 @@ async def test_base_camera_preview_ignores_capture_error():
     mock_camera.capture.side_effect = CameraCaptureError
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb, immediate=True)
+    preview.bn_image.on_changed.connect(cb)
 
     await asyncio.sleep(0.2)
 

@@ -37,10 +37,10 @@ class IFTResultsExplorer:
         def _track_drop(self, drop: IFTDropAnalysis) -> None:
             self._drops.append(drop)
             event_connections = [
-                drop.bn_image_timestamp.on_changed.connect(self._poke_all_data, immediate=True),
-                drop.bn_interfacial_tension.on_changed.connect(self.bn_ift_data.poke, immediate=True),
-                drop.bn_volume.on_changed.connect(self.bn_volume_data.poke, immediate=True),
-                drop.bn_surface_area.on_changed.connect(self.bn_surface_area_data.poke, immediate=True)]
+                drop.bn_image_timestamp.on_changed.connect(self._poke_all_data),
+                drop.bn_interfacial_tension.on_changed.connect(self.bn_ift_data.poke),
+                drop.bn_volume.on_changed.connect(self.bn_volume_data.poke),
+                drop.bn_surface_area.on_changed.connect(self.bn_surface_area_data.poke)]
             self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
         def _get_drop_timestamps(self) -> Sequence[float]:

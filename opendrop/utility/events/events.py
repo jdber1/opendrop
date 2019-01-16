@@ -27,15 +27,15 @@ class EventConnection:
     # Callback for when the connection disconnects. For internal use.
     _on_disconnected = None  # type: Optional[Callable[]]
 
-    def __init__(self, event: 'Event', handler: Handler, *, immediate: bool = False, ignore_args: bool = False,
-                 strong_ref: bool = False, once: bool = False):
-        if asyncio.iscoroutinefunction(handler) and immediate:
-            raise ValueError('Can\'t connect coroutine function with immediate=True')
+    def __init__(self, event: 'Event', handler: Handler, *, loop: Optional[asyncio.AbstractEventLoop] = None,
+                 ignore_args: bool = False, strong_ref: bool = False, once: bool = False):
+        if asyncio.iscoroutinefunction(handler) and loop is None:
+            loop = asyncio.get_event_loop()
 
-        self.status = EventConnection.Status.CONNECTED  # type: EventConnection.Status
-        self.event = event  # type: Event
+        self.status = EventConnection.Status.CONNECTED
+        self.event = event
         self._opts = dict(
-            immediate=immediate,
+            loop=loop,
             ignore_args=ignore_args,
             strong_ref=strong_ref,
             once=once
@@ -99,18 +99,20 @@ class EventConnection:
         if self._opts['ignore_args']:
             args, kwargs = (), {}
 
+        loop = self._opts['loop']
         if asyncio.iscoroutinefunction(self.handler):
-            self._track_task(asyncio.get_event_loop().create_task(self.handler(*args, **kwargs)))
+            loop = loop if loop is not None else asyncio.get_event_loop()
+            self._track_task(loop.create_task(self.handler(*args, **kwargs)))
             # Increment the invocation count after the task is tracked, otherwise if `self._opts['once'] is True`,
             # incrementing before tracking the task would disconnect the connection and then it wouldn't allow us to
             # track the task afterwards.
             self._invocation_count += 1
         else:
             self._invocation_count += 1
-            if self._opts['immediate']:
+            if loop is None:
                 self.handler(*args, **kwargs)
             else:
-                asyncio.get_event_loop().call_soon(functools.partial(self.handler, *args, **kwargs))
+                loop.call_soon(functools.partial(self.handler, *args, **kwargs))
 
     def _track_task(self, task: asyncio.Future) -> None:
         assert self.status is EventConnection.Status.CONNECTED
@@ -175,8 +177,7 @@ class Event:
         Therefore `strong_ref=True` is often used with `once=True` for one time event handling.
 
         :param handler: The function to connect to this event.
-        :param immediate: Whether the function should be called immediately after this event is fired, or queued onto the
-        event loop.
+        :param loop: Undocumented.
         :param once: Whether the function should only connect once, and automatically disconnect after it is invoked.
         :param ignore_args: Whether the function should be called with no arguments when this event is fired.
         :param strong_ref: Whether this event should keep a strong reference to the handler.
@@ -262,32 +263,16 @@ class Event:
 
     def _invoke_connections(self, args: Iterable, kwargs: Mapping[str, Any],
                             block: Sequence[EventConnection] = tuple()) -> None:
-        # todo: this docstring is outdated
-        """There are two handler invocation 'stages', stage=0 is called by `fire()` initially and during this stage, all
-        handlers connected with immediate=True are invoked. This then queues stage=1 to be called by the event loop
-        later via `AbstractEventLoop.call_soon()`, during this stage, all other handlers will be invoked.
-
-        One exception is that coroutines are scheduled to be executed during stage 0 (with
-        `AbstractEventLoop.create_task()`), this is such that the execution of all connected handlers is guaranteed
-        after the coroutine that fired the event returns control to the event loop.
-
-        >>> async def main():
-        >>>     event = Event()
-        >>>     # Connect handlers
-        >>>     event.fire()
-        >>>     # Handlers with immediate=True invoked
-        >>>     await asyncio.sleep(0)
-        >>>     # All handlers invoked
-        """
-
         for conn in self._connections:
             # Ignore if connection has disconnected, this may have occurred during execution of some handlers.
             if conn.status is not EventConnection.Status.CONNECTED: continue
             if conn in block: continue
             conn._invoke_handler(args, kwargs)
 
-    def wait(self) -> asyncio.Future:
-        f = asyncio.get_event_loop().create_future()  # type: asyncio.Future
+    def wait(self, loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Future:
+        loop = loop if loop is not None else asyncio.get_event_loop()
+
+        f = loop.create_future()  # type: asyncio.Future
 
         # An implicit handler created to act as the callback to this event so that once fired, it will set its arguments
         # as the result of `f`.

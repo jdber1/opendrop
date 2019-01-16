@@ -64,7 +64,7 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
         def __init__(self, target: 'BaseImageSequenceImageAcquisitionImpl') -> None:
             self._target = target
             self.bn_frame_interval_err_msg = AtomicBindableAdapter(self._get_frame_interval_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke, immediate=True)
+            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke)
 
         def check_is_valid(self) -> bool:
             target = self._target
@@ -151,7 +151,7 @@ class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
         # BaseImageSequenceImageAcquisitionImpl initialises this first before LocalImages.. has finished initialised.
         def extra_init(self) -> None:
             self.bn_last_loaded_paths_err_msg = AtomicBindableAdapter(self._get_last_loaded_paths_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_last_loaded_paths.on_changed.connect(self.bn_last_loaded_paths_err_msg.poke, immediate=True)
+            self._target.bn_last_loaded_paths.on_changed.connect(self.bn_last_loaded_paths_err_msg.poke)
 
         def _get_last_loaded_paths_err_msg(self) -> Optional[str]:
             if len(self._target.images) == 0:
@@ -254,7 +254,7 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
         self.bn_image = self.ImageBindable(self)  # type: CameraImageAcquisitionPreview.ImageBindable[Image]
 
         self.__event_connections = [
-            self._src_impl._on_camera_changed.connect(self._hdl_src_impl_camera_changed, immediate=True)
+            self._src_impl._on_camera_changed.connect(self._hdl_src_impl_camera_changed)
         ]
 
         self._poke_image_loop()
@@ -309,13 +309,13 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
             self._target = target
 
             self.bn_camera_err_msg = AtomicBindableAdapter(self._get_camera_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target._on_camera_changed.connect(self.bn_camera_err_msg.poke, immediate=True)
+            self._target._on_camera_changed.connect(self.bn_camera_err_msg.poke)
 
             self.bn_num_frames_err_msg = AtomicBindableAdapter(self._get_num_frames_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_num_frames.on_changed.connect(self.bn_num_frames_err_msg.poke, immediate=True)
+            self._target.bn_num_frames.on_changed.connect(self.bn_num_frames_err_msg.poke)
 
             self.bn_frame_interval_err_msg = AtomicBindableAdapter(self._get_frame_interval_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke, immediate=True)
+            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke)
 
         def check_is_valid(self) -> bool:
             target = self._target
@@ -524,7 +524,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
 
         self._camera = new_camera
         self._camera_alive_changed_event_connection = new_camera.bn_alive.on_changed \
-            .connect(self._hdl_camera_alive_changed, immediate=True)
+            .connect(self._hdl_camera_alive_changed)
         self._current_camera_index = cam_idx
         self.bn_current_camera_index.poke()
 

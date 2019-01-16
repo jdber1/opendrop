@@ -200,11 +200,11 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
             self._view = view
 
             self.__event_connections = [
-                self._validator.bn_last_loaded_paths_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors, immediate=True),
+                self._validator.bn_last_loaded_paths_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors),
 
-                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_selected_image_paths_touched.on_changed.connect(self._update_errors, immediate=True)
+                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors),
+                self._view.bn_selected_image_paths_touched.on_changed.connect(self._update_errors)
             ]
 
             self._view.reset_touches()
@@ -239,10 +239,8 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
         self._errors_presenter = self.ErrorsPresenter(impl.validator, self._view.errors_view)
 
         self.__event_connections = [
-            self._impl.bn_last_loaded_paths.on_changed.connect(self._hdl_impl_last_loaded_paths_changed,
-                                                               immediate=True),
-            self._view.bn_selected_image_paths.on_changed.connect(self._hdl_view_user_input_image_paths_changed,
-                                                                  immediate=True)
+            self._impl.bn_last_loaded_paths.on_changed.connect(self._hdl_impl_last_loaded_paths_changed),
+            self._view.bn_selected_image_paths.on_changed.connect(self._hdl_view_user_input_image_paths_changed)
          ]
 
         self.__data_bindings = [
@@ -581,10 +579,10 @@ class USBCameraImageAcquisitionImplPresenter:
             self.tick = False
 
             self.__event_connections = [
-                self._view.on_connect_btn_clicked.connect(self._hdl_view_on_connect_btn_clicked, immediate=True),
-                self._view.on_cancel_btn_clicked.connect(self._destroy_and_hide_dialog, immediate=True),
-                self._view.on_request_close_window.connect(self._destroy_and_hide_dialog, immediate=True),
-                self._view.bn_camera_inp_text.on_changed.connect(self._hdl_view_camera_inp_text_changed, immediate=True)
+                self._view.on_connect_btn_clicked.connect(self._hdl_view_on_connect_btn_clicked),
+                self._view.on_cancel_btn_clicked.connect(self._destroy_and_hide_dialog),
+                self._view.on_request_close_window.connect(self._destroy_and_hide_dialog),
+                self._view.bn_camera_inp_text.on_changed.connect(self._hdl_view_camera_inp_text_changed)
             ]
 
             self._hdl_view_camera_inp_text_changed()
@@ -624,13 +622,13 @@ class USBCameraImageAcquisitionImplPresenter:
             self._view = view
 
             self.__event_connections = [
-                self._validator.bn_camera_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_num_frames_err_msg.on_changed.connect(self._update_errors, immediate=True),
-                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors, immediate=True),
+                self._validator.bn_camera_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_num_frames_err_msg.on_changed.connect(self._update_errors),
+                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors),
 
-                self._view.bn_current_camera_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_num_frames_touched.on_changed.connect(self._update_errors, immediate=True),
-                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors, immediate=True),
+                self._view.bn_current_camera_touched.on_changed.connect(self._update_errors),
+                self._view.bn_num_frames_touched.on_changed.connect(self._update_errors),
+                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors),
             ]
 
             self._view.reset_touches()
@@ -671,8 +669,8 @@ class USBCameraImageAcquisitionImplPresenter:
         self._errors_presenter = self.ErrorsPresenter(impl.validator, view.errors_view)
 
         self.__event_connections = [
-            self._view.on_change_camera_btn_clicked.connect(self._hdl_view_change_camera_btn_clicked, immediate=True),
-            self._impl.bn_num_frames.on_changed.connect(self._update_view_frame_interval_sensitivity, immediate=True)
+            self._view.on_change_camera_btn_clicked.connect(self._hdl_view_change_camera_btn_clicked),
+            self._impl.bn_num_frames.on_changed.connect(self._update_view_frame_interval_sensitivity)
         ]
 
         self.__data_bindings = [
@@ -830,7 +828,7 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         self._view.set_available_types(available_types)
 
         self.__event_connections = [
-            self._image_acquisition.bn_type.on_changed.connect(self.hdl_image_acquisition_type_changed, immediate=True)
+            self._image_acquisition.bn_type.on_changed.connect(self.hdl_image_acquisition_type_changed)
         ]
 
         self.__data_bindings = [

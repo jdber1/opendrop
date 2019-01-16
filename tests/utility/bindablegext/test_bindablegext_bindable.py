@@ -25,7 +25,7 @@ def test_link_atomic_bn_adapter_to_g_prop_getting_and_setting():
     link_atomic_bn_adapter_to_g_prop(my_bn, my_g_obj, 'my_prop')
 
     cb = Mock()
-    my_bn.on_changed.connect(cb, immediate=True)
+    my_bn.on_changed.connect(cb)
 
     assert my_bn.get() == 1
 
@@ -56,8 +56,8 @@ def test_link_atomic_bn_adapter_to_g_prop_apply_tx():
 
     cb0 = Mock()
     cb1 = Mock()
-    conn0 = my_bn.on_new_tx.connect(cb0, immediate=True)
-    conn1 = my_bn.on_new_tx.connect(cb1, immediate=True)
+    conn0 = my_bn.on_new_tx.connect(cb0)
+    conn1 = my_bn.on_new_tx.connect(cb1)
 
     tx = AtomicBindableAdapter._create_tx(0)
     my_bn._apply_tx(tx, block=(conn0,))
@@ -82,7 +82,7 @@ def test_link_atomic_bn_adapter_to_g_prop_modify_g_prop():
     link_atomic_bn_adapter_to_g_prop(my_bn, my_g_obj, 'my-prop')
 
     cb = Mock()
-    my_bn.on_changed.connect(cb, immediate=True)
+    my_bn.on_changed.connect(cb)
 
     my_g_obj.set_property('my-prop', 0)
 

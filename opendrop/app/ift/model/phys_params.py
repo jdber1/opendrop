@@ -19,16 +19,16 @@ class IFTPhysicalParametersFactory:
             self._target = target
 
             self.bn_inner_density_err_msg = AtomicBindableAdapter(self._get_inner_density_err_msg)
-            self._target.bn_inner_density.on_changed.connect(self.bn_inner_density_err_msg.poke, immediate=True)
+            self._target.bn_inner_density.on_changed.connect(self.bn_inner_density_err_msg.poke)
 
             self.bn_outer_density_err_msg = AtomicBindableAdapter(self._get_outer_density_err_msg)
-            self._target.bn_outer_density.on_changed.connect(self.bn_outer_density_err_msg.poke, immediate=True)
+            self._target.bn_outer_density.on_changed.connect(self.bn_outer_density_err_msg.poke)
 
             self.bn_needle_width_err_msg = AtomicBindableAdapter(self._get_needle_width_err_msg)
-            self._target.bn_needle_width.on_changed.connect(self.bn_needle_width_err_msg.poke, immediate=True)
+            self._target.bn_needle_width.on_changed.connect(self.bn_needle_width_err_msg.poke)
 
             self.bn_gravity_err_msg = AtomicBindableAdapter(self._get_gravity_err_msg)
-            self._target.bn_gravity.on_changed.connect(self.bn_gravity_err_msg.poke, immediate=True)
+            self._target.bn_gravity.on_changed.connect(self.bn_gravity_err_msg.poke)
 
         def _get_inner_density_err_msg(self) -> Optional[str]:
             inner_density = self._target.bn_inner_density.get()

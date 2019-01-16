@@ -123,9 +123,9 @@ class StackPresenter(Generic[KeyType, ChildType]):
         self.stack_view = stack_view
 
         self.__event_connections = [
-            self.stack_model.on_child_added.connect(self._hdl_stack_model_child_added, immediate=True),
-            self.stack_model.on_child_removed.connect(self._hdl_stack_model_child_removed, immediate=True),
-            self.stack_model.bn_visible_child_key.on_changed.connect(self._update_view_visible_child, immediate=True)]
+            self.stack_model.on_child_added.connect(self._hdl_stack_model_child_added),
+            self.stack_model.on_child_removed.connect(self._hdl_stack_model_child_removed),
+            self.stack_model.bn_visible_child_key.on_changed.connect(self._update_view_visible_child)]
 
         self._update_view_visible_child()
 

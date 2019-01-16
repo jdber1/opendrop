@@ -71,8 +71,8 @@ class LocalImagesImageAcquisitionPreviewConfigView(GtkWidgetView[Gtk.Grid]):
         self.bn_num_images = AtomicBindableVar(0)  # type: AtomicBindable[int]
         self.bn_index = AtomicBindableVar(0)  # type: AtomicBindable[int]
 
-        self.bn_num_images.on_changed.connect(self._update_index_lbl, immediate=True)
-        self.bn_index.on_changed.connect(self._update_index_lbl, immediate=True)
+        self.bn_num_images.on_changed.connect(self._update_index_lbl)
+        self.bn_index.on_changed.connect(self._update_index_lbl)
 
     def _update_index_lbl(self) -> None:
         # The '+1' is to convert 0-based indexing to the more typical everyday 1-based indexing.
@@ -86,8 +86,8 @@ class LocalImagesImageAcquisitionPreviewConfigPresenter:
         self._view = view
 
         self.__event_connections = [
-            self._view.on_left_btn_clicked.connect(self._hdl_view_left_btn_clicked, immediate=True),
-            self._view.on_right_btn_clicked.connect(self._hdl_view_right_btn_clicked, immediate=True)
+            self._view.on_left_btn_clicked.connect(self._hdl_view_left_btn_clicked),
+            self._view.on_right_btn_clicked.connect(self._hdl_view_right_btn_clicked)
         ]
 
         self.__data_bindings = [

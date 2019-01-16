@@ -51,10 +51,10 @@ class IFTImageAnnotator:
             self._target = target
 
             self.bn_drop_region_px_err_msg = AtomicBindableAdapter(self._get_drop_region_px_err_msg)
-            self._target.bn_drop_region_px.on_changed.connect(self.bn_drop_region_px_err_msg.poke, immediate=True)
+            self._target.bn_drop_region_px.on_changed.connect(self.bn_drop_region_px_err_msg.poke)
 
             self.bn_needle_region_px_err_msg = AtomicBindableAdapter(self._get_needle_region_px_err_msg)
-            self._target.bn_needle_region_px.on_changed.connect(self.bn_needle_region_px_err_msg.poke, immediate=True)
+            self._target.bn_needle_region_px.on_changed.connect(self.bn_needle_region_px_err_msg.poke)
 
         def check_is_valid(self) -> bool:
             drop_region_px = self._target.bn_drop_region_px.get()

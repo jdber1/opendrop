@@ -215,7 +215,7 @@ class IFTDropAnalysis:
         assert self._yl_fit is None
 
         self._yl_fit_ = yl_fit
-        self._yl_fit_.on_params_changed.connect(self._hdl_yl_fit_params_changed, immediate=True)
+        self._yl_fit_.on_params_changed.connect(self._hdl_yl_fit_params_changed)
 
     @property
     def drop_contour_fit_residuals(self) -> Optional[np.ndarray]:

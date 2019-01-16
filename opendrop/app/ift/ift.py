@@ -214,14 +214,10 @@ class IFTRootPresenter:
         self.__cleanup_tasks.append(self._sidebar_presenter.destroy)
 
         event_connections.extend([
-            self._page_option_image_acquisition.on_changed.connect(self._hdl_page_option_image_acquisition_changed,
-                                                                   immediate=True),
-            self._page_option_phys_params.on_changed.connect(self._hdl_page_option_phys_params_changed,
-                                                             immediate=True),
-            self._page_option_image_processing.on_changed.connect(self._hdl_page_option_image_processing_changed,
-                                                                  immediate=True),
-            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed,
-                                                         immediate=True),
+            self._page_option_image_acquisition.on_changed.connect(self._hdl_page_option_image_acquisition_changed),
+            self._page_option_phys_params.on_changed.connect(self._hdl_page_option_phys_params_changed),
+            self._page_option_image_processing.on_changed.connect(self._hdl_page_option_image_processing_changed),
+            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed),
         ])
 
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
