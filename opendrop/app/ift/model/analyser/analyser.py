@@ -343,6 +343,8 @@ class IFTAnalysis:
                  phys_params: IFTPhysicalParameters, annotate_image: Callable[[Image], IFTImageAnnotations]) -> None:
         self._loop = asyncio.get_event_loop()
 
+        self.bn_cancelled = AtomicBindableVar(False)
+
         self._observations = observations_and_est_resolve_time[0]
         self._phys_params = phys_params
         self._annotate_image = annotate_image
@@ -365,7 +367,12 @@ class IFTAnalysis:
 
             observation.add_done_callback(functools.partial(self._hdl_observation_resolved, idx=i))
 
+    cancelled = AtomicBindable.property_adapter(attrgetter('bn_cancelled'))  # type: bool
+
     def cancel(self):
+        if self.cancelled or all(drop.status.terminal for drop in self._drops):
+            return
+
         for observation in self._observations:
             observation.cancel()
 
@@ -378,6 +385,8 @@ class IFTAnalysis:
                 start_fit_task.cancel()
 
             drop.cancel()
+
+        self.cancelled = True
 
     @property
     def drops(self) -> Sequence[IFTDropAnalysis]:
