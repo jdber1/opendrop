@@ -199,22 +199,50 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self.bn_log_text = AtomicBindableAdapter(setter=lambda v: log_text_view.get_buffer().set_text(v))
 
     def __init__(self) -> None:
-        self.widget = Gtk.Grid(margin=10, column_spacing=10)
+        self.widget = Gtk.Stack(margin=10)
+
+        self._data_grid = Gtk.Grid(column_spacing=10)
+        self.widget.add(self._data_grid)
 
         self.parameters = self.ParametersView()
-        self.widget.attach(self.parameters.widget, 0, 0, 1, 1)
+        self._data_grid.attach(self.parameters.widget, 0, 0, 1, 1)
 
-        notebook = Gtk.Notebook(hexpand=True, vexpand=True)
-        notebook.get_style_context().add_class('notebook-small-tabs')
-        self.widget.attach(notebook, 1, 0, 1, 1)
+        notebook_for_drop_resids_and_log = Gtk.Notebook(hexpand=True, vexpand=True)
+        notebook_for_drop_resids_and_log.get_style_context().add_class('notebook-small-tabs')
+        self._data_grid.attach(notebook_for_drop_resids_and_log, 1, 0, 1, 1)
 
         self.drop_contour_and_residuals = self.DropContourAndResidualsView()
-        notebook.append_page(self.drop_contour_and_residuals.widget, Gtk.Label('Drop contour'))
+        notebook_for_drop_resids_and_log.append_page(self.drop_contour_and_residuals.widget, Gtk.Label('Drop contour'))
 
         self.log = self.LogView()
-        notebook.append_page(self.log.widget, Gtk.Label('Log'))
+        notebook_for_drop_resids_and_log.append_page(self.log.widget, Gtk.Label('Log'))
+        self._data_grid.show_all()
+
+        self._waiting_for_data_placeholder_lbl = Gtk.Label()
+        self._waiting_for_data_placeholder_lbl.set_markup('<b>Waiting for data...</b>')
+        self._waiting_for_data_placeholder_lbl.show_all()
+        self.widget.add(self._waiting_for_data_placeholder_lbl)
 
         self.widget.show_all()
+
+        self._is_waiting_for_data = False
+        self.widget.set_visible_child(self._waiting_for_data_placeholder_lbl)
+
+    @property
+    def is_waiting_for_data(self) -> bool:
+        return self._is_waiting_for_data
+
+    @is_waiting_for_data.setter
+    def is_waiting_for_data(self, is_waiting: bool) -> None:
+        if self.is_waiting_for_data is is_waiting:
+            return
+
+        if is_waiting:
+            self.widget.set_visible_child(self._waiting_for_data_placeholder_lbl)
+        else:
+            self.widget.set_visible_child(self._data_grid)
+
+        self._is_waiting_for_data = is_waiting
 
 
 class MasterView(GtkWidgetView[Gtk.Grid]):
@@ -394,13 +422,20 @@ class DetailPresenter:
         self.__cleanup_tasks.extend([db.unbind for db in data_bindings])
 
         event_connections = [
+            self._drop.bn_status.on_changed.connect(self._hdl_drop_status_changed, immediate=True),
             self._drop.bn_image_annotations.on_changed.connect(self._hdl_image_annotations_changed, immediate=True),
             self._drop.on_drop_contour_fit_changed.connect(self._update_view_drop_contour_fit_and_residuals,
                                                            immediate=True)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
+        self._hdl_drop_status_changed()
         self._hdl_image_annotations_changed()
         self._update_view_drop_contour_fit_and_residuals()
+
+    def _hdl_drop_status_changed(self) -> None:
+        status = self._drop.status
+        self._view.is_waiting_for_data = (status is IFTDropAnalysis.Status.WAITING_FOR_IMAGE or
+                                          status is IFTDropAnalysis.Status.READY_TO_FIT)
 
     def _hdl_image_annotations_changed(self) -> None:
         image_annotations = self._drop.image_annotations
