@@ -432,7 +432,3 @@ class TestEvent:
             assert self.event.num_connections == len(cbs) - i - 1
 
         assert self.event.num_connections == 0
-
-
-@pytest.mark.skip
-def test_stub(): ...
