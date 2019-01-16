@@ -142,8 +142,8 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
                 item.set_fontsize(8)
 
             self._drop_aximg = AxesImage(ax=self._drop_fig_ax)
-            # Place holder image
-            self._drop_aximg.set_data(np.zeros((1, 1, 3)))
+            # Place holder transparent 1x1 image (rgba format)
+            self._drop_aximg.set_data(np.zeros((1, 1, 4)))
             self._drop_fig_ax.add_image(self._drop_aximg)
             self._drop_contour_line = self._drop_fig_ax.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
             self._drop_contour_fit_line = self._drop_fig_ax.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
@@ -159,6 +159,13 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self.bn_drop_contour_fit_residuals = AtomicBindableAdapter(setter=self._set_drop_contour_fit_residuals)
 
         def _set_drop_image(self, image: Optional[Image]) -> None:
+            if image is None:
+                self._drop_fig_ax.set_axis_off()
+                self._drop_aximg.set_data(np.zeros((1, 1, 4)))
+                return
+
+            self._drop_fig_ax.set_axis_on()
+
             # Use a scaled down image so it draws faster.
             thumb_size = (min(400, image.shape[1]), min(400, image.shape[0]))
             image_thumb = cv2.resize(image, dsize=thumb_size)
@@ -167,22 +174,24 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self._drop_aximg.set_extent((0, image.shape[1], image.shape[0], 0))
             self._drop_fig_canvas.queue_draw()
 
-        def _set_drop_contour(self, contour: Optional[np.ndarray]) -> None:
+        def _set_drop_contour(self, contour: np.ndarray) -> None:
             self._drop_contour_line.set_data(contour.T)
             self._drop_fig_canvas.queue_draw()
 
-        def _set_drop_contour_fit(self, contour: Optional[np.ndarray]) -> None:
+        def _set_drop_contour_fit(self, contour: np.ndarray) -> None:
             self._drop_contour_fit_line.set_data(contour.T)
             self._drop_fig_canvas.queue_draw()
 
-        def _set_drop_contour_fit_residuals(self, residuals: Optional[np.ndarray]) -> None:
-            self._residuals_figure_axes.clear()
+        def _set_drop_contour_fit_residuals(self, residuals: np.ndarray) -> None:
+            axes = self._residuals_figure_axes
+            axes.clear()
 
-            if residuals is None:
+            if residuals.size == 0:
+                axes.set_axis_off()
                 self._residuals_fig_canvas.queue_draw()
                 return
 
-            axes = self._residuals_figure_axes
+            axes.set_axis_on()
             axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
             self._residuals_fig_canvas.queue_draw()
 
@@ -439,27 +448,32 @@ class DetailPresenter:
 
     def _hdl_image_annotations_changed(self) -> None:
         image_annotations = self._drop.image_annotations
+
         if image_annotations is None:
-            return
+            drop_image = None
+            drop_contour_px = np.empty((0, 2))
+        else:
+            drop_region_px = image_annotations.drop_region_px
 
-        drop_region_px = image_annotations.drop_region_px
+            image = self._drop.image
+            drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
 
-        image = self._drop.image
-        drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
+            drop_contour_px = image_annotations.drop_contour_px.copy()
+            drop_contour_px -= drop_region_px.pos
+
         self._view.drop_contour_and_residuals.bn_drop_image.set(drop_image)
-
-        drop_contour_px = image_annotations.drop_contour_px.copy()
-        drop_contour_px -= drop_region_px.pos
         self._view.drop_contour_and_residuals.bn_drop_contour.set(drop_contour_px)
 
     def _update_view_drop_contour_fit_and_residuals(self) -> None:
         drop_contour_fit = self._drop.generate_drop_contour_fit(samples=50)
         residuals = self._drop.drop_contour_fit_residuals
-        if drop_contour_fit is None or residuals is None:
-            return
 
-        drop_contour_fit += self._drop.apex_coords_px
-        drop_contour_fit -= self._drop.image_annotations.drop_region_px.pos
+        if drop_contour_fit is None or residuals is None:
+            drop_contour_fit = np.empty((0, 2))
+            residuals = np.empty((0, 2))
+        else:
+            drop_contour_fit += self._drop.apex_coords_px
+            drop_contour_fit -= self._drop.image_annotations.drop_region_px.pos
 
         self._view.drop_contour_and_residuals.bn_drop_contour_fit.set(drop_contour_fit)
         self._view.drop_contour_and_residuals.bn_drop_contour_fit_residuals.set(residuals)
