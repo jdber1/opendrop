@@ -451,26 +451,19 @@ class USBCamera(Camera):
 
     def __init__(self, cam_idx: int) -> None:
         self._vc = cv2.VideoCapture(cam_idx)
-        self.wait_until_ready()
+
+        if not self.check_vc_works(timeout=5):
+            raise ValueError('Camera failed to open.')
+
+        self.bn_alive = AtomicBindableVar(True)
 
         # For some reason, on some cameras, the first few images captured will be dark. Consume those images
         # now so the camera will be "fully operational" after initialisation.
         for i in range(self._PRECAPTURE):
             self._vc.read()
 
-        self.bn_alive = AtomicBindableVar(True)
-
     # Property adapters for atomic bindables
     alive = AtomicBindable.property_adapter(lambda self: self.bn_alive)
-
-    def wait_until_ready(self) -> None:
-        success = False
-
-        while not success:
-            if not self._vc.isOpened():
-                raise ValueError('Camera failed to open.')
-
-            success = self._vc.read()[0]
 
     def capture(self) -> np.ndarray:
         start_time = time.time()
@@ -488,15 +481,19 @@ class USBCamera(Camera):
         height = self._vc.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return width, height
 
-    def check_still_working(self) -> None:
+    def check_vc_works(self, timeout: float) -> bool:
         start_time = time.time()
-        while self._vc.isOpened() and (time.time() - start_time) < self._CAPTURE_TIMEOUT:
+        while self._vc.isOpened() and (time.time() - start_time) < timeout:
             success = self._vc.grab()
             if success:
                 # Camera still works
-                return
+                return True
+        else:
+            return False
 
-        self.release()
+    def release_if_not_working(self, timeout=_CAPTURE_TIMEOUT) -> None:
+        if not self.check_vc_works(timeout):
+            self.release()
 
     def release(self) -> None:
         self._vc.release()
@@ -558,7 +555,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
             # There is no camera to check
             return
 
-        self._camera.check_still_working()
+        self._camera.release_if_not_working()
 
     def _get_current_camera_index(self) -> int:
         return self._current_camera_index
