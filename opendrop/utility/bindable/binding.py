@@ -32,7 +32,7 @@ class Binding(Generic[STxT, DTxT]):
         self._mitm = mitm
 
         self._on_new_tx_conns = {
-            bn: bn.on_new_tx.connect(functools.partial(self._hdl_new_tx, bn), strong_ref=True)
+            bn: bn.on_new_tx.connect(functools.partial(self._hdl_new_tx, bn), weak_ref=False)
             for bn in (src, dst)
         }
 

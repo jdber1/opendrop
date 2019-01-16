@@ -342,7 +342,7 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
         row_ref = Gtk.TreeRowReference(model=self.fits, path=self.fits.get_path(tree_iter))
 
         row = self.Row(self.fits, row_ref)
-        ec = row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True)
+        ec = row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), weak_ref=False)
         self._rows_cleanup_tasks.append(ec.disconnect)
         self._rows.append(row)
 
@@ -509,9 +509,9 @@ class MasterPresenter:
 
         event_connections = [
             drop.bn_status.on_changed.connect(functools.partial(self._update_row_status_text, row, drop),
-                                              strong_ref=True),
-            drop.bn_log.on_changed.connect(functools.partial(self._update_row_log_text, row, drop), strong_ref=True),
-            row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), strong_ref=True)]
+                                              weak_ref=False),
+            drop.bn_log.on_changed.connect(functools.partial(self._update_row_log_text, row, drop), weak_ref=False),
+            row.bn_selected.on_changed.connect(functools.partial(self._hdl_row_selected_changed, row), weak_ref=False)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
         self._update_row_status_text(row, drop)

@@ -360,7 +360,7 @@ class IFTAnalysis:
 
         for i, observation in enumerate(self._observations):
             drop = IFTDropAnalysis(phys_params)
-            drop.bn_status.on_changed.connect(functools.partial(self._hdl_drop_status_changed, drop), strong_ref=True)
+            drop.bn_status.on_changed.connect(functools.partial(self._hdl_drop_status_changed, drop), weak_ref=False)
             self._drops.append(drop)
 
             observation.add_done_callback(functools.partial(self._hdl_observation_resolved, idx=i))

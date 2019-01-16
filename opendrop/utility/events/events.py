@@ -13,8 +13,8 @@ Handler = Union[Callable, Coroutine]
 
 # todo: Add documentation for EventConnection lifecycle, explanation of CONNECTED, LAST_CALL, DISCONNECTED
 # todo: Make threadsafe
-# todo: Warn if connecting a lambda function or functools.partial (or others) without strong_ref=True, this is a common
-#       mistake. Alternatively make strong_ref=True the default option, however this may lead to silent memory leaks.
+# todo: Warn if connecting a lambda function or functools.partial (or others) without weak_ref=False, this is a common
+#       mistake. Alternatively make weak_ref=False the default option, however this may lead to silent memory leaks.
 class EventConnection:
     class Status(Enum):
         CONNECTED = 1
@@ -28,7 +28,7 @@ class EventConnection:
     _on_disconnected = None  # type: Optional[Callable[]]
 
     def __init__(self, event: 'Event', handler: Handler, *, loop: Optional[asyncio.AbstractEventLoop] = None,
-                 ignore_args: bool = False, strong_ref: bool = False, once: bool = False):
+                 ignore_args: bool = False, weak_ref: bool = True, once: bool = False):
         if asyncio.iscoroutinefunction(handler) and loop is None:
             loop = asyncio.get_event_loop()
 
@@ -37,7 +37,7 @@ class EventConnection:
         self._opts = dict(
             loop=loop,
             ignore_args=ignore_args,
-            strong_ref=strong_ref,
+            weak_ref=weak_ref,
             once=once
         )  # type: Mapping[str, Any]
         self._tasks = []  # type: List[asyncio.Future]
@@ -45,22 +45,22 @@ class EventConnection:
 
     @property
     def handler(self) -> Handler:
-        if self._opts['strong_ref']:
-            return self._handler
-        else:
+        if self._opts['weak_ref']:
             return self._handler()
+        else:
+            return self._handler
 
     @handler.setter
     def handler(self, value: Handler) -> None:
-        if self._opts['strong_ref']:
-            self._handler = value
-        else:
+        if self._opts['weak_ref']:
             if isinstance(value, types.MethodType):
                 wref = weakref.WeakMethod(value)
             else:
                 wref = weakref.ref(value)
 
             self._handler = wref
+        else:
+            self._handler = value
 
     def disconnect(self, _force=False) -> None:
         if self.status is EventConnection.Status.DISCONNECTED:
@@ -169,18 +169,18 @@ class Event:
         ...     def increment_x(self):
         ...         self.x += 1
 
-        Specify `strong_ref=True` if you want the event to keep a strong reference to the handler, however this would
+        Specify `weak_ref=False` if you want the event to keep a strong reference to the handler, however this would
         prevent the handler from being garbage collected (unless it is later disconnected), and in this scenario, the
         MyClass instance will never be garbage collected either as the lambda closure will always hold a strong
         reference to it.
 
-        Therefore `strong_ref=True` is often used with `once=True` for one time event handling.
+        Therefore `weak_ref=False` is often used with `once=True` for one time event handling.
 
         :param handler: The function to connect to this event.
         :param loop: Undocumented.
         :param once: Whether the function should only connect once, and automatically disconnect after it is invoked.
         :param ignore_args: Whether the function should be called with no arguments when this event is fired.
-        :param strong_ref: Whether this event should keep a strong reference to the handler.
+        :param weak_ref: Whether this event should only keep a weak reference to the handler.
 
         :return: a new connection object
         """

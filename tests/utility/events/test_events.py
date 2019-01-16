@@ -326,8 +326,8 @@ class TestEvent:
     async def test_weak_ref_scenario_2(self):
         # Miscellaneous test scenario 2
         cb0, cb1 = Mock(), Mock()
-        self.event.connect(cb0, strong_ref=False)
-        self.event.connect(cb1, strong_ref=False)
+        self.event.connect(cb0, weak_ref=False)
+        self.event.connect(cb1, weak_ref=False)
 
         del cb0
         gc.collect()
@@ -337,11 +337,11 @@ class TestEvent:
 
         cb1.assert_called_once_with(*SAMPLE_ARGS)
 
-    def test_strong_ref(self):
+    def test_connect_with_weak_ref_false(self):
         cb = Mock()
         cb_wref = weakref.ref(cb)
 
-        self.event.connect(cb, strong_ref=True)
+        self.event.connect(cb, weak_ref=False)
 
         del cb
         gc.collect()
@@ -365,7 +365,7 @@ class TestEvent:
                 cb(*args, **kwargs)
 
         obj = ClassWithCallback()
-        self.event.connect(obj.cb, strong_ref=False)
+        self.event.connect(obj.cb, weak_ref=True)
 
         gc.collect()
 

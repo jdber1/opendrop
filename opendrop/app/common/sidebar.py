@@ -98,7 +98,7 @@ class TasksSidebarPresenter(Generic[TaskType]):
         for task, is_active in task_and_is_active:
             view.add_task(task)
             is_active.on_changed.connect(functools.partial(self._hdl_task_is_active_changed, task, is_active),
-                                         strong_ref=True)
+                                         weak_ref=False)
             self._hdl_task_is_active_changed(task, is_active)
 
     def _hdl_task_is_active_changed(self, task: TaskType, is_active: AtomicBindable[bool]) -> None:
