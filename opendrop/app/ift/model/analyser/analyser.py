@@ -211,7 +211,7 @@ class IFTDropAnalysis:
         return self._yl_fit_
 
     @_yl_fit.setter
-    def _yl_fit(self, yl_fit: YoungLaplaceFit) -> YoungLaplaceFit:
+    def _yl_fit(self, yl_fit: YoungLaplaceFit) -> None:
         assert self._yl_fit is None
 
         self._yl_fit_ = yl_fit
