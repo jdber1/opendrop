@@ -74,7 +74,7 @@ class IFTDropAnalysis:
         self.bn_image_annotations = AtomicBindableAdapter(lambda: self._image_annotations)
 
         # The time (in Unix time) that the image was captured.
-        self._image_timestamp = None  # type: Optional[float]
+        self._image_timestamp = math.nan  # type: float
         self.bn_image_timestamp = AtomicBindableAdapter(lambda: self._image_timestamp)
 
         self._yl_fit_ = None  # type: Optional[YoungLaplaceFit]
