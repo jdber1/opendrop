@@ -4,19 +4,21 @@ from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optiona
 
 from gi.repository import Gtk
 
+from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
+from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter, AnalysisFooterView, \
+    AnalysisFooterPresenter
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
-from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
-from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
+from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
+from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
+from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
+from opendrop.app.ift.footer import IFTAnalysisFooterModel
 from opendrop.app.ift.model.analyser import IFTAnalysis
 from opendrop.app.ift.model.analysis_factory import IFTAnalysisFactory
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
-from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
-from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
-from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView
 from opendrop.component.wizard.wizard import WizardPageID
@@ -60,10 +62,10 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
         self.footer_phys_params = LinearNavigatorFooterView()
 
         self.content_image_processing = IFTImageProcessingFormView()
-        self.footer_image_processing = LinearNavigatorFooterView()
+        self.footer_image_processing = LinearNavigatorFooterView(next_label='Start analysis')
 
         self.content_results = IFTResultsView()
-        self.footer_results = LinearNavigatorFooterView()
+        self.footer_results = AnalysisFooterView()
 
         # Sidebar
         self.sidebar_view = TasksSidebarView(attrgetter('title'))  # type: TasksSidebarView[IFTWizardPageID]
@@ -203,6 +205,19 @@ class IFTRootPresenter:
             view=self._view.footer_image_processing)
         self.__cleanup_tasks.append(self._footer_image_processing.destroy)
 
+        # Results
+        self._footer_results_model = IFTAnalysisFooterModel(
+            back_action=lambda: print('Back'),
+            cancel_action=lambda: self._results_explorer.analysis.cancel(),#print('Cancel'),
+            save_action=lambda: print('Save'))
+        self._footer_results = AnalysisFooterPresenter(
+            model=self._footer_results_model,
+            view=self._view.footer_results)  # type: Optional[AnalysisFooterPresenter]
+        self.__cleanup_tasks.append(self._footer_results.destroy)
+        self.__cleanup_tasks.append(self._footer_results_model.destroy)
+        self.__cleanup_tasks.append(
+            Binding(self._results_explorer.bn_analysis, self._footer_results_model.bn_analysis).unbind)
+
         # Sidebar
         self._sidebar_presenter = TasksSidebarPresenter(
             task_and_is_active=(
@@ -217,9 +232,7 @@ class IFTRootPresenter:
             self._page_option_image_acquisition.on_changed.connect(self._hdl_page_option_image_acquisition_changed),
             self._page_option_phys_params.on_changed.connect(self._hdl_page_option_phys_params_changed),
             self._page_option_image_processing.on_changed.connect(self._hdl_page_option_image_processing_changed),
-            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed),
-        ])
-
+            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed)])
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
         # Activate the first page.
