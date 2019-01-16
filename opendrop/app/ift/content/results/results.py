@@ -1,11 +1,10 @@
 from typing import Optional
 
-import numpy as np
 from gi.repository import Gtk, Gdk
 
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from .graphs import GraphsView
+from .graphs import GraphsView, GraphsPresenter
 from .individual import IndividualFitView, IndividualFitPresenter
 
 
@@ -48,17 +47,17 @@ class IFTResultsView(GtkWidgetView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        # DEBUG
-        time_data = np.linspace(0, 100, 10)
-        ift_data = np.random.rand(10)
-        vol_data = np.random.rand(10)
-        sur_data = np.random.rand(10)
-
-        self.graphs.bn_time_data.set(time_data)
-        self.graphs.bn_ift_data.set(ift_data)
-        self.graphs.bn_volume_data.set(vol_data)
-        self.graphs.bn_surface_area_data.set(sur_data)
-        # END DEBUG
+        # # DEBUG
+        # time_data = np.linspace(0, 100, 10)
+        # ift_data = np.random.rand(10)
+        # vol_data = np.random.rand(10)
+        # sur_data = np.random.rand(10)
+        #
+        # self.graphs.bn_time_data.set(time_data)
+        # self.graphs.bn_ift_data.set(ift_data)
+        # self.graphs.bn_volume_data.set(vol_data)
+        # self.graphs.bn_surface_area_data.set(sur_data)
+        # # END DEBUG
 
     def _hide_graphs(self) -> None:
         self._frame.props.shadow_type = Gtk.ShadowType.NONE
@@ -79,6 +78,10 @@ class _IFTResultsPresenter:
         self._individual_fit = IndividualFitPresenter(
             drops=self._results_explorer.individual_drops, view=self._view.individual_fit)
         self.__cleanup_tasks.append(self._individual_fit.destroy)
+
+        self._graphs = GraphsPresenter(
+            summary_data=self._results_explorer.summary_data, view=self._view.graphs)
+        self.__cleanup_tasks.append(self._graphs.destroy)
 
     def destroy(self) -> None:
         assert not self.__destroyed
