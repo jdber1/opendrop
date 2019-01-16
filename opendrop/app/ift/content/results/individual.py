@@ -537,7 +537,6 @@ class IndividualFitPresenter:
             self._master.destroy()
 
         if self._detail:
-            # destroy detail please
             self._detail.destroy()
 
         self.__destroyed = True

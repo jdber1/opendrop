@@ -47,18 +47,6 @@ class IFTResultsView(GtkWidgetView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        # # DEBUG
-        # time_data = np.linspace(0, 100, 10)
-        # ift_data = np.random.rand(10)
-        # vol_data = np.random.rand(10)
-        # sur_data = np.random.rand(10)
-        #
-        # self.graphs.bn_time_data.set(time_data)
-        # self.graphs.bn_ift_data.set(ift_data)
-        # self.graphs.bn_volume_data.set(vol_data)
-        # self.graphs.bn_surface_area_data.set(sur_data)
-        # # END DEBUG
-
     def _hide_graphs(self) -> None:
         self._frame.props.shadow_type = Gtk.ShadowType.NONE
         self._frame.props.label_widget.hide()
