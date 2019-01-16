@@ -504,7 +504,7 @@ class MasterPresenter:
                                                immediate=True)]
         self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
 
-        self._update_row_log_text(row, drop)
+        self._update_row_status_text(row, drop)
         self._update_row_log_text(row, drop)
         self._hdl_row_selected_changed(row)
 
