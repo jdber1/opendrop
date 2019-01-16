@@ -87,3 +87,37 @@ def test_link_atomic_bn_adapter_to_g_prop_modify_g_prop():
     my_g_obj.set_property('my-prop', 0)
 
     cb.assert_called_once_with()
+
+
+def test_link_atomic_bn_adapter_to_g_prop_transform_to():
+    class MyGObject(GObject.Object):
+        my_prop_setter = Mock()
+        my_prop = GObject.Property(setter=my_prop_setter)
+
+    my_bn = AtomicBindableAdapter()
+    my_g_obj = MyGObject()
+
+    transform_to = Mock()
+    link_atomic_bn_adapter_to_g_prop(my_bn, my_g_obj, 'my_prop', transform_to=transform_to)
+
+    # Set the value of my_bn
+    my_bn.set(2)
+
+    transform_to.assert_called_once_with(2)
+    MyGObject.my_prop_setter.assert_called_once_with(my_g_obj, transform_to.return_value)
+
+
+def test_link_atomic_bn_adapter_to_g_prop_transform_from():
+    class MyGObject(GObject.Object):
+        my_prop_getter = Mock()
+        my_prop = GObject.Property(getter=my_prop_getter)
+
+    my_bn = AtomicBindableAdapter()
+    my_g_obj = MyGObject()
+
+    transform_from = Mock()
+    link_atomic_bn_adapter_to_g_prop(my_bn, my_g_obj, 'my_prop', transform_from=transform_from)
+
+    # Retrieve the value of my_bn
+    assert my_bn.get() == transform_from.return_value
+    transform_from.assert_called_once_with(MyGObject.my_prop_getter.return_value)
