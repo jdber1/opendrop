@@ -66,16 +66,15 @@ class IFTResultsExplorer:
 
     def __init__(self):
         self._analysis = None
+        self.bn_analysis = AtomicBindableAdapter(getter=lambda: self._analysis, setter=self._set_analysis)  # type: AtomicBindable[Optional[(IFTAnalysis)]]
         self.bn_individual_drops = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[IFTDropAnalysis]]
         self.bn_summary_data = AtomicBindableVar(None)  # type: AtomicBindable[Optional[IFTResultsExplorer.SummaryData]]
 
+    analysis = AtomicBindable.property_adapter(attrgetter('bn_analysis'))  # type: Optional[IFTAnalysis]
     individual_drops = AtomicBindable.property_adapter(attrgetter('bn_individual_drops'))  # type: Sequence[IFTDropAnalysis]
     summary_data = AtomicBindable.property_adapter(attrgetter('bn_summary_data'))  # type: IFTResultsExplorer.SummaryData
 
-    analysis = property()
-
-    @analysis.setter
-    def analysis(self, analysis: IFTAnalysis) -> None:
+    def _set_analysis(self, analysis: IFTAnalysis) -> None:
         self._analysis = analysis
 
         self.individual_drops = tuple(self._analysis.drops)
