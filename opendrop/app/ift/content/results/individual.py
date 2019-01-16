@@ -282,6 +282,14 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
         self._hdl_fits_view_selection_changed_id = self._fits_selection.connect(
             'changed', self._hdl_fits_view_selection_changed)
 
+    @property
+    def visible(self) -> bool:
+        return self.widget.props.visible
+
+    @visible.setter
+    def visible(self, value: bool) -> None:
+        self.widget.props.visible = value
+
     def clear(self) -> None:
         self._rows = []
         for f in self._rows_cleanup_tasks:
@@ -440,6 +448,9 @@ class MasterPresenter:
 
         self._view.clear()
         self.add_drops(drops)
+
+        # Only show an overview if more than one drop analysis.
+        self._view.visible = len(drops) > 1
 
     def add_drops(self, drops: Sequence[IFTDropAnalysis]) -> None:
         for drop in drops:
