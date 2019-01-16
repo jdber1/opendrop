@@ -165,7 +165,9 @@ class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
 
         link_atomic_bn_adapter_to_g_prop(self.bn_inner_density, self._inner_density_inp, 'value')
         link_atomic_bn_adapter_to_g_prop(self.bn_outer_density, self._outer_density_inp, 'value')
-        link_atomic_bn_adapter_to_g_prop(self.bn_needle_width, self._needle_width_inp, 'value')
+        link_atomic_bn_adapter_to_g_prop(self.bn_needle_width, self._needle_width_inp, 'value',
+                                         transform_to=lambda x: x*1e3 if x is not None else None,
+                                         transform_from=lambda x: x/1e3 if x is not None else None)
         link_atomic_bn_adapter_to_g_prop(self.bn_gravity, self._gravity_inp, 'value')
 
         self.errors_view = self.ErrorsView(self)
