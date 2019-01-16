@@ -71,10 +71,10 @@ class GraphsView(GtkWidgetView[Gtk.Stack]):
 
         if value:
             self.widget.set_visible_child(self._graphs_fig_canvas)
-            self._sufficient_data = value
         else:
             self.widget.set_visible_child(self._insufficient_data_lbl)
-            self._sufficient_data = value
+
+        self._sufficient_data = value
 
     def _update_xlim(self) -> None:
         all_xdata = [*itertools.chain(self._ift_line.get_xdata(), self._volume_line.get_xdata(),
