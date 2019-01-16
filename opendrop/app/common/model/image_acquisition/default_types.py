@@ -441,8 +441,8 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
 
         try:
             fut.set_result((self._camera.capture(), time.time()))
-        except CameraCaptureError as exc:
-            fut.set_exception(exc)
+        except CameraCaptureError:
+            fut.cancel()
 
 
 class USBCamera(Camera):

@@ -364,7 +364,7 @@ async def test_base_camera_acquire_images_with_camera_that_cannot_capture():
     base_camera.bn_frame_interval.set(0.01)
 
     for fut in base_camera.acquire_images()[0]:
-        with pytest.raises(CameraCaptureError):
+        with pytest.raises(asyncio.CancelledError):
             await fut
 
 
@@ -384,14 +384,14 @@ async def test_base_camera_acquire_images_with_camera_that_can_somtimes_capture(
     # Simulate the camera failing
     mock_camera.capture.side_effect = CameraCaptureError
 
-    for fut in futs[1:2]:
-        with pytest.raises(CameraCaptureError):
+    for fut in futs[1:3]:
+        with pytest.raises(asyncio.CancelledError):
             await fut
 
     # Simulate the camera working again
     mock_camera.capture.side_effect = None
 
-    for fut in futs[2:]:
+    for fut in futs[3:]:
         await fut
 
 
