@@ -27,6 +27,6 @@ class IFTImageAnnotations:
         self.drop_contour_px.flags.writeable = False
 
         # Coordinates with origin relative to needle_region_px.pos
-        self.needle_contours_px = (c.copy() for c in needle_contours_px)
+        self.needle_contours_px = tuple(c.copy() for c in needle_contours_px)
         for c in self.needle_contours_px:
             c.flags.writeable = False
