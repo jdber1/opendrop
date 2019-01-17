@@ -5,6 +5,7 @@ from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optiona
 from gi.repository import Gtk
 
 from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
+from opendrop.app.common.dialog import YesNoDialogView, YesNoDialogResponse
 from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter, AnalysisFooterView, \
     AnalysisFooterPresenter
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
@@ -105,6 +106,11 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
     def active_footer_view(self, view: GtkWidgetView) -> None:
         self._footer_view.set_visible_child(view)
 
+    def create_cancel_analysis_dialog(self) -> YesNoDialogView:
+        toplevel = self.widget.get_toplevel()
+        toplevel = toplevel if isinstance(toplevel, Gtk.Window) else None
+        return YesNoDialogView(message='Cancel analysis?', window=toplevel)
+
 
 class IfThen:
     def __init__(self, cond: Callable, then: Callable) -> None:
@@ -133,6 +139,7 @@ class IFTRootPresenter:
     def __init__(self, image_acquisition: ImageAcquisition, phys_params: IFTPhysicalParametersFactory,
                  image_annotator: IFTImageAnnotator, create_analysis: Callable[[], IFTAnalysis],
                  results_explorer: IFTResultsExplorer, view: IFTRootView):
+        self._loop = asyncio.get_event_loop()
         self._view = view
         self._create_analysis = create_analysis
         self._results_explorer = results_explorer
@@ -207,9 +214,9 @@ class IFTRootPresenter:
 
         # Results
         self._footer_results_model = IFTAnalysisFooterModel(
-            back_action=lambda: print('Back'),
-            cancel_action=lambda: self._results_explorer.analysis.cancel(),#print('Cancel'),
-            save_action=lambda: print('Save'))
+            back_action=self._user_wants_to_exit_analysis,
+            cancel_action=self._user_wants_to_cancel_analysis,
+            save_action=self._user_wants_to_save_analysis)
         self._footer_results = AnalysisFooterPresenter(
             model=self._footer_results_model,
             view=self._view.footer_results)  # type: Optional[AnalysisFooterPresenter]
@@ -237,6 +244,47 @@ class IFTRootPresenter:
 
         # Activate the first page.
         self._page_option_image_acquisition.set(True)
+
+    def _user_wants_to_start_analysis(self) -> None:
+        analysis = self._create_analysis()
+        self._results_explorer.analysis = analysis
+        self._page_option_results.set(True)
+
+    def _user_wants_to_cancel_analysis(self) -> None:
+        analysis = self._results_explorer.analysis
+        if analysis is None or analysis.cancelled:
+            return
+
+        confirm_cancel_analysis = self._loop.create_task(self._ask_user_confirm_cancel_analysis())
+        early_termination_ec = analysis.bn_done.on_changed.connect(
+            IfThen(cond=analysis.bn_done.get,
+                   then=confirm_cancel_analysis.cancel),
+            weak_ref=False)
+
+        def result(fut: asyncio.Future):
+            early_termination_ec.disconnect()
+            if fut.cancelled() or fut.result() is False:
+                return
+            analysis.cancel()
+
+        confirm_cancel_analysis.add_done_callback(result)
+
+    def _user_wants_to_exit_analysis(self) -> None:
+        print('Back')
+        self._page_option_image_processing.set(True)
+        pass
+
+    def _user_wants_to_save_analysis(self) -> None:
+        print('Save')
+        pass
+
+    async def _ask_user_confirm_cancel_analysis(self) -> bool:
+        dlg_view = self._view.create_cancel_analysis_dialog()
+        try:
+            dlg_response = await dlg_view.on_response.wait()
+            return dlg_response is YesNoDialogResponse.YES
+        finally:
+            dlg_view.destroy()
 
     def _hdl_page_option_image_acquisition_changed(self) -> None:
         if self._page_option_image_acquisition.get() is True:
@@ -270,11 +318,6 @@ class IFTRootPresenter:
         else:
             pass
             self._content_results.leave()
-
-    def _user_wants_to_start_analysis(self) -> None:
-        analysis = self._create_analysis()
-        self._results_explorer.analysis = analysis
-        self._page_option_results.set(True)
 
     def destroy(self) -> None:
         for f in self.__cleanup_tasks:
