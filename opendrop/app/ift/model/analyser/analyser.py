@@ -103,6 +103,7 @@ class IFTDropAnalysis:
     image_annotations = AtomicBindable.property_adapter(attrgetter('bn_image_annotations'))  # type: IFTImageAnnotations
     image_timestamp = AtomicBindable.property_adapter(attrgetter('bn_image_timestamp'))  # type: float
     objective = AtomicBindable.property_adapter(attrgetter('bn_objective'))  # type: float
+    bond_number = AtomicBindable.property_adapter(attrgetter('bn_bond_number'))  # type: float
     apex_coords_px = AtomicBindable.property_adapter(attrgetter('bn_apex_coords_px'))  # type: Tuple[int, int]
     apex_radius = AtomicBindable.property_adapter(attrgetter('bn_apex_radius'))  # type: si.Length
     apex_rot = AtomicBindable.property_adapter(attrgetter('bn_apex_rot'))  # type: float
