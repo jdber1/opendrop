@@ -306,16 +306,11 @@ class TestEvent:
         assert await asyncio.wait_for(fut, timeout=0.1) == expected_result
 
     @pytest.mark.asyncio
-    async def test_wait_cancel_before_fire(self):
-        fut = self.event.wait()
-        fut.cancel()
-        self.event.fire()
-
-    @pytest.mark.asyncio
     async def test_wait_and_disconnect_all(self):
         fut = self.event.wait()
         self.event.disconnect_all()
-        assert fut.cancelled() is True
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(fut, timeout=0.1)
 
     def test_weak_ref_by_default(self):
         cb = Mock()

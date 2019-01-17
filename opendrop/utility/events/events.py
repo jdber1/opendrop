@@ -269,17 +269,13 @@ class Event:
             if conn in block: continue
             conn._invoke_handler(args, kwargs)
 
-    def wait(self, loop: Optional[asyncio.AbstractEventLoop] = None) -> asyncio.Future:
+    def wait(self, loop: Optional[asyncio.AbstractEventLoop] = None) -> Any:
         loop = loop if loop is not None else asyncio.get_event_loop()
-
         f = loop.create_future()  # type: asyncio.Future
 
         # An implicit handler created to act as the callback to this event so that once fired, it will set its arguments
         # as the result of `f`.
         def handler(*args, **kwargs):
-            if f.cancelled():
-                return
-
             if kwargs:
                 warnings.warn('Keyword arguments not supported by Event.wait(), ignoring keyword arguments.')
 
@@ -290,16 +286,14 @@ class Event:
 
             f.set_result(args)
 
-        # If the connection is disconnected, and the handler is not scheduled to be called, cancel `f` so the coroutine
-        # waiting on it will be thrown a `asyncio.CancelledError` exception instead of waiting indefinitely.
-        def on_disconnect():
-            if conn.invocation_count > 0: return
-            f.cancel()
+        conn = self.connect(handler, weak_ref=False)
+        conn._on_disconnected = f.cancel
 
-        # Keep a strong reference to `handler` in `f` so that `handler` won't be garbage collected before `f` is done.
-        f.__Event_wait_implicit_handler_ref = handler
+        async def wait_for_f():
+            try:
+                return await f
+            finally:
+                if conn.status is EventConnection.Status.CONNECTED:
+                    conn.disconnect()
 
-        conn = self.connect(handler, once=True)
-        conn._on_disconnected = on_disconnect
-
-        return f
+        return wait_for_f()
