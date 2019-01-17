@@ -55,7 +55,7 @@ class IFTDropAnalysis:
                  calculate_volume: Callable = phys_props.calculate_volume,
                  calculate_surface_area: Callable = phys_props.calculate_surface_area,
                  calculate_worthington: Callable = phys_props.calculate_worthington) -> None:
-        self._phys_params = phys_params
+        self.phys_params = phys_params
 
         # Dependency injection stuff
         self._create_yl_fit = create_yl_fit
@@ -255,9 +255,9 @@ class IFTDropAnalysis:
         if yl_fit is None:
             return math.nan
 
-        inner_density = self._phys_params.inner_density  # type: si.Density
-        outer_density = self._phys_params.outer_density  # type: si.Density
-        gravity = self._phys_params.gravity  # type: si.Acceleration
+        inner_density = self.phys_params.inner_density  # type: si.Density
+        outer_density = self.phys_params.outer_density  # type: si.Density
+        gravity = self.phys_params.gravity  # type: si.Acceleration
 
         bond_number = self._get_bond_number()
         apex_radius = self._get_apex_radius()  # type: si.Length
@@ -293,10 +293,10 @@ class IFTDropAnalysis:
         if yl_fit is None:
             return math.nan
 
-        inner_density = self._phys_params.inner_density  # type: si.Density
-        outer_density = self._phys_params.outer_density  # type: si.Density
-        needle_width = self._phys_params.needle_width  # type: si.Length
-        gravity = self._phys_params.gravity  # type: si.Acceleration
+        inner_density = self.phys_params.inner_density  # type: si.Density
+        outer_density = self.phys_params.outer_density  # type: si.Density
+        needle_width = self.phys_params.needle_width  # type: si.Length
+        gravity = self.phys_params.gravity  # type: si.Acceleration
         ift = self._get_interfacial_tension()
         volume = self._get_volume()
 
