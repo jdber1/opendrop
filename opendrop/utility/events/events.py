@@ -277,6 +277,9 @@ class Event:
         # An implicit handler created to act as the callback to this event so that once fired, it will set its arguments
         # as the result of `f`.
         def handler(*args, **kwargs):
+            if f.cancelled():
+                return
+
             if kwargs:
                 warnings.warn('Keyword arguments not supported by Event.wait(), ignoring keyword arguments.')
 
