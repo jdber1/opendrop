@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, overload, Tuple, Any, Callable
+from typing import TypeVar, Generic, overload, Tuple, Any, Callable, Iterator
 
 import numpy as np
 from typing_extensions import Protocol
@@ -102,6 +102,9 @@ class Rect2(Generic[NumericType]):
 
     def as_type(self, cast: Callable[[NumericType], SomeNumericType]) -> 'Rect2[SomeNumericType]':
         return Rect2(x0=cast(self.x0), y0=cast(self.y0), x1=cast(self.x1), y1=cast(self.y1))
+
+    def __iter__(self) -> Iterator[NumericType]:
+        return iter((self.x0, self.x1, self.y0, self.y1))
 
     def __repr__(self) -> str:
         return '{class_name}(x0={self.x0}, y0={self.y0}, x1={self.x1}, y1={self.y1})' \
