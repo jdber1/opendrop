@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from gi.repository import GObject
 
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, BaseAtomicBindable, VT
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter, BaseAtomicBindable
 
 
 def _identity(x):
