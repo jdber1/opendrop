@@ -2,9 +2,9 @@ import collections
 import itertools
 from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any
 
-from opendrop.utility.bindable import SetBindable, BuiltinSetBindable
-from opendrop.utility.bindable.binding import Binding
 from .bindable import AtomicBindable, Bindable, AtomicBindableVar
+from .binding import Binding
+from .set import SetBindable, BuiltinSetBindable
 
 BindableType = TypeVar('BindableType', bound=Bindable)
 TxT = TypeVar('TxT')
