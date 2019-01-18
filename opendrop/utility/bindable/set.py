@@ -149,9 +149,14 @@ class ModifiableSetBindable(SetBindable[VT], MutableSet):
 
 # SetBindable that uses the builtin set as the underlying implementation.
 class BuiltinSetBindable(ModifiableSetBindable[VT]):
-    def __init__(self, initial_value: Iterable[VT]) -> None:
+    def __init__(self, *initial_value: Iterable[VT]) -> None:
         super().__init__()
-        self._set = set(initial_value)
+        if len(initial_value) == 0:
+            self._set = set()
+        elif len(initial_value) == 1:
+            self._set = set(initial_value[0])
+        else:
+            raise TypeError('Too many arguments')
 
     def _actual_add(self, x: VT) -> None:
         self._set.add(x)
