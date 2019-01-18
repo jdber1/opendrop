@@ -106,7 +106,7 @@ class FunctionApplierBindable(BindableProxy[VT]):
 
     def _calculate_result(self) -> VT:
         args_pod = [self._convert_to_pod(x) for x in self._args]
-        kwargs_pod = {k: self._convert_to_pod(v) for k, v in self._kwargs}
+        kwargs_pod = {k: self._convert_to_pod(v) for k, v in self._kwargs.items()}
         return self._func(*args_pod, **kwargs_pod)
 
     def _update(self) -> None:
