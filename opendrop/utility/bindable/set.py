@@ -1,4 +1,5 @@
 import functools
+import typing
 from abc import ABC, abstractmethod
 from collections import Set, MutableSet
 from typing import TypeVar, Generic, Iterable, Iterator, Union, MutableSequence, Any
@@ -35,13 +36,20 @@ class SetBindableDiscardItemTx(Generic[VT], SetBindableTx):
         target.discard(self._x, _bcast_tx=False)
 
 
-class SetBindableGroupedTx(Generic[VT], SetBindableTx):
-    def __init__(self, txs: Iterable[SetBindableTx]) -> None:
-        self._txs = list(txs)
+class SetBindableSynchronizeTx(Generic[VT], SetBindableTx):
+    def __init__(self, match: typing.Set[VT]) -> None:
+        self._match = match
 
     def silent_apply(self, target: 'ModifiableSetBindable') -> None:
-        for tx in self._txs:
-            tx.silent_apply(target)
+        for x in self._match:
+            if x in target:
+                continue
+            target.add(x, _bcast_tx=False)
+
+        for x in target:
+            if x in self._match:
+                continue
+            target.discard(x, _bcast_tx=False)
 
 
 class SetBindable(Generic[VT], Bindable[SetBindableTx], Set):
@@ -74,9 +82,7 @@ class SetBindable(Generic[VT], Bindable[SetBindableTx], Set):
         """Actual implementation of discard"""
 
     def _export(self) -> SetBindableTx:
-        return SetBindableGroupedTx(
-            SetBindableAddItemTx(x)
-            for x in self)
+        return SetBindableSynchronizeTx(set(self))
 
     def _raw_apply_tx(self, tx: Any) -> None:
         raise ValueError('This set bindable is read-only.')
