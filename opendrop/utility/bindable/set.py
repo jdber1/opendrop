@@ -41,12 +41,12 @@ class SetBindableSynchronizeTx(Generic[VT], SetBindableTx):
         self._match = match
 
     def silent_apply(self, target: 'ModifiableSetBindable') -> None:
-        for x in self._match:
+        for x in tuple(self._match):
             if x in target:
                 continue
             target.add(x, _bcast_tx=False)
 
-        for x in target:
+        for x in tuple(target):
             if x in self._match:
                 continue
             target.discard(x, _bcast_tx=False)
