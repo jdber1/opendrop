@@ -3,8 +3,10 @@ import itertools
 from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any
 
 from opendrop.utility.bindable import SetBindable, BuiltinSetBindable
+from opendrop.utility.bindable.binding import Binding
 from .bindable import AtomicBindable, Bindable, AtomicBindableVar
 
+BindableType = TypeVar('BindableType', bound=Bindable)
 TxT = TypeVar('TxT')
 VT = TypeVar('VT')
 
@@ -15,6 +17,10 @@ class BindableProxy(Bindable[TxT]):
         self._proxy_target_value = None  # type: Optional[Bindable[TxT]]
         self._proxy_target_cleanup_tasks = []
         self._proxy_target = target
+
+    def __call__(self, bindable: BindableType) -> BindableType:
+        Binding(self, bindable)
+        return bindable
 
     @property
     def _proxy_target(self) -> Bindable[TxT]:
@@ -65,21 +71,22 @@ if_expr = IfExpr
 ArgType = Union[AtomicBindable, SetBindable]
 
 
-class AtomicFunctionReturnBindable(BaseAtomicBindable[VT]):
+class FunctionApplierBindable(BindableProxy[VT]):
     def __init__(self, func: Callable[..., VT], args: Sequence[ArgType], kwargs: Mapping[str, ArgType]) -> None:
-        super().__init__()
         self._func = func
         self._args = tuple(args)
         self._kwargs = dict(kwargs)
-        self._result = self._calculate_result()
+        initial_result = self._calculate_result()
+
+        super().__init__(self._convert_to_bindable(initial_result))
 
         for x in itertools.chain(self._args, self._kwargs.values()):
             if not isinstance(x, Bindable):
                 continue
-            x.on_new_tx.connect(self._update_result, ignore_args=True)
+            x.on_new_tx.connect(self._update, ignore_args=True)
 
     @staticmethod
-    def _transform_to_pod(x: ArgType) -> Any:
+    def _convert_to_pod(x: ArgType) -> Any:
         if not isinstance(x, Bindable):
             return x
         bindable = x
@@ -90,24 +97,32 @@ class AtomicFunctionReturnBindable(BaseAtomicBindable[VT]):
         else:
             raise ValueError('Unrecognized bindable type')
 
+    @staticmethod
+    def _convert_to_bindable(x: ArgType) -> Any:
+        if isinstance(x, collections.Set):
+            return BuiltinSetBindable(x)
+        else:
+            return AtomicBindableVar(x)
+
     def _calculate_result(self) -> VT:
-        args_pod = [self._transform_to_pod(x) for x in self._args]
-        kwargs_pod = {k: self._transform_to_pod(v) for k, v in self._kwargs}
+        args_pod = [self._convert_to_pod(x) for x in self._args]
+        kwargs_pod = {k: self._convert_to_pod(v) for k, v in self._kwargs}
         return self._func(*args_pod, **kwargs_pod)
 
-    def _update_result(self) -> None:
-        self._result = self._calculate_result()
-        self.poke()
+    def _update(self) -> None:
+        result = self._calculate_result()
+        self._proxy_target = self._convert_to_bindable(result)
 
-    def _raw_get(self) -> VT:
-        return self._result
-
-    def _raw_set(self, value: Any):
-        raise AttributeError("Can't set")
+    def _raw_apply_tx(self, tx: Any) -> None:
+        raise ValueError("Can't apply transactions to this.")
 
 
-def bindable_function(func: Callable) -> Callable:
-    def wrapper(*args, **kwargs):
-        return AtomicFunctionReturnBindable(func, args, kwargs)
+class FunctionBindableWrapper:
+    def __init__(self, func: Callable) -> None:
+        self._func = func
 
-    return wrapper
+    def __call__(self, *args, **kwargs) -> Any:
+        return FunctionApplierBindable(self._func, args, kwargs)
+
+
+bindable_function = FunctionBindableWrapper
