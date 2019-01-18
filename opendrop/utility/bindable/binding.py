@@ -32,9 +32,8 @@ class Binding(Generic[STxT, DTxT]):
         self._mitm = mitm
 
         self._on_new_tx_conns = {
-            bn: bn.on_new_tx.connect(functools.partial(self._hdl_new_tx, bn), weak_ref=False)
-            for bn in (src, dst)
-        }
+            id(bn): bn.on_new_tx.connect(functools.partial(self._hdl_new_tx, bn), weak_ref=False)
+            for bn in (src, dst)}
 
         # Export the state of `src` to `dst`.
         self._hdl_new_tx(src, src._export())
@@ -63,7 +62,7 @@ class Binding(Generic[STxT, DTxT]):
 
         # Block the event connection connected to `target_bn.on_new_tx` as we don't want to be notified about the change
         # we are about to apply to `target_bn`, otherwise we end up in an infinite feedback loop.
-        block_conn = self._on_new_tx_conns[target]
+        block_conn = self._on_new_tx_conns[id(target)]
 
         tx = self._transform_tx(tx, target)
 
