@@ -7,9 +7,10 @@ import pytest
 
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.experimental import if_expr
+from opendrop.utility.events import Event
 
 
-def _test_bindable_proxy(proxy, target):
+async def _test_bindable_proxy(proxy, target):
     with mock.patch.multiple(target, _export=mock.DEFAULT, _raw_apply_tx=mock.DEFAULT):
         assert proxy._export() == target._export.return_value
 
@@ -17,25 +18,38 @@ def _test_bindable_proxy(proxy, target):
         assert proxy._raw_apply_tx(stub_tx) == target._raw_apply_tx.return_value
         target._raw_apply_tx.assert_called_once_with(stub_tx)
 
+        stub_tx = mock.Mock()
+        proxy_on_new_tx_wait = proxy.on_new_tx.wait()
+        target.on_new_tx.fire(stub_tx)
+        assert await asyncio.wait_for(proxy_on_new_tx_wait, 0.1) == stub_tx
+
+
+def create_mock_bindable():
+    mock_bindable = mock.Mock()
+    mock_bindable.on_new_tx = Event()
+    return mock_bindable
+
 
 class TestIfExprJustInitialised:
     @pytest.fixture(autouse=True, params=[True, False])
     def fixture(self, request):
         cond_initial_value = request.param
         self.cond = AtomicBindableVar(cond_initial_value)
-        self.true = mock.Mock()
-        self.false = mock.Mock()
+        self.true = create_mock_bindable()
+        self.false = create_mock_bindable()
         self.result = if_expr(cond=self.cond, true=self.true, false=self.false)
 
     def get_target(self, cond):
         return self.true if cond else self.false
 
-    def test_result_proxy(self):
-        _test_bindable_proxy(proxy=self.result, target=self.get_target(self.cond.get()))
+    @pytest.mark.asyncio
+    async def test_result_proxy(self):
+        await _test_bindable_proxy(proxy=self.result, target=self.get_target(self.cond.get()))
 
-    def test_change_cond_changes_result_proxy_target(self):
+    @pytest.mark.asyncio
+    async def test_change_cond_changes_result_proxy_target(self):
         self.cond.set(not self.cond.get())
-        _test_bindable_proxy(proxy=self.result, target=self.get_target(self.cond.get()))
+        await _test_bindable_proxy(proxy=self.result, target=self.get_target(self.cond.get()))
 
     @pytest.mark.asyncio
     async def test_change_cond_changes_result_proxy_exports(self):

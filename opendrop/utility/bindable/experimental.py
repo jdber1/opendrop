@@ -1,8 +1,9 @@
+import collections
 import itertools
 from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any
 
-from opendrop.utility.bindable import SetBindable
-from .bindable import AtomicBindable, Bindable, BaseAtomicBindable
+from opendrop.utility.bindable import SetBindable, BuiltinSetBindable
+from .bindable import AtomicBindable, Bindable, AtomicBindableVar
 
 TxT = TypeVar('TxT')
 VT = TypeVar('VT')
@@ -11,7 +12,9 @@ VT = TypeVar('VT')
 class BindableProxy(Bindable[TxT]):
     def __init__(self, target: Bindable[TxT]) -> None:
         super().__init__()
-        self._proxy_target_value = target
+        self._proxy_target_value = None  # type: Optional[Bindable[TxT]]
+        self._proxy_target_cleanup_tasks = []
+        self._proxy_target = target
 
     @property
     def _proxy_target(self) -> Bindable[TxT]:
@@ -19,8 +22,17 @@ class BindableProxy(Bindable[TxT]):
 
     @_proxy_target.setter
     def _proxy_target(self, new_target: Bindable[TxT]) -> None:
+        self._remove_current_proxy_target()
         self._proxy_target_value = new_target
+        self._proxy_target_cleanup_tasks.append(
+            new_target.on_new_tx.connect(self._bcast_tx).disconnect)
         self._bcast_tx(self._export())
+
+    def _remove_current_proxy_target(self) -> None:
+        for f in self._proxy_target_cleanup_tasks:
+            f()
+        self._proxy_target_cleanup_tasks = []
+        self._proxy_target_value = None
 
     def _export(self) -> TxT:
         return self._proxy_target._export()
