@@ -1,6 +1,6 @@
 import collections
 import itertools
-from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any
+from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any, overload
 
 from .bindable import AtomicBindable, Bindable, AtomicBindableVar
 from .set import SetBindable, BuiltinSetBindable
@@ -117,11 +117,28 @@ class FunctionApplierBindable(BindableProxy[TxT1, TxT2]):
 
 
 class FunctionBindableWrapper:
-    def __init__(self, func: Callable) -> None:
+    def __init__(self, func: Callable, autobind_return: Optional[Callable[[], Bindable]] = None) -> None:
         self._func = func
+        self._autobind_return = autobind_return
 
     def __call__(self, *args, **kwargs) -> Any:
-        return FunctionApplierBindable(self._func, args, kwargs)
+        result = FunctionApplierBindable(self._func, args, kwargs)
+        if self._autobind_return:
+            result = result(self._autobind_return())
+        return result
 
 
-bindable_function = FunctionBindableWrapper
+@overload
+def bindable_function(*, autobind_return: Optional[Callable[[], Bindable]] = None) -> Callable: ...
+@overload
+def bindable_function(func: Callable) -> Callable: ...
+@overload
+def bindable_function(func: Callable, autobind_return: Optional[Callable[[], Bindable]] = None) -> Callable: ...
+
+def bindable_function(func=None, **kwargs):
+    if func is None:
+        def inner(func: Callable) -> Callable:
+            return bindable_function(func, **kwargs)
+        return inner
+
+    return FunctionBindableWrapper(func, **kwargs)

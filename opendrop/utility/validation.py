@@ -3,11 +3,14 @@
 import itertools
 import math
 from enum import Enum
-from typing import Set, Sized, Any, Callable, Iterable
+from typing import Set, Sized, Any, Callable, Iterable, TypeVar, Generic, Optional
 
 from gi.repository import Gtk
 
-from opendrop.utility.bindable import bindable_function, SetBindable
+from opendrop.utility.bindable import bindable_function, SetBindable, AtomicBindableVar, if_expr, \
+    BuiltinSetBindable
+from opendrop.utility.bindable.bindable import Bindable
+from opendrop.utility.events import Event
 
 
 class ValidationFlag(Enum):
@@ -54,7 +57,7 @@ def check_is_positive(x: float) -> Iterable[ValidationFlag]:
     return flags
 
 
-@bindable_function
+@bindable_function(autobind_return=BuiltinSetBindable)
 def validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]], enabled: bool = True) \
         -> Set[ValidationFlag]:
     if not enabled:
@@ -83,3 +86,52 @@ class AssociateStyleClassToWidgetWhenFlagsPresent:
 
 
 add_style_class_when_flags = AssociateStyleClassToWidgetWhenFlagsPresent
+
+ValueType = TypeVar('ValueType', bound=Bindable)
+ErrorType = TypeVar('ErrorType')
+
+
+class FieldView(Generic[ValueType, ErrorType]):
+    def __init__(self, value: ValueType, *, errors_out: Optional[SetBindable[ErrorType]] = None,
+                 on_user_finished_editing: Optional[Event] = None) -> None:
+        if errors_out is None:
+            errors_out = BuiltinSetBindable()
+
+        if on_user_finished_editing is None:
+            on_user_finished_editing = Event()
+
+        self.value = value
+        self.errors_out = errors_out
+        self.on_user_finished_editing = on_user_finished_editing
+
+
+class FieldPresenter(Generic[ValueType, ErrorType]):
+    def __init__(self, value: ValueType, errors: SetBindable[ErrorType], field_view: FieldView) -> None:
+        self._errors = errors
+        self._field_view = field_view
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._is_showing_errors = AtomicBindableVar(False)
+        errors_out = if_expr(cond=self._is_showing_errors, true=errors, false=BuiltinSetBindable())
+
+        data_bindings = [
+            value.bind_to(field_view.value),
+            errors_out.bind_to(field_view.errors_out)]
+        self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
+
+        event_connections = [
+            field_view.on_user_finished_editing.connect(self._hdl_field_view_user_finished_editing)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
+
+    def _hdl_field_view_user_finished_editing(self) -> None:
+        self._is_showing_errors.set(bool(self._errors))
+
+    def show_errors(self) -> None:
+        self._is_showing_errors.set(True)
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True

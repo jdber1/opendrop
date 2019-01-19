@@ -11,10 +11,9 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
-from opendrop.utility.validation import validate, check_is_positive, \
-    check_is_not_empty
-from opendrop.utility.bindable import BuiltinSetBindable, SetBindable
+from opendrop.utility.bindable import SetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
+from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty
 
 
 class IFTAnalysisSaverOptions:
@@ -25,18 +24,23 @@ class IFTAnalysisSaverOptions:
             self.bn_size_w = AtomicBindableVar(size_w)
             self.bn_size_h = AtomicBindableVar(size_h)
 
+            # Validation
+
             self.dpi_err = validate(
                 value=self.bn_dpi,
-                checks=(check_is_not_empty, check_is_positive),
-                enabled=self.bn_should_save)(BuiltinSetBindable())
+                checks=(check_is_not_empty,
+                        check_is_positive),
+                enabled=self.bn_should_save)
             self.size_w_err = validate(
                 value=self.bn_size_w,
-                checks=(check_is_not_empty, check_is_positive),
-                enabled=self.bn_should_save)(BuiltinSetBindable())
+                checks=(check_is_not_empty,
+                        check_is_positive),
+                enabled=self.bn_should_save)
             self.size_h_err = validate(
                 value=self.bn_size_h,
-                checks=(check_is_not_empty, check_is_positive),
-                enabled=self.bn_should_save)(BuiltinSetBindable())
+                checks=(check_is_not_empty,
+                        check_is_positive),
+                enabled=self.bn_should_save)
 
             self.errors = SetBindable.union(self.dpi_err, self.size_w_err, self.size_h_err)
 
@@ -69,10 +73,10 @@ class IFTAnalysisSaverOptions:
 
         self.save_dir_parent_err = validate(
             value=self.bn_save_dir_parent,
-            checks=(check_is_not_empty,))(BuiltinSetBindable())
+            checks=(check_is_not_empty,))
         self.save_dir_name_err = validate(
             value=self.bn_save_dir_name,
-            checks=(check_is_not_empty,))(BuiltinSetBindable())
+            checks=(check_is_not_empty,))
 
         errors = [self.save_dir_parent_err, self.save_dir_name_err]
 
