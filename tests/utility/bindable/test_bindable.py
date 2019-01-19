@@ -34,7 +34,7 @@ def test_bindable_apply_tx():
         def __init__(self, txs_to_return):
             self.txs_to_return = txs_to_return
 
-    class MyBindable(Bindable[MyBindableTx]):
+    class MyBindable(Bindable[MyBindableTx, MyBindableTx]):
         def _export(self):
             pass
 

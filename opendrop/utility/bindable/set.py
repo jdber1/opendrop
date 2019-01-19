@@ -52,7 +52,7 @@ class SetBindableSynchronizeTx(Generic[VT], SetBindableTx):
             target.discard(x, _bcast_tx=False)
 
 
-class SetBindable(Generic[VT], Bindable[SetBindableTx], Set):
+class SetBindable(Generic[VT], Bindable[SetBindableTx, SetBindableTx], Set):
     def __init__(self) -> None:
         super().__init__()
         self.on_add = Event()

@@ -9,7 +9,8 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
-from opendrop.utility.bindable.binding import Binding, AtomicBindingMITM
+from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
 from opendrop.widgets.file_chooser_button import FileChooserButton

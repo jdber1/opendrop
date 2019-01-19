@@ -1,38 +1,40 @@
 from abc import abstractmethod, ABC
 from typing import Any, Generic, TypeVar, Sequence, Optional, Callable, Type, MutableSequence, Iterable
 
+from opendrop.utility.bindable.node import Source, Sink
 from opendrop.utility.events import Event, EventConnection
 
-TxT = TypeVar('TxT')
+TxT1 = TypeVar('TxT1')
+TxT2 = TypeVar('TxT2')
 VT = TypeVar('VT')
 T = TypeVar('T')
 
 
 # Bindable
 
-class Bindable(Generic[TxT]):
+class Bindable(Source[TxT1], Sink[TxT2]):
     def __init__(self):
         self.on_new_tx = Event()
 
-    def _apply_tx(self, tx: TxT, block: Sequence[EventConnection] = tuple()):
+    def _apply_tx(self, tx: TxT2, block: Sequence[EventConnection] = tuple()):
         new_txs = self._raw_apply_tx(tx)
         new_txs = [tx] if new_txs is None else new_txs
 
         for new_tx in new_txs:
             self._bcast_tx(new_tx, block=block)
 
-    def _bcast_tx(self, tx: TxT, block: Sequence[EventConnection] = tuple()) -> None:
+    def _bcast_tx(self, tx: TxT1, block: Sequence[EventConnection] = tuple()) -> None:
         self.on_new_tx.fire_with_opts(args=(tx,), block=block)
 
     @abstractmethod
-    def _export(self) -> TxT:
+    def _export(self) -> TxT1:
         """Return a transaction that can be applied to another Bindable of the same type to restore its state to this
         Bindable's state.
         """
         pass
 
     @abstractmethod
-    def _raw_apply_tx(self, tx: TxT) -> Optional[Sequence[TxT]]:
+    def _raw_apply_tx(self, tx: TxT1) -> Optional[Sequence[TxT2]]:
         """Apply `tx` and return a sequence of transactions that should be broadcasted as a result of the changes made
         during transaction application. Optionally return None to specify that the same `tx` should be broadcasted.
         Return an empty sequence to specify that no transactions should be broadcasted.
@@ -52,7 +54,7 @@ class AtomicBindableTx(Generic[VT]):
         return self.value == other.value
 
 
-class AtomicBindable(Bindable[AtomicBindableTx[VT]]):
+class AtomicBindable(Bindable[AtomicBindableTx[VT], AtomicBindableTx[VT]]):
     class _AtomicBindablePropertyAdapter(Generic[T, VT]):
         def __init__(self, bn_getter: Callable[[T], 'AtomicBindable[VT]']):
             self._bn_getter = bn_getter
@@ -179,48 +181,48 @@ class AtomicBindableAdapter(BaseAtomicBindable[VT]):
 
 
 # MutableSequenceBindable
-class MutableSequenceBindableTx(ABC):
+class MutableSequenceBindableTx(Generic[VT]):
     @abstractmethod
-    def silent_apply(self, target: 'MutableSequenceBindable') -> None:
+    def silent_apply(self, target: 'MutableSequenceBindable[VT]') -> None:
         """Apply the transaction onto `target` without `target` broadcasting new transactions."""
 
 
-class MutableSequenceBindableSetItemTx(Generic[VT], MutableSequenceBindableTx):
+class MutableSequenceBindableSetItemTx(MutableSequenceBindableTx[VT]):
     def __init__(self, i: int, v: VT) -> None:
         self._i = i
         self._v = v
 
-    def silent_apply(self, target: 'MutableSequenceBindable') -> None:
+    def silent_apply(self, target: 'MutableSequenceBindable[VT]') -> None:
         target.__setitem__(self._i, self._v, _bcast_tx=False)
 
 
-class MutableSequenceBindableDelItemTx(Generic[VT], MutableSequenceBindableTx):
+class MutableSequenceBindableDelItemTx(MutableSequenceBindableTx[VT]):
     def __init__(self, i: int) -> None:
         self._i = i
 
-    def silent_apply(self, target: 'MutableSequenceBindable') -> None:
+    def silent_apply(self, target: 'MutableSequenceBindable[VT]') -> None:
         target.__delitem__(self._i, _bcast_tx=False)
 
 
-class MutableSequenceBindableInsertTx(Generic[VT], MutableSequenceBindableTx):
+class MutableSequenceBindableInsertTx(MutableSequenceBindableTx[VT]):
     def __init__(self, i: int, v: VT) -> None:
         self._i = i
         self._v = v
 
-    def silent_apply(self, target: 'MutableSequenceBindable') -> None:
+    def silent_apply(self, target: 'MutableSequenceBindable[VT]') -> None:
         target.insert(self._i, self._v, _bcast_tx=False)
 
 
-class MutableSequenceBindableGroupedTx(Generic[VT], MutableSequenceBindableTx):
-    def __init__(self, txs: Iterable[MutableSequenceBindableTx]) -> None:
+class MutableSequenceBindableGroupedTx(MutableSequenceBindableTx[VT]):
+    def __init__(self, txs: Iterable[MutableSequenceBindableTx[VT]]) -> None:
         self._txs = list(txs)
 
-    def silent_apply(self, target: 'MutableSequenceBindable') -> None:
+    def silent_apply(self, target: 'MutableSequenceBindable[VT]') -> None:
         for tx in self._txs:
             tx.silent_apply(target)
 
 
-class MutableSequenceBindable(Bindable[MutableSequenceBindableTx], MutableSequence[VT]):
+class MutableSequenceBindable(Bindable[MutableSequenceBindableTx[VT], MutableSequenceBindableTx[VT]], MutableSequence[VT]):
     def __init__(self) -> None:
         super().__init__()
 

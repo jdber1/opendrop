@@ -2,7 +2,8 @@ import gc
 import weakref
 
 from opendrop.utility.bindable.bindable import Bindable, BaseAtomicBindable
-from opendrop.utility.bindable.binding import Binding, BindingMITM, AtomicBindingMITM
+from opendrop.utility.bindable.binding import Binding, BindingMITM
+from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
 
 
 def test_binding_applies_new_tx_to_other_and_unbind():
@@ -212,7 +213,7 @@ def test_chained_bindings():
 def test_binding_with_mitm():
     checkpoints = []
 
-    class MyBindable(Bindable[int]):
+    class MyBindable(Bindable[int, int]):
         def __init__(self, name):
             super().__init__()
             self.name = name

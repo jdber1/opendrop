@@ -1,23 +1,23 @@
 import functools
-from typing import TypeVar, Generic, Optional, Callable, overload
+from typing import TypeVar, Generic, Optional, overload, Union
 
-from opendrop.utility.bindable.bindable import Bindable, AtomicBindableTx, BaseAtomicBindable
+from .node import Source, Sink
 
-STxT = TypeVar('STxT')
-DTxT = TypeVar('DTxT')
-SVT = TypeVar('SVT')
-DVT = TypeVar('DVT')
+TxT1 = TypeVar('TxT1')
+TxT2 = TypeVar('TxT2')
 
 
-# Binding
+class SourceAndSink(Source[TxT1], Sink[TxT2]):
+    pass
 
-class BindingMITM(Generic[STxT, DTxT]):
+
+class BindingMITM(Generic[TxT1, TxT2]):
     # These methods should not modify `tx`, they should create new transactions since `tx` is reused for all connected
-    # handlers to the `on_new_tx` event of a Bindable.
-    def to_dst(self, tx: STxT) -> DTxT:
+    # handlers to the `on_new_tx` event of a Source.
+    def to_dst(self, tx: TxT1) -> TxT2:
         return tx
 
-    def to_src(self, tx: DTxT) -> STxT:
+    def to_src(self, tx: TxT2) -> TxT1:
         return tx
 
 
@@ -25,8 +25,9 @@ class BindingMITM(Generic[STxT, DTxT]):
 #   A - B
 #    \ /
 #     C
-class Binding(Generic[STxT, DTxT]):
-    def __init__(self, src: Bindable[STxT], dst: Bindable[DTxT], mitm: Optional[BindingMITM[STxT, DTxT]] = None):
+class Binding(Generic[TxT1, TxT2]):
+    def __init__(self, src: SourceAndSink[TxT1, TxT2], dst: SourceAndSink[TxT2, TxT1],
+                 mitm: Optional[BindingMITM[TxT1, TxT2]] = None):
         self._src = src
         self._dst = dst
         self._mitm = mitm
@@ -53,9 +54,9 @@ class Binding(Generic[STxT, DTxT]):
         del self._on_new_tx_conns
 
     @overload
-    def _hdl_new_tx(self, from_: Bindable[STxT], tx: STxT) -> None: ...
+    def _hdl_new_tx(self, from_: Source[TxT1], tx: TxT1) -> None: ...
     @overload
-    def _hdl_new_tx(self, from_: Bindable[DTxT], tx: DTxT) -> None: ...
+    def _hdl_new_tx(self, from_: Source[TxT2], tx: TxT2) -> None: ...
 
     def _hdl_new_tx(self, from_, tx) -> None:
         target = self._get_other(from_)
@@ -69,9 +70,9 @@ class Binding(Generic[STxT, DTxT]):
         target._apply_tx(tx, block=(block_conn,))
 
     @overload
-    def _get_other(self, this: Bindable[STxT]) -> Bindable[DTxT]: ...
+    def _get_other(self, this: Union[Source[TxT1], Sink[TxT2]]) -> SourceAndSink[TxT2, TxT1]: ...
     @overload
-    def _get_other(self, this: Bindable[DTxT]) -> Bindable[STxT]: ...
+    def _get_other(self, this: Union[Source[TxT2], Sink[TxT1]]) -> SourceAndSink[TxT1, TxT2]: ...
 
     def _get_other(self, this):
         """Return the `src` bindable if `bn` is `dst`, else return the `dst` bindable."""
@@ -83,9 +84,9 @@ class Binding(Generic[STxT, DTxT]):
             return self._src
 
     @overload
-    def _transform_tx(self, tx: STxT, target: Bindable[DTxT]) -> DTxT: ...
+    def _transform_tx(self, tx: TxT1, target: Sink[TxT2]) -> TxT2: ...
     @overload
-    def _transform_tx(self, tx: DTxT, target: Bindable[STxT]) -> STxT: ...
+    def _transform_tx(self, tx: TxT2, target: Sink[TxT1]) -> TxT1: ...
 
     def _transform_tx(self, tx, target):
         assert target in (self._src, self._dst)
@@ -97,28 +98,3 @@ class Binding(Generic[STxT, DTxT]):
             return self._mitm.to_dst(tx)
         else:
             return self._mitm.to_src(tx)
-
-
-# AtomicBindingMITM
-
-class AtomicBindingMITM(Generic[SVT, DVT], BindingMITM[AtomicBindableTx[SVT], AtomicBindableTx[DVT]]):
-    def __init__(self, to_dst: Optional[Callable[[SVT], DVT]] = None, to_src: Optional[Callable[[DVT], SVT]] = None):
-        if to_dst is not None:
-            self._atomic_to_dst = to_dst
-
-        if to_src is not None:
-            self._atomic_to_src = to_src
-
-    def to_dst(self, tx: AtomicBindableTx[SVT]) -> AtomicBindableTx[DVT]:
-        new_tx = BaseAtomicBindable._create_tx(self._atomic_to_dst(tx.value))
-        return new_tx
-
-    def to_src(self, tx: AtomicBindableTx[DVT]) -> AtomicBindableTx[SVT]:
-        new_tx = BaseAtomicBindable._create_tx(self._atomic_to_src(tx.value))
-        return new_tx
-
-    def _atomic_to_dst(self, value: SVT) -> DVT:
-        return value
-
-    def _atomic_to_src(self, value: DVT) -> SVT:
-        return value

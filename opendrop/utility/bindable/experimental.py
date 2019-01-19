@@ -7,14 +7,14 @@ from .binding import Binding
 from .set import SetBindable, BuiltinSetBindable
 
 BindableType = TypeVar('BindableType', bound=Bindable)
-TxT = TypeVar('TxT')
-VT = TypeVar('VT')
+TxT1 = TypeVar('TxT1')
+TxT2 = TypeVar('TxT2')
 
 
-class BindableProxy(Bindable[TxT]):
-    def __init__(self, target: Bindable[TxT]) -> None:
+class BindableProxy(Bindable[TxT1, TxT2]):
+    def __init__(self, target: Bindable[TxT1, TxT2]) -> None:
         super().__init__()
-        self._proxy_target_value = None  # type: Optional[Bindable[TxT]]
+        self._proxy_target_value = None  # type: Optional[Bindable[TxT1, TxT2]]
         self._proxy_target_cleanup_tasks = []
         self._proxy_target = target
 
@@ -23,11 +23,11 @@ class BindableProxy(Bindable[TxT]):
         return bindable
 
     @property
-    def _proxy_target(self) -> Bindable[TxT]:
+    def _proxy_target(self) -> Bindable[TxT1, TxT2]:
         return self._proxy_target_value
 
     @_proxy_target.setter
-    def _proxy_target(self, new_target: Bindable[TxT]) -> None:
+    def _proxy_target(self, new_target: Bindable[TxT1, TxT2]) -> None:
         self._remove_current_proxy_target()
         self._proxy_target_value = new_target
         self._proxy_target_cleanup_tasks.append(
@@ -40,15 +40,15 @@ class BindableProxy(Bindable[TxT]):
         self._proxy_target_cleanup_tasks = []
         self._proxy_target_value = None
 
-    def _export(self) -> TxT:
+    def _export(self) -> TxT2:
         return self._proxy_target._export()
 
-    def _raw_apply_tx(self, tx: TxT) -> Optional[Sequence[TxT]]:
+    def _raw_apply_tx(self, tx: TxT1) -> Optional[Sequence[TxT2]]:
         return self._proxy_target._raw_apply_tx(tx)
 
 
-class IfExpr(BindableProxy[TxT]):
-    def __init__(self, cond: AtomicBindable[bool], true: Bindable[TxT], false: Bindable[TxT]) -> None:
+class IfExpr(BindableProxy[TxT1, TxT2]):
+    def __init__(self, cond: AtomicBindable[bool], true: Bindable[TxT1, TxT2], false: Bindable[TxT1, TxT2]) -> None:
         initial_target = true if cond.get() else false
         super().__init__(target=initial_target)
 
@@ -71,8 +71,8 @@ if_expr = IfExpr
 ArgType = Union[AtomicBindable, SetBindable]
 
 
-class FunctionApplierBindable(BindableProxy[VT]):
-    def __init__(self, func: Callable[..., VT], args: Sequence[ArgType], kwargs: Mapping[str, ArgType]) -> None:
+class FunctionApplierBindable(BindableProxy[TxT1, TxT2]):
+    def __init__(self, func: Callable, args: Sequence[ArgType], kwargs: Mapping[str, ArgType]) -> None:
         self._func = func
         self._args = tuple(args)
         self._kwargs = dict(kwargs)
@@ -104,7 +104,7 @@ class FunctionApplierBindable(BindableProxy[VT]):
         else:
             return AtomicBindableVar(x)
 
-    def _calculate_result(self) -> VT:
+    def _calculate_result(self) -> Any:
         args_pod = [self._convert_to_pod(x) for x in self._args]
         kwargs_pod = {k: self._convert_to_pod(v) for k, v in self._kwargs.items()}
         return self._func(*args_pod, **kwargs_pod)
