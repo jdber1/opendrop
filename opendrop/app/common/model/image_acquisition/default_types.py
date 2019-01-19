@@ -206,8 +206,6 @@ class Camera:
 class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
     POKE_IDLE_INTERVAL = 0.05
 
-    # These two classes are kind of a bodge, ImageBindable is compatible to being used as a read-only
-    # BaseAtomicBindable[Image].
     class ImageBindableTx(AtomicBindableTx[Image]):
         def __init__(self, src_bn: 'CameraImageAcquisitionPreview.ImageBindable') -> None:
             self._src_bn = src_bn
