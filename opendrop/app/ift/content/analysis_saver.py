@@ -4,13 +4,13 @@ from typing import Optional, Set
 from gi.repository import Gtk, Gdk
 
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
-from opendrop.app.validation import message_from_flags, associate_style_class_to_widget_when_flags_present, \
-    ValidationFlag
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable import BuiltinSetBindable, bindable_function, if_expr
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.validation import message_from_flags, associate_style_class_to_widget_when_flags_present, \
+    ValidationFlag
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
 

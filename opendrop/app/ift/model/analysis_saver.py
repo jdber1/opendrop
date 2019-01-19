@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
-from opendrop.app.validation import validate, check_is_positive, \
+from opendrop.utility.validation import validate, check_is_positive, \
     check_is_not_empty
 from opendrop.utility.bindable import BuiltinSetBindable, SetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
