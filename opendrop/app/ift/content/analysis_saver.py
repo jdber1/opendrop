@@ -5,12 +5,12 @@ from gi.repository import Gtk, Gdk
 
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable import BuiltinSetBindable, bindable_function, if_expr
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
-from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
-from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, \
-    ValidationFlag
+from opendrop.utility.events import Event
+from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, ValidationFlag, FieldView, \
+    FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
 
@@ -100,70 +100,63 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
             self._should_save_figure_inp = Gtk.CheckButton(label='Save {}'.format(figure_name))
             self.widget.add(self._should_save_figure_inp)
 
-            more_options = Gtk.Grid(margin_left=30, row_spacing=5, column_spacing=10)
-            self.widget.add(more_options)
+            self._more_options = Gtk.Grid(margin_left=30, row_spacing=5, column_spacing=10)
+            self.widget.add(self._more_options)
 
             dpi_lbl = Gtk.Label('Figure DPI:', xalign=0)
-            more_options.attach(dpi_lbl, 0, 0, 1, 1)
+            self._more_options.attach(dpi_lbl, 0, 0, 1, 1)
 
             dpi_inp_ctn = Gtk.Grid()
-            more_options.attach_next_to(dpi_inp_ctn, dpi_lbl, Gtk.PositionType.RIGHT, 1, 1)
-            self._dpi_inp = IntegerEntry(value=300, lower=72, upper=10000, width_chars=5)
-            self._dpi_inp.get_style_context().add_class('small-pad')
-            dpi_inp_ctn.add(self._dpi_inp)
+            self._more_options.attach_next_to(dpi_inp_ctn, dpi_lbl, Gtk.PositionType.RIGHT, 1, 1)
+            dpi_inp = IntegerEntry(value=300, lower=72, upper=10000, width_chars=5)
+            dpi_inp.get_style_context().add_class('small-pad')
+            dpi_inp_ctn.add(dpi_inp)
 
             dpi_err_lbl = Gtk.Label(xalign=0, width_request=190)
             dpi_err_lbl.get_style_context().add_class('error-text')
-            more_options.attach_next_to(dpi_err_lbl, dpi_inp_ctn, Gtk.PositionType.RIGHT, 1, 1)
+            self._more_options.attach_next_to(dpi_err_lbl, dpi_inp_ctn, Gtk.PositionType.RIGHT, 1, 1)
 
             size_lbl = Gtk.Label('Figure size (cm):', xalign=0)
-            more_options.attach(size_lbl, 0, 1, 1, 1)
+            self._more_options.attach(size_lbl, 0, 1, 1, 1)
 
             size_inp_ctn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-            more_options.attach_next_to(size_inp_ctn, size_lbl, Gtk.PositionType.RIGHT, 1, 1)
+            self._more_options.attach_next_to(size_inp_ctn, size_lbl, Gtk.PositionType.RIGHT, 1, 1)
 
             size_w_lbl = Gtk.Label('W:')
             size_inp_ctn.add(size_w_lbl)
-            self._size_w_inp = FloatEntry(value=10, lower=0, upper=10000, width_chars=6)
-            self._size_w_inp.get_style_context().add_class('small-pad')
-            size_inp_ctn.add(self._size_w_inp)
+            size_w_inp = FloatEntry(value=10, lower=0, upper=10000, width_chars=6)
+            size_w_inp.get_style_context().add_class('small-pad')
+            size_inp_ctn.add(size_w_inp)
             size_h_lbl = Gtk.Label('H:')
             size_inp_ctn.add(size_h_lbl)
-            self._size_h_inp = FloatEntry(value=10, lower=0, upper=10000, width_chars=6)
-            self._size_h_inp.get_style_context().add_class('small-pad')
-            size_inp_ctn.add(self._size_h_inp)
+            size_h_inp = FloatEntry(value=10, lower=0, upper=10000, width_chars=6)
+            size_h_inp.get_style_context().add_class('small-pad')
+            size_inp_ctn.add(size_h_inp)
 
             size_err_lbl = Gtk.Label(xalign=0, width_request=190)
             size_err_lbl.get_style_context().add_class('error-text')
-            more_options.attach_next_to(size_err_lbl, size_inp_ctn, Gtk.PositionType.RIGHT, 1, 1)
+            self._more_options.attach_next_to(size_err_lbl, size_inp_ctn, Gtk.PositionType.RIGHT, 1, 1)
 
             self.widget.show_all()
 
             # Wiring things up
 
             self.bn_more_options_sensitive = AtomicBindableAdapter(setter=self._set_figure_options_sensitive)
-            self.bn_should_save = GObjectPropertyBindable(self._should_save_figure_inp, 'active')  # type: AtomicBindable[bool]
-            self.bn_dpi = GObjectPropertyBindable(self._dpi_inp, 'value')  # type: AtomicBindable[int]
-            self.bn_size_w = GObjectPropertyBindable(self._size_w_inp, 'value')  # type: AtomicBindable[int]
-            self.bn_size_h = GObjectPropertyBindable(self._size_h_inp, 'value')  # type: AtomicBindable[int]
+
+            # Fields
+
+            self.should_save_field = FieldView(value=GObjectPropertyBindable(self._should_save_figure_inp, 'active'))
+            self.dpi_field = FieldView(value=GObjectPropertyBindable(dpi_inp, 'value'))
+            self.size_w_field = FieldView(value=GObjectPropertyBindable(size_w_inp, 'value'))
+            self.size_h_field = FieldView(value=GObjectPropertyBindable(size_h_inp, 'value'))
 
             # Error highlighting
 
-            self.dpi_err = BuiltinSetBindable()
-            self.size_w_err = BuiltinSetBindable()
-            self.size_h_err = BuiltinSetBindable()
-
-            self.figure_dpi_touched = AtomicBindableVar(False)
-            self.figure_size_w_touched = AtomicBindableVar(False)
-            self.figure_size_h_touched = AtomicBindableVar(False)
-
             # Keep a reference to unnamed objects to prevent them from being garbage collected
-            self._refs = []
-
-            self._refs.extend([
-                add_style_class_when_flags(self._dpi_inp, 'error', flags=self.dpi_err),
+            self.dpi_field.__my_refs = [
+                add_style_class_when_flags(dpi_inp, 'error', flags=self.dpi_field.errors_out),
                 GObjectPropertyBindable(dpi_err_lbl, 'label').bind_from(
-                    message_from_flags(field_name='Figure DPI', flags=self.dpi_err))]),
+                    message_from_flags(field_name='Figure DPI', flags=self.dpi_field.errors_out))]
 
             @bindable_function
             def figure_size_err_message(w_errors: Set[ValidationFlag], h_errors: Set[ValidationFlag]) -> str:
@@ -194,30 +187,18 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
                     return message
 
-            self._refs.extend([
-                add_style_class_when_flags(self._size_w_inp, 'error', flags=self.size_w_err),
-                add_style_class_when_flags(self._size_h_inp, 'error', flags=self.size_h_err),
+            self.size_w_field.__my_refs = [
+                add_style_class_when_flags(size_w_inp, 'error', flags=self.size_w_field.errors_out),
+                add_style_class_when_flags(size_h_inp, 'error', flags=self.size_h_field.errors_out),
                 GObjectPropertyBindable(size_err_lbl, 'label').bind_from(
-                    src=figure_size_err_message(self.size_w_err, self.size_h_err))])
+                    figure_size_err_message(self.size_w_field.errors_out, self.size_h_field.errors_out))]
 
-            self._dpi_inp.connect('focus-out-event', lambda *_: self.figure_dpi_touched.set(True))
-            self._size_w_inp.connect('focus-out-event', lambda *_: self.figure_size_w_touched.set(True))
-            self._size_h_inp.connect('focus-out-event', lambda *_: self.figure_size_h_touched.set(True))
+            dpi_inp.connect('focus-out-event', lambda *_: self.dpi_field.on_user_finished_editing.fire())
+            size_w_inp.connect('focus-out-event', lambda *_: self.size_w_field.on_user_finished_editing.fire())
+            size_h_inp.connect('focus-out-event', lambda *_: self.size_h_field.on_user_finished_editing.fire())
 
         def _set_figure_options_sensitive(self, sensitive: bool) -> None:
-            self._dpi_inp.props.sensitive = sensitive
-            self._size_w_inp.props.sensitive = sensitive
-            self._size_h_inp.props.sensitive = sensitive
-
-        def touch_all(self):
-            self.figure_dpi_touched.set(True)
-            self.figure_size_w_touched.set(True)
-            self.figure_size_h_touched.set(True)
-
-        def reset_touches(self):
-            self.figure_dpi_touched.set(False)
-            self.figure_size_w_touched.set(False)
-            self.figure_size_h_touched.set(False)
+            self._more_options.props.sensitive = sensitive
 
     def __init__(self, transient_for: Optional[Gtk.Window] = None) -> None:
         self.widget = Gtk.Window(resizable=False, modal=True, transient_for=transient_for)
@@ -287,51 +268,56 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
         # Wiring things up
 
-        self.bn_save_dir_parent = AtomicBindableAdapter(self._get_save_dir_parent, self._set_save_dir_parent)
-        self.bn_save_dir_name = GObjectPropertyBindable(save_dir_name_inp, 'text')
+        self.on_ok_btn_clicked = Event()
+        self.on_cancel_btn_clicked = Event()
+
+        ok_btn.connect('clicked', lambda *_: self.on_ok_btn_clicked.fire())
+        cancel_btn.connect('clicked', lambda *_: self.on_cancel_btn_clicked.fire())
+        self.widget.connect('delete-event', self._hdl_widget_delete_event)
+
+        self.save_dir_parent_field = FieldView(
+            value=AtomicBindableAdapter(self._get_save_dir_parent, self._set_save_dir_parent))
+        self.save_dir_name_field = FieldView(
+            value=GObjectPropertyBindable(save_dir_name_inp, 'text'))
 
         # Error highlighting
 
-        self.save_dir_parent_err = BuiltinSetBindable()
-        self.save_dir_name_err = BuiltinSetBindable()
-        self.save_dir_parent_touched = AtomicBindableVar(False)
-        self.save_dir_name_touched = AtomicBindableVar(False)
-
         # Keep a reference to unnamed objects to prevent them from being garbage collected
-        self._refs = (
-            add_style_class_when_flags(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_err),
+        self.save_dir_parent_field.__my_refs = [
+            add_style_class_when_flags(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_field.errors_out),
             GObjectPropertyBindable(save_dir_parent_err_lbl, 'label').bind_from(
-                message_from_flags(field_name='Parent', flags=self.save_dir_parent_err)),
+                message_from_flags(field_name='Parent', flags=self.save_dir_parent_field.errors_out))]
 
-            add_style_class_when_flags(save_dir_name_inp, 'error', flags=self.save_dir_name_err),
+        self.save_dir_name_field.__my_refs = [
+            add_style_class_when_flags(save_dir_name_inp, 'error', flags=self.save_dir_name_field.errors_out),
             GObjectPropertyBindable(save_dir_name_err_lbl, 'label').bind_from(
-                src=message_from_flags(field_name='Name', flags=self.save_dir_name_err)))
+                message_from_flags(field_name='Name', flags=self.save_dir_name_field.errors_out))]
 
-        save_dir_name_inp.connect('focus-out-event', lambda *_: self.save_dir_name_touched.set(True))
+        save_dir_name_inp.connect('focus-out-event', lambda *_: self.save_dir_name_field.on_user_finished_editing.fire())
+
+    def _hdl_widget_delete_event(self, widget: Gtk.Dialog, event: Gdk.Event) -> bool:
+        self.on_cancel_btn_clicked.fire()
+        # return True to block the dialog from closing.
+        return True
 
     def _get_save_dir_parent(self) -> Path:
-        return Path(self._save_dir_parent_inp.get_filename())
+        path_str = self._save_dir_parent_inp.get_filename()
+        path = Path(path_str) if path_str is not None else None
+        return path
 
-    def _set_save_dir_parent(self, path: Path) -> None:
-        self._save_dir_parent_inp.set_filename(str(path))
+    def _set_save_dir_parent(self, path: Optional[Path]) -> None:
+        if path is None:
+            self._save_dir_parent_inp.unselect_all()
+            return
 
-    def touch_all(self) -> None:
-        self.save_dir_parent_touched.set(True)
-        self.save_dir_name_touched.set(True)
+        path = str(path)
+        self._save_dir_parent_inp.set_filename(path)
 
-        self.drop_residuals_figure_save_options.touch_all()
-        self.ift_figure_save_options.touch_all()
-        self.volume_figure_save_options.touch_all()
-        self.surface_area_figure_save_options.touch_all()
+    def flush(self) -> None:
+        self.save_dir_parent_field.value.poke()
 
-    def reset_touches(self) -> None:
-        self.save_dir_parent_touched.set(False)
-        self.save_dir_name_touched.set(False)
-
-        self.drop_residuals_figure_save_options.reset_touches()
-        self.ift_figure_save_options.reset_touches()
-        self.volume_figure_save_options.reset_touches()
-        self.surface_area_figure_save_options.reset_touches()
+    def destroy(self) -> None:
+        self.widget.destroy()
 
 
 class IFTAnalysisSaverPresenter:
@@ -343,22 +329,20 @@ class IFTAnalysisSaverPresenter:
             self.__destroyed = False
             self.__cleanup_tasks = []
 
-            empty_err = BuiltinSetBindable()
-            dpi_err = if_expr(cond=self._view.figure_dpi_touched, true=options.dpi_err, false=empty_err)
-            size_w_err = if_expr(cond=self._view.figure_size_w_touched, true=options.size_w_err, false=empty_err)
-            size_h_err = if_expr(cond=self._view.figure_size_h_touched, true=options.size_h_err, false=empty_err)
-
             data_bindings = [
-                options.bn_should_save.bind_to(self._view.bn_should_save),
-                options.bn_should_save.bind_to(self._view.bn_more_options_sensitive),
-                options.bn_dpi.bind_to(self._view.bn_dpi),
-                options.bn_size_w.bind_to(self._view.bn_size_w),
-                options.bn_size_h.bind_to(self._view.bn_size_h),
-
-                dpi_err.bind_to(self._view.dpi_err),
-                size_w_err.bind_to(self._view.size_w_err),
-                size_h_err.bind_to(self._view.size_h_err)]
+                self._options.bn_should_save.bind_to(self._view.should_save_field.value),
+                self._options.bn_should_save.bind_to(self._view.bn_more_options_sensitive)]
             self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
+
+            self._field_presenters = [
+                FieldPresenter(self._options.bn_dpi, self._options.dpi_err, self._view.dpi_field),
+                FieldPresenter(self._options.bn_size_w, self._options.size_w_err, self._view.size_w_field),
+                FieldPresenter(self._options.bn_size_h, self._options.size_h_err, self._view.size_h_field)]
+            self.__cleanup_tasks.extend(fp.destroy for fp in self._field_presenters)
+
+        def show_errors(self) -> None:
+            for fp in self._field_presenters:
+                fp.show_errors()
 
         def destroy(self) -> None:
             assert not self.__destroyed
@@ -372,44 +356,62 @@ class IFTAnalysisSaverPresenter:
         self.__destroyed = False
         self.__cleanup_tasks = []
 
-        self._view.reset_touches()
-
-        drop_residuals_figure_save_options = self.FigureOptionsPresenter(
+        self._drop_residuals_figure_save_options = self.FigureOptionsPresenter(
             options=self._options.drop_residuals_figure_opts,
             view=self._view.drop_residuals_figure_save_options)
-        self.__cleanup_tasks.append(drop_residuals_figure_save_options.destroy)
+        self.__cleanup_tasks.append(self._drop_residuals_figure_save_options.destroy)
 
-        ift_figure_save_options = self.FigureOptionsPresenter(
+        self._ift_figure_save_options = self.FigureOptionsPresenter(
             options=self._options.ift_figure_opts,
             view=self._view.ift_figure_save_options)
-        self.__cleanup_tasks.append(ift_figure_save_options.destroy)
+        self.__cleanup_tasks.append(self._ift_figure_save_options.destroy)
 
-        volume_figure_save_options = self.FigureOptionsPresenter(
+        self._volume_figure_save_options = self.FigureOptionsPresenter(
             options=self._options.volume_figure_opts,
             view=self._view.volume_figure_save_options)
-        self.__cleanup_tasks.append(volume_figure_save_options.destroy)
+        self.__cleanup_tasks.append(self._volume_figure_save_options.destroy)
 
-        surface_area_figure_save_options = self.FigureOptionsPresenter(
+        self._surface_area_figure_save_options = self.FigureOptionsPresenter(
             options=self._options.surface_area_figure_opts,
             view=self._view.surface_area_figure_save_options)
-        self.__cleanup_tasks.append(surface_area_figure_save_options.destroy)
+        self.__cleanup_tasks.append(self._surface_area_figure_save_options.destroy)
 
-        empty_err = BuiltinSetBindable()
-        save_dir_parent_err = if_expr(cond=self._view.save_dir_parent_touched,
-                                      true=self._options.save_dir_parent_err,
-                                      false=empty_err)
-        save_dir_name_err = if_expr(cond=self._view.save_dir_name_touched,
-                                    true=self._options.save_dir_name_err,
-                                    false=empty_err)
+        self._field_presenters = [
+            FieldPresenter(value=self._options.bn_save_dir_parent,
+                           errors=self._options.save_dir_parent_err,
+                           field_view=self._view.save_dir_parent_field),
+            FieldPresenter(value=self._options.bn_save_dir_name,
+                           errors=self._options.save_dir_name_err,
+                           field_view=self._view.save_dir_name_field)]
+        self.__cleanup_tasks.extend(fp.destroy for fp in self._field_presenters)
 
-        data_bindings = [
-            Binding(self._options.bn_save_dir_parent, self._view.bn_save_dir_parent),
-            Binding(self._options.bn_save_dir_name, self._view.bn_save_dir_name),
+        event_connections = [
+            self._view.on_ok_btn_clicked.connect(self._ok),
+            self._view.on_cancel_btn_clicked.connect(self._cancel)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
-            Binding(save_dir_parent_err, self._view.save_dir_parent_err),
-            Binding(save_dir_name_err, self._view.save_dir_name_err),
-        ]
-        self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
+        self.on_user_finished_editing = Event()
+
+    def _ok(self) -> None:
+        self._view.flush()
+
+        if self._options.has_errors:
+            self._show_errors()
+            return
+
+        self.on_user_finished_editing.fire(True)
+
+    def _cancel(self) -> None:
+        self.on_user_finished_editing.fire(False)
+
+    def _show_errors(self) -> None:
+        for fp in self._field_presenters:
+            fp.show_errors()
+
+        self._drop_residuals_figure_save_options.show_errors()
+        self._ift_figure_save_options.show_errors()
+        self._volume_figure_save_options.show_errors()
+        self._surface_area_figure_save_options.show_errors()
 
     def destroy(self) -> None:
         assert not self.__destroyed
