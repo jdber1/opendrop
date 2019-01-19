@@ -124,6 +124,9 @@ class IFTDropAnalysis:
         self._image_timestamp = image_timestamp
         self._image_annotations = image_annotations
 
+        # Set given image to be readonly to prevent bugs.
+        self._image.flags.writeable = False
+
         self._status = self.Status.READY_TO_FIT
 
         self.bn_image.poke()
