@@ -1,8 +1,9 @@
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import Any, Generic, TypeVar, Sequence, Optional, Callable, Type, MutableSequence, Iterable
 
-from opendrop.utility.bindable.node import Source, Sink
 from opendrop.utility.events import Event, EventConnection
+from .binding import Binding
+from .node import Source, Sink
 
 TxT1 = TypeVar('TxT1')
 TxT2 = TypeVar('TxT2')
@@ -25,6 +26,12 @@ class Bindable(Source[TxT1], Sink[TxT2]):
 
     def _bcast_tx(self, tx: TxT1, block: Sequence[EventConnection] = tuple()) -> None:
         self.on_new_tx.fire_with_opts(args=(tx,), block=block)
+
+    def bind_from(self, src: 'Bindable[TxT2, TxT1]') -> Binding[TxT2, TxT1]:
+        return Binding(src=src, dst=self)
+
+    def bind_to(self, dst: 'Bindable[TxT2, TxT1]') -> Binding[TxT1, TxT2]:
+        return Binding(src=self, dst=dst)
 
     @abstractmethod
     def _export(self) -> TxT1:

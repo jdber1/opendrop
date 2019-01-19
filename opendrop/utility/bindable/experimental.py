@@ -3,7 +3,6 @@ import itertools
 from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any
 
 from .bindable import AtomicBindable, Bindable, AtomicBindableVar
-from .binding import Binding
 from .set import SetBindable, BuiltinSetBindable
 
 BindableType = TypeVar('BindableType', bound=Bindable)
@@ -19,7 +18,7 @@ class BindableProxy(Bindable[TxT1, TxT2]):
         self._proxy_target = target
 
     def __call__(self, bindable: BindableType) -> BindableType:
-        Binding(self, bindable)
+        self.bind_to(bindable)
         return bindable
 
     @property
