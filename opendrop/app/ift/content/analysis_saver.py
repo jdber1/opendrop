@@ -9,7 +9,7 @@ from opendrop.utility.bindable import BuiltinSetBindable, bindable_function, if_
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
-from opendrop.utility.validation import message_from_flags, associate_style_class_to_widget_when_flags_present, \
+from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, \
     ValidationFlag
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
@@ -161,7 +161,7 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
             self._refs = []
 
             self._refs.extend([
-                associate_style_class_to_widget_when_flags_present(self._dpi_inp, 'error', flags=self.dpi_err),
+                add_style_class_when_flags(self._dpi_inp, 'error', flags=self.dpi_err),
                 GObjectPropertyBindable(dpi_err_lbl, 'label').bind_from(
                     message_from_flags(field_name='Figure DPI', flags=self.dpi_err))]),
 
@@ -195,8 +195,8 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
                     return message
 
             self._refs.extend([
-                associate_style_class_to_widget_when_flags_present(self._size_w_inp, 'error', flags=self.size_w_err),
-                associate_style_class_to_widget_when_flags_present(self._size_h_inp, 'error', flags=self.size_h_err),
+                add_style_class_when_flags(self._size_w_inp, 'error', flags=self.size_w_err),
+                add_style_class_when_flags(self._size_h_inp, 'error', flags=self.size_h_err),
                 GObjectPropertyBindable(size_err_lbl, 'label').bind_from(
                     src=figure_size_err_message(self.size_w_err, self.size_h_err))])
 
@@ -299,11 +299,11 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self._refs = (
-            associate_style_class_to_widget_when_flags_present(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_err),
+            add_style_class_when_flags(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_err),
             GObjectPropertyBindable(save_dir_parent_err_lbl, 'label').bind_from(
                 message_from_flags(field_name='Parent', flags=self.save_dir_parent_err)),
 
-            associate_style_class_to_widget_when_flags_present(save_dir_name_inp, 'error', flags=self.save_dir_name_err),
+            add_style_class_when_flags(save_dir_name_inp, 'error', flags=self.save_dir_name_err),
             GObjectPropertyBindable(save_dir_name_err_lbl, 'label').bind_from(
                 src=message_from_flags(field_name='Name', flags=self.save_dir_name_err)))
 

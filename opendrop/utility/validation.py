@@ -82,4 +82,4 @@ class AssociateStyleClassToWidgetWhenFlagsPresent:
             self._widget.get_style_context().remove_class(self._style_class)
 
 
-associate_style_class_to_widget_when_flags_present = AssociateStyleClassToWidgetWhenFlagsPresent
+add_style_class_when_flags = AssociateStyleClassToWidgetWhenFlagsPresent
