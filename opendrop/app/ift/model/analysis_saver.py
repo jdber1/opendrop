@@ -3,7 +3,7 @@ import itertools
 import math
 from collections import OrderedDict
 from pathlib import Path
-from typing import Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union, Iterable
 
 import cv2
 import numpy as np
@@ -15,6 +15,8 @@ from opendrop.utility.bindable import SetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty
 
+
+# Save options container
 
 class IFTAnalysisSaverOptions:
     class FigureOptions:
@@ -43,6 +45,10 @@ class IFTAnalysisSaverOptions:
                 enabled=self.bn_should_save)
 
             self.errors = SetBindable.union(self.dpi_err, self.size_w_err, self.size_h_err)
+
+        @property
+        def size(self) -> Tuple[float, float]:
+            return self.bn_size_w.get(), self.bn_size_h.get()
 
     def __init__(self) -> None:
         self.bn_save_dir_parent = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Path]]
@@ -84,7 +90,11 @@ class IFTAnalysisSaverOptions:
                             self.surface_area_figure_opts):
             errors.append(figure_opts.errors)
 
-        self.errors = SetBindable.union(*errors)
+        self._errors = SetBindable.union(*errors)
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self._errors)
 
     @property
     def save_root_dir(self) -> Path:
@@ -131,7 +141,7 @@ def simple_grapher(label_x: str, label_y: str, data_x: Sequence[float], data_y: 
 
 # Main functions and classes start here
 
-def save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
+def _save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
     image = drop.image
     if image is None:
         return
@@ -139,10 +149,13 @@ def save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
     cv2.imwrite(str(out_file_path), image)
 
 
-def save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> None:
+def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> None:
     image, image_annotations = drop.image, drop.image_annotations
     if image is None or image_annotations is None:
         return
+
+    # Draw on a copy
+    image = image.copy()
 
     # Note, colors are in BGR format.
 
@@ -194,10 +207,10 @@ def save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> Non
         color=(13, 26, 255),
         thickness=1)
 
-    cv2.imwrite(out_file_path, image)
+    cv2.imwrite(str(out_file_path), image)
 
 
-def save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
     if drop.image_annotations is None:
         return
 
@@ -228,7 +241,7 @@ def save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
     root.write(out_file)
 
 
-def save_drop_contour(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_contour(drop: IFTDropAnalysis, out_file) -> None:
     image_annotations = drop.image_annotations
     if image_annotations is None:
         return
@@ -237,7 +250,7 @@ def save_drop_contour(drop: IFTDropAnalysis, out_file) -> None:
     np.savetxt(out_file, drop_contour, fmt='%d,%d')
 
 
-def save_drop_contour_fit(drop: IFTDropAnalysis, out_file, samples: int = 100) -> None:
+def _save_drop_contour_fit(drop: IFTDropAnalysis, out_file, samples: int = 100) -> None:
     drop_contour_fit = drop.generate_drop_contour_fit(samples=samples)
     if drop_contour_fit is None:
         return
@@ -247,7 +260,7 @@ def save_drop_contour_fit(drop: IFTDropAnalysis, out_file, samples: int = 100) -
     np.savetxt(out_file, drop_contour_fit, fmt='%d,%d')
 
 
-def save_drop_residuals(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_contour_fit_residuals(drop: IFTDropAnalysis, out_file) -> None:
     residuals = drop.drop_contour_fit_residuals
     if residuals is None:
         return
@@ -255,7 +268,7 @@ def save_drop_residuals(drop: IFTDropAnalysis, out_file) -> None:
     np.savetxt(out_file, residuals, fmt='%g,%g')
 
 
-def save_drop_residuals_figure(drop: IFTDropAnalysis, out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_drop_contour_fit_residuals_figure(drop: IFTDropAnalysis, out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     residuals = drop.drop_contour_fit_residuals
     if residuals is None:
         return
@@ -278,7 +291,7 @@ def save_drop_residuals_figure(drop: IFTDropAnalysis, out_file, fig_size: Tuple[
     fig.savefig(out_file)
 
 
-def save_ift_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_ift_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [drop for drop in drops if math.isfinite(drop.image_timestamp) and math.isfinite(drop.interfacial_tension)]
     start_time = min(drop.image_timestamp for drop in drops)
     data = ((drop.image_timestamp - start_time, drop.interfacial_tension*1e3) for drop in drops)
@@ -296,7 +309,7 @@ def save_ift_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[
     fig.savefig(out_file)
 
 
-def save_volume_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_volume_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [drop for drop in drops if math.isfinite(drop.image_timestamp) and math.isfinite(drop.volume)]
     start_time = min(drop.image_timestamp for drop in drops)
     data = ((drop.image_timestamp - start_time, drop.volume*1e9) for drop in drops)
@@ -314,7 +327,7 @@ def save_volume_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tup
     fig.savefig(out_file)
 
 
-def save_surface_area_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_surface_area_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [drop for drop in drops if math.isfinite(drop.image_timestamp) and math.isfinite(drop.surface_area)]
     start_time = min(drop.image_timestamp for drop in drops)
     data = ((drop.image_timestamp - start_time, drop.surface_area*1e6) for drop in drops)
@@ -331,15 +344,85 @@ def save_surface_area_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_siz
 
     fig.savefig(out_file)
 
-# save profile_extracted.csv
-# save profile_fit.csv # save so it overlays onto image coordinates
-# save residuals.csv
 
-
-def save_drop(drop: IFTDropAnalysis, drop_dir_name: str, options: IFTAnalysisSaverOptions):
-    save_drop_dir = options.save_root_dir/drop_dir_name
+def _save_individual(drop: IFTDropAnalysis, drop_dir_name: str, options: IFTAnalysisSaverOptions) -> None:
+    full_dir = options.save_root_dir/drop_dir_name
+    full_dir.mkdir(parents=True)
 
     # clear the directory
 
-    save_drop_image(drop.image, save_drop_dir)
-    save_drop_image_annotated(drop.image, drop.image_annotations, save_drop_dir)
+    _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
+    _save_drop_image_annotated(drop, out_file_path=full_dir / 'image_annotated.png')
+
+    with (full_dir/'params.ini').open('w') as out_file:
+        _save_drop_params(drop, out_file=out_file)
+
+    with (full_dir/'profile_extracted.csv').open('wb') as out_file:
+        _save_drop_contour(drop, out_file=out_file)
+
+    with (full_dir/'profile_fit.csv').open('wb') as out_file:
+        _save_drop_contour_fit(drop, out_file=out_file)
+
+    with (full_dir/'profile_fit_residuals.csv').open('wb') as out_file:
+        _save_drop_contour_fit_residuals(drop, out_file=out_file)
+
+    drop_residuals_figure_opts = options.drop_residuals_figure_opts
+    if drop_residuals_figure_opts.bn_should_save.get():
+        fig_size = drop_residuals_figure_opts.size
+        dpi = drop_residuals_figure_opts.bn_dpi.get()
+        with (full_dir/'profile_fit_residuals_plot.png').open('wb') as out_file:
+            _save_drop_contour_fit_residuals_figure(
+                drop=drop,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
+
+
+def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOptions) -> None:
+    drops = list(drops)
+
+    full_dir = options.save_root_dir
+    full_dir.mkdir(parents=True)
+
+    padding = len(str(len(drops)))
+    dir_name = options.bn_save_dir_name.get()
+    for i, drop in enumerate(drops):
+        drop_dir_name = dir_name + '{i:0>{padding}}'.format(i=i, padding=padding)
+        _save_individual(drop, drop_dir_name, options)
+
+    if len(drops) <= 1:
+        return
+
+
+    figure_opts = options.ift_figure_opts
+    if figure_opts.bn_should_save.get():
+        fig_size = figure_opts.size
+        dpi = figure_opts.bn_dpi.get()
+        with (full_dir/'ift_plot.png').open('wb') as out_file:
+            _save_ift_figure(
+                drops=drops,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
+
+    figure_opts = options.volume_figure_opts
+    if figure_opts.bn_should_save.get():
+        fig_size = figure_opts.size
+        dpi = figure_opts.bn_dpi.get()
+        with (full_dir/'volume_plot.png').open('wb') as out_file:
+            _save_volume_figure(
+                drops=drops,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
+
+    figure_opts = options.surface_area_figure_opts
+    if figure_opts.bn_should_save.get():
+        fig_size = figure_opts.size
+        dpi = figure_opts.bn_dpi.get()
+        with (full_dir/'surface_area_plot.png').open('wb') as out_file:
+            _save_surface_area_figure(
+                drops=drops,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
