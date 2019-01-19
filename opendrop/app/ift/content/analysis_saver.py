@@ -162,8 +162,8 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
             self._refs.extend([
                 associate_style_class_to_widget_when_flags_present(self._dpi_inp, 'error', flags=self.dpi_err),
-                Binding(dst=GObjectPropertyBindable(dpi_err_lbl, 'label'),
-                        src=message_from_flags(field_name='Figure DPI', flags=self.dpi_err))]),
+                GObjectPropertyBindable(dpi_err_lbl, 'label').bind_from(
+                    message_from_flags(field_name='Figure DPI', flags=self.dpi_err))]),
 
             @bindable_function
             def figure_size_err_message(w_errors: Set[ValidationFlag], h_errors: Set[ValidationFlag]) -> str:
@@ -197,8 +197,8 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
             self._refs.extend([
                 associate_style_class_to_widget_when_flags_present(self._size_w_inp, 'error', flags=self.size_w_err),
                 associate_style_class_to_widget_when_flags_present(self._size_h_inp, 'error', flags=self.size_h_err),
-                Binding(dst=GObjectPropertyBindable(size_err_lbl, 'label'),
-                        src=figure_size_err_message(self.size_w_err, self.size_h_err))])
+                GObjectPropertyBindable(size_err_lbl, 'label').bind_from(
+                    src=figure_size_err_message(self.size_w_err, self.size_h_err))])
 
             self._dpi_inp.connect('focus-out-event', lambda *_: self.figure_dpi_touched.set(True))
             self._size_w_inp.connect('focus-out-event', lambda *_: self.figure_size_w_touched.set(True))
@@ -300,12 +300,12 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self._refs = (
             associate_style_class_to_widget_when_flags_present(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_err),
-            Binding(dst=GObjectPropertyBindable(save_dir_parent_err_lbl, 'label'),
-                    src=message_from_flags(field_name='Parent', flags=self.save_dir_parent_err)),
+            GObjectPropertyBindable(save_dir_parent_err_lbl, 'label').bind_from(
+                message_from_flags(field_name='Parent', flags=self.save_dir_parent_err)),
 
             associate_style_class_to_widget_when_flags_present(save_dir_name_inp, 'error', flags=self.save_dir_name_err),
-            Binding(dst=GObjectPropertyBindable(save_dir_name_err_lbl, 'label'),
-                    src=message_from_flags(field_name='Name', flags=self.save_dir_name_err)))
+            GObjectPropertyBindable(save_dir_name_err_lbl, 'label').bind_from(
+                src=message_from_flags(field_name='Name', flags=self.save_dir_name_err)))
 
         save_dir_name_inp.connect('focus-out-event', lambda *_: self.save_dir_name_touched.set(True))
 
@@ -349,15 +349,15 @@ class IFTAnalysisSaverPresenter:
             size_h_err = if_expr(cond=self._view.figure_size_h_touched, true=options.size_h_err, false=empty_err)
 
             data_bindings = [
-                Binding(options.bn_should_save, self._view.bn_should_save),
-                Binding(options.bn_should_save, self._view.bn_more_options_sensitive),
-                Binding(options.bn_dpi, self._view.bn_dpi),
-                Binding(options.bn_size_w, self._view.bn_size_w),
-                Binding(options.bn_size_h, self._view.bn_size_h),
+                options.bn_should_save.bind_to(self._view.bn_should_save),
+                options.bn_should_save.bind_to(self._view.bn_more_options_sensitive),
+                options.bn_dpi.bind_to(self._view.bn_dpi),
+                options.bn_size_w.bind_to(self._view.bn_size_w),
+                options.bn_size_h.bind_to(self._view.bn_size_h),
 
-                Binding(dpi_err, self._view.dpi_err),
-                Binding(size_w_err, self._view.size_w_err),
-                Binding(size_h_err, self._view.size_h_err)]
+                dpi_err.bind_to(self._view.dpi_err),
+                size_w_err.bind_to(self._view.size_w_err),
+                size_h_err.bind_to(self._view.size_h_err)]
             self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         def destroy(self) -> None:
