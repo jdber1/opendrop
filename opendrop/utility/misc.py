@@ -1,6 +1,8 @@
 import importlib
 import inspect
 import pkgutil
+import shutil
+from pathlib import Path
 from types import ModuleType
 from typing import Union, Type, List, Iterable, TypeVar
 
@@ -45,3 +47,17 @@ def clamp(x: float, lower: float, upper: float) -> float:
               `x`     if `lower < x < upper`
     """
     return max(min(x, upper), lower)
+
+
+def clear_directory_contents(path: Path) -> None:
+    if not path.is_dir():
+        return
+
+    for child_path in path.iterdir():
+        try:
+            if child_path.is_file():
+                child_path.unlink()
+            elif child_path.is_dir():
+                shutil.rmtree(str(child_path))
+        except Exception as e:
+            print(e)
