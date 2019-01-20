@@ -348,8 +348,6 @@ def _save_individual(drop: IFTDropAnalysis, drop_dir_name: str, options: IFTAnal
     full_dir = options.save_root_dir/drop_dir_name
     full_dir.mkdir(parents=True)
 
-    # clear the directory
-
     _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
     _save_drop_image_annotated(drop, out_file_path=full_dir / 'image_annotated.png')
 
