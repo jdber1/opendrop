@@ -63,18 +63,18 @@ class IFTAnalysisSaverOptions:
         self.ift_figure_opts = self.FigureOptions(
             should_save=True,
             dpi=300,
-            size_w=16,
-            size_h=12)
+            size_w=15,
+            size_h=9)
         self.volume_figure_opts = self.FigureOptions(
             should_save=True,
             dpi=300,
-            size_w=16,
-            size_h=12)
+            size_w=15,
+            size_h=9)
         self.surface_area_figure_opts = self.FigureOptions(
             should_save=True,
             dpi=300,
-            size_w=16,
-            size_h=12)
+            size_w=15,
+            size_h=9)
 
         # Validation:
 
