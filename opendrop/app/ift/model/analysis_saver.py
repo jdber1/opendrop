@@ -13,6 +13,7 @@ from matplotlib.ticker import MultipleLocator
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
 from opendrop.utility.bindable import SetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
+from opendrop.utility.misc import clear_directory_contents
 from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty
 
 
@@ -233,7 +234,7 @@ def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
             ('apex_coordinates', drop.apex_coords_px),
             ('; needle width in pixels', None),
             ('needle_width', drop.phys_params.needle_width / drop.image_annotations.m_per_px),
-            ('; angle is in degrees (positive is clockwise)', None),
+            ('; angle is in degrees (positive is counter-clockwise)', None),
             ('image_angle', math.degrees(drop.apex_rot)),
         ))),
     )))
@@ -382,7 +383,9 @@ def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOption
     drops = list(drops)
 
     full_dir = options.save_root_dir
-    full_dir.mkdir(parents=True)
+    assert full_dir.is_dir() or not full_dir.exists()
+    full_dir.mkdir(parents=True, exist_ok=True)
+    clear_directory_contents(full_dir)
 
     padding = len(str(len(drops)))
     dir_name = options.bn_save_dir_name.get()
@@ -392,7 +395,6 @@ def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOption
 
     if len(drops) <= 1:
         return
-
 
     figure_opts = options.ift_figure_opts
     if figure_opts.bn_should_save.get():

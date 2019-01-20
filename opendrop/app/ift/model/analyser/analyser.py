@@ -339,7 +339,8 @@ class IFTDropAnalysis:
         if yl_fit is None:
             return math.nan
 
-        return yl_fit.apex_rot
+        # Return negative so positive angle is counter-clockwise.
+        return -yl_fit.apex_rot
 
 
 class IFTAnalysis:
