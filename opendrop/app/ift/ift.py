@@ -1,29 +1,31 @@
 import asyncio
 from operator import attrgetter
+from pathlib import Path
 from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional
 
 from gi.repository import Gtk
 
 from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
-from opendrop.app.common.dialog import YesNoDialogView, YesNoDialogResponse
+from opendrop.app.common.dialog import YesNoDialogView, YesNoDialogResponse, ErrorDialogView
 from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter, AnalysisFooterView, \
     AnalysisFooterPresenter
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
+from opendrop.app.ift.content.analysis_saver import IFTAnalysisSaverPresenter, IFTAnalysisSaverView
 from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
 from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
 from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
 from opendrop.app.ift.footer import IFTAnalysisFooterModel
 from opendrop.app.ift.model.analyser import IFTAnalysis
 from opendrop.app.ift.model.analysis_factory import IFTAnalysisFactory
+from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions, save_drops
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView
 from opendrop.component.wizard.wizard import WizardPageID
-from opendrop.mytypes import Rect2
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.events import EventConnection
@@ -106,10 +108,30 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
     def active_footer_view(self, view: GtkWidgetView) -> None:
         self._footer_view.set_visible_child(view)
 
-    def create_cancel_analysis_dialog(self) -> YesNoDialogView:
+    @property
+    def window(self) -> Optional[Gtk.Window]:
         toplevel = self.widget.get_toplevel()
-        toplevel = toplevel if isinstance(toplevel, Gtk.Window) else None
-        return YesNoDialogView(message='Cancel analysis?', window=toplevel)
+        window = toplevel if isinstance(toplevel, Gtk.Window) else None
+        return window
+
+    def create_cancel_analysis_dialog(self) -> YesNoDialogView:
+        return YesNoDialogView(message='Cancel analysis?', window=self.window)
+
+    def create_discard_analysis_results_dialog(self) -> YesNoDialogView:
+        return YesNoDialogView(message='Discard analysis results?', window=self.window)
+
+    def create_clear_directory_dialog(self, path: Path) -> YesNoDialogView:
+        return YesNoDialogView(
+            message="This save location '{!s}' already exists, do you want to clear its contents?".format(path),
+            window=self.window)
+
+    def create_path_exists_and_is_not_a_directory_error_dialog(self, path: Path) -> ErrorDialogView:
+        return ErrorDialogView(
+            message="Cannot save to '{!s}', the path already exists and is a non-directory file.".format(path),
+            window=self.window)
+
+    def create_saver_dialog(self) -> IFTAnalysisSaverView:
+        return IFTAnalysisSaverView(transient_for=self.window)
 
 
 class IfThen:
@@ -143,6 +165,9 @@ class IFTRootPresenter:
         self._view = view
         self._create_analysis = create_analysis
         self._results_explorer = results_explorer
+
+        self._current_analysis = None  # type: Optional[IFTAnalysis]
+        self._current_analysis_saved = False
 
         self.__cleanup_tasks = []
         event_connections = []  # type: MutableSequence[EventConnection]
@@ -247,6 +272,10 @@ class IFTRootPresenter:
 
     def _user_wants_to_start_analysis(self) -> None:
         analysis = self._create_analysis()
+
+        self._current_analysis = analysis
+        self._current_analysis_saved = False
+
         self._results_explorer.analysis = analysis
         self._page_option_results.set(True)
 
@@ -261,7 +290,7 @@ class IFTRootPresenter:
                    then=confirm_cancel_analysis.cancel),
             weak_ref=False)
 
-        def result(fut: asyncio.Future):
+        def result(fut: asyncio.Future) -> None:
             early_termination_ec.disconnect()
             if fut.cancelled() or fut.result() is False:
                 return
@@ -270,19 +299,108 @@ class IFTRootPresenter:
         confirm_cancel_analysis.add_done_callback(result)
 
     def _user_wants_to_exit_analysis(self) -> None:
-        print('Back')
-        self._page_option_image_processing.set(True)
-        pass
+        assert self._current_analysis.bn_done.get()
+
+        def done(fut: Optional[asyncio.Future] = None) -> None:
+            if fut is not None and (fut.cancelled() or fut.result() is False):
+                return
+            self._page_option_image_processing.set(True)
+
+        if not self._current_analysis_saved:
+            self._loop.create_task(self._ask_user_confirm_discard_analysis_results()).add_done_callback(done)
+        else:
+            done()
 
     def _user_wants_to_save_analysis(self) -> None:
-        print('Save')
-        pass
+        analysis = self._current_analysis
+        if analysis is None or not analysis.bn_done.get():
+            return
+
+        def done(fut: asyncio.Future) -> None:
+            if fut.cancelled():
+                return
+
+            options = fut.result()  # type: IFTAnalysisSaverOptions
+            if options is None:
+                return
+
+            self._save_analysis(options)
+
+        self._loop.create_task(self._ask_user_save_analysis()).add_done_callback(done)
+
+    def _save_analysis(self, save_options: IFTAnalysisSaverOptions) -> None:
+        analysis = self._current_analysis
+        assert analysis is not None and analysis.bn_done.get()
+
+        save_drops(analysis.drops, save_options)
+        self._current_analysis_saved = True
+
+    async def _ask_user_confirm_discard_analysis_results(self) -> bool:
+        dlg_view = self._view.create_discard_analysis_results_dialog()
+        try:
+            dlg_response = await dlg_view.on_response.wait()
+            return dlg_response is YesNoDialogResponse.YES
+        finally:
+            dlg_view.destroy()
 
     async def _ask_user_confirm_cancel_analysis(self) -> bool:
         dlg_view = self._view.create_cancel_analysis_dialog()
         try:
             dlg_response = await dlg_view.on_response.wait()
             return dlg_response is YesNoDialogResponse.YES
+        finally:
+            dlg_view.destroy()
+
+    async def _ask_user_save_analysis(self) -> Optional[IFTAnalysisSaverOptions]:
+        options = IFTAnalysisSaverOptions()
+
+        while True:
+            save_dlg_view = self._view.create_saver_dialog()
+            save_dlg = IFTAnalysisSaverPresenter(options, save_dlg_view)
+
+            try:
+                accept = await save_dlg.on_user_finished_editing.wait()
+            finally:
+                save_dlg.destroy()
+                save_dlg_view.destroy()
+
+            if not accept:
+                return
+
+            save_root_dir = options.save_root_dir
+            if not save_root_dir.exists():
+                # User specified a non-existent directory, we will create one later.
+                break
+            elif save_root_dir.is_dir():
+                if len(tuple(save_root_dir.iterdir())) == 0:
+                    # Directory is empty, no 'overwrite' confirmation required.
+                    break
+
+                user_wants_to_clear_dir = await self._ask_user_clear_directory(save_root_dir)
+                if user_wants_to_clear_dir:
+                    break
+                else:
+                    # User does not want to clear the existing directory, return to save options dialog.
+                    continue
+            else:
+                # Path exists, but is not a directory. We will not attempt to remove whatever it is.
+                await self._tell_user_file_exists_and_is_not_a_directory(save_root_dir)
+                continue
+
+        return options
+
+    async def _ask_user_clear_directory(self, path: Path) -> None:
+        dlg_view = self._view.create_clear_directory_dialog(path)
+        try:
+            dlg_response = await dlg_view.on_response.wait()
+            return dlg_response is YesNoDialogResponse.YES
+        finally:
+            dlg_view.destroy()
+
+    async def _tell_user_file_exists_and_is_not_a_directory(self, path: Path) -> None:
+        dlg_view = self._view.create_path_exists_and_is_not_a_directory_error_dialog(path)
+        try:
+            await dlg_view.on_acknowledged.wait()
         finally:
             dlg_view.destroy()
 
@@ -316,13 +434,15 @@ class IFTRootPresenter:
             self._view.active_content_view = self._view.content_results
             self._view.active_footer_view = self._view.footer_results
         else:
-            pass
             self._content_results.leave()
 
     def destroy(self) -> None:
         for f in self.__cleanup_tasks:
             f()
         self.__cleanup_tasks = []
+
+        if self._current_analysis is not None:
+            self._current_analysis.cancel()
 
 
 class IFTSpeaker(Speaker):
