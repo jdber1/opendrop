@@ -222,7 +222,7 @@ def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
             ('timestamp', drop.image_timestamp),
             ('interfacial_tension', drop.interfacial_tension),
             ('volume', drop.volume),
-            ('surface area', drop.surface_area),
+            ('surface_area', drop.surface_area),
             ('apex_radius', drop.apex_radius),
             ('worthington', drop.worthington),
             ('bond_number', drop.bond_number),
