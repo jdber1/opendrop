@@ -23,6 +23,9 @@ class YesNoDialogView(GtkWidgetView[Gtk.Dialog]):
             message_format=message)
         self.widget.show()
 
+        # Add a reference to self in the widget, otherwise self gets garbage collected for some reason.
+        self.widget.__ref_to_view = self
+
         # Wiring things up
 
         self.on_response = Event()

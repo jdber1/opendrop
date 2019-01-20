@@ -6,7 +6,7 @@ from gi.repository import Gtk, Gdk
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
 from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, ValidationFlag, FieldView, \
@@ -49,51 +49,6 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
-        class ErrorsView:
-            def __init__(self, view: 'IFTAnalysisSaverView.FigureOptionsView') -> None:
-                self._view = view
-
-                self.bn_figure_dpi_err_msg = AtomicBindableAdapter(
-                    setter=self._set_figure_dpi_err_msg)  # type: AtomicBindable[Optional[str]]
-                self.bn_figure_size_err_msg = AtomicBindableAdapter(
-                    setter=self._set_figure_size_err_msg)  # type: AtomicBindable[Optional[str]]
-
-                self.bn_figure_dpi_touched = AtomicBindableVar(False)
-                self.bn_figure_size_touched = AtomicBindableVar(False)
-
-                self._view._dpi_inp.connect(
-                    'focus-out-event', lambda *_: self.bn_figure_dpi_touched.set(True))
-                self._view._size_w_inp.connect(
-                    'focus-out-event', lambda *_: self.bn_figure_size_touched.set(True))
-                self._view._size_h_inp.connect(
-                    'focus-out-event', lambda *_: self.bn_figure_size_touched.set(True))
-
-            def reset_touches(self) -> None:
-                self.bn_figure_dpi_touched.set(False)
-                self.bn_figure_size_touched.set(False)
-
-            def touch_all(self) -> None:
-                self.bn_figure_dpi_touched.set(True)
-                self.bn_figure_size_touched.set(True)
-
-            def _set_figure_dpi_err_msg(self, err_msg: Optional[str]) -> None:
-                self._view._figure_dpi_err_msg_lbl.props.label = err_msg
-
-                if err_msg is not None:
-                    self._view._dpi_inp.get_style_context().add_class('error')
-                else:
-                    self._view._dpi_inp.get_style_context().remove_class('error')
-
-            def _set_figure_size_err_msg(self, err_msg: Optional[str]) -> None:
-                self._view._figure_size_err_msg_lbl.props.label = err_msg
-
-                if err_msg is not None:
-                    self._view._size_w_inp.get_style_context().add_class('error')
-                    self._view._size_h_inp.get_style_context().add_class('error')
-                else:
-                    self._view._size_w_inp.get_style_context().remove_class('error')
-                    self._view._size_h_inp.get_style_context().remove_class('error')
-
         def __init__(self, figure_name: str) -> None:
             self.widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
 
@@ -202,6 +157,9 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
     def __init__(self, transient_for: Optional[Gtk.Window] = None) -> None:
         self.widget = Gtk.Window(resizable=False, modal=True, transient_for=transient_for)
+
+        # Add a reference to self in the widget, otherwise self gets garbage collected for some reason.
+        self.widget.__ref_to_view = self
 
         body = Gtk.Grid(margin=10, row_spacing=10)
         self.widget.add(body)
