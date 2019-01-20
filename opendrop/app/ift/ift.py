@@ -1,4 +1,5 @@
 import asyncio
+from enum import Enum
 from operator import attrgetter
 from pathlib import Path
 from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional
@@ -14,7 +15,6 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView
-from opendrop.component.wizard.wizard import WizardPageID
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.events import EventConnection
@@ -50,11 +50,14 @@ def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Cal
 
 # Main classes start here
 
-class IFTWizardPageID(WizardPageID):
+class IFTWizardPageID(Enum):
     IMAGE_ACQUISITION = ('Image acquisition',)
     PHYS_PARAMS = ('Physical parameters',)
     IMAGE_PROCESSING = ('Image processing',)
     RESULTS = ('Results',)
+
+    def __init__(self, title: str) -> None:
+        self.title = title
 
 
 class IFTRootView(GtkWidgetView[Gtk.Grid]):
