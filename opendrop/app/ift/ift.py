@@ -32,11 +32,14 @@ from .model.image_annotator.image_annotator import IFTImageAnnotator
 from .model.phys_params import IFTPhysicalParametersFactory
 from .model.results_explorer import IFTResultsExplorer
 
-# Helper functions
+# Helper functions/classes
 
 T = TypeVar('T')
 U = TypeVar('U')
 
+
+# These functions and classes are basically just used to help make "one liner's", not a great solution but works for
+# now.
 
 def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Callable[..., Union[T, U]]:
     def wrapper(*args, **kwargs) -> Union[T, U]:
@@ -46,6 +49,29 @@ def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Cal
             return default
 
     return wrapper
+
+
+class IfThen:
+    def __init__(self, cond: Callable, then: Callable) -> None:
+        self._cond = cond
+        self._then = then
+
+    def __call__(self) -> None:
+        if self._cond():
+            self._then()
+
+
+class IfThenElse:
+    def __init__(self, cond: Callable, then: Callable, else_: Callable) -> None:
+        self._cond = cond
+        self._then = then
+        self._else = else_
+
+    def __call__(self) -> None:
+        if self._cond():
+            self._then()
+        else:
+            self._else()
 
 
 # Main classes start here
@@ -139,29 +165,6 @@ class IFTRootView(GtkWidgetView[Gtk.Grid]):
 
     def create_saver_dialog(self) -> IFTAnalysisSaverView:
         return IFTAnalysisSaverView(transient_for=self.window)
-
-
-class IfThen:
-    def __init__(self, cond: Callable, then: Callable) -> None:
-        self._cond = cond
-        self._then = then
-
-    def __call__(self) -> None:
-        if self._cond():
-            self._then()
-
-
-class IfThenElse:
-    def __init__(self, cond: Callable, then: Callable, else_: Callable) -> None:
-        self._cond = cond
-        self._then = then
-        self._else = else_
-
-    def __call__(self) -> None:
-        if self._cond():
-            self._then()
-        else:
-            self._else()
 
 
 class IFTRootPresenter:
@@ -276,6 +279,10 @@ class IFTRootPresenter:
 
         # Activate the first page.
         self._page_option_image_acquisition.set(True)
+
+        # DEBUG
+        # self._user_wants_to_start_analysis()
+        # self._page_option_results.set(True)
 
     def _user_wants_to_start_analysis(self) -> None:
         analysis = self._create_analysis()
@@ -493,6 +500,27 @@ class IFTSpeaker(Speaker):
 
         # Results explorer
         results_explorer = IFTResultsExplorer()
+
+        # DEBUG TESTING
+        # image_acquisition.impl.load_image_paths(('/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image0.png',# '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image0.png',
+        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image1.png',
+        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image2.png',
+        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image3.png',
+        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image4.png',
+        #                                         ))
+        # image_acquisition.impl.load_image_paths(('/Users/Eugene/Desktop/sessile.png',))
+        # image_acquisition.impl.bn_frame_interval.set(10)
+        #
+        # phys_params_factory.inner_density = 0
+        # phys_params_factory.outer_density = 1000
+        # phys_params_factory.needle_width = 0.7176/1000
+        # phys_params_factory.gravity = 9.8
+        #
+        # # image_annotator.bn_needle_region_px.set(Rect2(x=407, y=50, w=203, h=73))
+        # # image_annotator.bn_drop_region_px.set(Rect2(x=279, y=185, w=453, h=503))
+        # image_annotator.bn_drop_region_px.set(Rect2(x0=443, y0=173, x1=1057, y1=796))
+        # image_annotator.bn_needle_region_px.set(Rect2(x0=579, y0=900, x1=922, y1=981))
+        # END DEBUG TESTING
 
         self._root_presenter = IFTRootPresenter(
             image_acquisition=image_acquisition,
