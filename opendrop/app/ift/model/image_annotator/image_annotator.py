@@ -116,6 +116,9 @@ class IFTImageAnnotator:
         self.validator = self.Validator(self)
 
     def apply_edge_detection(self, image: Image) -> Image:
+        # Perform a Gaussian blur first, no way to configure this in the UI currently..
+        image = cv2.GaussianBlur(image, (3, 3), 0)
+
         return cv2.Canny(image, self.bn_canny_min_thresh.get(), self.bn_canny_max_thresh.get())
 
     def annotate_image(self, image: Image) -> IFTImageAnnotations:
