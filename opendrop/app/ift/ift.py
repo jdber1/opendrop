@@ -12,17 +12,6 @@ from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigato
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
-from opendrop.app.ift.content.analysis_saver import IFTAnalysisSaverPresenter, IFTAnalysisSaverView
-from opendrop.app.ift.content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
-from opendrop.app.ift.content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
-from opendrop.app.ift.content.results import IFTResultsView, IFTResultsPresenter
-from opendrop.app.ift.footer import IFTAnalysisFooterModel
-from opendrop.app.ift.model.analyser import IFTAnalysis
-from opendrop.app.ift.model.analysis_factory import IFTAnalysisFactory
-from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions, save_drops
-from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
-from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
-from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackModel, StackView
 from opendrop.component.wizard.wizard import WizardPageID
@@ -31,6 +20,19 @@ from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.events import EventConnection
 from opendrop.utility.option import MutuallyExclusiveOptions
 from opendrop.utility.speaker import Speaker
+from .content.analysis_saver import IFTAnalysisSaverPresenter, IFTAnalysisSaverView
+from .content.image_processing import IFTImageProcessingFormView, IFTImageProcessingFormPresenter
+from .content.phys_params import IFTPhysicalParametersFormPresenter, IFTPhysicalParametersFormView
+from .content.results import IFTResultsView, IFTResultsPresenter
+from .footer import IFTAnalysisFooterModel
+from .model.analyser import IFTAnalysis
+from .model.analysis_factory import IFTAnalysisFactory
+from .model.analysis_saver import IFTAnalysisSaverOptions, save_drops
+from .model.image_annotator.image_annotator import IFTImageAnnotator
+from .model.phys_params import IFTPhysicalParametersFactory
+from .model.results_explorer import IFTResultsExplorer
+
+# Helper functions
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -45,6 +47,8 @@ def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Cal
 
     return wrapper
 
+
+# Main classes start here
 
 class IFTWizardPageID(WizardPageID):
     IMAGE_ACQUISITION = ('Image acquisition',)
