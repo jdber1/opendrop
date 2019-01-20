@@ -142,6 +142,9 @@ class IFTDropAnalysis:
         drop_contour_px = image_annotations.drop_contour_px
         drop_contour_px = bl_tl_coords_swap(self._image.shape[0], *drop_contour_px.T).T
 
+        if self._is_sessile:
+            drop_contour_px[:, 1] *= -1
+
         self._yl_fit = self._create_yl_fit(drop_contour_px, self._log_shim)
         self._status = IFTDropAnalysis.Status.FITTING
 
@@ -196,10 +199,17 @@ class IFTDropAnalysis:
         contour_xy = yl_fit.xy_from_rz(*contour_rz.T).T
         contour_xy += (yl_fit.apex_x, yl_fit.apex_y)
 
+        if self._is_sessile:
+            contour_xy[:, 1] *= -1
+
         contour_xy = bl_tl_coords_swap(self._image.shape[0], *contour_xy.T).T
         contour_xy -= self._get_apex_coords_px()
 
         return contour_xy
+
+    @property
+    def _is_sessile(self) -> bool:
+        return self.phys_params.inner_density < self.phys_params.outer_density
 
     @property
     def _status(self) -> 'IFTDropAnalysis.Status':
@@ -317,7 +327,10 @@ class IFTDropAnalysis:
         if yl_fit is None:
             return (math.nan, math.nan)
 
-        apex_coords = yl_fit.apex_x, yl_fit.apex_y
+        if not self._is_sessile:
+            apex_coords = yl_fit.apex_x, yl_fit.apex_y
+        else:
+            apex_coords = yl_fit.apex_x, -yl_fit.apex_y
 
         # Convert to image coordinates
         apex_coords = bl_tl_coords_swap(self._image.shape[0], *apex_coords).astype(int)
@@ -341,6 +354,9 @@ class IFTDropAnalysis:
 
         # Negate so that positive angle is counter-clockwise.
         angle = -yl_fit.apex_rot
+
+        if self._is_sessile:
+            angle *= -1
 
         return angle
 
