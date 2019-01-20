@@ -147,7 +147,7 @@ def _save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
     if image is None:
         return
 
-    cv2.imwrite(str(out_file_path), image)
+    cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
 def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> None:
@@ -158,14 +158,12 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
     # Draw on a copy
     image = image.copy()
 
-    # Note, colors are in BGR format.
-
     # Draw extracted needle edges
     image = cv2.polylines(
         img=image,
         pts=image_annotations.needle_contours_px,
         isClosed=False,
-        color=(255, 128, 0),
+        color=(0, 128, 255),
         thickness=1,
         lineType=cv2.LINE_AA)
 
@@ -174,7 +172,7 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
         img=image,
         pts=[image_annotations.drop_contour_px],
         isClosed=False,
-        color=(255, 128, 0),
+        color=(0, 128, 255),
         thickness=1,
         lineType=cv2.LINE_AA)
 
@@ -188,7 +186,7 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
                 img=image,
                 pts=[drop_contour_fit],
                 isClosed=False,
-                color=(128, 0, 255),
+                color=(255, 0, 128),
                 thickness=1,
                 lineType=cv2.LINE_AA)
 
@@ -197,7 +195,7 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
         img=image,
         pt1=image_annotations.needle_region_px.p0,
         pt2=image_annotations.needle_region_px.p1,
-        color=(255, 26, 13),
+        color=(13, 26, 255),
         thickness=1)
 
     # Draw drop region
@@ -205,10 +203,10 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
         img=image,
         pt1=image_annotations.drop_region_px.p0,
         pt2=image_annotations.drop_region_px.p1,
-        color=(13, 26, 255),
+        color=(255, 26, 13),
         thickness=1)
 
-    cv2.imwrite(str(out_file_path), image)
+    cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
 def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
