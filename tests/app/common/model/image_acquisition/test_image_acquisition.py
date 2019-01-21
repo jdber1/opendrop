@@ -183,24 +183,19 @@ def test_im_acq_destroy_when_no_impl_chosen():
 
 # Test validation
 
-def test_image_acquisition_validator_is_valid_when_im_acq_has_no_impl():
+def test_image_acquisition_has_errors_when_no_impl():
     img_acq = ImageAcquisition()
+    assert img_acq.has_errors is True
 
-    assert img_acq.validator.check_is_valid() is False
 
-
-def test_image_acquisition_validator_is_valid_delegates_to_subvalidator():
-    mock_impl = Mock()
+def test_image_acquisition_has_error_delegates_to_impl():
     mock_impl_type = Mock()
-    mock_impl_type.impl_factory.return_value = mock_impl
-
-    expected_is_valid_value = Mock()
-    mock_impl.validator.check_is_valid.return_value = expected_is_valid_value
+    mock_impl = mock_impl_type.impl_factory.return_value
 
     img_acq = ImageAcquisition()
     img_acq.type = mock_impl_type
 
-    actual_is_valid_value = img_acq.validator.check_is_valid()
+    actual_has_errors_value = img_acq.has_errors
+    expected_has_errors_value = mock_impl.has_errors
 
-    mock_impl.validator.check_is_valid.assert_called_once_with()
-    assert actual_is_valid_value == expected_is_valid_value
+    assert actual_has_errors_value == expected_has_errors_value

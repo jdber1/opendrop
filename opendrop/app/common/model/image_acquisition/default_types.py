@@ -1,9 +1,9 @@
 import asyncio
 import functools
-import math
 import time
 from abc import abstractmethod
 from asyncio import Future
+from operator import attrgetter
 from pathlib import Path
 from typing import Union, Sequence, MutableSequence, Tuple, Optional, Any, TypeVar, Generic
 
@@ -11,9 +11,11 @@ import cv2
 import numpy as np
 
 from opendrop.mytypes import Image
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter, \
     AtomicBindableTx
 from opendrop.utility.events import Event, EventConnection
+from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
 from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview
 
 T = TypeVar('T')
@@ -60,43 +62,23 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
 
 
 class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
-    class Validator:
-        def __init__(self, target: 'BaseImageSequenceImageAcquisitionImpl') -> None:
-            self._target = target
-            self.bn_frame_interval_err_msg = AtomicBindableAdapter(self._get_frame_interval_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke)
-
-        def check_is_valid(self) -> bool:
-            target = self._target
-
-            if len(target.images) == 0:
-                return False
-
-            if len(target.images) > 1:
-                if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
-                    return False
-
-            return True
-
-        def _get_frame_interval_err_msg(self) -> Optional[str]:
-            target = self._target
-
-            if len(target.images) == 1:
-                return
-
-            frame_interval = target.bn_frame_interval.get()
-            if frame_interval is None:
-                return 'Frame interval cannot be empty'
-            elif not math.isfinite(frame_interval) or frame_interval <= 0:
-                return 'Frame interval must be greater than 0'
-
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
-        self._images = []  # type: MutableSequence[np.ndarray]
+        self._bn_images = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[Image]]
 
         self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[int]
 
-        self.validator = self.Validator(self)
+        # Input validation
+
+        frame_interval_err_enabled = bindable_function(
+            lambda images: len(images) != 1 if images is not None else True
+        )(self._bn_images)(AtomicBindableVar(False))
+        self.frame_interval_err = validate(
+            value=self.bn_frame_interval,
+            checks=(check_is_not_empty, check_is_positive),
+            enabled=frame_interval_err_enabled)
+
+    _images = AtomicBindable.property_adapter(attrgetter('_bn_images'))
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         images = self._images
@@ -142,28 +124,20 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
     def images(self) -> Sequence[Image]:
         return tuple(self._images) if self._images is not None else tuple()
 
+    @property
+    def has_errors(self) -> bool:
+        if len(self.images) == 0:
+            # Images can't be empty
+            return True
+
+        return bool(self.frame_interval_err)
+
 
 class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
-    class Validator(BaseImageSequenceImageAcquisitionImpl.Validator):
-        _target = None  # type: LocalImagesImageAcquisitionImpl
-
-        # Called after LocalImagesImageAcquisitionImpl has finished initialising, can't be put in __init__ since
-        # BaseImageSequenceImageAcquisitionImpl initialises this first before LocalImages.. has finished initialised.
-        def extra_init(self) -> None:
-            self.bn_last_loaded_paths_err_msg = AtomicBindableAdapter(self._get_last_loaded_paths_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_last_loaded_paths.on_changed.connect(self.bn_last_loaded_paths_err_msg.poke)
-
-        def _get_last_loaded_paths_err_msg(self) -> Optional[str]:
-            if len(self._target.images) == 0:
-                return 'Selected images cannot be empty'
-
-    validator = None  # type: Validator
-
     def __init__(self) -> None:
         super().__init__()
         self._last_loaded_paths = tuple()  # type: Sequence[Path]
         self.bn_last_loaded_paths = AtomicBindableAdapter(self._get_last_loaded_paths)  # type: AtomicBindableVar[Sequence[Path]]
-        self.validator.extra_init()
 
     def _get_last_loaded_paths(self) -> Sequence[Path]:
         return self._last_loaded_paths
@@ -302,55 +276,6 @@ CameraType = TypeVar('CameraType', bound=Camera)
 
 
 class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
-    class Validator:
-        def __init__(self, target: 'BaseCameraImageAcquisitionImpl') -> None:
-            self._target = target
-
-            self.bn_camera_err_msg = AtomicBindableAdapter(self._get_camera_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target._on_camera_changed.connect(self.bn_camera_err_msg.poke)
-
-            self.bn_num_frames_err_msg = AtomicBindableAdapter(self._get_num_frames_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_num_frames.on_changed.connect(self.bn_num_frames_err_msg.poke)
-
-            self.bn_frame_interval_err_msg = AtomicBindableAdapter(self._get_frame_interval_err_msg)  # type: AtomicBindableAdapter[Optional[str]]
-            self._target.bn_frame_interval.on_changed.connect(self.bn_frame_interval_err_msg.poke)
-
-        def check_is_valid(self) -> bool:
-            target = self._target
-
-            if target._camera is None:
-                return False
-
-            if target.bn_num_frames.get() is None or target.bn_num_frames.get() <= 0:
-                return False
-
-            if target.bn_num_frames.get() > 1:
-                if target.bn_frame_interval.get() is None or target.bn_frame_interval.get() <= 0:
-                    return False
-
-            return True
-
-        def _get_camera_err_msg(self) -> Optional[str]:
-            if self._target._camera is None:
-                return 'Camera selection cannot be empty'
-
-        def _get_num_frames_err_msg(self) -> Optional[str]:
-            num_frames = self._target.bn_num_frames.get()
-            if num_frames is None:
-                return 'Number of frames cannot be empty'
-            elif num_frames <= 0:
-                return 'Number of frames must be greater than 0'
-
-        def _get_frame_interval_err_msg(self) -> Optional[str]:
-            if self._target.bn_num_frames.get() == 1:
-                return
-
-            frame_interval = self._target.bn_frame_interval.get()
-            if frame_interval is None:
-                return 'Frame interval cannot be empty'
-            elif not math.isfinite(frame_interval) or frame_interval <= 0:
-                return 'Frame interval must be greater than 0'
-
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
 
@@ -359,7 +284,14 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         self.bn_num_frames = AtomicBindableVar(1)  # type: AtomicBindable[int]
         self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[float]
 
-        self.validator = self.Validator(self)
+        # Input validation
+        self.num_frames_err = validate(self.bn_num_frames, checks=(check_is_not_empty, check_is_positive))
+
+        frame_interval_err_enabled = bindable_function(lambda n: n != 1)(self.bn_num_frames)(AtomicBindableVar(False))
+        self.frame_interval_err = validate(
+            self.bn_frame_interval,
+            checks=(check_is_not_empty, check_is_positive),
+            enabled=frame_interval_err_enabled)
 
     @property
     def _camera(self) -> Optional[CameraType]:
@@ -442,6 +374,13 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         except CameraCaptureError:
             fut.cancel()
 
+    @property
+    def has_errors(self) -> bool:
+        if self._camera is None:
+            return True
+
+        return bool(self.frame_interval_err) or bool(self.num_frames_err)
+
 
 class USBCamera(Camera):
     _PRECAPTURE = 5
@@ -499,18 +438,14 @@ class USBCamera(Camera):
 
 
 class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
-    class Validator(BaseCameraImageAcquisitionImpl.Validator):
-        def check_is_valid(self) -> bool:
-            target = self._target  # type: USBCameraImageAcquisitionImpl
-            target.check_camera_still_working()
-
-            return super().check_is_valid()
-
     def __init__(self):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
         self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindableAdapter[Optional[int]]
         self._camera_alive_changed_event_connection = None  # type: Optional[EventConnection]
+
+        # Input validation
+        self.current_camera_index_err = validate(self.bn_current_camera_index, checks=(check_is_not_empty,))
 
     def open_camera(self, cam_idx: int) -> None:
         try:
@@ -564,6 +499,12 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
 
         if camera.alive is False:
             self.remove_current_camera()
+
+    @property
+    def has_errors(self) -> bool:
+        if super().has_errors:
+            return True
+        return bool(self.current_camera_index_err)
 
     def destroy(self) -> None:
         if self._camera is not None:

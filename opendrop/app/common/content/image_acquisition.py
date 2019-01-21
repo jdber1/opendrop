@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Generic, TypeVar, Callable, Optional, Sequence, MutableSequence, Tuple, Type, MutableMapping
 
 from gi.repository import Gtk, Gdk, GObject
@@ -8,11 +9,13 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
     ImageAcquisitionImpl, ImageAcquisitionImplType
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
+from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
-from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
+from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop, GObjectPropertyBindable
 from opendrop.utility.events import Event
+from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter, \
+    check_is_not_empty, validate
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
@@ -186,7 +189,30 @@ class LocalImagesImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
             self._frame_interval_inp, 'visibility',
             GObject.BindingFlags.SYNC_CREATE)
 
-        self.errors_view = self.ErrorsView(self)
+        # self.errors_view = self.ErrorsView(self)
+
+        # Fields
+        self.selected_image_paths_field = FieldView(value=GObjectPropertyBindable(self._file_chooser_inp, 'file-paths'))
+        self.frame_interval_field = FieldView(value=GObjectPropertyBindable(self._frame_interval_inp, 'value'))
+
+        # Error highlighting
+
+        # Keep a reference to unnamed objects to prevent them from being garbage collected
+        self.selected_image_paths_field.__my_refs = [
+            add_style_class_when_flags(
+                self._file_chooser_inp, style_class='error', flags=self.selected_image_paths_field.errors_out),
+            GObjectPropertyBindable(self._file_chooser_err_msg_lbl, 'label').bind_from(
+                message_from_flags(field_name='Selected images', flags=self.selected_image_paths_field.errors_out))]
+
+        self.frame_interval_field.__my_refs = [
+            add_style_class_when_flags(
+                self._frame_interval_inp, style_class='error', flags=self.frame_interval_field.errors_out),
+            GObjectPropertyBindable(self._frame_interval_err_msg_lbl, 'label').bind_from(
+                message_from_flags(field_name='Frame interval', flags=self.frame_interval_field.errors_out))]
+
+        self._frame_interval_inp.connect(
+            'focus-out-event',
+            lambda *_: self.frame_interval_field.on_user_finished_editing.fire())
 
         # Set which widget is first focused
         self._file_chooser_inp.grab_focus()
@@ -194,61 +220,43 @@ class LocalImagesImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
 
 @this_presenter_attaches_to(LocalImagesImageAcquisitionImpl, LocalImagesImageAcquisitionImplView)
 class LocalImagesImageAcquisitionImplPresenter(Destroyable):
-    class ErrorsPresenter:
-        def __init__(self, validator: LocalImagesImageAcquisitionImpl.Validator,
-                     view: LocalImagesImageAcquisitionImplView.ErrorsView) -> None:
-            self._validator = validator
-            self._view = view
-
-            self.__event_connections = [
-                self._validator.bn_last_loaded_paths_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors),
-
-                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors),
-                self._view.bn_selected_image_paths_touched.on_changed.connect(self._update_errors)
-            ]
-
-            self._view.reset_touches()
-            self._update_errors()
-
-        def _update_errors(self) -> None:
-            selected_image_paths_err_msg = None  # type: Optional[str]
-            frame_interval_err_msg = None   # type: Optional[str]
-
-            if self._view.bn_selected_image_paths_touched.get():
-                selected_image_paths_err_msg = self._validator.bn_last_loaded_paths_err_msg.get()
-
-            if self._view.bn_frame_interval_touched.get():
-                frame_interval_err_msg = self._validator.bn_frame_interval_err_msg.get()
-
-            self._view.bn_selected_image_paths_err_msg.set(selected_image_paths_err_msg)
-            self._view.bn_frame_interval_err_msg.set(frame_interval_err_msg)
-
-        def _clear_errors(self) -> None:
-            self._view.bn_selected_image_paths_err_msg.set(None)
-            self._view.bn_frame_interval_err_msg.set(None)
-
-        def destroy(self) -> None:
-            self._clear_errors()
-            for ec in self.__event_connections:
-                ec.disconnect()
-
     def __init__(self, impl: LocalImagesImageAcquisitionImpl, view: LocalImagesImageAcquisitionImplView) -> None:
         self._impl = impl
         self._view = view
 
-        self._errors_presenter = self.ErrorsPresenter(impl.validator, self._view.errors_view)
+        self.__destroyed = False
+        self.__cleanup_tasks = []  # type: MutableSequence[Callable]
 
-        self.__event_connections = [
-            self._impl.bn_last_loaded_paths.on_changed.connect(self._hdl_impl_last_loaded_paths_changed),
-            self._view.bn_selected_image_paths.on_changed.connect(self._hdl_view_user_input_image_paths_changed)
-         ]
+        self._selected_image_paths = AtomicBindableAdapter(
+            getter=self._get_selected_image_paths,
+            setter=self._set_selected_image_paths)
 
-        self.__data_bindings = [
-            Binding(self._impl.bn_frame_interval, self._view.bn_frame_interval)
-        ]
+        self._selected_image_paths_err = validate(
+            value=self._selected_image_paths,
+            checks=(check_is_not_empty,))
+
+        event_connections = [
+            self._impl.bn_last_loaded_paths.on_changed.connect(self._hdl_impl_last_loaded_paths_changed)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
+
+        self.__field_presenters = [
+            FieldPresenter(value=self._selected_image_paths,
+                           errors=self._selected_image_paths_err,
+                           field_view=self._view.selected_image_paths_field),
+            FieldPresenter(value=self._impl.bn_frame_interval,
+                           errors=self._impl.frame_interval_err,
+                           field_view=self._view.frame_interval_field)]
+        self.__cleanup_tasks.extend(fp.destroy for fp in self.__field_presenters)
 
         self._hdl_impl_last_loaded_paths_changed()
+
+    def _get_selected_image_paths(self) -> Sequence[Path]:
+        return self._impl.bn_last_loaded_paths.get()
+
+    def _set_selected_image_paths(self, new_image_paths: Sequence[Path]) -> None:
+        if set(self._impl.bn_last_loaded_paths.get()) == set(new_image_paths):
+            return
+        self._impl.load_image_paths(self._view.bn_selected_image_paths.get())
 
     def _hdl_impl_last_loaded_paths_changed(self) -> None:
         impl_last_loaded_paths = set(self._impl.bn_last_loaded_paths.get())
@@ -257,29 +265,22 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
         if impl_last_loaded_paths == view_selected_image_paths:
             return
 
-        self._view.bn_selected_image_paths.set(self._impl.bn_last_loaded_paths.get())
+        self._selected_image_paths.poke()
 
         if len(self._impl.images) == 1:
             self._view.bn_frame_interval_sensitive.set(False)
         else:
             self._view.bn_frame_interval_sensitive.set(True)
 
-    def _hdl_view_user_input_image_paths_changed(self) -> None:
-        new_image_paths = self._view.bn_selected_image_paths.get()
-
-        if set(self._impl.bn_last_loaded_paths.get()) == set(new_image_paths):
-            return
-
-        self._impl.load_image_paths(self._view.bn_selected_image_paths.get())
+    def show_errors(self) -> None:
+        for fp in self.__field_presenters:
+            fp.show_errors()
 
     def destroy(self) -> None:
-        self._errors_presenter.destroy()
-
-        for ec in self.__event_connections:
-            ec.disconnect()
-
-        for db in self.__data_bindings:
-            db.unbind()
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
 # View and presenter for 'USB Camera'
@@ -409,60 +410,6 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
         def _actual_destroy(self) -> None:
             self.widget.destroy()
 
-    class ErrorsView:
-        def __init__(self, view: 'USBCameraImageAcquisitionImplView') -> None:
-            self._view = view
-
-            self.bn_current_camera_err_msg = AtomicBindableAdapter(
-                setter=self._set_current_camera_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_num_frames_err_msg = AtomicBindableAdapter(
-                setter=self._set_num_frames_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_frame_interval_err_msg = AtomicBindableAdapter(
-                setter=self._set_frame_interval_err_msg)  # type: AtomicBindable[Optional[str]]
-
-            self.bn_current_camera_touched = AtomicBindableVar(False)
-            self.bn_num_frames_touched = AtomicBindableVar(False)
-            self.bn_frame_interval_touched = AtomicBindableVar(False)
-
-            self._view._num_frames_inp.connect(
-                'focus-out-event', lambda *_: self.bn_num_frames_touched.set(True))
-            self._view._frame_interval_inp.connect(
-                'focus-out-event', lambda *_: self.bn_frame_interval_touched.set(True))
-
-        def reset_touches(self) -> None:
-            self.bn_current_camera_touched.set(False)
-            self.bn_num_frames_touched.set(False)
-            self.bn_frame_interval_touched.set(False)
-
-        def touch_all(self) -> None:
-            self.bn_current_camera_touched.set(True)
-            self.bn_num_frames_touched.set(True)
-            self.bn_frame_interval_touched.set(True)
-
-        def _set_current_camera_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._current_camera_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._change_camera_btn.get_style_context().add_class('error')
-            else:
-                self._view._change_camera_btn.get_style_context().remove_class('error')
-
-        def _set_num_frames_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._num_frames_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._num_frames_inp.get_style_context().add_class('error')
-            else:
-                self._view._num_frames_inp.get_style_context().remove_class('error')
-
-        def _set_frame_interval_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._frame_interval_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._frame_interval_inp.get_style_context().add_class('error')
-            else:
-                self._view._frame_interval_inp.get_style_context().remove_class('error')
-
     def __init__(self) -> None:
         self.widget = Gtk.Grid(row_spacing=10, column_spacing=10)
 
@@ -521,27 +468,50 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
 
         # Wiring things up
 
-        self.on_change_camera_btn_clicked = Event()
-        self._change_camera_btn.connect('clicked', lambda *_: self.on_change_camera_btn_clicked.fire())
-
-        self.bn_current_camera_index = AtomicBindableAdapter(setter=self._set_current_camera_index)  # type: AtomicBindable[Optional[int]]
-        self.bn_num_frames = AtomicBindableAdapter()
-        self.bn_frame_interval = AtomicBindableAdapter()
-
-        link_atomic_bn_adapter_to_g_prop(self.bn_num_frames, self._num_frames_inp, 'value')
-        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval, self._frame_interval_inp, 'value')
-
-        self.bn_frame_interval_sensitive = AtomicBindableAdapter()
-        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval_sensitive, self._frame_interval_inp, 'sensitive')
-
         self._frame_interval_inp.bind_property(
             'sensitive',
             self._frame_interval_inp, 'visibility',
             GObject.BindingFlags.SYNC_CREATE)
 
+        self.on_change_camera_btn_clicked = Event()
+        self._change_camera_btn.connect('clicked', lambda *_: self.on_change_camera_btn_clicked.fire())
+
+        self.bn_frame_interval_sensitive = GObjectPropertyBindable(self._frame_interval_inp, 'sensitive')
+
         self._active_change_camera_dialog_view = None  # type: Optional[USBCameraImageAcquisitionImplView.ChangeCameraDialogView]
 
-        self.errors_view = self.ErrorsView(self)
+        # Fields
+        self.current_camera_index_field = FieldView(value=AtomicBindableAdapter(setter=self._set_current_camera_index))
+        self.num_frames_field = FieldView(value=GObjectPropertyBindable(self._num_frames_inp, 'value'))
+        self.frame_interval_field = FieldView(value=GObjectPropertyBindable(self._frame_interval_inp, 'value'))
+
+        # Error highlighting
+
+        # Keep a reference to unnamed objects to prevent them from being garbage collected
+        self.current_camera_index_field.__my_refs = [
+            add_style_class_when_flags(
+                self._change_camera_btn, style_class='error', flags=self.current_camera_index_field.errors_out),
+            GObjectPropertyBindable(self._current_camera_err_msg_lbl, 'label').bind_from(
+                message_from_flags(field_name='Current camera', flags=self.current_camera_index_field.errors_out))]
+
+        self.num_frames_field.__my_refs = [
+            add_style_class_when_flags(
+                self._num_frames_inp, style_class='error', flags=self.num_frames_field.errors_out),
+            GObjectPropertyBindable(self._num_frames_err_msg_lbl, 'label').bind_from(
+                message_from_flags(field_name='Number of frames', flags=self.num_frames_field.errors_out))]
+
+        self.frame_interval_field.__my_refs = [
+            add_style_class_when_flags(
+                self._frame_interval_inp, style_class='error', flags=self.frame_interval_field.errors_out),
+            GObjectPropertyBindable(self._frame_interval_err_msg_lbl, 'label').bind_from(
+                message_from_flags(field_name='Frame interval', flags=self.frame_interval_field.errors_out))]
+
+        self._num_frames_inp.connect(
+            'focus-out-event',
+            lambda *_: self.num_frames_field.on_user_finished_editing.fire())
+        self._frame_interval_inp.connect(
+            'focus-out-event',
+            lambda *_: self.frame_interval_field.on_user_finished_editing.fire())
 
     def _set_current_camera_index(self, value: Optional[int]) -> None:
         if value is None:
@@ -616,69 +586,32 @@ class USBCameraImageAcquisitionImplPresenter:
             for ec in self.__event_connections:
                 ec.disconnect()
 
-    class ErrorsPresenter:
-        def __init__(self, validator: USBCameraImageAcquisitionImpl.Validator,
-                     view: USBCameraImageAcquisitionImplView.ErrorsView) -> None:
-            self._validator = validator
-            self._view = view
-
-            self.__event_connections = [
-                self._validator.bn_camera_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_num_frames_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_frame_interval_err_msg.on_changed.connect(self._update_errors),
-
-                self._view.bn_current_camera_touched.on_changed.connect(self._update_errors),
-                self._view.bn_num_frames_touched.on_changed.connect(self._update_errors),
-                self._view.bn_frame_interval_touched.on_changed.connect(self._update_errors),
-            ]
-
-            self._view.reset_touches()
-            self._update_errors()
-
-        def _update_errors(self) -> None:
-            camera_err_msg = None  # type: Optional[str]
-            num_frames_err_msg = None   # type: Optional[str]
-            frame_interval_err_msg = None   # type: Optional[str]
-
-            if self._view.bn_current_camera_touched.get():
-                camera_err_msg = self._validator.bn_camera_err_msg.get()
-
-            if self._view.bn_num_frames_touched.get():
-                num_frames_err_msg = self._validator.bn_num_frames_err_msg.get()
-
-            if self._view.bn_frame_interval_touched.get():
-                frame_interval_err_msg = self._validator.bn_frame_interval_err_msg.get()
-
-            self._view.bn_current_camera_err_msg.set(camera_err_msg)
-            self._view.bn_num_frames_err_msg.set(num_frames_err_msg)
-            self._view.bn_frame_interval_err_msg.set(frame_interval_err_msg)
-
-        def _clear_errors(self):
-            self._view.bn_current_camera_err_msg.set(None)
-            self._view.bn_num_frames_err_msg.set(None)
-            self._view.bn_frame_interval_err_msg.set(None)
-
-        def destroy(self) -> None:
-            self._clear_errors()
-            for ec in self.__event_connections:
-                ec.disconnect()
-
     def __init__(self, impl: USBCameraImageAcquisitionImpl, view: USBCameraImageAcquisitionImplView) -> None:
         self._impl = impl
         self._view = view
         self._active_change_camera_dialog_presenter = None  # type: Optional[USBCameraImageAcquisitionImplPresenter.ChangeCameraDialogPresenter]
-        self._errors_presenter = self.ErrorsPresenter(impl.validator, view.errors_view)
+        self.__destroyed = False
+        self.__cleanup_tasks = []
 
-        self.__event_connections = [
+        event_connections = [
             self._view.on_change_camera_btn_clicked.connect(self._hdl_view_change_camera_btn_clicked),
-            self._impl.bn_num_frames.on_changed.connect(self._update_view_frame_interval_sensitivity)
-        ]
+            self._impl.bn_num_frames.on_changed.connect(self._update_view_frame_interval_sensitivity)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
-        self.__data_bindings = [
-            Binding(self._impl.bn_current_camera_index, self._view.bn_current_camera_index),
-            Binding(self._impl.bn_num_frames, self._view.bn_num_frames),
-            Binding(self._impl.bn_frame_interval, self._view.bn_frame_interval)
-        ]
+        self.__field_presenters = [
+            FieldPresenter(
+                value=self._impl.bn_current_camera_index,
+                errors=self._impl.current_camera_index_err,
+                field_view=self._view.current_camera_index_field),
+            FieldPresenter(
+                value=self._impl.bn_num_frames,
+                errors=self._impl.num_frames_err,
+                field_view=self._view.num_frames_field),
+            FieldPresenter(
+                value=self._impl.bn_frame_interval,
+                errors=self._impl.frame_interval_err,
+                field_view=self._view.frame_interval_field)]
+        self.__cleanup_tasks.extend(fp.destroy for fp in self.__field_presenters)
 
         self._update_view_frame_interval_sensitivity()
 
@@ -699,14 +632,15 @@ class USBCameraImageAcquisitionImplPresenter:
         # Keep a reference to the dialog presenter so that it is not garbage collected.
         self._active_change_camera_dialog_presenter = dlg_presenter
 
+    def show_errors(self) -> None:
+        for fp in self.__field_presenters:
+            fp.show_errors()
+
     def destroy(self) -> None:
-        self._errors_presenter.destroy()
-
-        for ec in self.__event_connections:
-            ec.disconnect()
-
-        for db in self.__data_bindings:
-            db.unbind()
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
 # Root view and presenter.
@@ -725,24 +659,6 @@ class ImageAcquisitionFormView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
     _STYLE_PROV = Gtk.CssProvider()
     _STYLE_PROV.load_from_data(bytes(STYLE, 'utf-8'))
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-    class ErrorsView:
-        def __init__(self, view: 'ImageAcquisitionFormView') -> None:
-            self._view = view
-
-        def reset_touches(self) -> None:
-            subview = self._view._current_config_subview
-            if subview is None:
-                return
-
-            subview.errors_view.reset_touches()
-
-        def touch_all(self) -> None:
-            subview = self._view._current_config_subview
-            if subview is None:
-                return
-
-            subview.errors_view.touch_all()
 
     def __init__(self, create_view_for_impl_type: Callable[[ImageAcquisitionImplType], GtkWidgetView] = create_view_for_impl_type) \
             -> None:
@@ -777,8 +693,6 @@ class ImageAcquisitionFormView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
         Binding(self.bn_actual_user_input_impl_type, self.bn_user_input_impl_type,
                 mitm=AtomicBindingMITM(to_dst=self._impl_type_from_combobox_id,
                                        to_src=self._combobox_id_from_impl_type))
-
-        self.errors_view = self.ErrorsView(self)
 
     def _impl_type_from_combobox_id(self, combobox_id: Optional[str]) -> Optional[ImageAcquisitionImplType]:
         if combobox_id is None:
@@ -823,7 +737,7 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
                  available_types: Sequence[ImplType], view: ImageAcquisitionFormView) -> None:
         self._image_acquisition = image_acquisition
         self._create_presenter_for_impl_and_view = create_presenter_for_impl_and_view
-        self._current_subpresenter = None  # type: Optional[Destroyable]
+        self._current_subpresenter = None
 
         self._view = view
         self._view.set_available_types(available_types)
@@ -853,6 +767,9 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         new_subpresenter = self._create_presenter_for_impl_and_view(self._image_acquisition.impl, new_child_view)
         self._current_subpresenter = new_subpresenter
 
+    def show_errors(self) -> None:
+        self._current_subpresenter.show_errors()
+
     def destroy(self) -> None:
         for ec in self.__event_connections:
             ec.disconnect()
@@ -876,9 +793,11 @@ class ImageAcquisitionFormPresenter:
         self._enabled = False
 
     def validate(self) -> bool:
-        is_valid = self._image_acquisition.validator.check_is_valid()
-        self._root_view.errors_view.touch_all()
-        return is_valid
+        has_errors = self._image_acquisition.has_errors
+        if has_errors:
+            self._root_presenter.show_errors()
+
+        return not has_errors
 
     def enter(self) -> None:
         if self._enabled or self._destroyed:
