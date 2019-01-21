@@ -121,14 +121,11 @@ class FieldPresenter(Generic[ValueType, ErrorType]):
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [
-            field_view.on_user_finished_editing.connect(self._hdl_field_view_user_finished_editing)]
+            field_view.on_user_finished_editing.connect(self.show_errors)]
         self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
-    def _hdl_field_view_user_finished_editing(self) -> None:
-        self._is_showing_errors.set(bool(self._errors))
-
     def show_errors(self) -> None:
-        self._is_showing_errors.set(True)
+        self._is_showing_errors.set(bool(self._errors))
 
     def destroy(self) -> None:
         assert not self.__destroyed
