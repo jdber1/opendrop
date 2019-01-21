@@ -1,19 +1,24 @@
 import asyncio
 
-from gi.repository import Gtk, GdkPixbuf
+import pkg_resources
+from gi.repository import Gio, Gtk, GdkPixbuf, GLib
 
 from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.res import res
+from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator
 
 
 class HeaderView(GtkWidgetView[Gtk.Grid]):
+    LOGO_WIDE_PIXBUF = GdkPixbuf.Pixbuf.new_from_stream(
+        Gio.MemoryInputStream.new_from_bytes(
+            GLib.Bytes(
+                pkg_resources.resource_stream('opendrop.res', 'images/logo_wide.png').read() )))
+
     def __init__(self) -> None:
         self.widget = Gtk.HeaderBar(hexpand=True)
 
@@ -24,8 +29,10 @@ class HeaderView(GtkWidgetView[Gtk.Grid]):
 
         link_atomic_bn_adapter_to_g_prop(self.bn_header_title, self.widget, 'title')
 
-        logo_path = res/'images'/'logo_wide.png'
-        logo_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(str(logo_path), width=100, height=-1)
+        logo_pixbuf = self.LOGO_WIDE_PIXBUF.scale_simple(
+            dest_width=100,
+            dest_height=100/self.LOGO_WIDE_PIXBUF.props.width * self.LOGO_WIDE_PIXBUF.props.height,
+            interp_type=GdkPixbuf.InterpType.BILINEAR)
         logo_wgt = Gtk.Image(pixbuf=logo_pixbuf, margin=5)
         self.widget.pack_start(logo_wgt)
 
