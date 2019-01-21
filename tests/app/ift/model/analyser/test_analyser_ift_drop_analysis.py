@@ -9,7 +9,7 @@ from scipy.spatial import distance
 
 from opendrop.app.ift.model.analyser import IFTDropAnalysis, IFTImageAnnotations, IFTPhysicalParameters
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
-from opendrop.mytypes import Rect2
+from opendrop.utility.geometry import Rect2
 from opendrop.utility.events import Event
 from tests.iftcalc.dataset.water_in_air001 import data as water_in_air001_data
 

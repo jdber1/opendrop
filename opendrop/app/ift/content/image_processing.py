@@ -14,11 +14,12 @@ from opendrop.component.image_acquisition_preview_config import ImageAcquisition
 from opendrop.component.message_text_view import MessageTextView
 from opendrop.component.mouse_switch import MouseSwitchTarget, MouseSwitch
 from opendrop.component.stack import StackModel, StackView, StackPresenter
-from opendrop.mytypes import Image, Rect2, Vector2
+from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
+from opendrop.utility.geometry import Rect2, Vector2
 from opendrop.utility.gtk_misc import pixbuf_from_array
 from opendrop.utility.misc import clamp
 from opendrop.widgets.canny_parameters import CannyParameters

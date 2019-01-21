@@ -5,9 +5,10 @@ import cv2
 import numpy as np
 
 from opendrop.app.ift.model.analyser import IFTImageAnnotations
-from opendrop.mytypes import Rect2, Image
+from opendrop.mytypes import Image
 from opendrop.utility import mycv
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.geometry import Rect2
 from .needle_width import get_needle_width_from_contours
 
 

@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import cairo
 from gi.repository import GdkPixbuf, GObject
 
-from opendrop.mytypes import Rect2
+from opendrop.utility.geometry import Rect2
 from opendrop.widgets.layered_drawing_area.layered_drawing_area import Layer
 
 

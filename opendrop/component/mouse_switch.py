@@ -2,7 +2,7 @@ from typing import Optional, MutableSequence
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.mytypes import Vector2
+from opendrop.utility.geometry import Vector2
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
 from opendrop.utility.events import EventConnection
 

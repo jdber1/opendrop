@@ -5,7 +5,7 @@ import cairo
 from gi.repository import Gdk, GdkPixbuf, GObject
 
 from opendrop.widgets.layered_drawing_area.layered_drawing_area import Layer
-from opendrop.mytypes import Rect2, Vector2
+from opendrop.utility.geometry import Rect2, Vector2
 
 
 class DrawStyle(Enum):

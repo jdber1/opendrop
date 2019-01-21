@@ -3,7 +3,7 @@ import math
 import pytest
 
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
-from opendrop.mytypes import Rect2
+from opendrop.utility.geometry import Rect2
 
 
 # Test validation

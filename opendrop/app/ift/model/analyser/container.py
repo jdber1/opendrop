@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from opendrop.mytypes import Rect2
+from opendrop.utility.geometry import Rect2
 
 
 class IFTPhysicalParameters:
