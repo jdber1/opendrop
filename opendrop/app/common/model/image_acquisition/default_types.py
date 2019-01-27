@@ -16,7 +16,7 @@ from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
     AtomicBindableTx
 from opendrop.utility.events import Event, EventConnection
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
-from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview
+from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview, ScheduledImage
 
 T = TypeVar('T')
 
@@ -62,6 +62,14 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
 
 
 class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
+    class _ScheduledImageImpl(ScheduledImage):
+        def __init__(self, image: Image, timestamp: float) -> None:
+            self._image = image
+            self._timestamp = timestamp
+
+        async def read(self) -> Tuple[Image, float]:
+            return self._image, self._timestamp
+
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
         self._bn_images = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[Image]]
@@ -94,16 +102,12 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
             else:
                 raise ValueError('Frame interval must be > 0 and not None, currently: `{}`'.format(frame_interval))
 
-        futs = []
-        ests = []
+        result = []
 
         for i, img in enumerate(self._images):
-            fut = self._loop.create_future()
-            fut.set_result((img, i * frame_interval))
-            futs.append(fut)
-            ests.append(time.time())
+            result.append(self._ScheduledImageImpl(img, i * frame_interval))
 
-        return futs, ests
+        return result
 
     def create_preview(self) -> ImageAcquisitionPreview[ImageSequenceImageAcquisitionPreviewConfig]:
         if self._images is None:
@@ -276,6 +280,17 @@ CameraType = TypeVar('CameraType', bound=Camera)
 
 
 class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
+    class _ScheduledImageImpl(ScheduledImage):
+        def __init__(self, image_and_timestamp_fut: Future, est_ready: float) -> None:
+            self._image_and_timestamp_fut = image_and_timestamp_fut
+            self.est_ready = est_ready
+
+        async def read(self) -> Tuple[Image, float]:
+            return await self._image_and_timestamp_fut
+
+        def cancel(self) -> None:
+            self._image_and_timestamp_fut.cancel()
+
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
 
@@ -302,7 +317,7 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         self._actual_camera = new_camera
         self._on_camera_changed.fire()
 
-    def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
+    def acquire_images(self) -> Sequence[ScheduledImage]:
         if self._camera is None:
             raise ValueError("_camera can't be None")
 
@@ -322,8 +337,7 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         acquire_start_loop_time = self._loop.time()
         acquire_start_unix_time = time.time()
 
-        futs = []
-        ests = []
+        results = []
 
         for i in range(num_frames):
             fut = Future()
@@ -332,11 +346,11 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
             capture_at_unix_time = acquire_start_unix_time + capture_at_rel_time
 
             handle = self._loop.call_at(capture_at_loop_time, self._capture_and_set_future, fut)
-            futs.append(fut)
             fut.add_done_callback(functools.partial(self._cancel_handle_if_fut_cancelled, handle=handle))
-            ests.append(capture_at_unix_time)
 
-        return futs, ests
+            results.append(self._ScheduledImageImpl(fut, capture_at_unix_time))
+
+        return results
 
     def create_preview(self) -> ImageAcquisitionPreview[None]:
         if self._camera is None:

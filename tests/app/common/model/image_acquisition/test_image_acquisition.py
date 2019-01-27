@@ -12,7 +12,7 @@ class MockImAcqImpl(ImageAcquisitionImpl):
     LOG_GET_IMAGE_SIZE_HINT = 'LOG_GET_IMAGE_SIZE_HINT'
     LOG_DESTROY = 'LOG_DESTROY'
 
-    acquire_images_return_val = (list(range(5)), list(range(5)))
+    acquire_images_return_val = tuple(Mock() for i in range(5))
     create_preview_return_val = object()
     get_image_size_hint_return_val = object()
 

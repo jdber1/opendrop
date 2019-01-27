@@ -1,9 +1,21 @@
-from asyncio import Future
+import math
+from abc import abstractmethod, ABC
 from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
 
 from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindableAdapter, AtomicBindable
+
+
+class ScheduledImage(ABC):
+    est_ready = math.nan
+
+    @abstractmethod
+    async def read(self) -> Tuple[Image, float]:
+        """Return the image and timestamp."""
+
+    def cancel(self) -> None:
+        pass
 
 
 class ImageAcquisitionImplType(Enum):
@@ -13,7 +25,7 @@ class ImageAcquisitionImplType(Enum):
 
 
 class ImageAcquisitionImpl:
-    def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
+    def acquire_images(self) -> Sequence[ScheduledImage]:
         """Implementation of acquire_images()"""
 
     def create_preview(self) -> Tuple[BaseAtomicBindable[Image], Any]:
@@ -56,19 +68,14 @@ class ImageAcquisition(Generic[ImplType]):
     type = AtomicBindable.property_adapter(lambda self: self.bn_type)
     impl = AtomicBindable.property_adapter(lambda self: self.bn_impl)
 
-    def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
+    def acquire_images(self) -> Sequence[ScheduledImage]:
         """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
         image and the image's timestamp, and the second element being a sequence of estimated unix timestamps for when
         the futures will be resolved."""
         if self.impl is None:
             raise ValueError('No implementation chosen yet')
 
-        futs, tims = self.impl.acquire_images()
-
-        # Check that the number of futures matches the number of estimated timestamps.
-        assert len(futs) == len(tims)
-
-        return futs, tims
+        return self.impl.acquire_images()
 
     def create_preview(self) -> ImageAcquisitionPreview:
         if self.impl is None:

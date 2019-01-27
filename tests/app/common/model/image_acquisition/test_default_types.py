@@ -25,19 +25,20 @@ MOCK_IMAGE_2[0, 0, 0] = 1
 
 
 async def _test_acquire_images_ret_val_images(acquire_images_ret_val, expected_imgs):
-    for fut, est, expected_img in zip_longest(*acquire_images_ret_val, expected_imgs):
-        img, img_timestamp = await fut
+    for scheduled_image, expected_img in zip_longest(acquire_images_ret_val, expected_imgs):
+        img, timestamp = await scheduled_image.read()
         assert (img == expected_img).all()
 
 
-async def _test_acquire_images_ret_val_timestamps(acquire_images_ret_val, expected_img_timestamps):
-    for fut, est, expected_img_timestamp in zip_longest(*acquire_images_ret_val, expected_img_timestamps):
-        img, img_timestamp = await fut
-        assert abs(img_timestamp - expected_img_timestamp) < EPSILON_FOR_TIME
+async def _test_acquire_images_ret_val_timestamps(acquire_images_ret_val, expected_timestamps):
+    for scheduled_image, expected_timestamp in zip_longest(acquire_images_ret_val, expected_timestamps):
+        img, timestamp = await scheduled_image.read()
+        assert abs(timestamp - expected_timestamp) < EPSILON_FOR_TIME
 
 
 def _test_acquire_images_ret_val_est_timestamps(acquire_images_ret_val, expected_est_timestamps):
-    for est, expected_est in zip_longest(acquire_images_ret_val[1], expected_est_timestamps):
+    for scheduled_img, expected_est in zip_longest(acquire_images_ret_val, expected_est_timestamps):
+        est = scheduled_img.est_ready
         assert abs(est - expected_est) < EPSILON_FOR_TIME
 
 
@@ -334,10 +335,10 @@ async def test_base_camera_acquire_images_cancel_futures():
     base_camera._camera = mock_camera
     base_camera.bn_num_frames.set(3)
     base_camera.bn_frame_interval.set(0.01)
-    futs, _ = base_camera.acquire_images()
+    scheduled_imgs = base_camera.acquire_images()
 
-    for fut in futs:
-        fut.cancel()
+    for scheduled_img in scheduled_imgs:
+        scheduled_img.cancel()
 
     await asyncio.sleep(0.5)
 
@@ -363,9 +364,9 @@ async def test_base_camera_acquire_images_with_camera_that_cannot_capture():
     base_camera.bn_num_frames.set(3)
     base_camera.bn_frame_interval.set(0.01)
 
-    for fut in base_camera.acquire_images()[0]:
+    for scheduled_img in base_camera.acquire_images():
         with pytest.raises(asyncio.CancelledError):
-            await fut
+            await scheduled_img.read()
 
 
 @pytest.mark.asyncio
@@ -376,23 +377,23 @@ async def test_base_camera_acquire_images_with_camera_that_can_somtimes_capture(
     base_camera.bn_num_frames.set(5)
     base_camera.bn_frame_interval.set(0.01)
 
-    futs = base_camera.acquire_images()[0]
+    scheduled_imgs = base_camera.acquire_images()
 
-    for fut in futs[:1]:
-        await fut
+    for scheduled_img in scheduled_imgs[:1]:
+        await scheduled_img.read()
 
     # Simulate the camera failing
     mock_camera.capture.side_effect = CameraCaptureError
 
-    for fut in futs[1:3]:
+    for scheduled_img in scheduled_imgs[1:3]:
         with pytest.raises(asyncio.CancelledError):
-            await fut
+            await scheduled_img.read()
 
     # Simulate the camera working again
     mock_camera.capture.side_effect = None
 
-    for fut in futs[3:]:
-        await fut
+    for scheduled_img in scheduled_imgs[3:]:
+        await scheduled_img.read()
 
 
 @pytest.mark.asyncio
@@ -402,13 +403,13 @@ async def test_base_camera_acquire_images_remove_camera_while_futures_pending():
     base_camera._camera = mock_camera
     base_camera.bn_num_frames.set(3)
     base_camera.bn_frame_interval.set(0.1)
-    futs, _ = base_camera.acquire_images()
+    scheduled_imgs = base_camera.acquire_images()
 
     base_camera._camera = None
 
-    for fut in futs:
+    for scheduled_img in scheduled_imgs:
         with pytest.raises(asyncio.CancelledError):
-            await fut
+            await scheduled_img.read()
 
 
 def test_base_camera_get_image_size_hint():
