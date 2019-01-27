@@ -107,34 +107,52 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self.bn_image_angle = AtomicBindableAdapter(
                 setter=lambda v: image_angle_val.set_text('{:.4g}°'.format(math.degrees(v))))
 
-    class DropContourAndResidualsView(GtkWidgetView[Gtk.Grid]):
+    class DropContourFitResidualsView(GtkWidgetView[Gtk.Grid]):
         def __init__(self) -> None:
             self.widget = Gtk.Grid()
-
-            stack = Gtk.Stack()
-            self.widget.attach(stack, 0, 0, 1, 1)
-
-            drop_fig = Figure(tight_layout=True)
-            self._drop_fig_canvas = FigureCanvas(drop_fig)
-            self._drop_fig_canvas.props.hexpand = True
-            self._drop_fig_canvas.props.vexpand = True
-            stack.add_titled(self._drop_fig_canvas, name='Drop', title='Drop')
 
             residuals_figure = Figure(tight_layout=True)
             self._residuals_fig_canvas = FigureCanvas(residuals_figure)
             self._residuals_fig_canvas.props.hexpand = True
             self._residuals_fig_canvas.props.vexpand = True
-            stack.add_titled(self._residuals_fig_canvas, name='Residuals', title='Residuals')
-
-            stack_switcher = Gtk.StackSwitcher(stack=stack, halign=Gtk.Align.CENTER, margin_left=10, margin_bottom=10,
-                                               margin_right=10)
-            self.widget.attach(stack_switcher, 0, 1, 1, 1)
-            stack_switcher.get_style_context().add_class('individual-detail-view-stack-switcher')
+            self.widget.add(self._residuals_fig_canvas)
 
             self.widget.show_all()
 
             # Axes
+            self._residuals_figure_axes = residuals_figure.add_subplot(1, 1, 1)
+            for item in (self._residuals_figure_axes.get_xticklabels() + self._residuals_figure_axes.get_yticklabels()):
+                item.set_fontsize(8)
 
+            # Wiring things up
+            self.bn_residuals = AtomicBindableAdapter(setter=self._set_residuals)
+
+        def _set_residuals(self, residuals: np.ndarray) -> None:
+            axes = self._residuals_figure_axes
+            axes.clear()
+
+            if residuals.size == 0:
+                axes.set_axis_off()
+                self._residuals_fig_canvas.queue_draw()
+                return
+
+            axes.set_axis_on()
+            axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
+            self._residuals_fig_canvas.queue_draw()
+
+    class DropContourView(GtkWidgetView[Gtk.Grid]):
+        def __init__(self) -> None:
+            self.widget = Gtk.Grid()
+
+            drop_fig = Figure(tight_layout=True)
+            self._drop_fig_canvas = FigureCanvas(drop_fig)
+            self._drop_fig_canvas.props.hexpand = True
+            self._drop_fig_canvas.props.vexpand = True
+            self.widget.add(self._drop_fig_canvas)
+
+            self.widget.show_all()
+
+            # Axes
             self._drop_fig_ax = drop_fig.add_subplot(1, 1, 1)
             self._drop_fig_ax.set_aspect('equal', 'box')
             self._drop_fig_ax.xaxis.tick_top()
@@ -148,15 +166,10 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self._drop_contour_line = self._drop_fig_ax.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
             self._drop_contour_fit_line = self._drop_fig_ax.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
 
-            self._residuals_figure_axes = residuals_figure.add_subplot(1, 1, 1)
-            for item in (self._residuals_figure_axes.get_xticklabels() + self._residuals_figure_axes.get_yticklabels()):
-                item.set_fontsize(8)
-
             # Wiring things up
             self.bn_drop_image = AtomicBindableAdapter(setter=self._set_drop_image)
             self.bn_drop_contour = AtomicBindableAdapter(setter=self._set_drop_contour)
             self.bn_drop_contour_fit = AtomicBindableAdapter(setter=self._set_drop_contour_fit)
-            self.bn_drop_contour_fit_residuals = AtomicBindableAdapter(setter=self._set_drop_contour_fit_residuals)
 
         def _set_drop_image(self, image: Optional[Image]) -> None:
             if image is None:
@@ -181,19 +194,6 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
         def _set_drop_contour_fit(self, contour: np.ndarray) -> None:
             self._drop_contour_fit_line.set_data(contour.T)
             self._drop_fig_canvas.queue_draw()
-
-        def _set_drop_contour_fit_residuals(self, residuals: np.ndarray) -> None:
-            axes = self._residuals_figure_axes
-            axes.clear()
-
-            if residuals.size == 0:
-                axes.set_axis_off()
-                self._residuals_fig_canvas.queue_draw()
-                return
-
-            axes.set_axis_on()
-            axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-            self._residuals_fig_canvas.queue_draw()
 
     class LogView(GtkWidgetView[Gtk.ScrolledWindow]):
         def __init__(self) -> None:
@@ -220,8 +220,11 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
         notebook_for_drop_resids_and_log.get_style_context().add_class('notebook-small-tabs')
         self._data_grid.attach(notebook_for_drop_resids_and_log, 1, 0, 1, 1)
 
-        self.drop_contour_and_residuals = self.DropContourAndResidualsView()
-        notebook_for_drop_resids_and_log.append_page(self.drop_contour_and_residuals.widget, Gtk.Label('Drop contour'))
+        self.drop_contour = self.DropContourView()
+        notebook_for_drop_resids_and_log.append_page(self.drop_contour.widget, Gtk.Label('Drop contour'))
+
+        self.drop_contour_fit_residuals = self.DropContourFitResidualsView()
+        notebook_for_drop_resids_and_log.append_page(self.drop_contour_fit_residuals.widget, Gtk.Label('Fit residuals'))
 
         self.log = self.LogView()
         notebook_for_drop_resids_and_log.append_page(self.log.widget, Gtk.Label('Log'))
@@ -459,8 +462,8 @@ class DetailPresenter:
             drop_contour_px = image_annotations.drop_contour_px.copy()
             drop_contour_px -= drop_region_px.pos
 
-        self._view.drop_contour_and_residuals.bn_drop_image.set(drop_image)
-        self._view.drop_contour_and_residuals.bn_drop_contour.set(drop_contour_px)
+        self._view.drop_contour.bn_drop_image.set(drop_image)
+        self._view.drop_contour.bn_drop_contour.set(drop_contour_px)
 
     def _update_view_drop_contour_fit_and_residuals(self) -> None:
         drop_contour_fit = self._drop.generate_drop_contour_fit(samples=50)
@@ -473,8 +476,8 @@ class DetailPresenter:
             drop_contour_fit += self._drop.apex_coords_px
             drop_contour_fit -= self._drop.image_annotations.drop_region_px.pos
 
-        self._view.drop_contour_and_residuals.bn_drop_contour_fit.set(drop_contour_fit)
-        self._view.drop_contour_and_residuals.bn_drop_contour_fit_residuals.set(residuals)
+        self._view.drop_contour.bn_drop_contour_fit.set(drop_contour_fit)
+        self._view.drop_contour_fit_residuals.bn_residuals.set(residuals)
 
     def destroy(self) -> None:
         assert not self.__destroyed
