@@ -13,6 +13,6 @@ class IFTAnalysisFactory:
 
     def create_analysis(self) -> IFTAnalysis:
         return IFTAnalysis(
-            self._image_acquisition.acquire_images(),
-            self._phys_params_factory.create_physical_parameters(),
-            self._image_annotator.annotate_image)
+            scheduled_images=self._image_acquisition.acquire_images(),
+            annotate_image=self._image_annotator.annotate_image,
+            phys_params=self._phys_params_factory.create_physical_parameters())

@@ -29,11 +29,11 @@ class _IFTAnalysisFooterModel:
     progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
 
     def _get_status(self) -> AnalysisFooterStatus:
-        cancelled = self._analysis.cancelled
+        cancelled = self._analysis.bn_cancelled.get()
         if cancelled:
             return AnalysisFooterStatus.CANCELLED
 
-        all_done = all(d.status.terminal for d in self._analysis.drops)
+        all_done = all(d.status.terminal for d in self._analysis.drop_analyses)
         if all_done:
             return AnalysisFooterStatus.FINISHED
 

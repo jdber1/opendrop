@@ -18,6 +18,7 @@ from opendrop.component.stack import StackModel, StackView
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.events import EventConnection
+from opendrop.utility.geometry import Rect2
 from opendrop.utility.option import MutuallyExclusiveOptions
 from opendrop.utility.speaker import Speaker
 from .content.analysis_saver import IFTAnalysisSaverPresenter, IFTAnalysisSaverView
@@ -295,7 +296,7 @@ class IFTRootPresenter:
 
     def _user_wants_to_cancel_analysis(self) -> None:
         analysis = self._results_explorer.analysis
-        if analysis is None or analysis.cancelled:
+        if analysis is None or analysis.bn_cancelled.get():
             return
 
         confirm_cancel_analysis = self._loop.create_task(self._ask_user_confirm_cancel_analysis())
@@ -346,7 +347,7 @@ class IFTRootPresenter:
         analysis = self._current_analysis
         assert analysis is not None and analysis.bn_done.get()
 
-        save_drops(analysis.drops, save_options)
+        save_drops(analysis.drop_analyses, save_options)
         self._current_analysis_saved = True
 
     async def _ask_user_confirm_discard_analysis_results(self) -> bool:
@@ -502,22 +503,21 @@ class IFTSpeaker(Speaker):
         results_explorer = IFTResultsExplorer()
 
         # DEBUG TESTING
-        # image_acquisition.impl.load_image_paths(('/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image0.png',# '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image0.png',
-        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image1.png',
-        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image2.png',
-        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image3.png',
-        #                                          '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image4.png',
+        # image_acquisition.impl.load_image_paths(('/Users/Eugene/Desktop/opendrop sample images/water_in_air001.png',# '/Users/Eugene/PycharmProjects/opendrop/tests/samples/images/image0.png',
+        #                                          '/Users/Eugene/Desktop/opendrop sample images/water_in_air002.png',
+        #                                          '/Users/Eugene/Desktop/opendrop sample images/water_in_air003.png',
+        #                                          '/Users/Eugene/Desktop/opendrop sample images/water_in_air004.png',
+        #                                          '/Users/Eugene/Desktop/opendrop sample images/water_in_air005.png',
         #                                         ))
-        # image_acquisition.impl.load_image_paths(('/Users/Eugene/Desktop/sessile.png',))
         # image_acquisition.impl.bn_frame_interval.set(10)
         #
-        # phys_params_factory.inner_density = 0
-        # phys_params_factory.outer_density = 1000
+        # phys_params_factory.inner_density = 1000
+        # phys_params_factory.outer_density = 0
         # phys_params_factory.needle_width = 0.7176/1000
         # phys_params_factory.gravity = 9.8
         #
-        # # image_annotator.bn_needle_region_px.set(Rect2(x=407, y=50, w=203, h=73))
-        # # image_annotator.bn_drop_region_px.set(Rect2(x=279, y=185, w=453, h=503))
+        # image_annotator.bn_needle_region_px.set(Rect2(x=407, y=50, w=203, h=73))
+        # image_annotator.bn_drop_region_px.set(Rect2(x=279, y=185, w=453, h=503))
         # image_annotator.bn_drop_region_px.set(Rect2(x0=443, y0=173, x1=1057, y1=796))
         # image_annotator.bn_needle_region_px.set(Rect2(x0=579, y0=900, x1=922, y1=981))
         # END DEBUG TESTING

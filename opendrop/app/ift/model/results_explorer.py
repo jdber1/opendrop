@@ -77,10 +77,10 @@ class IFTResultsExplorer:
     def _set_analysis(self, analysis: IFTAnalysis) -> None:
         self._analysis = analysis
 
-        self.individual_drops = tuple(self._analysis.drops)
+        self.individual_drops = tuple(self._analysis.drop_analyses)
 
         if self.summary_data is not None:
             self.summary_data.destroy()
             self.summary_data = None
 
-        self.summary_data = self.SummaryData(self._analysis.drops)
+        self.summary_data = self.SummaryData(self._analysis.drop_analyses)
