@@ -20,7 +20,7 @@ from opendrop.utility.bindable.binding import Binding
 from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Rect2, Vector2
-from opendrop.utility.gtk_misc import pixbuf_from_array
+from opendrop.utility.gmisc import pixbuf_from_array
 from opendrop.utility.misc import clamp
 from opendrop.widgets.canny_parameters import CannyParameters
 from opendrop.widgets.layered_drawing_area.layered_drawing_area import LayeredDrawingArea
