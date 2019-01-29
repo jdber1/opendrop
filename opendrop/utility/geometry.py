@@ -65,6 +65,9 @@ class Vector2(Generic[NumericType]):
             return NotImplemented
         return Vector2(self.x // other, self.y // other)
 
+    def __len__(self) -> int:
+        return 2
+
     def __iter__(self) -> Iterator[NumericType]:
         return iter((self.x, self.y))
 
