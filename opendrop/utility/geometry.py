@@ -80,6 +80,12 @@ class Vector2(Generic[NumericType]):
         return '{class_name}(x={self.x}, y={self.y})' \
                .format(class_name=type(self).__name__, self=self)
 
+    def __eq__(self, other: Tuple[NumericType, NumericType]) -> bool:
+        if not (isinstance(other, Vector2) or isinstance(other, tuple)):
+            return False
+
+        return self[0] == other[0] and self[1] == other[1]
+
 
 Vector2Like = Union[Vector2[NumericType], Tuple[NumericType, NumericType]]
 
