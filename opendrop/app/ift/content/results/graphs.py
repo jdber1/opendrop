@@ -21,7 +21,6 @@ class GraphsView(GtkWidgetView[Gtk.Stack]):
         self.widget.add(self._insufficient_data_lbl)
 
         graphs_fig = Figure(tight_layout=True)
-        graphs_fig.subplots_adjust(hspace=0)
 
         self._graphs_fig_canvas = FigureCanvas(graphs_fig)
         self._graphs_fig_canvas.props.hexpand = True
