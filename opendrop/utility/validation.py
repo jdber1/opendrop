@@ -11,11 +11,13 @@ from opendrop.utility.bindable import bindable_function, SetBindable, AtomicBind
     BuiltinSetBindable
 from opendrop.utility.bindable.bindable import Bindable
 from opendrop.utility.events import Event
+from opendrop.utility.geometry import Rect2
 
 
 class ValidationFlag(Enum):
-    CANNOT_BE_EMPTY = 0
-    MUST_BE_POSITIVE = 1
+    INVALID = 0
+    CANNOT_BE_EMPTY = 1
+    MUST_BE_POSITIVE = 2
 
 
 @bindable_function
@@ -35,8 +37,19 @@ def message_from_flags(field_name: str, flags: Set[ValidationFlag]) -> str:
     return message
 
 
+def check_custom_condition(cond: Callable[[Any], bool]) -> Callable[[Any], Iterable[ValidationFlag]]:
+    def check(x: Any) -> Iterable[ValidationFlag]:
+        if not cond(x):
+            return (ValidationFlag.INVALID,)
+        else:
+            return tuple()
+    return check
+
+
 def check_is_not_empty(x: Any) -> Iterable[ValidationFlag]:
-    if x is None or isinstance(x, Sized) and len(x) == 0:
+    if x is None or \
+            isinstance(x, Sized) and len(x) == 0 or \
+            isinstance(x, Rect2) and 0 in x:
         return (ValidationFlag.CANNOT_BE_EMPTY,)
     else:
         return tuple()
@@ -106,18 +119,16 @@ class FieldView(Generic[ValueType, ErrorType]):
 
 
 class FieldPresenter(Generic[ValueType, ErrorType]):
-    def __init__(self, value: ValueType, errors: SetBindable[ErrorType], field_view: FieldView) -> None:
-        self._errors = errors
-        self._field_view = field_view
+    def __init__(self, value: ValueType, errors: SetBindable[ErrorType], field_view: FieldView[ValueType, ErrorType]) \
+            -> None:
         self.__destroyed = False
         self.__cleanup_tasks = []
 
-        self._is_showing_errors = AtomicBindableVar(False)
-        errors_out = if_expr(cond=self._is_showing_errors, true=errors, false=BuiltinSetBindable())
+        self._errors = ErrorsPresenter(errors_in=errors, errors_out=field_view.errors_out)
+        self.__cleanup_tasks.append(self._errors.destroy)
 
         data_bindings = [
-            value.bind_to(field_view.value),
-            errors_out.bind_to(field_view.errors_out)]
+            value.bind_to(field_view.value)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [
@@ -125,7 +136,31 @@ class FieldPresenter(Generic[ValueType, ErrorType]):
         self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
     def show_errors(self) -> None:
-        self._is_showing_errors.set(bool(self._errors))
+        self._errors.show_errors()
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
+
+
+class ErrorsPresenter(Generic[ErrorType]):
+    def __init__(self, errors_in: SetBindable[ErrorType], errors_out: SetBindable[ErrorType]) -> None:
+        self._errors_in = errors_in
+
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._is_showing_errors = AtomicBindableVar(False)
+        data_bindings = [
+            errors_out.bind_from(if_expr(cond=self._is_showing_errors,
+                                         true=self._errors_in,
+                                         false=BuiltinSetBindable()))]
+        self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
+
+    def show_errors(self) -> None:
+        self._is_showing_errors.set(bool(self._errors_in))
 
     def destroy(self) -> None:
         assert not self.__destroyed
