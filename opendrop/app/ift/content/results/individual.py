@@ -19,7 +19,8 @@ from opendrop.utility.bindable.binding import Binding
 class DetailView(GtkWidgetView[Gtk.Grid]):
     STYLE = '''
     .notebook-small-tabs tab {
-         padding: 0px;
+         min-height: 0px;
+         padding: 8px 0px;
     }
     
     .individual-detail-view-stack-switcher > * {
