@@ -2,9 +2,9 @@ from typing import Optional, MutableSequence
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.utility.geometry import Vector2
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
 from opendrop.utility.events import EventConnection
+from opendrop.utility.geometry import Vector2
 
 
 class MouseSwitchTarget:
@@ -93,13 +93,13 @@ class MouseSwitch:
             return
 
         if event.type == Gdk.EventType.BUTTON_PRESS:
-            target.do_mouse_button_press((event.x, event.y))
+            target.do_mouse_button_press(Vector2(event.x, event.y))
         elif event.type == Gdk.EventType.BUTTON_RELEASE:
-            target.do_mouse_button_release((event.x, event.y))
+            target.do_mouse_button_release(Vector2(event.x, event.y))
 
     def _hdl_event_source_motion_notify_event(self, event_source: Gtk.Widget, event: Gdk.EventMotion) -> None:
         target = self._target
         if target is None:
             return
 
-        target.do_mouse_move((event.x, event.y))
+        target.do_mouse_move(Vector2(event.x, event.y))
