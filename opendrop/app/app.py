@@ -98,17 +98,26 @@ class App:
 
             self._main_mod.add_speaker(key, speaker)
 
-        self._main_mod.bn_active_speaker_key.on_changed.connect(self._hdl_main_mod_active_speaker_key_changed)
+        self._hdl_main_mod_active_speaker_key_changed_ec = self._main_mod.bn_active_speaker_key.on_changed.connect(
+            self._hdl_main_mod_active_speaker_key_changed)
 
     def _hdl_main_mod_active_speaker_key_changed(self) -> None:
         if self._main_mod.active_speaker_key is None:
             self.destroy()
 
     def run(self) -> None:
-        self._loop.create_task(self._main_mod.activate_speaker_by_key(AppSpeakerID.MAIN_MENU))
-        self._loop.run_forever()
+        try:
+            self._loop.run_until_complete(self._main_mod.activate_speaker_by_key(AppSpeakerID.MAIN_MENU))
+            self._loop.run_forever()
+        except (KeyboardInterrupt, SystemExit):
+            self.destroy()
 
     def destroy(self) -> None:
+        self._hdl_main_mod_active_speaker_key_changed_ec.disconnect()
+        self._loop.stop()
+
+        if self._main_mod.active_speaker_key is not None:
+            self._loop.run_until_complete(self._main_mod.activate_speaker_by_key(None))
+
         self._app_presenter.destroy()
         self._app_view.destroy()
-        self._loop.stop()
