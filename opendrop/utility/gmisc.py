@@ -4,7 +4,7 @@ import numpy as np
 from gi.repository import GdkPixbuf, GLib
 
 
-def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]):
+def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]) -> GdkPixbuf.Pixbuf:
     if not isinstance(image, np.ndarray):
         image = np.array(image)
 
