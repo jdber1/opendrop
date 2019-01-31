@@ -27,7 +27,7 @@ def get_needle_width_from_contours(needle_contours: Tuple[np.ndarray, np.ndarray
     p0 = needle_contours[0][0]
 
     # Translate the needle contours such that the top left point is at (0, 0)
-    needle_contours -= p0
+    needle_contours = tuple(edge - p0 for edge in needle_contours)
 
     [x0, x1, theta] = _optimise_needle(needle_contours)
 
