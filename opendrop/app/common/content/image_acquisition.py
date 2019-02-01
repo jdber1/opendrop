@@ -10,10 +10,9 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
 from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
-from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop, GObjectPropertyBindable
+from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
 from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter, \
     check_is_not_empty, validate
@@ -65,15 +64,7 @@ WidgetType = TypeVar('WidgetType', bound=Gtk.Widget)
 
 
 class ImageAcquisitionImplView(GtkWidgetView[WidgetType]):
-    class ErrorsView:
-        def reset_touches(self) -> None:
-            pass
-
-        def touch_all(self) -> None:
-            pass
-
-    errors_view = None  # type: ErrorsView
-
+    pass
 
 # View and presenter for 'Local Images'
 
@@ -103,45 +94,6 @@ class LocalImagesImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
     _STYLE_PROV = Gtk.CssProvider()
     _STYLE_PROV.load_from_data(bytes(STYLE, 'utf-8'))
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-    class ErrorsView:
-        def __init__(self, view: 'LocalImagesImageAcquisitionImplView') -> None:
-            self._view = view
-
-            self.bn_selected_image_paths_err_msg = AtomicBindableAdapter(
-                setter=self._set_selected_image_paths_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_frame_interval_err_msg = AtomicBindableAdapter(
-                setter=self._set_frame_interval_err_msg)  # type: AtomicBindable[Optional[str]]
-
-            self.bn_selected_image_paths_touched = AtomicBindableVar(False)
-            self.bn_frame_interval_touched = AtomicBindableVar(False)
-
-            self._view._frame_interval_inp.connect(
-                'focus-out-event', lambda *_: self.bn_frame_interval_touched.set(True))
-
-        def reset_touches(self) -> None:
-            self.bn_selected_image_paths_touched.set(False)
-            self.bn_frame_interval_touched.set(False)
-
-        def touch_all(self) -> None:
-            self.bn_selected_image_paths_touched.set(True)
-            self.bn_frame_interval_touched.set(True)
-
-        def _set_selected_image_paths_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._file_chooser_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._file_chooser_inp.get_style_context().add_class('error')
-            else:
-                self._view._file_chooser_inp.get_style_context().remove_class('error')
-
-        def _set_frame_interval_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._frame_interval_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._frame_interval_inp.get_style_context().add_class('error')
-            else:
-                self._view._frame_interval_inp.get_style_context().remove_class('error')
 
     def __init__(self) -> None:
         self.widget = Gtk.Grid(row_spacing=10, column_spacing=10)
@@ -176,24 +128,16 @@ class LocalImagesImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        self.bn_selected_image_paths = AtomicBindableAdapter()
-        link_atomic_bn_adapter_to_g_prop(self.bn_selected_image_paths, self._file_chooser_inp, 'file-paths')
-
-        self.bn_frame_interval = AtomicBindableAdapter()
-        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval, self._frame_interval_inp, 'value')
-
-        self.bn_frame_interval_sensitive = AtomicBindableAdapter()
-        link_atomic_bn_adapter_to_g_prop(self.bn_frame_interval_sensitive, self._frame_interval_inp, 'sensitive')
+        self.bn_selected_image_paths = GObjectPropertyBindable(self._file_chooser_inp, 'file-paths')
+        self.bn_frame_interval_sensitive = GObjectPropertyBindable(self._frame_interval_inp, 'sensitive')
 
         self._frame_interval_inp.bind_property(
             'sensitive',
             self._frame_interval_inp, 'visibility',
             GObject.BindingFlags.SYNC_CREATE)
 
-        # self.errors_view = self.ErrorsView(self)
-
         # Fields
-        self.selected_image_paths_field = FieldView(value=GObjectPropertyBindable(self._file_chooser_inp, 'file-paths'))
+        self.selected_image_paths_field = FieldView(value=self.bn_selected_image_paths)
         self.frame_interval_field = FieldView(value=GObjectPropertyBindable(self._frame_interval_inp, 'value'))
 
         # Error highlighting
@@ -263,15 +207,13 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
         impl_last_loaded_paths = set(self._impl.bn_last_loaded_paths.get())
         view_selected_image_paths = set(self._view.bn_selected_image_paths.get())
 
-        if impl_last_loaded_paths == view_selected_image_paths:
-            return
-
-        self._selected_image_paths.poke()
-
         if len(self._impl.images) == 1:
             self._view.bn_frame_interval_sensitive.set(False)
         else:
             self._view.bn_frame_interval_sensitive.set(True)
+
+        if impl_last_loaded_paths != view_selected_image_paths:
+            self._selected_image_paths.poke()
 
     def update_errors_visibility(self) -> None:
         for fp in self.__field_presenters:
@@ -379,14 +321,11 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
             self.on_request_close_window = Event()
             self.widget.connect('delete-event', self._hdl_widget_delete_event)
 
-            self.bn_camera_index = AtomicBindableAdapter()  # type: AtomicBindableAdapter[int]
-            link_atomic_bn_adapter_to_g_prop(self.bn_camera_index, camera_index_inp, 'value')
+            self.bn_camera_index = GObjectPropertyBindable(camera_index_inp, 'value')  # type: AtomicBindableAdapter[int]
 
-            self.bn_camera_inp_text = AtomicBindableAdapter()  # type: AtomicBindableAdapter[str]
-            link_atomic_bn_adapter_to_g_prop(self.bn_camera_inp_text, camera_index_inp, 'text')
+            self.bn_camera_inp_text = GObjectPropertyBindable(camera_index_inp, 'text')  # type: AtomicBindableAdapter[str]
 
-            self.bn_connect_btn_sensitive = AtomicBindableAdapter()
-            link_atomic_bn_adapter_to_g_prop(self.bn_connect_btn_sensitive, connect_btn, 'sensitive')
+            self.bn_connect_btn_sensitive = GObjectPropertyBindable(connect_btn, 'sensitive')
 
         def show_camera_connection_fail_msg(self, cam_idx: int) -> None:
             self._set_error_msg('Failed to connect to camera index {}.'.format(cam_idx))
@@ -548,16 +487,13 @@ class USBCameraImageAcquisitionImplPresenter:
             self._impl = impl
             self._view = view
 
-            self.tick = False
-
             self.__event_connections = [
                 self._view.on_connect_btn_clicked.connect(self._hdl_view_on_connect_btn_clicked),
                 self._view.on_cancel_btn_clicked.connect(self._destroy_and_hide_dialog),
                 self._view.on_request_close_window.connect(self._destroy_and_hide_dialog),
-                self._view.bn_camera_inp_text.on_changed.connect(self._hdl_view_camera_inp_text_changed)
-            ]
+                self._view.bn_camera_index.on_changed.connect(self._hdl_view_camera_index_changed)]
 
-            self._hdl_view_camera_inp_text_changed()
+            self._hdl_view_camera_index_changed()
 
         def _hdl_view_on_connect_btn_clicked(self) -> None:
             cam_idx = self._view.bn_camera_index.get()
@@ -571,7 +507,7 @@ class USBCameraImageAcquisitionImplPresenter:
             except ValueError:
                 self._view.show_camera_connection_fail_msg(cam_idx)
 
-        def _hdl_view_camera_inp_text_changed(self) -> None:
+        def _hdl_view_camera_index_changed(self) -> None:
             cam_idx = self._view.bn_camera_index.get()
             if cam_idx is None:
                 self._view.bn_connect_btn_sensitive.set(False)
@@ -684,16 +620,9 @@ class ImageAcquisitionFormView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        self.bn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
-        link_atomic_bn_adapter_to_g_prop(self.bn_visible, self.widget, 'visible')
-
-        self.bn_actual_user_input_impl_type = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[str]]
-        link_atomic_bn_adapter_to_g_prop(self.bn_actual_user_input_impl_type, self._user_input_impl_type_combobox,
-                                         'active-id')
-        self.bn_user_input_impl_type = AtomicBindableVar(None)  # type: AtomicBindable[Optional[ImageAcquisitionImplType]]
-        Binding(self.bn_actual_user_input_impl_type, self.bn_user_input_impl_type,
-                mitm=AtomicBindingMITM(to_dst=self._impl_type_from_combobox_id,
-                                       to_src=self._combobox_id_from_impl_type))
+        self.bn_user_input_impl_type = GObjectPropertyBindable(self._user_input_impl_type_combobox, 'active-id',
+                                                               transform_to=self._combobox_id_from_impl_type,
+                                                               transform_from=self._impl_type_from_combobox_id)  # type: AtomicBindableAdapter[Optional[str]]
 
     def _impl_type_from_combobox_id(self, combobox_id: Optional[str]) -> Optional[ImageAcquisitionImplType]:
         if combobox_id is None:
