@@ -153,6 +153,8 @@ class ErrorsPresenter(Generic[ErrorType]):
         self.__cleanup_tasks = []
 
         self._is_showing_errors = AtomicBindableVar(False)
+        self.__cleanup_tasks.append(lambda: self._is_showing_errors.set(False))
+
         data_bindings = [
             errors_out.bind_from(if_expr(cond=self._is_showing_errors,
                                          true=self._errors_in,
