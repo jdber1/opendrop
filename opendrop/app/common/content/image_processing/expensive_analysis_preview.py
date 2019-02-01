@@ -35,7 +35,7 @@ class ExpensiveAnalysisPreview(Generic[AnalysisResultType]):
         self._preview = preview
 
         self.__destroyed = False
-        self.__cleanup_tasks = []
+        self.__cleanup_tasks = [self._do_preview_clear]
 
         self._worker = WorkerThread()  # type: WorkerThread[Image, AnalysisResultType]
         self._worker.start()
