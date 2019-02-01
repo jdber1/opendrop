@@ -3,7 +3,9 @@ from numbers import Number
 from typing import Optional
 
 from opendrop.app.ift.model.analyser import IFTPhysicalParameters
+from opendrop.utility.bindable import SetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
 
 
 def _is_positive_float(x) -> bool:
@@ -68,13 +70,37 @@ class IFTPhysicalParametersFactory:
         self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
         self.bn_gravity = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
 
-        self.validator = self.Validator(self)
+        # Input validation
+        self.inner_density_err = validate(
+            value=self.bn_inner_density,
+            checks=(check_is_not_empty,))
+        self.outer_density_err = validate(
+            value=self.bn_outer_density,
+            checks=(check_is_not_empty,))
+        self.needle_width_err = validate(
+            value=self.bn_needle_width,
+            checks=(check_is_not_empty,
+                    check_is_positive))
+        self.gravity_err = validate(
+            value=self.bn_gravity,
+            checks=(check_is_not_empty,
+                    check_is_positive))
+
+        self._errors = SetBindable.union(
+            self.inner_density_err,
+            self.outer_density_err,
+            self.needle_width_err,
+            self.gravity_err)
 
     # Property adapters for atomic bindables
     inner_density = AtomicBindable.property_adapter(lambda self: self.bn_inner_density)
     outer_density = AtomicBindable.property_adapter(lambda self: self.bn_outer_density)
     needle_width = AtomicBindable.property_adapter(lambda self: self.bn_needle_width)
     gravity = AtomicBindable.property_adapter(lambda self: self.bn_gravity)
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self._errors)
 
     def create_physical_parameters(self) -> IFTPhysicalParameters:
         inner_density = self.inner_density
@@ -98,5 +124,4 @@ class IFTPhysicalParametersFactory:
             inner_density,
             outer_density,
             needle_width,
-            gravity
-        )
+            gravity)

@@ -1,13 +1,10 @@
-from typing import Optional
-
 from gi.repository import Gtk, Gdk
 
 from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
-from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
+from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry
 
 
@@ -32,77 +29,6 @@ class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
     _STYLE_PROV = Gtk.CssProvider()
     _STYLE_PROV.load_from_data(bytes(STYLE, 'utf-8'))
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-    class ErrorsView:
-        def __init__(self, view: 'IFTPhysicalParametersFormView') -> None:
-            self._view = view
-
-            self.bn_inner_density_err_msg = AtomicBindableAdapter(
-                setter=self._set_inner_density_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_outer_density_err_msg = AtomicBindableAdapter(
-                setter=self._set_outer_density_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_needle_width_err_msg = AtomicBindableAdapter(
-                setter=self._set_needle_width_err_msg)  # type: AtomicBindable[Optional[str]]
-            self.bn_gravity_err_msg = AtomicBindableAdapter(
-                setter=self._set_gravity_err_msg)  # type: AtomicBindable[Optional[str]]
-
-            self.bn_inner_density_touched = AtomicBindableVar(False)
-            self.bn_outer_density_touched = AtomicBindableVar(False)
-            self.bn_needle_width_touched = AtomicBindableVar(False)
-            self.bn_gravity_touched = AtomicBindableVar(False)
-
-            self._view._inner_density_inp.connect(
-                'focus-out-event', lambda *_: self.bn_inner_density_touched.set(True))
-            self._view._outer_density_inp.connect(
-                'focus-out-event', lambda *_: self.bn_outer_density_touched.set(True))
-            self._view._needle_width_inp.connect(
-                'focus-out-event', lambda *_: self.bn_needle_width_touched.set(True))
-            self._view._gravity_inp.connect(
-                'focus-out-event', lambda *_: self.bn_gravity_touched.set(True))
-
-        def reset_touches(self) -> None:
-            self.bn_inner_density_touched.set(False)
-            self.bn_outer_density_touched.set(False)
-            self.bn_needle_width_touched.set(False)
-            self.bn_gravity_touched.set(False)
-
-        def touch_all(self) -> None:
-            self.bn_inner_density_touched.set(True)
-            self.bn_outer_density_touched.set(True)
-            self.bn_needle_width_touched.set(True)
-            self.bn_gravity_touched.set(True)
-
-        def _set_inner_density_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._inner_density_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._inner_density_inp.get_style_context().add_class('error')
-            else:
-                self._view._inner_density_inp.get_style_context().remove_class('error')
-
-        def _set_outer_density_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._outer_density_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._outer_density_inp.get_style_context().add_class('error')
-            else:
-                self._view._outer_density_inp.get_style_context().remove_class('error')
-
-        def _set_needle_width_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._needle_width_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._needle_width_inp.get_style_context().add_class('error')
-            else:
-                self._view._needle_width_inp.get_style_context().remove_class('error')
-
-        def _set_gravity_err_msg(self, err_msg: Optional[str]) -> None:
-            self._view._gravity_err_msg_lbl.props.label = err_msg
-
-            if err_msg is not None:
-                self._view._gravity_inp.get_style_context().add_class('error')
-            else:
-                self._view._gravity_inp.get_style_context().remove_class('error')
 
     def __init__(self) -> None:
         self.widget = Gtk.Grid(margin=20, row_spacing=10, column_spacing=10)
@@ -155,102 +81,83 @@ class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
 
         self.widget.show_all()
 
-        # Bindables
-        self.bn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
-        link_atomic_bn_adapter_to_g_prop(self.bn_visible, self.widget, 'visible')
+        # Fields
+        self.inner_density_field = FieldView(
+            value=GObjectPropertyBindable(self._inner_density_inp, 'value'))
+        self.outer_density_field = FieldView(
+            value=GObjectPropertyBindable(self._outer_density_inp, 'value'))
+        self.needle_width_field = FieldView(
+            value=GObjectPropertyBindable(self._needle_width_inp, 'value',
+            transform_to=lambda x: x * 1e3 if x is not None else None,
+            transform_from=lambda x: x / 1e3 if x is not None else None))
+        self.gravity_field = FieldView(
+            value=GObjectPropertyBindable(self._gravity_inp, 'value'))
 
-        self.bn_inner_density = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
-        self.bn_outer_density = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
-        self.bn_needle_width = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
-        self.bn_gravity = AtomicBindableAdapter()  # type: AtomicBindableAdapter[Optional[float]]
+        self._inner_density_inp.connect(
+            'focus-out-event', lambda *_: self.inner_density_field.on_user_finished_editing.fire())
+        self._outer_density_inp.connect(
+            'focus-out-event', lambda *_: self.outer_density_field.on_user_finished_editing.fire())
+        self._needle_width_inp.connect(
+            'focus-out-event', lambda *_: self.needle_width_field.on_user_finished_editing.fire())
+        self._gravity_inp.connect(
+            'focus-out-event', lambda *_: self.gravity_field.on_user_finished_editing.fire())
 
-        link_atomic_bn_adapter_to_g_prop(self.bn_inner_density, self._inner_density_inp, 'value')
-        link_atomic_bn_adapter_to_g_prop(self.bn_outer_density, self._outer_density_inp, 'value')
-        link_atomic_bn_adapter_to_g_prop(self.bn_needle_width, self._needle_width_inp, 'value',
-                                         transform_to=lambda x: x*1e3 if x is not None else None,
-                                         transform_from=lambda x: x/1e3 if x is not None else None)
-        link_atomic_bn_adapter_to_g_prop(self.bn_gravity, self._gravity_inp, 'value')
-
-        self.errors_view = self.ErrorsView(self)
+        # Error highlighting
+        self.inner_density_field.__refs = [
+            add_style_class_when_flags(self._inner_density_inp, 'error', self.inner_density_field.errors_out),
+            GObjectPropertyBindable(self._inner_density_err_msg_lbl, 'label').bind_from(
+                message_from_flags('Inner density', self.inner_density_field.errors_out))]
+        self.outer_density_field.__refs = [
+            add_style_class_when_flags(self._outer_density_inp, 'error', self.outer_density_field.errors_out),
+            GObjectPropertyBindable(self._outer_density_err_msg_lbl, 'label').bind_from(
+                message_from_flags('Outer density', self.outer_density_field.errors_out))]
+        self.needle_width_field.__refs = [
+            add_style_class_when_flags(self._needle_width_inp, 'error', self.needle_width_field.errors_out),
+            GObjectPropertyBindable(self._needle_width_err_msg_lbl, 'label').bind_from(
+                message_from_flags('Needle width', self.needle_width_field.errors_out))]
+        self.gravity_field.__refs = [
+            add_style_class_when_flags(self._gravity_inp, 'error', self.gravity_field.errors_out),
+            GObjectPropertyBindable(self._gravity_err_msg_lbl, 'label').bind_from(
+                message_from_flags('Gravity', self.gravity_field.errors_out))]
 
 
 class _IFTPhysicalParametersFormPresenter:
-    class ErrorsPresenter:
-        def __init__(self, validator: IFTPhysicalParametersFactory.Validator,
-                     view: IFTPhysicalParametersFormView.ErrorsView) -> None:
-            self._validator = validator
-            self._view = view
-
-            self.__event_connections = [
-                self._validator.bn_inner_density_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_outer_density_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_needle_width_err_msg.on_changed.connect(self._update_errors),
-                self._validator.bn_gravity_err_msg.on_changed.connect(self._update_errors),
-
-                self._view.bn_inner_density_touched.on_changed.connect(self._update_errors),
-                self._view.bn_outer_density_touched.on_changed.connect(self._update_errors),
-                self._view.bn_needle_width_touched.on_changed.connect(self._update_errors),
-                self._view.bn_gravity_touched.on_changed.connect(self._update_errors),
-            ]
-
-            self._view.reset_touches()
-            self._update_errors()
-
-        def _update_errors(self) -> None:
-            inner_density_err_msg = None  # type: Optional[str]
-            outer_density_err_msg = None  # type: Optional[str]
-            needle_width_err_msg = None  # type: Optional[str]
-            gravity_err_msg = None  # type: Optional[str]
-
-            if self._view.bn_inner_density_touched.get():
-                inner_density_err_msg = self._validator.bn_inner_density_err_msg.get()
-
-            if self._view.bn_outer_density_touched.get():
-                outer_density_err_msg = self._validator.bn_outer_density_err_msg.get()
-
-            if self._view.bn_needle_width_touched.get():
-                needle_width_err_msg = self._validator.bn_needle_width_err_msg.get()
-
-            if self._view.bn_gravity_touched.get():
-                gravity_err_msg = self._validator.bn_gravity_err_msg.get()
-
-            self._view.bn_inner_density_err_msg.set(inner_density_err_msg)
-            self._view.bn_outer_density_err_msg.set(outer_density_err_msg)
-            self._view.bn_needle_width_err_msg.set(needle_width_err_msg)
-            self._view.bn_gravity_err_msg.set(gravity_err_msg)
-
-        def _clear_errors(self) -> None:
-            self._view.bn_inner_density_err_msg.set(None)
-            self._view.bn_outer_density_err_msg.set(None)
-            self._view.bn_needle_width_err_msg.set(None)
-            self._view.bn_gravity_err_msg.set(None)
-
-        def destroy(self) -> None:
-            self._clear_errors()
-            for ec in self.__event_connections:
-                ec.disconnect()
-
     def __init__(self, phys_params: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
         self._phys_params = phys_params
         self._view = view
 
-        self._errors_presenter = self.ErrorsPresenter(self._phys_params.validator, self._view.errors_view)
-        self.__data_bindings = [
-            Binding(self._phys_params.bn_inner_density, self._view.bn_inner_density),
-            Binding(self._phys_params.bn_outer_density, self._view.bn_outer_density),
-            Binding(self._phys_params.bn_needle_width, self._view.bn_needle_width),
-            Binding(self._phys_params.bn_gravity, self._view.bn_gravity)
-        ]
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._field_presenters = [
+            FieldPresenter(
+                value=self._phys_params.bn_inner_density,
+                errors=self._phys_params.inner_density_err,
+                field_view=self._view.inner_density_field),
+            FieldPresenter(
+                value=self._phys_params.bn_outer_density,
+                errors=self._phys_params.outer_density_err,
+                field_view=self._view.outer_density_field),
+            FieldPresenter(
+                value=self._phys_params.bn_needle_width,
+                errors=self._phys_params.needle_width_err,
+                field_view=self._view.needle_width_field),
+            FieldPresenter(
+                value=self._phys_params.bn_gravity,
+                errors=self._phys_params.gravity_err,
+                field_view=self._view.gravity_field)]
+        self.__cleanup_tasks.extend(fp.destroy for fp in self._field_presenters)
 
     def validate(self) -> bool:
-        self._view.errors_view.touch_all()
-        return self._phys_params.validator.check_is_valid()
+        for fp in self._field_presenters:
+            fp.show_errors()
+        return not self._phys_params.has_errors
 
     def destroy(self) -> None:
-        self._errors_presenter.destroy()
-
-        for db in self.__data_bindings:
-            db.unbind()
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
 class IFTPhysicalParametersFormPresenter(WizardPageWrapperPresenter):
