@@ -70,7 +70,6 @@ def squish_contour(contour: np.ndarray) -> np.ndarray:
             path_splice = path_splice_i
             objective = objective_i
         elif objective_i > objective:
-            pass
             break
 
     squished = contour[path]
