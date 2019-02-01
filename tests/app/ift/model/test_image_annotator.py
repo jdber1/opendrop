@@ -31,56 +31,58 @@ def good_image_annotator_no_size_hint():
 
 
 def test_validator_accepts_valid_data(good_image_annotator):
-    assert good_image_annotator.validator.check_is_valid() is True
+    assert good_image_annotator.has_errors is False
 
 
-@pytest.mark.parametrize('is_valid, drop_region_px', [
-    (False, None),  # invalid because is None
-    (False, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
-    (False, Rect2(x=100, y=100, w=10, h=10)),  # invalid because outside of image extents
-    (True, Rect2(x0=-30, y0=-20, x1=10, y1=10)),
-    (True, Rect2(x0=-30, y0=-20, x1=110, y1=110)),
+@pytest.mark.parametrize('has_errors, drop_region_px', [
+    (True, None),  # invalid because is None
+    (True, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
+    (True, Rect2(x=100, y=100, w=10, h=10)),  # invalid because outside of image extents
+    (False, Rect2(x0=-30, y0=-20, x1=10, y1=10)),
+    (False, Rect2(x0=-30, y0=-20, x1=110, y1=110)),
 ])
-def test_validator_checks_drop_region(good_image_annotator, is_valid, drop_region_px):
+def test_validator_checks_drop_region(good_image_annotator, has_errors, drop_region_px):
     good_image_annotator.bn_drop_region_px.set(drop_region_px)
 
-    assert good_image_annotator.validator.check_is_valid() is is_valid
+    assert good_image_annotator.has_errors is has_errors
 
 
 # Similar to test_validator_rejects_invalid_drop_region
-@pytest.mark.parametrize('is_valid, needle_region_px', [
-    (False, None),
-    (False, Rect2(x=0, y=0, w=0, h=0)),
-    (False, Rect2(x=100, y=100, w=10, h=10)),
-    (True, Rect2(x0=-30, y0=-20, x1=10, y1=10)),
-    (True, Rect2(x0=-30, y0=-20, x1=110, y1=110)),
+@pytest.mark.parametrize('has_errors, needle_region_px', [
+    (True, None),
+    (True, Rect2(x=0, y=0, w=0, h=0)),
+    (True, Rect2(x=100, y=100, w=10, h=10)),
+    (False, Rect2(x0=-30, y0=-20, x1=10, y1=10)),
+    (False, Rect2(x0=-30, y0=-20, x1=110, y1=110)),
 ])
-def test_validator_checks_needle_region(good_image_annotator, is_valid, needle_region_px):
+def test_validator_checks_needle_region(good_image_annotator, has_errors, needle_region_px):
     good_image_annotator.bn_needle_region_px.set(needle_region_px)
 
-    assert good_image_annotator.validator.check_is_valid() is is_valid
+    assert good_image_annotator.has_errors is has_errors
 
 
-@pytest.mark.parametrize('is_valid, drop_region_px', [
-    (False, None),  # invalid because is None
-    (False, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
-    (True, Rect2(x=100, y=100, w=10, h=10)),  # assumed to be valid (not None and finite size) since no size hint.
+@pytest.mark.parametrize('has_errors, drop_region_px', [
+    (True, None),  # invalid because is None
+    (True, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
+    (True, Rect2(x=0, y=0, w=10, h=0)),  # invalid because has no finite size
+    (True, Rect2(x=0, y=0, w=0, h=10)),  # invalid because has no finite size
+    (False, Rect2(x=100, y=100, w=10, h=10)),  # assumed to be valid (not None and finite size) since no size hint.
 ])
-def test_validator_checks_drop_region_when_no_size_hint(good_image_annotator_no_size_hint, is_valid, drop_region_px):
+def test_validator_checks_drop_region_when_no_size_hint(good_image_annotator_no_size_hint, has_errors, drop_region_px):
     good_image_annotator_no_size_hint.bn_drop_region_px.set(drop_region_px)
 
-    assert good_image_annotator_no_size_hint.validator.check_is_valid() is is_valid
+    assert good_image_annotator_no_size_hint.has_errors is has_errors
 
 
-@pytest.mark.parametrize('is_valid, needle_region_px', [
-    (False, None),  # invalid because is None
-    (False, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
-    (True, Rect2(x=100, y=100, w=10, h=10)),  # assumed to be valid (not None and finite size) since no size hint.
+@pytest.mark.parametrize('has_errors, needle_region_px', [
+    (True, None),  # invalid because is None
+    (True, Rect2(x=0, y=0, w=0, h=0)),  # invalid because has no finite size
+    (False, Rect2(x=100, y=100, w=10, h=10)),  # assumed to be valid (not None and finite size) since no size hint.
 ])
-def test_validator_checks_needle_region_when_no_size_hint(good_image_annotator_no_size_hint, is_valid, needle_region_px):
+def test_validator_checks_needle_region_when_no_size_hint(good_image_annotator_no_size_hint, has_errors, needle_region_px):
     good_image_annotator_no_size_hint.bn_needle_region_px.set(needle_region_px)
 
-    assert good_image_annotator_no_size_hint.validator.check_is_valid() is is_valid
+    assert good_image_annotator_no_size_hint.has_errors is has_errors
 
 
 @pytest.mark.parametrize('needle_width', [
@@ -93,4 +95,4 @@ def test_validator_checks_needle_region_when_no_size_hint(good_image_annotator_n
 def test_validator_rejects_invalid_needle_width(good_image_annotator, needle_width):
     good_image_annotator.bn_needle_width.set(needle_width)
 
-    assert good_image_annotator.validator.check_is_valid() is False
+    assert good_image_annotator.has_errors is True

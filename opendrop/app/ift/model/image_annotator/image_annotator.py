@@ -1,4 +1,3 @@
-import math
 from typing import Optional, Tuple, Callable
 
 import cv2
@@ -7,8 +6,10 @@ import numpy as np
 from opendrop.app.ift.model.analyser import IFTImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.geometry import Rect2
+from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty, check_custom_condition
 from .needle_width import get_needle_width_from_contours
 
 
@@ -21,6 +22,9 @@ def _get_drop_contour(drop_img: Image) -> np.ndarray:
         raise ValueError('drop_img must be grayscale or rgb')
 
     found_contours = mycv.find_contours(drop_img)
+
+    if len(found_contours) == 0:
+        return np.empty((0, 2))
 
     # Assume the drop contour is the longest contour found (mycv.find_contours() returns found contours in descending
     # order of contour length)
@@ -47,66 +51,12 @@ def _get_needle_contours(needle_img: Image) -> Tuple[np.ndarray, np.ndarray]:
 
 
 class IFTImageAnnotator:
-    class Validator:
-        def __init__(self, target: 'IFTImageAnnotator') -> None:
-            self._target = target
-
-            self.bn_drop_region_px_err_msg = AtomicBindableAdapter(self._get_drop_region_px_err_msg)
-            self._target.bn_drop_region_px.on_changed.connect(self.bn_drop_region_px_err_msg.poke)
-
-            self.bn_needle_region_px_err_msg = AtomicBindableAdapter(self._get_needle_region_px_err_msg)
-            self._target.bn_needle_region_px.on_changed.connect(self.bn_needle_region_px_err_msg.poke)
-
-        def check_is_valid(self) -> bool:
-            drop_region_px = self._target.bn_drop_region_px.get()
-            if drop_region_px is None or drop_region_px.size == (0, 0):
-                return False
-
-            needle_region_px = self._target.bn_needle_region_px.get()
-            if needle_region_px is None or needle_region_px.size == (0, 0):
-                return False
-
-            size_hint = self._target._get_image_size_hint()
-            if size_hint is not None:
-                image_extents = Rect2(pos=(0.0, 0.0), size=size_hint)
-                if not drop_region_px.is_intersecting(image_extents) or not needle_region_px.is_intersecting(
-                        image_extents):
-                    return False
-
-            needle_width = self._target.bn_needle_width.get()
-            if needle_width is None \
-                    or needle_width <= 0 \
-                    or needle_width == 0 \
-                    or math.isnan(needle_width) \
-                    or math.isinf(needle_width):
-                return False
-
-            return True
-
-        def _get_drop_region_px_err_msg(self) -> Optional[str]:
-            drop_region_px = self._target.bn_drop_region_px.get()
-            if drop_region_px is None:
-                return 'Drop region cannot be empty'
-
-            size_hint = self._target._get_image_size_hint()
-            if size_hint is not None and not drop_region_px.is_intersecting(Rect2(pos=(0.0, 0.0), size=size_hint)):
-                return 'Drop region is outside of image extents'
-
-        def _get_needle_region_px_err_msg(self) -> Optional[str]:
-            needle_region_px = self._target.bn_needle_region_px.get()
-            if needle_region_px is None:
-                return 'Needle region cannot be empty'
-
-            size_hint = self._target._get_image_size_hint()
-            if size_hint is not None and not needle_region_px.is_intersecting(Rect2(pos=(0.0, 0.0), size=size_hint)):
-                return 'Needle region is outside of image extents'
-
     def __init__(self, get_image_size_hint: Callable[[], Optional[Tuple[int, int]]] = lambda: None) -> None:
         # Used for validation
         self._get_image_size_hint = get_image_size_hint
 
-        self.bn_canny_min_thresh = AtomicBindableVar(30)  # type: AtomicBindable[int]
-        self.bn_canny_max_thresh = AtomicBindableVar(60)  # type: AtomicBindable[int]
+        self.bn_canny_min = AtomicBindableVar(30)  # type: AtomicBindable[int]
+        self.bn_canny_max = AtomicBindableVar(60)  # type: AtomicBindable[int]
 
         self.bn_drop_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
         self.bn_needle_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
@@ -114,13 +64,48 @@ class IFTImageAnnotator:
         # Physical needle width (in metres) is used to calculate the image scale.
         self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
 
-        self.validator = self.Validator(self)
+        # Input validation
+        self.drop_region_px_err = validate(
+            value=self.bn_drop_region_px,
+            checks=(check_is_not_empty,
+                    check_custom_condition(
+                        lambda x: Rect2(pos=(0.0, 0.0), size=self._get_image_size_hint()).is_intersecting(x)
+                                  if x is not None and self._get_image_size_hint() is not None else True
+                    )))
+
+        self.needle_region_px_err = validate(
+            value=self.bn_needle_region_px,
+            checks=(check_is_not_empty,
+                    check_custom_condition(
+                        lambda x: Rect2(pos=(0.0, 0.0), size=self._get_image_size_hint()).is_intersecting(x)
+                                  if x is not None and self._get_image_size_hint() is not None else True
+                    )))
+
+        self.needle_width_err = validate(
+            value=self.bn_needle_width,
+            checks=(check_is_positive, check_is_not_empty))
+
+        self._errors = SetBindable.union(self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)
+
+    def extract_drop_contour(self, image: Image) -> np.ndarray:
+        drop_region_px = self.bn_drop_region_px.get()
+        if drop_region_px is None:
+            return np.empty((0, 2))
+        drop_region_px = drop_region_px.as_type(int)
+
+        image = self.apply_edge_detection(image)
+        drop_image = image[drop_region_px.y0:drop_region_px.y1, drop_region_px.x0:drop_region_px.x1]
+
+        contour = _get_drop_contour(drop_image)
+        contour += drop_region_px.pos
+
+        return contour
 
     def apply_edge_detection(self, image: Image) -> Image:
         # Perform a Gaussian blur first, no way to configure this in the UI currently..
         image = cv2.GaussianBlur(image, (3, 3), 0)
 
-        return cv2.Canny(image, self.bn_canny_min_thresh.get(), self.bn_canny_max_thresh.get())
+        return cv2.Canny(image, self.bn_canny_min.get(), self.bn_canny_max.get())
 
     def annotate_image(self, image: Image) -> IFTImageAnnotations:
         image = self.apply_edge_detection(image)
@@ -151,3 +136,7 @@ class IFTImageAnnotator:
             drop_contour_px=drop_contour_px,
             needle_contours_px=needle_contours_px
         )
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self._errors)

@@ -272,7 +272,7 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
         else:
             self._view.bn_frame_interval_sensitive.set(True)
 
-    def show_errors(self) -> None:
+    def update_errors_visibility(self) -> None:
         for fp in self.__field_presenters:
             fp.show_errors()
 
@@ -632,7 +632,7 @@ class USBCameraImageAcquisitionImplPresenter:
         # Keep a reference to the dialog presenter so that it is not garbage collected.
         self._active_change_camera_dialog_presenter = dlg_presenter
 
-    def show_errors(self) -> None:
+    def update_errors_visibility(self) -> None:
         for fp in self.__field_presenters:
             fp.show_errors()
 
@@ -767,8 +767,8 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         new_subpresenter = self._create_presenter_for_impl_and_view(self._image_acquisition.impl, new_child_view)
         self._current_subpresenter = new_subpresenter
 
-    def show_errors(self) -> None:
-        self._current_subpresenter.show_errors()
+    def update_errors_visibility(self) -> None:
+        self._current_subpresenter.update_errors_visibility()
 
     def destroy(self) -> None:
         for ec in self.__event_connections:
@@ -793,11 +793,8 @@ class ImageAcquisitionFormPresenter:
         self._enabled = False
 
     def validate(self) -> bool:
-        has_errors = self._image_acquisition.has_errors
-        if has_errors:
-            self._root_presenter.show_errors()
-
-        return not has_errors
+        self._root_presenter.update_errors_visibility()
+        return not self._image_acquisition.has_errors
 
     def enter(self) -> None:
         if self._enabled or self._destroyed:

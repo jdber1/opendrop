@@ -193,16 +193,16 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
     # Draw needle region
     image = cv2.rectangle(
         img=image,
-        pt1=image_annotations.needle_region_px.p0,
-        pt2=image_annotations.needle_region_px.p1,
+        pt1=tuple(image_annotations.needle_region_px.p0),
+        pt2=tuple(image_annotations.needle_region_px.p1),
         color=(13, 26, 255),
         thickness=1)
 
     # Draw drop region
     image = cv2.rectangle(
         img=image,
-        pt1=image_annotations.drop_region_px.p0,
-        pt2=image_annotations.drop_region_px.p1,
+        pt1=tuple(image_annotations.drop_region_px.p0),
+        pt2=tuple(image_annotations.drop_region_px.p1),
         color=(255, 26, 13),
         thickness=1)
 
@@ -386,7 +386,7 @@ def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOption
     padding = len(str(len(drops)))
     dir_name = options.bn_save_dir_name.get()
     for i, drop in enumerate(drops):
-        drop_dir_name = dir_name + '{i:0>{padding}}'.format(i=i, padding=padding)
+        drop_dir_name = dir_name + '{n:0>{padding}}'.format(n=(i+1), padding=padding)  # i+1 for 1-based indexing.
         _save_individual(drop, drop_dir_name, options)
 
     if len(drops) <= 1:

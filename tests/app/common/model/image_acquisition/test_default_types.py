@@ -162,7 +162,7 @@ def test_base_image_seq_preview_config_index():
 
     for i, image in enumerate(images):
         preview.config.bn_index.set(i)
-        assert (preview.bn_image.get() == image).all()
+        assert (preview.image == image).all()
 
 
 def test_base_image_seq_preview_config_index_set_outside_range():
@@ -436,7 +436,7 @@ def test_base_camera_create_preview():
     preview = base_camera.create_preview()
     assert preview.bn_alive.get() is True
 
-    assert (preview.bn_image.get() == MOCK_IMAGE_0).all()
+    assert (preview.image == MOCK_IMAGE_0).all()
 
 
 def test_base_camera_create_preview_with_camera_none():
@@ -459,7 +459,7 @@ def test_base_camera_create_preview_with_camera_that_cannot_capture():
 
 @pytest.mark.asyncio
 async def test_base_camera_create_preview_image():
-    MIN_FPS = 10
+    MIN_FPS = 3
 
     mock_camera = Mock()
     base_camera = BaseCameraImageAcquisitionImpl()
@@ -467,7 +467,7 @@ async def test_base_camera_create_preview_image():
     preview = base_camera.create_preview()
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb)
+    preview.on_image_changed.connect(cb)
 
     mock_camera.capture.reset_mock()
 
@@ -476,12 +476,12 @@ async def test_base_camera_create_preview_image():
     # Preview image should be retrieved from the camera lazily.
     mock_camera.capture.assert_not_called()
     # Retrieve image, this should capture a new image from the camera.
-    preview.bn_image.get()
+    tmp = preview.image
 
     await asyncio.sleep(0.5)
 
     # Retrieve another image.
-    preview.bn_image.get()
+    tmp = preview.image
 
     assert cb.call_count > MIN_FPS
     assert mock_camera.capture.call_count == 2
@@ -495,7 +495,7 @@ async def test_base_camera_preview_destroy():
     preview = base_camera.create_preview()
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb)
+    preview.on_image_changed.connect(cb)
 
     preview.destroy()
     assert preview.bn_alive.get() is False
@@ -506,7 +506,7 @@ async def test_base_camera_preview_destroy():
     await asyncio.sleep(0.5)
 
     # Retrieve an image after preview destroyed
-    preview.bn_image.get()
+    tmp = preview.image
 
     cb.assert_not_called()
     mock_camera.capture.assert_not_called()
@@ -534,19 +534,19 @@ async def test_base_camera_preview_ignores_capture_error():
     mock_camera.capture.side_effect = CameraCaptureError
 
     cb = Mock()
-    preview.bn_image.on_changed.connect(cb)
+    preview.on_image_changed.connect(cb)
 
     await asyncio.sleep(0.2)
 
     # The preview image should be the last image successfully captured by the camera.
-    assert (preview.bn_image.get() == MOCK_IMAGE_0).all()
+    assert (preview.image == MOCK_IMAGE_0).all()
 
     # Simulate the camera working again.
     mock_camera.capture.side_effect = None
 
     await asyncio.sleep(0.2)
 
-    assert (preview.bn_image.get() == MOCK_IMAGE_1).all()
+    assert (preview.image == MOCK_IMAGE_1).all()
 
 
 # Test validation

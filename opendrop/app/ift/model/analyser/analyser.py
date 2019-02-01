@@ -1,11 +1,10 @@
 import asyncio
-import functools
 import math
 import time
 from asyncio import Future
 from enum import Enum
 from operator import attrgetter
-from typing import Tuple, Callable, Optional, Union, Iterable, Type, Sequence, MutableMapping, Any
+from typing import Tuple, Callable, Optional, Union, Iterable, Type, Sequence, Any
 
 import numpy as np
 
@@ -37,16 +36,19 @@ def bl_tl_coords_swap(height: float, x: Union[float, Iterable[float]], y: Union[
 
 class IFTDropAnalysis(Operation):
     class Status(Enum):
-        # The first element of the tuples are just to keep each enum unique.
-        WAITING_FOR_IMAGE = (0, False)
-        READY_TO_FIT = (1, False)
-        FITTING = (2, False)
-        FINISHED = (3, True)
-        CANCELLED = (4, True)
-        UNEXPECTED_EXCEPTION = (5, True)
+        WAITING_FOR_IMAGE = ('Waiting for image', False)
+        READY_TO_FIT = ('Ready to fit', False)
+        FITTING = ('Fitting', False)
+        FINISHED = ('Finished', True)
+        CANCELLED = ('Cancelled', True)
+        UNEXPECTED_EXCEPTION = ('Unexpected exception', True)
 
-        def __init__(self, id_: int, terminal: bool) -> None:
+        def __init__(self, friendly: str, terminal: bool) -> None:
+            self.friendly = friendly
             self.terminal = terminal
+
+        def __str__(self) -> str:
+            return self.friendly
 
     class LogShim:
         def __init__(self, write: Callable[[str], Any]) -> None:
@@ -68,7 +70,6 @@ class IFTDropAnalysis(Operation):
         self._annotate_image = annotate_image
 
         self._loop.create_task(self._scheduled_image.read()).add_done_callback(self._hdl_scheduled_img_read)
-
         self.phys_params = phys_params
 
         self._start_fit_task = None  # type: Optional[asyncio.Task]
@@ -156,6 +157,9 @@ class IFTDropAnalysis(Operation):
     def _hdl_scheduled_img_read(self, read_task: Future) -> None:
         if read_task.cancelled():
             self.cancel()
+            return
+
+        if self.bn_done.get():
             return
 
         image, image_timestamp = read_task.result()
@@ -430,91 +434,3 @@ class IFTAnalysis(OperationGroup):
             return
         super().cancel()
         self.bn_cancelled.set(True)
-
-
-# class IFTAnalysis:
-#     def __init__(self, scheduled_imgs: Sequence[ScheduledImage], phys_params: IFTPhysicalParameters,
-#                  annotate_image: Callable[[Image], IFTImageAnnotations]) -> None:
-#         self._loop = asyncio.get_event_loop()
-#
-#         self.bn_cancelled = AtomicBindableVar(False)
-#
-#         self._scheduled_imgs = scheduled_imgs
-#         self._phys_params = phys_params
-#         self._annotate_image = annotate_image
-#
-#         self._drops = []
-#         self._time_start = time.time()
-#         self._time_est_complete = max(scheduled_img.est_ready for scheduled_img in scheduled_imgs)
-#
-#         self._start_fit_tasks = {}  # type: MutableMapping[IFTDropAnalysis, asyncio.Task]
-#
-#         self.bn_done = AtomicBindableAdapter(self._get_done)
-#         self.bn_progress = AtomicBindableAdapter(self._get_progress)
-#         self.bn_time_start = AtomicBindableAdapter(lambda: self._time_start)
-#         self.bn_time_est_complete = AtomicBindableAdapter(lambda: self._time_est_complete)
-#
-#         for i, scheduled_img in enumerate(self._scheduled_imgs):
-#             drop = IFTDropAnalysis(phys_params)
-#             drop.bn_status.on_changed.connect(functools.partial(self._hdl_drop_status_changed, drop), weak_ref=False)
-#             self._drops.append(drop)
-#
-#             self._loop.create_task(scheduled_img.read()) \
-#                 .add_done_callback(functools.partial(self._hdl_scheduled_img_loads, idx=i))
-#
-#     cancelled = AtomicBindable.property_adapter(attrgetter('bn_cancelled'))  # type: bool
-#
-#     def _hdl_scheduled_img_loads(self, read_task: Future, idx: int) -> None:
-#         drop = self._drops[idx]
-#
-#         if read_task.cancelled():
-#             drop.cancel()
-#
-#         if drop.status.terminal:
-#             return
-#
-#         image, image_timestamp = read_task.result()
-#         drop._give_image(image, image_timestamp, self._annotate_image(image))
-#         self._start_fit_tasks[drop] = self._loop.create_task(drop._start_fit())
-#
-#     def cancel(self):
-#         if self.cancelled or all(drop.status.terminal for drop in self._drops):
-#             return
-#
-#         for scheduled_img in self._scheduled_imgs:
-#             scheduled_img.cancel()
-#
-#         for drop in self._drops:
-#             if drop.status.terminal:
-#                 continue
-#
-#             if drop.status is not IFTDropAnalysis.Status.FITTING and drop in self._start_fit_tasks:
-#                 start_fit_task = self._start_fit_tasks[drop]
-#                 start_fit_task.cancel()
-#
-#             drop.cancel()
-#
-#         self.cancelled = True
-#
-#     @property
-#     def drops(self) -> Sequence[IFTDropAnalysis]:
-#         return tuple(self._drops)
-#
-#     def _get_progress(self) -> float:
-#         num_drops_done = 0
-#         for drop in self._drops:
-#             if drop.status is IFTDropAnalysis.Status.FINISHED:
-#                 num_drops_done += 1
-#
-#         return num_drops_done/len(self._drops)
-#
-#     def _get_done(self) -> bool:
-#         for drop in self._drops:
-#             if not drop.status.terminal:
-#                 return False
-#
-#         return True
-#
-#     def _hdl_drop_status_changed(self, drop: IFTDropAnalysis) -> None:
-#         self.bn_progress.on_changed.fire()
-#         self.bn_done.on_changed.fire()

@@ -129,7 +129,7 @@ class ImageAcquisitionPreviewConfigView(GtkWidgetView[Gtk.Grid]):
 
         self.impl = None  # type: Optional[GtkWidgetView]
 
-    def configure_for_config(self, config: Any) -> None:
+    def configure_for_config(self, config: Any) -> GtkWidgetView:
         # Remove the old implementation
         old_impl = self.impl
         if old_impl is not None:
@@ -139,6 +139,8 @@ class ImageAcquisitionPreviewConfigView(GtkWidgetView[Gtk.Grid]):
         if self.impl is not None:
             self.widget.add(self.impl.widget)
             self.impl.widget.show()
+
+        return self.impl
 
 
 # CamelCase to make usage of the function more like constructing an object.

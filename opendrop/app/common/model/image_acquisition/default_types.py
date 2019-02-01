@@ -5,15 +5,14 @@ from abc import abstractmethod
 from asyncio import Future
 from operator import attrgetter
 from pathlib import Path
-from typing import Union, Sequence, MutableSequence, Tuple, Optional, Any, TypeVar, Generic
+from typing import Union, Sequence, MutableSequence, Tuple, Optional, TypeVar, Generic
 
 import cv2
 import numpy as np
 
 from opendrop.mytypes import Image
 from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter, \
-    AtomicBindableTx
+from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
 from opendrop.utility.events import Event, EventConnection
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
 from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview, ScheduledImage
@@ -32,6 +31,7 @@ class ImageSequenceImageAcquisitionPreviewConfig:
 class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequenceImageAcquisitionPreviewConfig]):
     def __init__(self, images: Sequence[Image]) -> None:
         assert len(images) > 0
+        self.on_image_changed = Event()
 
         self._index = 0
         self._images = images
@@ -39,11 +39,11 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
         self._bn_index = AtomicBindableAdapter(self._get_index, self._set_index)  # type: AtomicBindableAdapter[int]
         self._bn_num_images = AtomicBindableAdapter(self._get_num_images)  # type: AtomicBindableAdapter[int]
 
-        self.bn_image = AtomicBindableAdapter(self._get_image)  # type: AtomicBindableAdapter[Image]
         self.bn_alive = AtomicBindableVar(True)  # type: AtomicBindable[bool]
         self.config = ImageSequenceImageAcquisitionPreviewConfig(self)
 
-    def _get_image(self) -> Image:
+    @property
+    def image(self) -> Image:
         return self._images[self._index]
 
     def _get_index(self) -> int:
@@ -55,7 +55,7 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
                              .format(new_index, self._get_num_images()))
 
         self._index = new_index
-        self.bn_image.poke()
+        self.on_image_changed.fire(self.Transition.JUMP)
 
     def _get_num_images(self) -> int:
         return len(self._images)
@@ -182,61 +182,29 @@ class Camera:
 
 
 class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
-    POKE_IDLE_INTERVAL = 0.05
-
-    class ImageBindableTx(AtomicBindableTx[Image]):
-        def __init__(self, src_bn: 'CameraImageAcquisitionPreview.ImageBindable') -> None:
-            self._src_bn = src_bn
-
-        @property
-        def value(self) -> Image:
-            return self._src_bn.get()
-
-    class ImageBindable(AtomicBindable[Image]):
-        def __init__(self, preview: 'CameraImageAcquisitionPreview') -> None:
-            super().__init__()
-            self._preview = preview
-
-        def get(self) -> Image:
-            return self._preview._get_image()
-
-        def set(self, value: Any) -> None:
-            raise AttributeError('Cannot set image attribute')
-
-        def poke(self) -> None:
-            self.on_changed.fire()
-            self._bcast_tx(self._create_tx())
-
-        def _create_tx(self) -> 'CameraImageAcquisitionPreview.ImageBindableTx':
-            return CameraImageAcquisitionPreview.ImageBindableTx(self)
-
-        def _export(self) -> 'CameraImageAcquisitionPreview.ImageBindableTx':
-            return self._create_tx()
-
-        def _raw_apply_tx(self, tx: 'CameraImageAcquisitionPreview.ImageBindableTx') \
-                -> Optional[Sequence['CameraImageAcquisitionPreview.ImageBindableTx']]:
-            raise NotImplementedError
+    POKE_IDLE_INTERVAL = 0.20
 
     def __init__(self, src_impl: 'BaseCameraImageAcquisitionImpl', first_image: Image) -> None:
         self._loop = asyncio.get_event_loop()
-
         self._src_impl = src_impl
+
+        self.on_image_changed = Event()
+
         self._buffer = first_image
         self._buffer_outdated = False
-        self._alive = True
         self._poke_image_loop_timer_handle = None  # type: Optional[asyncio.TimerHandle]
 
-        self.bn_alive = AtomicBindableAdapter(self._get_alive)  # type: AtomicBindableAdapter[bool]
-        self.bn_image = self.ImageBindable(self)  # type: CameraImageAcquisitionPreview.ImageBindable[Image]
+        self.bn_alive = AtomicBindableVar(True)  # type: AtomicBindableAdapter[bool]
 
         self.__event_connections = [
-            self._src_impl._on_camera_changed.connect(self._hdl_src_impl_camera_changed)
+            self._src_impl._on_camera_changed.connect(self.destroy)
         ]
 
         self._poke_image_loop()
 
     def destroy(self) -> None:
-        self._alive = False
+        if not self.bn_alive.get():
+            return
 
         if self._poke_image_loop_timer_handle is not None:
             self._poke_image_loop_timer_handle.cancel()
@@ -244,25 +212,20 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
         for ec in self.__event_connections:
             ec.disconnect()
 
-        self.bn_alive.poke()
-
-    def _hdl_src_impl_camera_changed(self) -> None:
-        self.destroy()
-
-    def _get_alive(self) -> bool:
-        return self._alive
+        self.bn_alive.set(False)
 
     def _poke_image_loop(self) -> None:
-        if self._alive is False:
+        if self.bn_alive.get() is False:
             return
 
         self._buffer_outdated = True
-        self.bn_image.poke()
+        self.on_image_changed.fire(self.Transition.SMOOTH)
 
         self._poke_image_loop_timer_handle = self._loop.call_later(self.POKE_IDLE_INTERVAL, self._poke_image_loop)
 
-    def _get_image(self) -> Image:
-        if self._alive and self._buffer_outdated:
+    @property
+    def image(self) -> Image:
+        if self.bn_alive.get() and self._buffer_outdated:
             self._update_buffer()
 
         return self._buffer

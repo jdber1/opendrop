@@ -7,10 +7,11 @@ import pytest
 from scipy import interpolate
 from scipy.spatial import distance
 
+from opendrop.app.common.model.image_acquisition.image_acquisition import ScheduledImage
 from opendrop.app.ift.model.analyser import IFTDropAnalysis, IFTImageAnnotations, IFTPhysicalParameters
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
-from opendrop.utility.geometry import Rect2
 from opendrop.utility.events import Event
+from opendrop.utility.geometry import Rect2
 from tests.iftcalc.dataset.water_in_air001 import data as water_in_air001_data
 
 
@@ -79,6 +80,17 @@ class MockYoungLaplaceFit:
         return self._apex_rot_matrix.T @ [r, z]
 
 
+class MockScheduledImage(ScheduledImage):
+    def __init__(self, loop):
+        self._future = loop.create_future()
+
+    def set_read_return(self, value):
+        self._future.set_result(value)
+
+    async def read(self):
+        return await self._future
+
+
 @pytest.fixture(params=[
     water_in_air001_data])
 def mock_yl_fit_and_drop_data(request, event_loop):
@@ -104,9 +116,44 @@ def image_and_annotations(request):
     return image, image_timestamp, annotations
 
 
+@pytest.fixture
+async def drop_analysis_just_initialised(phys_params, event_loop) -> 'DropAnalysisJustInitialisedContext':
+    mock_yl_fit_factory = Mock()
+
+    scheduled_image = MockScheduledImage(event_loop)
+    annotate_image = Mock()
+    calculate_ift = Mock()
+    calculate_volume = Mock()
+    calculate_surface_area = Mock()
+    calculate_worthington = Mock()
+
+    drop_analysis = IFTDropAnalysis(
+        scheduled_image=scheduled_image,
+        annotate_image=annotate_image,
+        phys_params=phys_params,
+        create_yl_fit=mock_yl_fit_factory,
+        calculate_ift=calculate_ift,
+        calculate_volume=calculate_volume,
+        calculate_surface_area=calculate_surface_area,
+        calculate_worthington=calculate_worthington)
+
+    return DropAnalysisJustInitialisedContext(
+        scheduled_image=scheduled_image,
+        annotate_image=annotate_image,
+        drop_analysis=drop_analysis,
+        phys_params=phys_params,
+        mock_yl_fit_factory=mock_yl_fit_factory,
+        calculate_ift=calculate_ift,
+        calculate_volume=calculate_volume,
+        calculate_surface_area=calculate_surface_area,
+        calculate_worthington=calculate_worthington)
+
+
 class DropAnalysisJustInitialisedContext:
-    def __init__(self, *, drop_analysis, phys_params, mock_yl_fit_factory, calculate_ift, calculate_volume,
-                 calculate_surface_area, calculate_worthington):
+    def __init__(self, *, scheduled_image, annotate_image, drop_analysis, phys_params, mock_yl_fit_factory,
+                 calculate_ift, calculate_volume, calculate_surface_area, calculate_worthington):
+        self.scheduled_image = scheduled_image
+        self.annotate_image = annotate_image
         self.drop_analysis = drop_analysis
         self.phys_params = phys_params
         self.mock_yl_fit_factory = mock_yl_fit_factory
@@ -117,69 +164,31 @@ class DropAnalysisJustInitialisedContext:
 
 
 @pytest.fixture
-def drop_analysis_just_initialised(phys_params: IFTPhysicalParameters) -> DropAnalysisJustInitialisedContext:
-    mock_yl_fit_factory = Mock()
+async def drop_analysis_fitting(drop_analysis_just_initialised: DropAnalysisJustInitialisedContext,
+                                image_and_annotations, mock_yl_fit_and_drop_data) -> 'DropAnalysisFittingContext':
+    mock_yl_fit, drop_data = mock_yl_fit_and_drop_data
+    mock_yl_fit_factory = drop_analysis_just_initialised.mock_yl_fit_factory
+    mock_yl_fit_factory.return_value = mock_yl_fit
 
-    calculate_ift = Mock()
-    calculate_volume = Mock()
-    calculate_surface_area = Mock()
-    calculate_worthington = Mock()
-
-    drop_analysis = IFTDropAnalysis(
-        phys_params=phys_params,
-        create_yl_fit=mock_yl_fit_factory,
-        calculate_ift=calculate_ift,
-        calculate_volume=calculate_volume,
-        calculate_surface_area=calculate_surface_area,
-        calculate_worthington=calculate_worthington)
-
-    return DropAnalysisJustInitialisedContext(
-        drop_analysis=drop_analysis,
-        phys_params=phys_params,
-        mock_yl_fit_factory=mock_yl_fit_factory,
-        calculate_ift=calculate_ift,
-        calculate_volume=calculate_volume,
-        calculate_surface_area=calculate_surface_area,
-        calculate_worthington=calculate_worthington)
-
-
-class DropAnalysisReadyToFitContext(DropAnalysisJustInitialisedContext):
-    pass
-
-
-@pytest.fixture
-def drop_analysis_ready_to_fit(drop_analysis_just_initialised: DropAnalysisJustInitialisedContext,
-                               image_and_annotations) -> DropAnalysisReadyToFitContext:
     drop_analysis = drop_analysis_just_initialised.drop_analysis
-    drop_analysis._give_image(*image_and_annotations)
 
-    return DropAnalysisReadyToFitContext(**drop_analysis_just_initialised.__dict__)
+    # Start the fit
+    image, image_timestamp, image_annotations = image_and_annotations
+    drop_analysis_just_initialised.annotate_image.return_value = image_annotations
+    drop_analysis_just_initialised.scheduled_image.set_read_return((image, image_timestamp))
+
+    # Wait for status to change to FITTING
+    await asyncio.wait_for(drop_analysis.bn_status.on_changed.wait(), timeout=0.1)
+
+    return DropAnalysisFittingContext(mock_yl_fit=mock_yl_fit, drop_data=drop_data,
+                                      **drop_analysis_just_initialised.__dict__)
 
 
-class DropAnalysisFittingContext(DropAnalysisReadyToFitContext):
+class DropAnalysisFittingContext(DropAnalysisJustInitialisedContext):
     def __init__(self, *, mock_yl_fit, drop_data, **kwargs):
         super().__init__(**kwargs)
         self.mock_yl_fit = mock_yl_fit
         self.drop_data = drop_data
-
-
-@pytest.fixture
-async def drop_analysis_fitting(drop_analysis_ready_to_fit: DropAnalysisReadyToFitContext, mock_yl_fit_and_drop_data,
-                                event_loop) -> DropAnalysisFittingContext:
-    mock_yl_fit, drop_data = mock_yl_fit_and_drop_data
-    mock_yl_fit_factory = drop_analysis_ready_to_fit.mock_yl_fit_factory
-    mock_yl_fit_factory.return_value = mock_yl_fit
-
-    drop_analysis = drop_analysis_ready_to_fit.drop_analysis
-
-    # Start the fit
-    event_loop.create_task(drop_analysis._start_fit())
-
-    # Wait for status to change to FITTING
-    await asyncio.wait_for(drop_analysis.bn_status.on_changed.wait(), 0.1)
-
-    return DropAnalysisFittingContext(mock_yl_fit=mock_yl_fit, drop_data=drop_data,
-                                      **drop_analysis_ready_to_fit.__dict__)
 
 
 # Tests
@@ -187,16 +196,22 @@ async def drop_analysis_fitting(drop_analysis_ready_to_fit: DropAnalysisReadyToF
 class TestDropAnalysisJustInitialised:
     @pytest.fixture(autouse=True)
     def fixture(self, drop_analysis_just_initialised: DropAnalysisJustInitialisedContext):
-        self.drop_analysis = drop_analysis_just_initialised.drop_analysis
+        context = drop_analysis_just_initialised
+
+        self.scheduled_image = context.scheduled_image
+        self.annotate_image = context.annotate_image
+        self.mock_yl_fit_factory = context.mock_yl_fit_factory
+        self.drop_analysis = context.drop_analysis
 
     def test_initial_status(self):
         drop_analysis = self.drop_analysis
         assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.WAITING_FOR_IMAGE
 
     @pytest.mark.asyncio
-    async def test_give_image(self, image_and_annotations):
+    async def test_scheduled_image_ready(self, image_and_annotations):
+        scheduled_image = self.scheduled_image
+        annotate_image = self.annotate_image
         drop_analysis = self.drop_analysis
-        image, image_timestamp, image_annotations = image_and_annotations
 
         wait_for_these = asyncio.gather(
             drop_analysis.bn_status.on_changed.wait(),
@@ -204,61 +219,36 @@ class TestDropAnalysisJustInitialised:
             drop_analysis.bn_image_timestamp.on_changed.wait(),
             drop_analysis.bn_image_annotations.on_changed.wait())
 
-        drop_analysis._give_image(image, image_timestamp, image_annotations)
+        image, image_timestamp, image_annotations = image_and_annotations
 
-        await asyncio.wait_for(wait_for_these, 0.1)
+        scheduled_image.set_read_return((image, image_timestamp))
+        annotate_image.return_value = image_annotations
 
-        assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.READY_TO_FIT
+        await asyncio.wait_for(wait_for_these, timeout=0.1)
+
+        assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.FITTING
         assert (drop_analysis.bn_image.get() == image).all()
         assert drop_analysis.bn_image_timestamp.get() == image_timestamp
         assert drop_analysis.bn_image_annotations.get() == image_annotations
 
-    def test_cancel(self):
-        drop_analysis = self.drop_analysis
-        drop_analysis.cancel()
-        assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.CANCELLED
-
-    def test_cancel_and_then_give_image(self, image_and_annotations):
-        drop_analysis = self.drop_analysis
-        drop_analysis.cancel()
-
-        # Can't give image after cancelled.
-        with pytest.raises(ValueError):
-            drop_analysis._give_image(*image_and_annotations)
-
     @pytest.mark.asyncio
-    async def test_start_fit_before_giving_image(self):
-        drop_analysis = self.drop_analysis
-
-        # Can't start fit before image and image annotations are given.
-        with pytest.raises(ValueError):
-            await drop_analysis._start_fit()
-
-
-class TestDropAnalysisReadyToFit:
-    @pytest.fixture(autouse=True)
-    def fixture(self, drop_analysis_ready_to_fit: DropAnalysisReadyToFitContext):
-        ctx = drop_analysis_ready_to_fit
-
-        self.drop_analysis = ctx.drop_analysis
-        self.phys_params = ctx.phys_params
-        self.mock_yl_fit_factory = ctx.mock_yl_fit_factory
-
-    @pytest.mark.asyncio
-    async def test_start_fit(self, event_loop):
-        # Extract out the objects we need
-        drop_analysis = self.drop_analysis
+    async def test_yl_fit(self, image_and_annotations, event_loop):
+        scheduled_image = self.scheduled_image
+        annotate_image = self.annotate_image
         mock_yl_fit_factory = self.mock_yl_fit_factory
+        drop_analysis = self.drop_analysis
 
         # Create a mock YoungLaplaceFit to be returned by mock_yl_fit_factory
         mock_yl_fit = Mock()
         mock_yl_fit.on_params_changed = Event()
         mock_yl_fit.optimise.return_value = event_loop.create_future()
-
         mock_yl_fit_factory.return_value = mock_yl_fit
 
-        # Start the fit
-        event_loop.create_task(drop_analysis._start_fit())
+        # Load the scheduled image
+        image, image_timestamp, image_annotations = image_and_annotations
+
+        scheduled_image.set_read_return((image, image_timestamp))
+        annotate_image.return_value = image_annotations
 
         # Wait until status is FITTING
         await asyncio.wait_for(drop_analysis.bn_status.on_changed.wait(), 0.1)
@@ -277,6 +267,34 @@ class TestDropAnalysisReadyToFit:
 
         # Assert mock_yl_fit.optimise() was called.
         mock_yl_fit.optimise.assert_called_once_with()
+
+    def test_cancel(self):
+        drop_analysis = self.drop_analysis
+        drop_analysis.cancel()
+        assert drop_analysis.bn_status.get() is IFTDropAnalysis.Status.CANCELLED
+
+    @pytest.mark.asyncio
+    async def test_cancel_and_then_schedule_image_ready(self, image_and_annotations):
+        scheduled_image = self.scheduled_image
+        annotate_image = self.annotate_image
+        drop_analysis = self.drop_analysis
+        drop_analysis.cancel()
+
+        image, image_timestamp, image_annotations = image_and_annotations
+
+        scheduled_image.set_read_return((image, image_timestamp))
+        annotate_image.return_value = image_annotations
+
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(drop_analysis.bn_image.on_changed.wait(), timeout=0.1)
+
+    @pytest.mark.asyncio
+    async def test_start_fit_before_giving_image(self):
+        drop_analysis = self.drop_analysis
+
+        # Can't start fit before image and image annotations are given.
+        with pytest.raises(ValueError):
+            await drop_analysis._start_fit()
 
 
 class TestDropAnalysisFitting:

@@ -1,10 +1,11 @@
 import math
 from abc import abstractmethod, ABC
 from enum import Enum
-from typing import Generic, TypeVar, Callable, Optional, Tuple, Any, Sequence
+from typing import Generic, TypeVar, Callable, Optional, Tuple, Sequence
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import BaseAtomicBindable, AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.events import Event
 
 
 class ScheduledImage(ABC):
@@ -28,7 +29,7 @@ class ImageAcquisitionImpl:
     def acquire_images(self) -> Sequence[ScheduledImage]:
         """Implementation of acquire_images()"""
 
-    def create_preview(self) -> Tuple[BaseAtomicBindable[Image], Any]:
+    def create_preview(self) -> 'ImageAcquisitionPreview':
         """Implementation of create_preview()"""
 
     def get_image_size_hint(self) -> Optional[Tuple[int, int]]:
@@ -46,9 +47,16 @@ ConfigType = TypeVar('ConfigType')
 
 
 class ImageAcquisitionPreview(Generic[ConfigType]):
+    class Transition(Enum):
+        JUMP = 0
+        SMOOTH = 1
+
     bn_alive = None  # type: AtomicBindable[bool]
-    bn_image = None  # type: AtomicBindable[Image]
+
+    image = None  # type: Image
     config = None  # type: ConfigType
+
+    on_image_changed = None  # type: Event
 
     def destroy(self) -> None:
         """Perform clean up any routines and destroy this preview, cannot be undone."""
