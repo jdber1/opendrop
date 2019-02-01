@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional, Tuple, Sequence
+from typing import Optional, Tuple, Sequence, Union
 
 import cairo
 from gi.repository import GObject
@@ -8,11 +8,13 @@ from opendrop.utility.cairomisc import cairo_saved
 from opendrop.utility.geometry import Vector2
 from .. import abc
 
+PolylineType = Sequence[Vector2[float]]
+
 
 class Polyline(abc.RenderObject):
     _APPROX_MAX_POINTS = 1000
 
-    _polyline = None  # type: Optional[Sequence[Vector2]]
+    _polyline = None  # type: Optional[Union[PolylineType, Sequence[PolylineType]]]
     _stroke_color = (0.0, 0.0, 0.0)
     _stroke_width = 1.0  # type: float
     _cache = None
@@ -31,30 +33,45 @@ class Polyline(abc.RenderObject):
 
             if self._cache is not None:
                 cr.append_path(self._cache)
-            elif len(polyline) >= 2:
-                if len(polyline) > self._APPROX_MAX_POINTS:
-                    polyline_reduced = itertools.islice(polyline, 0, None, len(polyline) // self._APPROX_MAX_POINTS)
-                    polyline = itertools.chain(polyline_reduced, [polyline[-1]])
-
-                points = iter(polyline) #iter(map(self._parent._widget_coord_from_canvas, polyline))
-
-                cr.move_to(*next(points))
-
-                for point in points:
-                    cr.line_to(*point)
-
+            else:
+                self._draw_paths(cr, polyline)
                 self._cache = cr.copy_path()
 
         cr.set_source_rgb(*stroke_color)
         cr.set_line_width(stroke_width)
         cr.stroke()
 
+    def _draw_paths(self, cr: cairo.Context, polylines: Sequence[PolylineType]) -> None:
+        if len(polylines) == 0:
+            return
+
+        if len(polylines[0]) == 2:
+            polylines = [polylines]
+
+        for polyline in polylines:
+            self._draw_path(cr, polyline)
+
+    def _draw_path(self, cr: cairo.Context, polyline: PolylineType) -> None:
+        if len(polyline) < 2:
+            return
+
+        if len(polyline) > self._APPROX_MAX_POINTS:
+            polyline_reduced = itertools.islice(polyline, 0, None, len(polyline) // self._APPROX_MAX_POINTS)
+            polyline = itertools.chain(polyline_reduced, [polyline[-1]])
+
+        points = iter(polyline)
+
+        cr.move_to(*next(points))
+
+        for point in points:
+            cr.line_to(*point)
+
     @GObject.Property
-    def polyline(self) -> Optional[Sequence[Vector2[float]]]:
+    def polyline(self) -> Optional[Union[PolylineType, Sequence[PolylineType]]]:
         return self._polyline
 
     @polyline.setter
-    def polyline(self, value: Optional[Sequence[Vector2[float]]]) -> None:
+    def polyline(self, value: Optional[Union[PolylineType, Sequence[PolylineType]]]) -> None:
         self._polyline = value
         self._cache = None
         self.emit('request-draw')
