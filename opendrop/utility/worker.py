@@ -50,15 +50,23 @@ class WorkerThread(Generic[JobIDType, ResultType], threading.Thread):
 
             self.input_semaphore.acquire()
             self._busy = True
-            job_container = self.input.get_nowait()
+
+            with self.input_mutex:
+                job_container = self.input.get_nowait()
 
             if job_container is self._stop_sentinel:
                 break
 
             result = job_container.job()
-            result_container = self._ResultContainer(job_container.identifier, result)
-            self.output.put_nowait(result_container)
+            self._put_result(job_container.identifier, result)
             self._busy = False
+
+    def _put_result(self, identifier: JobIDType, result: ResultType) -> None:
+        if self._stopped.is_set():
+            self.output_reserved.release()
+            return
+
+        self.output.put_nowait(self._ResultContainer(identifier, result))
 
     def put_job_override(self, identifier: JobIDType, job: Callable[[], ResultType]) -> None:
         with self.input_mutex:
