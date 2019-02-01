@@ -1,7 +1,6 @@
-from typing import Optional
-
 from gi.repository import Gtk, Gdk
 
+from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from .graphs import GraphsView, GraphsPresenter
@@ -91,30 +90,5 @@ class _IFTResultsPresenter:
         self.__destroyed = True
 
 
-class IFTResultsPresenter:
-    def __init__(self, results_explorer: IFTResultsExplorer, view: IFTResultsView) -> None:
-        self._results_explorer = results_explorer
-        self._root_view = view
-        self._root_presenter = None  # type: Optional[IFTResultsPresenter]
-
-        self.__enabled = False
-        self.__destroyed = False
-
-    def enter(self) -> None:
-        if self.__enabled or self.__destroyed:
-            return
-
-        self._root_presenter = _IFTResultsPresenter(results_explorer=self._results_explorer, view=self._root_view)
-        self.__enabled = True
-
-    def leave(self) -> None:
-        if not self.__enabled or self.__destroyed:
-            return
-
-        self._root_presenter.destroy()
-        self.__enabled = False
-
-    def destroy(self) -> None:
-        assert not self.__destroyed
-        self.leave()
-        self.__destroyed = True
+class IFTResultsPresenter(WizardPageWrapperPresenter):
+    create_presenter = _IFTResultsPresenter

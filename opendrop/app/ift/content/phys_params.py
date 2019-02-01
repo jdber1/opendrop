@@ -2,6 +2,7 @@ from typing import Optional
 
 from gi.repository import Gtk, Gdk
 
+from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
@@ -229,14 +230,21 @@ class _IFTPhysicalParametersFormPresenter:
             for ec in self.__event_connections:
                 ec.disconnect()
 
-    def __init__(self, phys_params_factory: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
-        self._errors_presenter = self.ErrorsPresenter(phys_params_factory.validator, view.errors_view)
+    def __init__(self, phys_params: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
+        self._phys_params = phys_params
+        self._view = view
+
+        self._errors_presenter = self.ErrorsPresenter(self._phys_params.validator, self._view.errors_view)
         self.__data_bindings = [
-            Binding(phys_params_factory.bn_inner_density, view.bn_inner_density),
-            Binding(phys_params_factory.bn_outer_density, view.bn_outer_density),
-            Binding(phys_params_factory.bn_needle_width, view.bn_needle_width),
-            Binding(phys_params_factory.bn_gravity, view.bn_gravity)
+            Binding(self._phys_params.bn_inner_density, self._view.bn_inner_density),
+            Binding(self._phys_params.bn_outer_density, self._view.bn_outer_density),
+            Binding(self._phys_params.bn_needle_width, self._view.bn_needle_width),
+            Binding(self._phys_params.bn_gravity, self._view.bn_gravity)
         ]
+
+    def validate(self) -> bool:
+        self._view.errors_view.touch_all()
+        return self._phys_params.validator.check_is_valid()
 
     def destroy(self) -> None:
         self._errors_presenter.destroy()
@@ -245,48 +253,5 @@ class _IFTPhysicalParametersFormPresenter:
             db.unbind()
 
 
-class IFTPhysicalParametersFormPresenter:
-    def __init__(self, phys_params: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
-        self._phys_params = phys_params
-        self._enabled = False
-        self._destroyed = False
-
-        self._root_view = view
-        self._root_presenter = None  # type: Optional[_IFTPhysicalParametersFormPresenter]
-
-        self.__event_connections = []
-
-    def validate(self) -> bool:
-        is_valid = self._phys_params.validator.check_is_valid()
-        self._root_view.errors_view.touch_all()
-        return is_valid
-
-    def enter(self) -> None:
-        if self._enabled or self._destroyed:
-            return
-
-        self._root_presenter = _IFTPhysicalParametersFormPresenter(
-            phys_params_factory=self._phys_params,
-            view=self._root_view)
-        self._enabled = True
-
-    def leave(self) -> None:
-        if not self._enabled or self._destroyed:
-            return
-
-        # Reset the highlighted errors.
-        self._root_view.errors_view.reset_touches()
-        self._root_presenter.destroy()
-
-        self._enabled = False
-
-    def destroy(self) -> None:
-        assert not self._destroyed
-
-        if self._enabled:
-            self.leave()
-
-        for ec in self.__event_connections:
-            ec.disconnect()
-
-        self._destroyed = True
+class IFTPhysicalParametersFormPresenter(WizardPageWrapperPresenter):
+    create_presenter = _IFTPhysicalParametersFormPresenter

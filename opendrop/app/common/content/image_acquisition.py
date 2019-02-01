@@ -7,6 +7,7 @@ from opendrop.app.common.model.image_acquisition.default_types import DefaultIma
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
+from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
 from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
@@ -767,8 +768,9 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         new_subpresenter = self._create_presenter_for_impl_and_view(self._image_acquisition.impl, new_child_view)
         self._current_subpresenter = new_subpresenter
 
-    def update_errors_visibility(self) -> None:
+    def validate(self) -> bool:
         self._current_subpresenter.update_errors_visibility()
+        return not self._image_acquisition.has_errors
 
     def destroy(self) -> None:
         for ec in self.__event_connections:
@@ -781,44 +783,13 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
             self._current_subpresenter.destroy()
 
 
-class ImageAcquisitionFormPresenter:
+class ImageAcquisitionFormPresenter(WizardPageWrapperPresenter):
     _AVAILABLE_IMAGE_ACQUISITION_TYPES = tuple(DefaultImageAcquisitionImplType)
-    _CONFIG_SUBPRESENTER_FACTORY = create_presenter_for_impl_and_view
+    _CONFIG_SUBPRESENTER_FACTORY = staticmethod(create_presenter_for_impl_and_view)
 
-    def __init__(self, image_acquisition: ImageAcquisition, view: ImageAcquisitionFormView) -> None:
-        self._image_acquisition = image_acquisition
-        self._root_view = view
-        self._root_presenter = None  # type: Optional[_ImageAcquisitionFormPresenter]
-        self._destroyed = False
-        self._enabled = False
-
-    def validate(self) -> bool:
-        self._root_presenter.update_errors_visibility()
-        return not self._image_acquisition.has_errors
-
-    def enter(self) -> None:
-        if self._enabled or self._destroyed:
-            return
-
-        self._root_presenter = _ImageAcquisitionFormPresenter(
-            image_acquisition=self._image_acquisition,
-            create_presenter_for_impl_and_view=ImageAcquisitionFormPresenter._CONFIG_SUBPRESENTER_FACTORY,
-            available_types=ImageAcquisitionFormPresenter._AVAILABLE_IMAGE_ACQUISITION_TYPES,
-            view=self._root_view)
-        self._enabled = True
-
-    def leave(self) -> None:
-        if not self._enabled or self._destroyed:
-            return
-
-        assert self._root_presenter is not None
-        self._root_presenter.destroy()
-        self._enabled = False
-
-    def destroy(self) -> None:
-        assert not self._destroyed
-
-        if self._enabled:
-            self.leave()
-
-        self._destroyed = True
+    def create_presenter(self, image_acquisition: ImageAcquisition, view: ImageAcquisitionFormView) -> _ImageAcquisitionFormPresenter:
+        return _ImageAcquisitionFormPresenter(
+            image_acquisition=image_acquisition,
+            create_presenter_for_impl_and_view=self._CONFIG_SUBPRESENTER_FACTORY,
+            available_types=self._AVAILABLE_IMAGE_ACQUISITION_TYPES,
+            view=view)
