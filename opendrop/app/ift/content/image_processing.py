@@ -112,7 +112,7 @@ class IFTImageProcessingFormView(ImageProcessingFormView):
         self._needle_region_mode_inp.connect(
             'toggled', lambda w: self.bn_define_region_mode.set(DefineRegionMode.NEEDLE) if w.props.active else None)
 
-    def _set_define_region_mode(self, mode: 'DefineRegionMode') -> None:
+    def _set_define_region_mode(self, mode: DefineRegionMode) -> None:
         if mode is DefineRegionMode.DROP:
             self._drop_region_mode_inp.props.active = True
         elif mode is DefineRegionMode.NEEDLE:
@@ -198,9 +198,9 @@ class _IFTImageProcessingFormPresenter(ImageProcessingFormPresenter[IFTImageProc
 
     def _auto_choose_next_tool(self) -> None:
         if self._drop_region_tool.bn_selection.get() is None:
-            self._view.bn_define_region_mode.set(DefineRegionMode.DROP)
+            self._bn_define_region_mode.set(DefineRegionMode.DROP)
         elif self._needle_region_tool.bn_selection.get() is None:
-            self._view.bn_define_region_mode.set(DefineRegionMode.NEEDLE)
+            self._bn_define_region_mode.set(DefineRegionMode.NEEDLE)
 
     def validate(self) -> bool:
         if not super().validate():
