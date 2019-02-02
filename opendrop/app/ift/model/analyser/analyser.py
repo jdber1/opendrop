@@ -292,11 +292,6 @@ class IFTDropAnalysis(Operation):
 
         return yl_fit.residuals
 
-    def _hdl_yl_fit_status_changed(self) -> None:
-        yl_fit_status = self._yl_fit.status
-        if yl_fit_status is YoungLaplaceFit.Status.FINISHED:
-            self._status = IFTDropAnalysis.Status.FINISHED
-
     def _hdl_yl_fit_params_changed(self) -> None:
         self.bn_objective.poke()
         self.bn_bond_number.poke()
