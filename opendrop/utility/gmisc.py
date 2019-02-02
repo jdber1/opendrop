@@ -30,7 +30,7 @@ def pixbuf_from_array(image: Sequence[Sequence[Sequence[int]]]) -> GdkPixbuf.Pix
     height = image.shape[0]  # type: int
 
     # Basically the size of each row in bytes
-    rowstride = image.strides[0]  # type: int
+    rowstride = image.shape[1]*image.shape[2]*image.itemsize  # type: int
 
     pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(
         data,
