@@ -172,10 +172,12 @@ def _save_right_angle_figure(drops: Sequence[ConanDropAnalysis], out_file, fig_s
 def _save_angle_data(drops: Sequence[ConanDropAnalysis], out_file) -> None:
     drops = [drop for drop in drops if math.isfinite(drop.image_timestamp)]
 
-    data = ((drop.image_timestamp, drop.bn_left_angle.get(), drop.bn_right_angle.get()) for drop in drops)
+    data = (
+        (drop.image_timestamp, math.degrees(drop.bn_left_angle.get()), math.degrees(drop.bn_right_angle.get()))
+        for drop in drops)
 
     writer = csv.writer(out_file)
-    writer.writerow(('Time (s)', 'Left (radians)', 'Right (radians)'))
+    writer.writerow(('Time (s)', 'Left (degrees)', 'Right (degrees)'))
     writer.writerows(data)
 
 
