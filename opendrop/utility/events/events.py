@@ -285,6 +285,7 @@ class Event:
                 args = args[0]
 
             f.set_result(args)
+            conn.disconnect()
 
         conn = self.connect(handler, weak_ref=False)
         conn._on_disconnected = f.cancel
