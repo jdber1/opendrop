@@ -201,8 +201,8 @@ class Rect2(Generic[NumericType]):
         return False
 
     def is_intersecting(self, other: 'Rect2') -> bool:
-        """Return True if this Rect2 is intersecting with `other`. Return False if they do not intersect of if they are
-        only 'touching' (i.e. share edges but do not intersect)."""
+        """Return True if the region defined by this Rect2 is intersecting with the region defined by `other`.
+        Return False if they do not intersect or if they are only 'touching' (i.e. share edges but do not intersect)."""
         if self.x1 > other.x0 and self.x0 < other.x1 and self.y1 > other.y0 and self.y0 < other.y1:
             return True
         else:
