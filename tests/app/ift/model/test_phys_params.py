@@ -11,10 +11,6 @@ def _is_valid_data(inner_density, outer_density, needle_width, gravity):
         return False
     if not all(map(math.isfinite, (inner_density, outer_density, needle_width, gravity))):
         return False
-    if inner_density < 0:
-        return False
-    if outer_density < 0:
-        return False
     if needle_width <= 0:
         return False
     if gravity <= 0:
@@ -70,7 +66,7 @@ def test_validator_accepts_valid_data(inner_density, outer_density, needle_width
     phys_params_factory.bn_needle_width.set(needle_width)
     phys_params_factory.bn_gravity.set(gravity)
 
-    assert phys_params_factory.validator.check_is_valid() is True
+    assert phys_params_factory.has_errors is False
 
 
 @pytest.mark.parametrize('inner_density, outer_density, needle_width, gravity',
@@ -85,4 +81,4 @@ def test_validator_rejects_invalid_data(inner_density, outer_density, needle_wid
     phys_params_factory.bn_needle_width.set(needle_width)
     phys_params_factory.bn_gravity.set(gravity)
 
-    assert phys_params_factory.validator.check_is_valid() is False
+    assert phys_params_factory.has_errors is True
