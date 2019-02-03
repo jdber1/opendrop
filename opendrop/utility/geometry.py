@@ -1,3 +1,4 @@
+import math
 from numbers import Number
 from typing import Generic, TypeVar, Tuple, Callable, Iterator, Any, overload, Iterable, Union
 
@@ -210,3 +211,56 @@ class Rect2(Generic[NumericType]):
             return True
         else:
             return False
+
+
+class Line2(Generic[NumericType]):
+    def __init__(self, p0: Vector2[NumericType], p1: Vector2[NumericType]):
+        if p1[0] < p0[0]:
+            p1, p0 = p0, p1
+
+        self._p0 = p0  # Left point
+        self._p1 = p1  # Right point
+
+    @property
+    def p0(self) -> Vector2[NumericType]:
+        return self._p0
+
+    @property
+    def p1(self) -> Vector2[NumericType]:
+        return self._p1
+
+    @property
+    def gradient(self) -> float:
+        dx = self._p1[0] - self._p0[0]
+        dy = self._p1[1] - self._p0[1]
+
+        if dx == 0:
+            return math.copysign(dy, math.inf)
+
+        return dy/dx
+
+    @overload
+    def eval_at(self, *, x: NumericType) -> Vector2[NumericType]:
+        ...
+    @overload
+    def eval_at(self, *, y: NumericType) -> Vector2[NumericType]:
+        ...
+    def eval_at(self, **kwargs) -> Vector2[NumericType]:
+        if 'x' in kwargs:
+            return self._eval_at_x(kwargs['x'])
+        elif 'y' in kwargs:
+            return self._eval_at_y(kwargs['y'])
+
+    def _eval_at_x(self, x: NumericType) -> Vector2[NumericType]:
+        p0_to_x = x - self.p0[0]
+        return Vector2(x, self.p0[1] + p0_to_x * self.gradient)
+
+    def _eval_at_y(self, y: NumericType) -> Vector2[NumericType]:
+        p0_to_y = y - self.p0[1]
+
+        if self.gradient == 0:
+            x = math.copysign(p0_to_y, math.inf)
+        else:
+            x = self.p0[0] + p0_to_y / self.gradient
+
+        return Vector2(x, y)
