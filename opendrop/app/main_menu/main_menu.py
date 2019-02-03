@@ -1,7 +1,8 @@
 import asyncio
 from typing import Optional
 
-from gi.repository import Gtk
+import pkg_resources
+from gi.repository import Gtk, GdkPixbuf, Gio, GLib
 
 from opendrop.app.app import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
@@ -11,17 +12,47 @@ from opendrop.utility.speaker import Speaker, Moderator
 
 
 class MainMenuView(GtkWidgetView[Gtk.Grid]):
+    IFT_BUTTON_IMAGE = GdkPixbuf.Pixbuf.new_from_stream(
+        Gio.MemoryInputStream.new_from_bytes(
+            GLib.Bytes(
+                pkg_resources.resource_stream('opendrop.res', 'images/ift_btn.png').read() )))
+
+    CONAN_BUTTON_IMAGE = GdkPixbuf.Pixbuf.new_from_stream(
+        Gio.MemoryInputStream.new_from_bytes(
+            GLib.Bytes(
+                pkg_resources.resource_stream('opendrop.res', 'images/conan_btn.png').read() )))
+
     def __init__(self) -> None:
         self.on_ift_btn_clicked = Event()
         self.on_conan_btn_clicked = Event()
 
         self.widget = Gtk.Grid()
 
-        ift_btn = Gtk.Button(label='IFT')
+        ift_btn = Gtk.Button(label='Interfacial Tension', hexpand=True, vexpand=True)
         self.widget.attach(ift_btn, 0, 0, 1, 1)
 
-        conan_btn = Gtk.Button(label='Contact Angle')
+        conan_btn = Gtk.Button(label='Contact Angle', hexpand=True, vexpand=True)
         self.widget.attach(conan_btn, 0, 1, 1, 1)
+
+        ift_btn_image_pixbuf = self.IFT_BUTTON_IMAGE.scale_simple(
+            dest_width=64,
+            dest_height=64/self.IFT_BUTTON_IMAGE.props.width * self.IFT_BUTTON_IMAGE.props.height,
+            interp_type=GdkPixbuf.InterpType.BILINEAR)
+
+        ift_btn_image = Gtk.Image(pixbuf=ift_btn_image_pixbuf, margin=16)
+        ift_btn.set_image(ift_btn_image)
+        ift_btn.set_always_show_image(True)
+        ift_btn.set_image_position(Gtk.PositionType.TOP)
+
+        conan_btn_image_pixbuf = self.CONAN_BUTTON_IMAGE.scale_simple(
+            dest_width=64,
+            dest_height=64/self.CONAN_BUTTON_IMAGE.props.width * self.CONAN_BUTTON_IMAGE.props.height,
+            interp_type=GdkPixbuf.InterpType.BILINEAR)
+
+        conan_btn_image = Gtk.Image(pixbuf=conan_btn_image_pixbuf, margin=16)
+        conan_btn.set_image(conan_btn_image)
+        conan_btn.set_always_show_image(True)
+        conan_btn.set_image_position(Gtk.PositionType.TOP)
 
         ift_btn.connect('clicked', lambda *_: self.on_ift_btn_clicked.fire())
         conan_btn.connect('clicked', lambda *_: self.on_conan_btn_clicked.fire())
