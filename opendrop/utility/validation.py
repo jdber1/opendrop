@@ -49,7 +49,7 @@ def check_custom_condition(cond: Callable[[Any], bool]) -> Callable[[Any], Itera
 def check_is_not_empty(x: Any) -> Iterable[ValidationFlag]:
     if x is None or \
             isinstance(x, Sized) and len(x) == 0 or \
-            isinstance(x, Rect2) and 0 in x:
+            isinstance(x, Rect2) and 0 in x.size:
         return (ValidationFlag.CANNOT_BE_EMPTY,)
     else:
         return tuple()
