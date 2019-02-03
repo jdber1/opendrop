@@ -40,6 +40,13 @@ def find_contours(image):
 
 # todo: add documentation
 def squish_contour(contour: np.ndarray) -> np.ndarray:
+    contour = _squish_contour_one_way(contour)
+    contour = _squish_contour_one_way(np.flipud(contour))
+    contour = np.flipud(contour)
+    return contour
+
+
+def _squish_contour_one_way(contour: np.ndarray) -> np.ndarray:
     contour = contour.copy()
 
     path_splice = 0
