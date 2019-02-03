@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import os
 import time
 from abc import abstractmethod
 from asyncio import Future
@@ -147,7 +148,7 @@ class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
         return self._last_loaded_paths
 
     def load_image_paths(self, img_paths: Sequence[Union[Path, str]]) -> None:
-        img_paths = sorted(img_paths)
+        img_paths = sorted(filter(os.path.isfile, img_paths))
 
         imgs = []  # type: MutableSequence[np.ndarray]
         for img_path in img_paths:
