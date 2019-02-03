@@ -14,7 +14,7 @@ from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.gmisc import pixbuf_from_array
 from opendrop.widgets.render import Render
-from opendrop.widgets.render.objects import PixbufFill, Polyline, Rectangle
+from opendrop.widgets.render.objects import PixbufFill, Polyline, Rectangle, Line
 
 
 # Render object wrapper views
@@ -23,6 +23,11 @@ from opendrop.widgets.render.objects import PixbufFill, Polyline, Rectangle
 class RectangleView:
     def __init__(self, rectangle: Rectangle) -> None:
         self.bn_extents = GObjectPropertyBindable(rectangle, 'extents')
+
+
+class LineView:
+    def __init__(self, line: Line) -> None:
+        self.bn_line = GObjectPropertyBindable(line, 'line')
 
 
 class MaskHighlightView:
