@@ -207,11 +207,11 @@ def save_drops(drops: Iterable[ConanDropAnalysis], options: ConanAnalysisSaverOp
         drop_dir_name = dir_name + '{n:0>{padding}}'.format(n=(i+1), padding=padding)  # i+1 for 1-based indexing.
         _save_individual(drop, drop_dir_name, options)
 
-    if len(drops) <= 1:
-        return
-
     with (full_dir/'contact_angles.csv').open('w', newline='') as out_file:
         _save_angle_data(drops, out_file)
+
+    if len(drops) <= 1:
+        return
 
     figure_opts = options.angle_figure_opts
     if figure_opts.bn_should_save.get():
