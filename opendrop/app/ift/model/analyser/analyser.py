@@ -115,6 +115,7 @@ class IFTDropAnalysis(Operation):
 
         # Operation attributes
         self.bn_done = AtomicBindableAdapter(self._get_done)
+        self.bn_cancelled = AtomicBindableAdapter(lambda: self.status is self.Status.CANCELLED)
         self.bn_progress = AtomicBindableAdapter(self._get_progress)
         self.bn_time_start = AtomicBindableAdapter(self._get_time_start)
         self.bn_time_est_complete = AtomicBindableAdapter(self._get_time_est_complete)
@@ -272,6 +273,7 @@ class IFTDropAnalysis(Operation):
     def _status(self, new_status: 'IFTDropAnalysis.Status') -> None:
         self._status_ = new_status
         self.bn_status.poke()
+        self.bn_cancelled.poke()
 
     @property
     def _yl_fit(self) -> YoungLaplaceFit:

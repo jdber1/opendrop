@@ -5,6 +5,7 @@ from opendrop.utility.bindable import AtomicBindable, AtomicBindableAdapter
 
 class Operation:
     bn_done = None  # type: AtomicBindable[bool]
+    bn_cancelled = None  # type: AtomicBindable[bool]
     bn_progress = None  # type: AtomicBindable[float]
     bn_time_start = None  # type: AtomicBindable[float]
     bn_time_est_complete = None  # type: AtomicBindable[float]
