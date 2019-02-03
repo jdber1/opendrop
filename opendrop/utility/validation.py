@@ -70,6 +70,18 @@ def check_is_positive(x: float) -> Iterable[ValidationFlag]:
     return flags
 
 
+def check_is_finite(x: float) -> Iterable[ValidationFlag]:
+    if x is None:
+        return tuple()
+
+    flags = []
+
+    if not math.isfinite(x):
+        flags.append(ValidationFlag.INVALID)
+
+    return flags
+
+
 @bindable_function(autobind_return=BuiltinSetBindable)
 def validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]], enabled: bool = True) \
         -> Set[ValidationFlag]:
