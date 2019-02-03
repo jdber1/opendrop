@@ -55,6 +55,8 @@ class Vector2(Generic[NumericType]):
             return NotImplemented
         return Vector2(self.x * other, self.y * other)
 
+    __rmul__ = __mul__
+
     def __truediv__(self, other: SomeNumericType) -> 'Vector2':
         if not isinstance(other, Number):
             return NotImplemented
@@ -192,7 +194,8 @@ class Rect2(Generic[NumericType]):
 
         return (self.p0 == other.p0) and (self.p1 == other.p1)
 
-    def contains_point(self, point: Vector2, include_boundary: bool = True):
+    def contains_point(self, point: Vector2Like, include_boundary: bool = True):
+        point = Vector2(*point)
         if include_boundary and (self.x0 <= point.x <= self.x1 and self.y0 <= point.y <= self.y1):
             return True
         elif self.x0 < point.x < self.x1 and self.y0 < point.y < self.y1:
