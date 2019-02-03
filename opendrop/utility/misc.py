@@ -54,10 +54,7 @@ def clear_directory_contents(path: Path) -> None:
         return
 
     for child_path in path.iterdir():
-        try:
-            if child_path.is_file():
-                child_path.unlink()
-            elif child_path.is_dir():
-                shutil.rmtree(str(child_path))
-        except Exception as e:
-            print(e)
+        if child_path.is_file():
+            child_path.unlink()
+        elif child_path.is_dir():
+            shutil.rmtree(str(child_path))
