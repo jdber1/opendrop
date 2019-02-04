@@ -113,6 +113,10 @@ def draw_line(image: Image, line: Line2, color: Tuple[float, float, float], thic
 
 def draw_angle_marker(image: Image, vertex_pos: Vector2[float], start_angle: float, delta_angle: float, radius: float,
                       color: Tuple[float, float, float]) -> None:
+    if not Rect2(pos=(0, 0), size=image.shape[1::-1]).contains_point(vertex_pos):
+        # Vertex is outside of the image, ignore.
+        return
+
     end_angle = start_angle + delta_angle
 
     start_pos = vertex_pos
