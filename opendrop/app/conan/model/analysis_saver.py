@@ -131,6 +131,17 @@ def _save_drop_contact_tangents(drop: ConanDropAnalysis, out_file) -> None:
     np.savetxt(out_file, tangents, fmt='%.18e,%.18e')
 
 
+def _save_surface_line(drop: ConanDropAnalysis, out_file) -> None:
+    image_annotations = drop.image_annotations
+    if image_annotations is None:
+        return
+
+    surface_line = image_annotations.surface_line_px
+    coefficients = np.array([surface_line.gradient, surface_line.eval_at(x=0).y])
+    coefficients = coefficients.reshape(1, 2)
+    np.savetxt(out_file, coefficients, fmt='%.18e,%.18e')
+
+
 def _save_left_angle_figure(drops: Sequence[ConanDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [drop for drop in drops if math.isfinite(drop.image_timestamp) and
                                        math.isfinite(drop.bn_left_angle.get())]
@@ -193,6 +204,9 @@ def _save_individual(drop: ConanDropAnalysis, drop_dir_name: str, options: Conan
 
     with (full_dir/'tangents.csv').open('wb') as out_file:
         _save_drop_contact_tangents(drop, out_file=out_file)
+
+    with (full_dir/'surface.csv').open('wb') as out_file:
+        _save_surface_line(drop, out_file=out_file)
 
 
 def save_drops(drops: Iterable[ConanDropAnalysis], options: ConanAnalysisSaverOptions) -> None:
