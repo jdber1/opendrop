@@ -74,13 +74,15 @@ class IFTResultsExplorer:
     individual_drops = AtomicBindable.property_adapter(attrgetter('bn_individual_drops'))  # type: Sequence[IFTDropAnalysis]
     summary_data = AtomicBindable.property_adapter(attrgetter('bn_summary_data'))  # type: IFTResultsExplorer.SummaryData
 
-    def _set_analysis(self, analysis: IFTAnalysis) -> None:
+    def _set_analysis(self, analysis: Optional[IFTAnalysis]) -> None:
         self._analysis = analysis
-
-        self.individual_drops = tuple(self._analysis.drop_analyses)
 
         if self.summary_data is not None:
             self.summary_data.destroy()
             self.summary_data = None
 
-        self.summary_data = self.SummaryData(self._analysis.drop_analyses)
+        if analysis is not None:
+            self.individual_drops = tuple(self._analysis.drop_analyses)
+            self.summary_data = self.SummaryData(self._analysis.drop_analyses)
+        else:
+            self.individual_drops = tuple()
