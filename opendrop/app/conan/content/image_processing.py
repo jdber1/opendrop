@@ -1,4 +1,3 @@
-import pickle
 from enum import Enum
 
 from gi.repository import Gtk, Gdk
@@ -85,7 +84,7 @@ class ConanImageProcessingFormView(ImageProcessingFormView):
         self._stage_render.add_render_object(drop_region_ro)
         self.drop_region = RectangleView(drop_region_ro)
 
-        surface_line_ro = Line(stroke_color=(0.05, 0.1, 1.0))
+        surface_line_ro = Line(stroke_color=(0.1, 0.8, 0.1))
         self._stage_render.add_render_object(surface_line_ro)
         self.surface_line = LineView(surface_line_ro)
 
@@ -93,7 +92,7 @@ class ConanImageProcessingFormView(ImageProcessingFormView):
         self._stage_render.add_render_object(drop_region_transient_ro)
         self.drop_region_transient = RectangleView(drop_region_transient_ro)
 
-        surface_line_transient_ro = Line(stroke_color=(0.15, 0.3, 1.0), draw_control_points=True)
+        surface_line_transient_ro = Line(stroke_color=(0.2, 1.0, 0.2), draw_control_points=True)
         self._stage_render.add_render_object(surface_line_transient_ro)
         self.surface_line_transient = LineView(surface_line_transient_ro)
 
