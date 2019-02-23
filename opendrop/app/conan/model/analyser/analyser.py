@@ -1,11 +1,12 @@
 import asyncio
 import math
-import pickle
 import time
 from asyncio import Future
 from enum import Enum
 from operator import attrgetter
 from typing import Callable, Optional, Sequence, Any, Union, Iterable
+
+import numpy as np
 
 from opendrop.app.common.model.image_acquisition.image_acquisition import ScheduledImage
 from opendrop.app.common.model.operation import Operation, OperationGroup
@@ -14,7 +15,6 @@ from opendrop.mytypes import Image
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from opendrop.utility.geometry import Line2, Vector2
 from .container import ConanImageAnnotations
-import numpy as np
 
 
 # Helper functions
@@ -288,11 +288,3 @@ class ConanAnalysis(OperationGroup):
             ))
 
         super().__init__(operations=self.drop_analyses)
-
-        self.bn_cancelled = AtomicBindableVar(False)
-
-    def cancel(self) -> None:
-        if self.bn_done.get():
-            return
-        super().cancel()
-        self.bn_cancelled.set(True)

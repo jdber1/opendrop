@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from opendrop.utility.bindable import AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
 
 
 class Operation:
@@ -19,6 +19,7 @@ class OperationGroup(Operation):
         self._operations = operations
 
         self.bn_done = AtomicBindableAdapter(self._get_done)
+        self.bn_cancelled = AtomicBindableVar(False)
         self.bn_progress = AtomicBindableAdapter(self._get_progress)
         self.bn_time_start = AtomicBindableAdapter(self._get_time_start)
         self.bn_time_est_complete = AtomicBindableAdapter(self._get_time_est_complete)
@@ -42,7 +43,12 @@ class OperationGroup(Operation):
         return max(op.bn_time_est_complete.get() for op in self._operations)
 
     def cancel(self) -> None:
+        if self.bn_done.get():
+            return
+
         for op in self._operations:
             if op.bn_done.get():
                 continue
             op.cancel()
+
+        self.bn_cancelled.set(True)

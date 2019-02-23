@@ -423,11 +423,3 @@ class IFTAnalysis(OperationGroup):
             ))
 
         super().__init__(operations=self.drop_analyses)
-
-        self.bn_cancelled = AtomicBindableVar(False)
-
-    def cancel(self) -> None:
-        if self.bn_done.get():
-            return
-        super().cancel()
-        self.bn_cancelled.set(True)
