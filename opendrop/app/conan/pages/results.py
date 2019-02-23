@@ -1,6 +1,6 @@
 from typing import Callable, Any, Optional
 
-from opendrop.app.common.footer import OperationFooterModel, AnalysisFooterPresenter
+from opendrop.app.common.footer import OperationFooterModel, OperationFooterPresenter
 from opendrop.app.common.wizard import WizardPagePresenter
 from ..content.results import ConanResultsPresenter
 from ..model.results_explorer import ConanResultsExplorer
@@ -16,9 +16,9 @@ class ConanResultsPagePresenter(WizardPagePresenter):
                    user_wants_to_save_analysis: Callable[[], Any],
                    back_action: Optional[Callable] = None) -> None:
         self._form = ConanResultsPresenter(results_explorer, self._view.form)
-        self._footer = AnalysisFooterPresenter(
+        self._footer = OperationFooterPresenter(
                 model=OperationFooterModel(
-                    analysis=results_explorer.analysis,
+                    operation=results_explorer.analysis,
                     back_action=back_action,
                     cancel_action=user_wants_to_cancel_analysis,
                     save_action=user_wants_to_save_analysis),

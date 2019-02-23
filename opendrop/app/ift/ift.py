@@ -6,7 +6,7 @@ from gi.repository import Gtk
 
 from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormView
 from opendrop.app.common.dialog import YesNoDialogView, YesNoDialogResponse, ErrorDialogView
-from opendrop.app.common.footer import LinearNavigatorFooterView, AnalysisFooterView
+from opendrop.app.common.footer import LinearNavigatorFooterView, OperationFooterView
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.wizard import WizardPresenter, WizardPageID, WizardView
@@ -396,7 +396,7 @@ class IFTRootView(WizardView[IFTWizardPageID]):
         self._add_page(
             page_id=IFTWizardPageID.RESULTS,
             content=IFTResultsView(),
-            footer=AnalysisFooterView())
+            footer=OperationFooterView())
 
     @property
     def window(self) -> Optional[Gtk.Window]:

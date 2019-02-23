@@ -3,10 +3,9 @@ import math
 import time
 from enum import Enum
 from operator import attrgetter
-from typing import Optional, Callable, Any
+from typing import Optional, Callable
 
 from gi.repository import Gtk, Gdk, GObject
-from typing_extensions import Protocol
 
 from opendrop.app.common.model.operation import Operation
 from opendrop.component.gtk_widget_view import GtkWidgetView
@@ -16,35 +15,71 @@ from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_p
 from opendrop.utility.events import Event
 
 
-class AnalysisFooterStatus(Enum):
+class OperationFooterStatus(Enum):
         IN_PROGRESS = 0
         FINISHED = 1
         CANCELLED = 2
 
 
-class AnalysisFooterModel(Protocol):
-    bn_status = None  # type: AtomicBindable[AnalysisFooterStatus]
-    bn_progress_fraction = None  # type: AtomicBindable[float]
-    bn_time_start = None  # type: AtomicBindable[float]
-    bn_time_est_complete = None  # type: AtomicBindable[float]
+class OperationFooterModel:
+    def __init__(self,
+                 operation: Operation,
+                 back_action: Callable,
+                 cancel_action: Callable,
+                 save_action: Callable) -> None:
+        self._operation = operation
+        self.__destroyed = False
+        self.__cleanup_tasks = []
 
-    status = None  # type: AnalysisFooterStatus
-    progress_fraction = None  # type: float
-    time_start = None  # type: float
-    time_est_complete = None  # type: float
+        self.bn_status = AtomicBindableAdapter(getter=self._get_status)  # type: AtomicBindableAdapter[OperationFooterStatus]
+        self.bn_time_start = operation.bn_time_start
+        self.bn_time_est_complete = operation.bn_time_est_complete
+        self.bn_progress_fraction = operation.bn_progress
 
-    def back(self) -> Any:
-        pass
+        self._back_action = back_action
+        self._cancel_action = cancel_action
+        self._save_action = save_action
 
-    def cancel(self) -> Any:
-        pass
+        event_connections = [
+            operation.bn_progress.on_changed.connect(self.bn_status.poke),
+            operation.bn_done.on_changed.connect(self.bn_status.poke),
+            operation.bn_cancelled.on_changed.connect(self.bn_status.poke)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
-    def save(self) -> Any:
-        pass
+    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: OperationFooterStatus
+    time_start = AtomicBindable.property_adapter(attrgetter('bn_time_start'))  # type: float
+    time_est_complete = AtomicBindable.property_adapter(attrgetter('bn_time_est_complete'))  # type: float
+    progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
+
+    def back(self) -> None:
+        self._back_action()
+
+    def cancel(self) -> None:
+        self._cancel_action()
+
+    def save(self) -> None:
+        self._save_action()
+
+    def _get_status(self) -> OperationFooterStatus:
+        cancelled = self._operation.bn_cancelled.get()
+        if cancelled:
+            return OperationFooterStatus.CANCELLED
+
+        is_done = self._operation.bn_done.get()
+        if is_done:
+            return OperationFooterStatus.FINISHED
+
+        return OperationFooterStatus.IN_PROGRESS
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
-class AnalysisFooterPresenter:
-    def __init__(self, model: AnalysisFooterModel, view: 'AnalysisFooterView') -> None:
+class OperationFooterPresenter:
+    def __init__(self, model: OperationFooterModel, view: 'OperationFooterView') -> None:
         self._loop = asyncio.get_event_loop()
         self._model = model
         self._view = view
@@ -71,7 +106,7 @@ class AnalysisFooterPresenter:
         if self._update_view_time_timer_handle is not None:
             self._update_view_time_timer_handle.cancel()
 
-        if self._model.status is not AnalysisFooterStatus.IN_PROGRESS:
+        if self._model.status is not OperationFooterStatus.IN_PROGRESS:
             return
 
         time_start = self._model.time_start
@@ -102,9 +137,9 @@ class AnalysisFooterPresenter:
         self.__destroyed = True
 
 
-class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
+class OperationFooterView(GtkWidgetView[Gtk.Grid]):
     STYLE = '''
-    .analysis-footer-nav-btn {
+    .operation-footer-nav-btn {
          min-height: 0px;
          min-width: 0px;
          padding: 0px 4px 0px 4px;
@@ -155,8 +190,8 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
         def _set_time_remaining(self, seconds: float) -> None:
             self._time_remaining_lbl.props.label = 'Remaining: {}'.format(pretty_time(seconds))
 
-        def _set_status(self, status: AnalysisFooterStatus) -> None:
-            is_done = status is not AnalysisFooterStatus.IN_PROGRESS
+        def _set_status(self, status: OperationFooterStatus) -> None:
+            is_done = status is not OperationFooterStatus.IN_PROGRESS
 
             if is_done:
                 self._complete_lbl.show()
@@ -169,9 +204,9 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
                 self._time_remaining_lbl.show()
                 self._progress_fraction_lbl.show()
 
-            if status is AnalysisFooterStatus.FINISHED:
+            if status is OperationFooterStatus.FINISHED:
                 self._complete_lbl.props.label = 'Finished'
-            elif status is AnalysisFooterStatus.CANCELLED:
+            elif status is OperationFooterStatus.CANCELLED:
                 self._complete_lbl.props.label = 'Cancelled'
 
     def __init__(self) -> None:
@@ -181,7 +216,7 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
         self.widget.attach(self._cancel_or_back_stack, 0, 0, 1, 1)
 
         self._cancel_btn = Gtk.Button(hexpand=False, vexpand=True)
-        self._cancel_btn.get_style_context().add_class('analysis-footer-nav-btn')
+        self._cancel_btn.get_style_context().add_class('operation-footer-nav-btn')
         self._cancel_or_back_stack.add(self._cancel_btn)
 
         cancel_btn_inner = Gtk.Grid(column_spacing=2)
@@ -193,14 +228,14 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
         cancel_btn_inner.add(cancel_btn_lbl)
 
         self._back_btn = Gtk.Button('< Back', hexpand=False, vexpand=True)
-        self._back_btn.get_style_context().add_class('analysis-footer-nav-btn')
+        self._back_btn.get_style_context().add_class('operation-footer-nav-btn')
         self._cancel_or_back_stack.add(self._back_btn)
 
         self.progress = self.ProgressView()
         self.widget.attach(self.progress.widget, 1, 0, 1, 1)
 
         self._save_btn = Gtk.Button(hexpand=False, vexpand=True)
-        self._save_btn.get_style_context().add_class('analysis-footer-nav-btn')
+        self._save_btn.get_style_context().add_class('operation-footer-nav-btn')
         self.widget.attach(self._save_btn, 2, 0, 1, 1)
 
         save_btn_inner = Gtk.Grid(column_spacing=2)
@@ -224,73 +259,16 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
 
         self.bn_status = AtomicBindableAdapter(setter=self._set_status)
 
-    def _set_status(self, status: AnalysisFooterStatus) -> None:
+    def _set_status(self, status: OperationFooterStatus) -> None:
         self.progress._set_status(status)
 
-        is_done = status is not AnalysisFooterStatus.IN_PROGRESS
+        is_done = status is not OperationFooterStatus.IN_PROGRESS
         if is_done:
             self._cancel_or_back_stack.props.visible_child = self._back_btn
             self._save_btn.props.sensitive = True
         else:
             self._cancel_or_back_stack.props.visible_child = self._cancel_btn
             self._save_btn.props.sensitive = False
-
-
-class OperationFooterModel(AnalysisFooterModel):
-    def __init__(self,
-                 analysis: Operation,
-                 back_action: Callable,
-                 cancel_action: Callable,
-                 save_action: Callable) -> None:
-        self._analysis = analysis
-        self.__destroyed = False
-        self.__cleanup_tasks = []
-
-        self.bn_status = AtomicBindableAdapter(getter=self._get_status)  # type: AtomicBindableAdapter[AnalysisFooterStatus]
-        self.bn_time_start = analysis.bn_time_start
-        self.bn_time_est_complete = analysis.bn_time_est_complete
-        self.bn_progress_fraction = analysis.bn_progress
-
-        self._back_action = back_action
-        self._cancel_action = cancel_action
-        self._save_action = save_action
-
-        event_connections = [
-            analysis.bn_progress.on_changed.connect(self.bn_status.poke),
-            analysis.bn_done.on_changed.connect(self.bn_status.poke),
-            analysis.bn_cancelled.on_changed.connect(self.bn_status.poke)]
-        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
-
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: AnalysisFooterStatus
-    time_start = AtomicBindable.property_adapter(attrgetter('bn_time_start'))  # type: float
-    time_est_complete = AtomicBindable.property_adapter(attrgetter('bn_time_est_complete'))  # type: float
-    progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
-
-    def back(self) -> None:
-        self._back_action()
-
-    def cancel(self) -> None:
-        self._cancel_action()
-
-    def save(self) -> None:
-        self._save_action()
-
-    def _get_status(self) -> AnalysisFooterStatus:
-        cancelled = self._analysis.bn_cancelled.get()
-        if cancelled:
-            return AnalysisFooterStatus.CANCELLED
-
-        is_done = self._analysis.bn_done.get()
-        if is_done:
-            return AnalysisFooterStatus.FINISHED
-
-        return AnalysisFooterStatus.IN_PROGRESS
-
-    def destroy(self) -> None:
-        assert not self.__destroyed
-        for f in self.__cleanup_tasks:
-            f()
-        self.__destroyed = True
 
 
 class LinearNavigatorFooterPresenter:
