@@ -312,6 +312,19 @@ class TestEvent:
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(coro, timeout=0.1)
 
+    @pytest.mark.asyncio
+    async def test_wait_and_cancel_wait_task(self, event_loop):
+        coro = self.event.wait()
+        wait_task = event_loop.create_task(coro)
+
+        # Hand over control to event loop for a bit to begin wait_task
+        await asyncio.sleep(0.1)
+
+        wait_task.cancel()
+
+        # This should not raise any errors about attempting to set the result of a cancelled future.
+        self.event.fire(123)
+
     def test_weak_ref_by_default(self):
         cb = Mock()
         cb_wref = weakref.ref(cb)
