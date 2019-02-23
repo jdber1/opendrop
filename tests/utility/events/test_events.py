@@ -301,16 +301,16 @@ class TestEvent:
         (('abc', 123), {'foo': 'bar'}, ('abc', 123))])
     @pytest.mark.asyncio
     async def test_wait(self, fire_args, fire_kwargs, expected_result):
-        fut = self.event.wait()
+        coro = self.event.wait()
         self.event.fire(*fire_args, **fire_kwargs)
-        assert await asyncio.wait_for(fut, timeout=0.1) == expected_result
+        assert await asyncio.wait_for(coro, timeout=0.1) == expected_result
 
     @pytest.mark.asyncio
     async def test_wait_and_disconnect_all(self):
-        fut = self.event.wait()
+        coro = self.event.wait()
         self.event.disconnect_all()
         with pytest.raises(asyncio.CancelledError):
-            await asyncio.wait_for(fut, timeout=0.1)
+            await asyncio.wait_for(coro, timeout=0.1)
 
     def test_weak_ref_by_default(self):
         cb = Mock()
