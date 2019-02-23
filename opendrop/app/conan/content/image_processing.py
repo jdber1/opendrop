@@ -17,6 +17,8 @@ from opendrop.widgets.render.objects import Line, PixbufFill, Polyline, Rectangl
 
 
 class ConanImageProcessingFormPresenter(ImageProcessingFormPresenter['ConanImageProcessingFormView']):
+    _errors = tuple()
+
     def __init__(self, image_annotator: ConanImageAnnotator, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -24,6 +26,9 @@ class ConanImageProcessingFormPresenter(ImageProcessingFormPresenter['ConanImage
 
         self.__destroyed = False
         self.__cleanup_tasks = []
+
+        if self._preview is None:
+            return
 
         # Drop region and surface line defining tools
         self._bn_define_feature_mode = AtomicBindableVar(DefineFeatureMode.DROP)

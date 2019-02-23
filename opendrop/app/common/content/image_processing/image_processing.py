@@ -1,4 +1,4 @@
-from typing import Optional, Callable, Generic, TypeVar, Tuple, Sequence
+from typing import Optional, Generic, TypeVar, Tuple, Sequence
 
 import numpy as np
 from gi.repository import Gtk, Gdk
@@ -119,17 +119,14 @@ ImageProcessingFormViewType = TypeVar('ImageProcessingFormViewType', bound=Image
 
 
 class ImageProcessingFormPresenter(Generic[ImageProcessingFormViewType]):
-    def __init__(self, create_preview: Callable[[], Optional[ImageAcquisitionPreview]],
-                 view: ImageProcessingFormViewType) -> None:
-        self._create_preview = create_preview
-        self._view = view
-
+    def __init__(self, preview: Optional[ImageAcquisitionPreview], view: ImageProcessingFormViewType) -> None:
         self.__destroyed = False
         self.__cleanup_tasks = []
 
-        preview = self._create_preview()
+        self._preview = preview
+        self._view = view
 
-        if preview is None:
+        if self._preview is None:
             self._view.show_no_preview_error()
             return
 

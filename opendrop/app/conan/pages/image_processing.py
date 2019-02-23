@@ -13,14 +13,14 @@ class ConanImageProcessingPagePresenter(WizardPagePresenter):
 
     def _page_init(self,
                    image_annotator: ConanImageAnnotator,
-                   create_preview: Callable[[], Optional[ImageAcquisitionPreview]],
+                   preview: Optional[ImageAcquisitionPreview],
                    back_action: Optional[Callable] = None,
                    next_action: Optional[Callable] = None) -> None:
         self._next_action = next_action
 
         self._form = ConanImageProcessingFormPresenter(
             image_annotator=image_annotator,
-            create_preview=create_preview,
+            preview=preview,
             view=self._view.form)
         self._footer = LinearNavigatorFooterPresenter(
             back=back_action,

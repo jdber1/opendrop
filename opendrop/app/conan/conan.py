@@ -1,6 +1,6 @@
 import asyncio
 from pathlib import Path
-from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional, Mapping
+from typing import Any, Callable, MutableSequence, Optional, Mapping
 
 from gi.repository import Gtk
 
@@ -208,10 +208,14 @@ class ConanRootPresenter(WizardPresenter['ConanRootView', ConanWizardPageID]):
 
     def _get_dependencies_for_image_processing(self) -> Mapping[str, Any]:
         context = self._context
+
+        try:
+            preview = context.image_acquisition.create_preview()
+        except ValueError:
+            preview = None
+
         return {'image_annotator': context.image_annotator,
-                'create_preview': _try_except(func=context.image_acquisition.create_preview,
-                                              exc=ValueError,
-                                              default=None),
+                'preview': preview,
 
                 'back_action': self._prev_page,
                 'next_action': self._user_wants_to_start_analysis}
@@ -407,24 +411,7 @@ class ConanRootView(WizardView):
         return ConanAnalysisSaverView(transient_for=self.window)
 
 
-# Helper functions/classes
-
-T = TypeVar('T')
-U = TypeVar('U')
-
-
-# These functions and classes are basically just used to help make "one liner's", not a great solution but works for
-# now.
-
-def _try_except(func: Callable[..., T], exc: Type[Exception], default: U) -> Callable[..., Union[T, U]]:
-    def wrapper(*args, **kwargs) -> Union[T, U]:
-        try:
-            return func(*args, **kwargs)
-        except exc:
-            return default
-
-    return wrapper
-
+# This class is basically just used to help make "one liner's", not a great solution but works for now.
 
 class IfThen:
     def __init__(self, cond: Callable, then: Callable) -> None:

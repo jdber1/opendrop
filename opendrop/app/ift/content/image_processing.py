@@ -18,6 +18,8 @@ from opendrop.widgets.render.objects.rectangle import RectangleWithLabel
 
 
 class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProcessingFormView']):
+    _errors = tuple()
+
     def __init__(self, image_annotator: IFTImageAnnotator, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -25,6 +27,9 @@ class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProc
 
         self.__destroyed = False
         self.__cleanup_tasks = []
+
+        if self._preview is None:
+            return
 
         # Drop region and needle region defining tools
         self._bn_define_region_mode = AtomicBindableVar(DefineRegionMode.DROP)
