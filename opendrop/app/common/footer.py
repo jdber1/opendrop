@@ -141,7 +141,7 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
     STYLE = '''
     .operation-footer-nav-btn {
          min-height: 0px;
-         min-width: 0px;
+         min-width: 60px;
          padding: 0px 4px 0px 4px;
     }
     '''
@@ -219,7 +219,7 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
         self._cancel_btn.get_style_context().add_class('operation-footer-nav-btn')
         self._cancel_or_back_stack.add(self._cancel_btn)
 
-        cancel_btn_inner = Gtk.Grid(column_spacing=2)
+        cancel_btn_inner = Gtk.Grid()
         self._cancel_btn.add(cancel_btn_inner)
         cancel_btn_image = Gtk.Image.new_from_icon_name('process-stop', Gtk.IconSize.BUTTON)
         cancel_btn_lbl = Gtk.Label('Cancel', halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER, hexpand=True,
@@ -238,7 +238,7 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
         self._save_btn.get_style_context().add_class('operation-footer-nav-btn')
         self.widget.attach(self._save_btn, 2, 0, 1, 1)
 
-        save_btn_inner = Gtk.Grid(column_spacing=2)
+        save_btn_inner = Gtk.Grid()
         self._save_btn.add(save_btn_inner)
         save_btn_image = Gtk.Image.new_from_icon_name('document-save', Gtk.IconSize.BUTTON)
         save_btn_lbl = Gtk.Label('Save', halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER, hexpand=True, vexpand=True)
