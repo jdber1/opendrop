@@ -1,30 +1,30 @@
 import asyncio
-from enum import Enum
-from operator import attrgetter
 from pathlib import Path
-from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional
+from typing import Any, Callable, MutableSequence, TypeVar, Type, Union, Optional, Mapping
 
 from gi.repository import Gtk
 
-from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormPresenter, ImageAcquisitionFormView
+from opendrop.app.common.content.image_acquisition import ImageAcquisitionFormView
 from opendrop.app.common.dialog import YesNoDialogView, YesNoDialogResponse, ErrorDialogView
-from opendrop.app.common.footer import LinearNavigatorFooterView, LinearNavigatorFooterPresenter, AnalysisFooterView, \
-    OperationFooterModel, AnalysisFooterPresenter
+from opendrop.app.common.footer import LinearNavigatorFooterView, AnalysisFooterView
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
-from opendrop.app.common.sidebar import TasksSidebarPresenter, TasksSidebarView
-from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.component.stack import StackModel, StackView
+from opendrop.app.common.wizard import WizardPresenter, WizardPageID, WizardView
+from opendrop.component.stack import StackModel
 from opendrop.utility.bindable.bindable import AtomicBindableVar
-from opendrop.utility.option import MutuallyExclusiveOptions
 from opendrop.utility.speaker import Speaker
 from .content.analysis_saver import ConanAnalysisSaverPresenter, ConanAnalysisSaverView
-from .content.image_processing import ConanImageProcessingFormPresenter, ConanImageProcessingFormView
-from .content.results.results import ConanResultsPresenter, ConanResultsView
+from .content.image_processing import ConanImageProcessingFormView
+from .content.results import ConanResultsView
 from .model.analyser import ConanAnalysis
 from .model.analysis_saver import ConanAnalysisSaverOptions, save_drops
 from .model.image_annotator.image_annotator import ConanImageAnnotator
 from .model.results_explorer import ConanResultsExplorer
+from .pages import (
+    ConanImageAcquisitionPagePresenter,
+    ConanImageProcessingPagePresenter,
+    ConanResultsPagePresenter
+)
 
 
 # Main classes start here
@@ -172,123 +172,60 @@ class Context:
         self.clear_current_analysis()
 
 
-class ConanRootPresenter:
-    def __init__(self, context: Context, view: 'ConanRootView'):
-        self._loop = asyncio.get_event_loop()
-        self._view = view
+class ConanWizardPageID(WizardPageID):
+    IMAGE_ACQUISITION = ('Image acquisition',)
+    IMAGE_PROCESSING = ('Image processing',)
+    RESULTS = ('Results',)
 
+
+class ConanRootPresenter(WizardPresenter['ConanRootView', ConanWizardPageID]):
+    def __init__(self, context: Context, view: 'ConanRootView'):
+        super().__init__(
+            view=view,
+            page_entries=[
+                self.PageEntry(
+                    page_id=ConanWizardPageID.IMAGE_ACQUISITION,
+                    presenter=ConanImageAcquisitionPagePresenter,
+                    dependency_factory=self._get_dependencies_for_image_acquisition),
+                self.PageEntry(
+                    page_id=ConanWizardPageID.IMAGE_PROCESSING,
+                    presenter=ConanImageProcessingPagePresenter,
+                    dependency_factory=self._get_dependencies_for_image_processing),
+                self.PageEntry(
+                    page_id=ConanWizardPageID.RESULTS,
+                    presenter=ConanResultsPagePresenter,
+                    dependency_factory=self._get_dependencies_for_results)])
+
+        self._loop = asyncio.get_event_loop()
         self._context = context
 
-        self.__destroyed = False
-        self.__cleanup_tasks = []
+        self._activate_first_page()
 
-        self._page_option_image_acquisition = AtomicBindableVar(False)
-        self._page_option_image_processing = AtomicBindableVar(False)
-        self._page_option_results = AtomicBindableVar(False)
+    def _get_dependencies_for_image_acquisition(self) -> Mapping[str, Any]:
+        return {'image_acquisition': self._context.image_acquisition,
 
-        # Manage options so that only one can be set to True at a time.
-        MutuallyExclusiveOptions((
-            self._page_option_image_acquisition,
-            self._page_option_image_processing,
-            self._page_option_results))
+                'next_action': self._next_page}
 
-        # Main content
-        # Image acquisition
-        self._content_image_acquisition = ImageAcquisitionFormPresenter(
-            image_acquisition=context.image_acquisition,
-            view=self._view.content_image_acquisition)
-        self.__cleanup_tasks.append(self._content_image_acquisition.destroy)
+    def _get_dependencies_for_image_processing(self) -> Mapping[str, Any]:
+        context = self._context
+        return {'image_annotator': context.image_annotator,
+                'create_preview': _try_except(func=context.image_acquisition.create_preview,
+                                              exc=ValueError,
+                                              default=None),
 
-        # Image processing
-        self._content_image_processing = ConanImageProcessingFormPresenter(
-            image_annotator=context.image_annotator,
-            create_preview=_try_except(
-                func=context.image_acquisition.create_preview,
-                exc=ValueError, default=None),
-            view=self._view.content_image_processing)
-        self.__cleanup_tasks.append(self._content_image_processing.destroy)
-
-        # Results
-        self._content_results = ConanResultsPresenter(
-            results_explorer=context.results_explorer,
-            view=self._view.content_results)
-        self.__cleanup_tasks.append(self._content_results.destroy)
-
-        # Footer
-        # Image acquisition
-        self._footer_image_acquisition = LinearNavigatorFooterPresenter(
-            back=None,
-            next=IfThen(cond=self._content_image_acquisition.validate,
-                        then=lambda: self._page_option_image_processing.set(True)),
-            view=self._view.footer_image_acquisition)
-        self.__cleanup_tasks.append(self._footer_image_acquisition.destroy)
-
-        # Image processing
-        self._footer_image_processing = LinearNavigatorFooterPresenter(
-            back=lambda: self._page_option_image_acquisition.set(True),
-            next=IfThen(cond=self._content_image_processing.validate,
-                        then=self._user_wants_to_start_analysis),
-            view=self._view.footer_image_processing)
-        self.__cleanup_tasks.append(self._footer_image_processing.destroy)
-
-        # Results
-        self._footer_results_model = OperationFooterModel(
-            back_action=self._user_wants_to_exit_analysis,
-            cancel_action=self._user_wants_to_cancel_analysis,
-            save_action=self._user_wants_to_save_analysis)
-        self._footer_results = AnalysisFooterPresenter(
-            model=self._footer_results_model,
-            view=self._view.footer_results)  # type: Optional[AnalysisFooterPresenter]
-        self.__cleanup_tasks.append(self._footer_results.destroy)
-        self.__cleanup_tasks.append(self._footer_results_model.destroy)
-        self.__cleanup_tasks.append(
-            context.results_explorer.bn_analysis.bind_to(self._footer_results_model.bn_analysis).unbind)
-
-        # Sidebar
-        self._sidebar_presenter = TasksSidebarPresenter(
-            task_and_is_active=(
-                (ConanWizardPageID.IMAGE_ACQUISITION, self._page_option_image_acquisition),
-                (ConanWizardPageID.IMAGE_PROCESSING, self._page_option_image_processing),
-                (ConanWizardPageID.RESULTS, self._page_option_results)),
-            view=self._view.sidebar_view)
-        self.__cleanup_tasks.append(self._sidebar_presenter.destroy)
-
-        event_connections = [
-            self._page_option_image_acquisition.on_changed.connect(self._hdl_page_option_image_acquisition_changed),
-            self._page_option_image_processing.on_changed.connect(self._hdl_page_option_image_processing_changed),
-            self._page_option_results.on_changed.connect(self._hdl_page_option_results_changed)]
-        self.__cleanup_tasks.extend([ec.disconnect for ec in event_connections])
-
-        # Activate the first page.
-        self._page_option_image_acquisition.set(True)
-
-    def _hdl_page_option_image_acquisition_changed(self) -> None:
-        if self._page_option_image_acquisition.get() is True:
-            self._content_image_acquisition.enter()
-            self._view.active_content_view = self._view.content_image_acquisition
-            self._view.active_footer_view = self._view.footer_image_acquisition
-        else:
-            self._content_image_acquisition.leave()
-
-    def _hdl_page_option_image_processing_changed(self) -> None:
-        if self._page_option_image_processing.get() is True:
-            self._content_image_processing.enter()
-            self._view.active_content_view = self._view.content_image_processing
-            self._view.active_footer_view = self._view.footer_image_processing
-        else:
-            self._content_image_processing.leave()
-
-    def _hdl_page_option_results_changed(self) -> None:
-        if self._page_option_results.get() is True:
-            self._content_results.enter()
-            self._view.active_content_view = self._view.content_results
-            self._view.active_footer_view = self._view.footer_results
-        else:
-            self._content_results.leave()
+                'back_action': self._prev_page,
+                'next_action': self._user_wants_to_start_analysis}
 
     def _user_wants_to_start_analysis(self) -> None:
         self._context.new_analysis()
-        self._page_option_results.set(True)
+        self._next_page()
+
+    def _get_dependencies_for_results(self) -> Mapping[str, Any]:
+        return {'results_explorer': self._context.results_explorer,
+
+                'user_wants_to_cancel_analysis': self._user_wants_to_cancel_analysis,
+                'user_wants_to_save_analysis': self._user_wants_to_save_analysis,
+                'back_action': self._user_wants_to_exit_analysis}
 
     def _user_wants_to_cancel_analysis(self) -> None:
         context = self._context
@@ -310,22 +247,6 @@ class ConanRootPresenter:
 
         confirm_cancel_analysis.add_done_callback(result)
 
-    def _user_wants_to_exit_analysis(self) -> None:
-        context = self._context
-        assert context.current_analysis_done
-
-        def do_it(fut: Optional[asyncio.Future] = None) -> None:
-            if fut is not None and (fut.cancelled() or fut.result() is False):
-                return
-
-            context.clear_current_analysis()
-            self._page_option_image_processing.set(True)
-
-        if not context.current_analysis_saved:
-            self._loop.create_task(self._ask_user_confirm_discard_analysis_results()).add_done_callback(do_it)
-        else:
-            do_it()
-
     def _user_wants_to_save_analysis(self) -> None:
         context = self._context
         if not context.current_analysis_done:
@@ -342,6 +263,22 @@ class ConanRootPresenter:
             context.save_current_analysis(options)
 
         self._loop.create_task(self._ask_user_save_analysis()).add_done_callback(do_it)
+
+    def _user_wants_to_exit_analysis(self) -> None:
+        context = self._context
+        assert context.current_analysis_done
+
+        def do_it(fut: Optional[asyncio.Future] = None) -> None:
+            if fut is not None and (fut.cancelled() or fut.result() is False):
+                return
+
+            context.clear_current_analysis()
+            self._prev_page()
+
+        if not context.current_analysis_saved:
+            self._loop.create_task(self._ask_user_confirm_discard_analysis_results()).add_done_callback(do_it)
+        else:
+            do_it()
 
     async def _ask_user_confirm_discard_analysis_results(self) -> bool:
         dlg_view = self._view.create_discard_analysis_results_dialog()
@@ -419,70 +356,26 @@ class ConanRootPresenter:
         finally:
             dlg_view.destroy()
 
-    def destroy(self) -> None:
-        assert not self.__destroyed
-        for f in self.__cleanup_tasks:
-            f()
-        self.__destroyed = True
 
-
-class ConanWizardPageID(Enum):
-    IMAGE_ACQUISITION = ('Image acquisition',)
-    IMAGE_PROCESSING = ('Image processing',)
-    RESULTS = ('Results',)
-
-    def __init__(self, title: str) -> None:
-        self.title = title
-
-
-class ConanRootView(GtkWidgetView[Gtk.Grid]):
+class ConanRootView(WizardView):
     def __init__(self) -> None:
-        self.widget = Gtk.Grid()
+        super().__init__()
 
         # Page views
-        self.content_image_acquisition = ImageAcquisitionFormView()
-        self.footer_image_acquisition = LinearNavigatorFooterView()
+        self._add_page(
+            page_id=ConanWizardPageID.IMAGE_ACQUISITION,
+            content=ImageAcquisitionFormView(),
+            footer=LinearNavigatorFooterView())
 
-        self.content_image_processing = ConanImageProcessingFormView()
-        self.footer_image_processing = LinearNavigatorFooterView(next_label='Start analysis')
+        self._add_page(
+            page_id=ConanWizardPageID.IMAGE_PROCESSING,
+            content=ConanImageProcessingFormView(),
+            footer=LinearNavigatorFooterView(next_label='Start analysis'))
 
-        self.content_results = ConanResultsView()
-        self.footer_results = AnalysisFooterView()
-
-        # Sidebar
-        self.sidebar_view = TasksSidebarView(attrgetter('title'))  # type: TasksSidebarView[ConanWizardPageID]
-        self.widget.attach(self.sidebar_view.widget, 0, 0, 1, 1)
-
-        # Main content container
-        self._content_view = StackView()
-        self.widget.attach(self._content_view.widget, 1, 0, 1, 1)
-
-        self._content_view.add_child(self.content_image_acquisition)
-        self._content_view.add_child(self.content_image_processing)
-        self._content_view.add_child(self.content_results)
-
-        # Main content and Footer separator
-        self.widget.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 2, 1)
-
-        # Footer container
-        self._footer_view = StackView()
-        self.widget.attach(self._footer_view.widget, 0, 2, 2, 1)
-
-        self._footer_view.add_child(self.footer_image_acquisition)
-        self._footer_view.add_child(self.footer_image_processing)
-        self._footer_view.add_child(self.footer_results)
-
-        self.widget.show_all()
-
-    def _set_active_content_view(self, view: GtkWidgetView) -> None:
-        self._content_view.set_visible_child(view)
-
-    active_content_view = property(fset=_set_active_content_view)
-
-    def _set_active_footer_view(self, view: GtkWidgetView) -> None:
-        self._footer_view.set_visible_child(view)
-
-    active_footer_view = property(fset=_set_active_footer_view)
+        self._add_page(
+            page_id=ConanWizardPageID.RESULTS,
+            content=ConanResultsView(),
+            footer=AnalysisFooterView())
 
     @property
     def window(self) -> Optional[Gtk.Window]:

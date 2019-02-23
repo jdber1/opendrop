@@ -1,10 +1,34 @@
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.app.conan.model.results_explorer import ConanResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from .graphs import GraphsView, GraphsPresenter
 from .individual import IndividualFitView, IndividualFitPresenter
+
+
+class ConanResultsPresenter:
+    def __init__(self, results_explorer: ConanResultsExplorer, view: 'ConanResultsView') -> None:
+        self._results_explorer = results_explorer
+        self._view = view
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._individual_fit = IndividualFitPresenter(
+            drops=self._results_explorer.individual_drops, view=self._view.individual_fit)
+        self.__cleanup_tasks.append(self._individual_fit.destroy)
+
+        if len(self._results_explorer.individual_drops) <= 1:
+            self._view.graphs_visibility = False
+        else:
+            self._view.graphs_visibility = True
+            self._graphs = GraphsPresenter(summary_data=self._results_explorer.summary_data, view=self._view.graphs)
+            self.__cleanup_tasks.append(self._graphs.destroy)
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
 class ConanResultsView(GtkWidgetView[Gtk.Grid]):
@@ -62,32 +86,3 @@ class ConanResultsView(GtkWidgetView[Gtk.Grid]):
     def _show_graphs(self) -> None:
         self._frame.props.shadow_type = Gtk.ShadowType.IN
         self._frame.props.label_widget.show()
-
-
-class _ConanResultsPresenter:
-    def __init__(self, results_explorer: ConanResultsExplorer, view: ConanResultsView) -> None:
-        self._results_explorer = results_explorer
-        self._view = view
-        self.__destroyed = False
-        self.__cleanup_tasks = []
-
-        self._individual_fit = IndividualFitPresenter(
-            drops=self._results_explorer.individual_drops, view=self._view.individual_fit)
-        self.__cleanup_tasks.append(self._individual_fit.destroy)
-
-        if len(self._results_explorer.individual_drops) <= 1:
-            self._view.graphs_visibility = False
-        else:
-            self._view.graphs_visibility = True
-            self._graphs = GraphsPresenter(summary_data=self._results_explorer.summary_data, view=self._view.graphs)
-            self.__cleanup_tasks.append(self._graphs.destroy)
-
-    def destroy(self) -> None:
-        assert not self.__destroyed
-        for f in self.__cleanup_tasks:
-            f()
-        self.__destroyed = True
-
-
-class ConanResultsPresenter(WizardPageWrapperPresenter):
-    create_presenter = _ConanResultsPresenter

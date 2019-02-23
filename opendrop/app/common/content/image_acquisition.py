@@ -7,7 +7,6 @@ from opendrop.app.common.model.image_acquisition.default_types import DefaultIma
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition, \
     ImageAcquisitionImpl, ImageAcquisitionImplType
-from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter
@@ -712,12 +711,12 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
             self._current_subpresenter.destroy()
 
 
-class ImageAcquisitionFormPresenter(WizardPageWrapperPresenter):
+class ImageAcquisitionFormPresenter(_ImageAcquisitionFormPresenter):
     _AVAILABLE_IMAGE_ACQUISITION_TYPES = tuple(DefaultImageAcquisitionImplType)
     _CONFIG_SUBPRESENTER_FACTORY = staticmethod(create_presenter_for_impl_and_view)
 
-    def create_presenter(self, image_acquisition: ImageAcquisition, view: ImageAcquisitionFormView) -> _ImageAcquisitionFormPresenter:
-        return _ImageAcquisitionFormPresenter(
+    def __init__(self, image_acquisition: ImageAcquisition, view: ImageAcquisitionFormView) -> None:
+        super().__init__(
             image_acquisition=image_acquisition,
             create_presenter_for_impl_and_view=self._CONFIG_SUBPRESENTER_FACTORY,
             available_types=self._AVAILABLE_IMAGE_ACQUISITION_TYPES,

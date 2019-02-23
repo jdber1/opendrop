@@ -3,7 +3,7 @@ import math
 import time
 from enum import Enum
 from operator import attrgetter
-from typing import Optional, Callable, Any, MutableSequence
+from typing import Optional, Callable, Any
 
 from gi.repository import Gtk, Gdk, GObject
 from typing_extensions import Protocol
@@ -16,25 +16,90 @@ from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_p
 from opendrop.utility.events import Event
 
 
-def pretty_time(seconds: float) -> str:
-    if not math.isfinite(seconds):
-        return ''
-
-    seconds = round(seconds)
-
-    s = seconds % 60
-    seconds //= 60
-    m = seconds % 60
-    seconds //= 60
-    h = seconds
-
-    return '{h:0>2}:{m:0>2}:{s:0>2}'.format(h=h, m=m, s=s)
-
-
 class AnalysisFooterStatus(Enum):
         IN_PROGRESS = 0
         FINISHED = 1
         CANCELLED = 2
+
+
+class AnalysisFooterModel(Protocol):
+    bn_status = None  # type: AtomicBindable[AnalysisFooterStatus]
+    bn_progress_fraction = None  # type: AtomicBindable[float]
+    bn_time_start = None  # type: AtomicBindable[float]
+    bn_time_est_complete = None  # type: AtomicBindable[float]
+
+    status = None  # type: AnalysisFooterStatus
+    progress_fraction = None  # type: float
+    time_start = None  # type: float
+    time_est_complete = None  # type: float
+
+    def back(self) -> Any:
+        pass
+
+    def cancel(self) -> Any:
+        pass
+
+    def save(self) -> Any:
+        pass
+
+
+class AnalysisFooterPresenter:
+    def __init__(self, model: AnalysisFooterModel, view: 'AnalysisFooterView') -> None:
+        self._loop = asyncio.get_event_loop()
+        self._model = model
+        self._view = view
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        data_bindings = [
+            Binding(self._model.bn_status, self._view.bn_status),
+            Binding(self._model.bn_progress_fraction, self._view.progress.bn_fraction)]
+        self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
+
+        event_connections = [
+            self._model.bn_time_start.on_changed.connect(self._update_view_time),
+            self._model.bn_time_est_complete.on_changed.connect(self._update_view_time),
+            self._view.on_back_btn_clicked.connect(self._model.back),
+            self._view.on_cancel_btn_clicked.connect(self._model.cancel),
+            self._view.on_save_btn_clicked.connect(self._model.save)]
+        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
+
+        self._update_view_time_timer_handle = None  # type: Optional[asyncio.TimerHandle]
+        self._update_view_time()
+
+    def _update_view_time(self) -> None:
+        if self._update_view_time_timer_handle is not None:
+            self._update_view_time_timer_handle.cancel()
+
+        if self._model.status is not AnalysisFooterStatus.IN_PROGRESS:
+            return
+
+        time_start = self._model.time_start
+        time_est_complete = self._model.time_est_complete
+        now = time.time()
+        time_elapsed = now - time_start
+        time_remaining = time_est_complete - now
+
+        self._view.progress.bn_time_elapsed.set(time_elapsed)
+
+        if time_remaining > 0:
+            self._view.progress.bn_time_remaining_visible.set(True)
+            self._view.progress.bn_time_remaining.set(time_remaining)
+        else:
+            self._view.progress.bn_time_remaining_visible.set(False)
+
+        self._update_view_time_timer_handle = self._loop.call_later(1, self._update_view_time)
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+
+        if self._update_view_time_timer_handle is not None:
+            self._update_view_time_timer_handle.cancel()
+
+        for f in self.__cleanup_tasks:
+            f()
+
+        self.__destroyed = True
 
 
 class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
@@ -171,88 +236,12 @@ class AnalysisFooterView(GtkWidgetView[Gtk.Grid]):
             self._save_btn.props.sensitive = False
 
 
-class AnalysisFooterModel(Protocol):
-    bn_status = None  # type: AtomicBindable[AnalysisFooterStatus]
-    bn_progress_fraction = None  # type: AtomicBindable[float]
-    bn_time_start = None  # type: AtomicBindable[float]
-    bn_time_est_complete = None  # type: AtomicBindable[float]
-
-    status = None  # type: AnalysisFooterStatus
-    progress_fraction = None  # type: float
-    time_start = None  # type: float
-    time_est_complete = None  # type: float
-
-    def back(self) -> Any:
-        pass
-
-    def cancel(self) -> Any:
-        pass
-
-    def save(self) -> Any:
-        pass
-
-
-class AnalysisFooterPresenter:
-    def __init__(self, model: AnalysisFooterModel, view: AnalysisFooterView) -> None:
-        self._loop = asyncio.get_event_loop()
-        self._model = model
-        self._view = view
-        self.__destroyed = False
-        self.__cleanup_tasks = []
-
-        data_bindings = [
-            Binding(self._model.bn_status, self._view.bn_status),
-            Binding(self._model.bn_progress_fraction, self._view.progress.bn_fraction)]
-        self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
-
-        event_connections = [
-            self._model.bn_time_start.on_changed.connect(self._update_view_time),
-            self._model.bn_time_est_complete.on_changed.connect(self._update_view_time),
-            self._view.on_back_btn_clicked.connect(self._model.back),
-            self._view.on_cancel_btn_clicked.connect(self._model.cancel),
-            self._view.on_save_btn_clicked.connect(self._model.save)]
-        self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
-
-        self._update_view_time_timer_handle = None  # type: Optional[asyncio.TimerHandle]
-        self._update_view_time()
-
-    def _update_view_time(self) -> None:
-        if self._update_view_time_timer_handle is not None:
-            self._update_view_time_timer_handle.cancel()
-
-        if self._model.status is not AnalysisFooterStatus.IN_PROGRESS:
-            return
-
-        time_start = self._model.time_start
-        time_est_complete = self._model.time_est_complete
-        now = time.time()
-        time_elapsed = now - time_start
-        time_remaining = time_est_complete - now
-
-        self._view.progress.bn_time_elapsed.set(time_elapsed)
-
-        if time_remaining > 0:
-            self._view.progress.bn_time_remaining_visible.set(True)
-            self._view.progress.bn_time_remaining.set(time_remaining)
-        else:
-            self._view.progress.bn_time_remaining_visible.set(False)
-
-        self._update_view_time_timer_handle = self._loop.call_later(1, self._update_view_time)
-
-    def destroy(self) -> None:
-        assert not self.__destroyed
-
-        if self._update_view_time_timer_handle is not None:
-            self._update_view_time_timer_handle.cancel()
-
-        for f in self.__cleanup_tasks:
-            f()
-
-        self.__destroyed = True
-
-
-class _OperationFooterModel:
-    def __init__(self, analysis: Operation) -> None:
+class OperationFooterModel(AnalysisFooterModel):
+    def __init__(self,
+                 analysis: Operation,
+                 back_action: Callable,
+                 cancel_action: Callable,
+                 save_action: Callable) -> None:
         self._analysis = analysis
         self.__destroyed = False
         self.__cleanup_tasks = []
@@ -261,6 +250,10 @@ class _OperationFooterModel:
         self.bn_time_start = analysis.bn_time_start
         self.bn_time_est_complete = analysis.bn_time_est_complete
         self.bn_progress_fraction = analysis.bn_progress
+
+        self._back_action = back_action
+        self._cancel_action = cancel_action
+        self._save_action = save_action
 
         event_connections = [
             analysis.bn_progress.on_changed.connect(self.bn_status.poke),
@@ -272,6 +265,15 @@ class _OperationFooterModel:
     time_start = AtomicBindable.property_adapter(attrgetter('bn_time_start'))  # type: float
     time_est_complete = AtomicBindable.property_adapter(attrgetter('bn_time_est_complete'))  # type: float
     progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
+
+    def back(self) -> None:
+        self._back_action()
+
+    def cancel(self) -> None:
+        self._cancel_action()
+
+    def save(self) -> None:
+        self._save_action()
 
     def _get_status(self) -> AnalysisFooterStatus:
         cancelled = self._analysis.bn_cancelled.get()
@@ -291,91 +293,41 @@ class _OperationFooterModel:
         self.__destroyed = True
 
 
-class OperationFooterModel(AnalysisFooterModel):
-    def __init__(self, back_action: Callable, cancel_action: Callable, save_action: Callable) -> None:
-        self._actual_model = None  # type: Optional[_OperationFooterModel]
-        self._actual_model_cleanup_tasks = []  # type: MutableSequence[Callable]
+class LinearNavigatorFooterPresenter:
+    def __init__(self, back: Optional[Callable], next: Optional[Callable], view: 'LinearNavigatorFooterView') -> None:
+        self._loop = asyncio.get_event_loop()
 
-        self.bn_analysis = AtomicBindableAdapter(setter=self._set_analysis)
+        self._back = back
+        self._next = next
 
-        self.bn_status = AtomicBindableAdapter(getter=self._get_status)  # type: AtomicBindableAdapter[AnalysisFooterStatus]
-        self.bn_time_start = AtomicBindableAdapter(getter=self._get_time_start)  # type: AtomicBindableAdapter[float]
-        self.bn_time_est_complete = AtomicBindableAdapter(getter=self._get_time_est_complete)  # type: AtomicBindableAdapter[float]
-        self.bn_progress_fraction = AtomicBindableAdapter(getter=self._get_progress_fraction)  # type: AtomicBindableAdapter[float]
+        self._view = view
 
-        self._back_action = back_action
-        self._cancel_action = cancel_action
-        self._save_action = save_action
+        self.__event_connections = [
+            self._view.on_next_btn_clicked.connect(self._hdl_view_next_btn_clicked),
+            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked)
+        ]
 
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: AnalysisFooterStatus
-    time_start = AtomicBindable.property_adapter(attrgetter('bn_time_start'))  # type: float
-    time_est_complete = AtomicBindable.property_adapter(attrgetter('bn_time_est_complete'))  # type: float
-    progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
+        self._update_view_nav_buttons_visibility()
 
-    def back(self) -> None:
-        self._back_action()
-
-    def cancel(self) -> None:
-        self._cancel_action()
-
-    def save(self) -> None:
-        self._save_action()
-
-    def _get_status(self) -> AnalysisFooterStatus:
-        if self._actual_model is None:
-            return AnalysisFooterStatus.IN_PROGRESS
-
-        return self._actual_model.status
-
-    def _get_time_start(self) -> float:
-        if self._actual_model is None:
-            return math.nan
-
-        return self._actual_model.time_start
-
-    def _get_time_est_complete(self) -> float:
-        if self._actual_model is None:
-            return math.nan
-
-        return self._actual_model.time_est_complete
-
-    def _get_progress_fraction(self) -> float:
-        if self._actual_model is None:
-            return 0
-
-        return self._actual_model.progress_fraction
-
-    def _destroy_current_actual_model(self) -> None:
-        if self._actual_model is None:
+    def _hdl_view_back_btn_clicked(self) -> None:
+        if self._back is None:
             return
 
-        self._actual_model.destroy()
-        self._actual_model = None
-        for f in self._actual_model_cleanup_tasks:
-            f()
-        self._actual_model_cleanup_tasks = []
+        self._back()
 
-    def _set_analysis(self, analysis: Operation) -> None:
-        self._destroy_current_actual_model()
-
-        if analysis is None:
+    def _hdl_view_next_btn_clicked(self) -> None:
+        if self._next is None:
             return
 
-        self._actual_model = _OperationFooterModel(analysis)
-        event_connections = [
-            self._actual_model.bn_status.on_changed.connect(self.bn_status.poke),
-            self._actual_model.bn_time_start.on_changed.connect(self.bn_time_start.poke),
-            self._actual_model.bn_time_est_complete.on_changed.connect(self.bn_time_est_complete.poke),
-            self._actual_model.bn_progress_fraction.on_changed.connect(self.bn_progress_fraction.poke)]
-        self._actual_model_cleanup_tasks.extend(ec.disconnect for ec in event_connections)
+        self._next()
 
-        self.bn_status.poke()
-        self.bn_time_start.poke()
-        self.bn_time_est_complete.poke()
-        self.bn_progress_fraction.poke()
+    def _update_view_nav_buttons_visibility(self) -> None:
+        self._view.bn_back_btn_visible.set(self._back is not None)
+        self._view.bn_next_btn_visible.set(self._next is not None)
 
     def destroy(self) -> None:
-        self._destroy_current_actual_model()
+        for ec in self.__event_connections:
+            ec.disconnect()
 
 
 class LinearNavigatorFooterView(GtkWidgetView[Gtk.Box]):
@@ -415,38 +367,18 @@ class LinearNavigatorFooterView(GtkWidgetView[Gtk.Box]):
         link_atomic_bn_adapter_to_g_prop(self.bn_next_btn_visible, next_btn, 'visible')
 
 
-class LinearNavigatorFooterPresenter:
-    def __init__(self, back: Optional[Callable], next: Optional[Callable], view: LinearNavigatorFooterView) -> None:
-        self._loop = asyncio.get_event_loop()
+# Helper functions
 
-        self._back = back
-        self._next = next
+def pretty_time(seconds: float) -> str:
+    if not math.isfinite(seconds):
+        return ''
 
-        self._view = view
+    seconds = round(seconds)
 
-        self.__event_connections = [
-            self._view.on_next_btn_clicked.connect(self._hdl_view_next_btn_clicked),
-            self._view.on_back_btn_clicked.connect(self._hdl_view_back_btn_clicked)
-        ]
+    s = seconds % 60
+    seconds //= 60
+    m = seconds % 60
+    seconds //= 60
+    h = seconds
 
-        self._update_view_nav_buttons_visibility()
-
-    def _hdl_view_back_btn_clicked(self) -> None:
-        if self._back is None:
-            return
-
-        self._back()
-
-    def _hdl_view_next_btn_clicked(self) -> None:
-        if self._next is None:
-            return
-
-        self._next()
-
-    def _update_view_nav_buttons_visibility(self) -> None:
-        self._view.bn_back_btn_visible.set(self._back is not None)
-        self._view.bn_next_btn_visible.set(self._next is not None)
-
-    def destroy(self) -> None:
-        for ec in self.__event_connections:
-            ec.disconnect()
+    return '{h:0>2}:{m:0>2}:{s:0>2}'.format(h=h, m=m, s=s)

@@ -1,11 +1,49 @@
 from gi.repository import Gtk, Gdk
 
-from opendrop.app.common.wizard import WizardPageWrapperPresenter
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry
+
+
+class IFTPhysicalParametersFormPresenter:
+    def __init__(self, phys_params: IFTPhysicalParametersFactory, view: 'IFTPhysicalParametersFormView') -> None:
+        self._phys_params = phys_params
+        self._view = view
+
+        self.__destroyed = False
+        self.__cleanup_tasks = []
+
+        self._field_presenters = [
+            FieldPresenter(
+                value=self._phys_params.bn_inner_density,
+                errors=self._phys_params.inner_density_err,
+                field_view=self._view.inner_density_field),
+            FieldPresenter(
+                value=self._phys_params.bn_outer_density,
+                errors=self._phys_params.outer_density_err,
+                field_view=self._view.outer_density_field),
+            FieldPresenter(
+                value=self._phys_params.bn_needle_width,
+                errors=self._phys_params.needle_width_err,
+                field_view=self._view.needle_width_field),
+            FieldPresenter(
+                value=self._phys_params.bn_gravity,
+                errors=self._phys_params.gravity_err,
+                field_view=self._view.gravity_field)]
+        self.__cleanup_tasks.extend(fp.destroy for fp in self._field_presenters)
+
+    def validate(self) -> bool:
+        for fp in self._field_presenters:
+            fp.show_errors()
+        return not self._phys_params.has_errors
+
+    def destroy(self) -> None:
+        assert not self.__destroyed
+        for f in self.__cleanup_tasks:
+            f()
+        self.__destroyed = True
 
 
 class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
@@ -119,46 +157,3 @@ class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
             add_style_class_when_flags(self._gravity_inp, 'error', self.gravity_field.errors_out),
             GObjectPropertyBindable(self._gravity_err_msg_lbl, 'label').bind_from(
                 message_from_flags('Gravity', self.gravity_field.errors_out))]
-
-
-class _IFTPhysicalParametersFormPresenter:
-    def __init__(self, phys_params: IFTPhysicalParametersFactory, view: IFTPhysicalParametersFormView) -> None:
-        self._phys_params = phys_params
-        self._view = view
-
-        self.__destroyed = False
-        self.__cleanup_tasks = []
-
-        self._field_presenters = [
-            FieldPresenter(
-                value=self._phys_params.bn_inner_density,
-                errors=self._phys_params.inner_density_err,
-                field_view=self._view.inner_density_field),
-            FieldPresenter(
-                value=self._phys_params.bn_outer_density,
-                errors=self._phys_params.outer_density_err,
-                field_view=self._view.outer_density_field),
-            FieldPresenter(
-                value=self._phys_params.bn_needle_width,
-                errors=self._phys_params.needle_width_err,
-                field_view=self._view.needle_width_field),
-            FieldPresenter(
-                value=self._phys_params.bn_gravity,
-                errors=self._phys_params.gravity_err,
-                field_view=self._view.gravity_field)]
-        self.__cleanup_tasks.extend(fp.destroy for fp in self._field_presenters)
-
-    def validate(self) -> bool:
-        for fp in self._field_presenters:
-            fp.show_errors()
-        return not self._phys_params.has_errors
-
-    def destroy(self) -> None:
-        assert not self.__destroyed
-        for f in self.__cleanup_tasks:
-            f()
-        self.__destroyed = True
-
-
-class IFTPhysicalParametersFormPresenter(WizardPageWrapperPresenter):
-    create_presenter = _IFTPhysicalParametersFormPresenter
