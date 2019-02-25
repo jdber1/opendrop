@@ -108,6 +108,9 @@ class ImageProcessingFormView(GtkWidgetView[Gtk.Stack]):
         # Image acquisition preview view
         self.stage = StageView(render=self._stage_render)
 
+    def focus_stage(self) -> None:
+        self._stage_render.grab_focus()
+
     def show_no_preview_error(self) -> None:
         self.widget.set_visible_child(self._no_preview_error)
 
@@ -131,6 +134,7 @@ class ImageProcessingFormPresenter(Generic[ImageProcessingFormViewType]):
             return
 
         self._view.show_main()
+        self._view.focus_stage()
 
         self._preview = preview
         self.__cleanup_tasks.append(self._preview.destroy)

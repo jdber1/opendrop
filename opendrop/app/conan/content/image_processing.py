@@ -143,13 +143,15 @@ class ConanImageProcessingFormView(ImageProcessingFormView):
         define_region_mode_lbl = Gtk.Label('Cursor is defining:')
         self._toolbar_area.attach(define_region_mode_lbl, 0, 0, 1, 1)
 
-        self._drop_region_mode_inp = Gtk.RadioButton(label='Drop region')
+        self._drop_region_mode_inp = Gtk.RadioButton(label='Drop region', focus_on_click=False)
         self._toolbar_area.add(self._drop_region_mode_inp)
 
         self._toolbar_area.add(Gtk.Label('or'))
 
         self._surface_line_mode_inp = Gtk.RadioButton.new_with_label_from_widget(self._drop_region_mode_inp,
                                                                                  label='Surface line')
+        self._surface_line_mode_inp.props.focus_on_click = False
+
         self._toolbar_area.add(self._surface_line_mode_inp)
 
         using_needle_inp_lbl = Gtk.Label(xalign=0)
