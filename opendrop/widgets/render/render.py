@@ -13,13 +13,22 @@ class Render(Gtk.DrawingArea, protocol.Render):
     _viewport_extents = Rect2(pos=(0, 0), size=_canvas_size)  # type: Rect2[float]
     _viewport_stretch = protocol.Render.ViewportStretch.FIT
 
+    STYLE = """
+        .render {
+            border: 1px solid white;
+        }
+    """
+
+    _STYLE_PROV = Gtk.CssProvider()
+    _STYLE_PROV.load_from_data(bytes(STYLE, 'utf-8'))
+
     class RenderObjectContainer:
         def __init__(self, render_object: protocol.RenderObject, handler_ids: Sequence[int]) -> None:
             self.render_object = render_object
             self.handler_ids = tuple(handler_ids)
 
-    def __init__(self, **options) -> None:
-        super().__init__(**options)
+    def __init__(self, *, can_focus=True, **options) -> None:
+        super().__init__(focus_on_click=True, can_focus=can_focus, **options)
         self._ro_containers = []  # type: MutableSequence[Render.RenderObjectContainer]
 
         self.add_events(
@@ -28,7 +37,11 @@ class Render(Gtk.DrawingArea, protocol.Render):
             | Gdk.EventMask.BUTTON_RELEASE_MASK
             | Gdk.EventMask.FOCUS_CHANGE_MASK
             | Gdk.EventMask.ENTER_NOTIFY_MASK
-            | Gdk.EventMask.LEAVE_NOTIFY_MASK)
+            | Gdk.EventMask.LEAVE_NOTIFY_MASK
+            | Gdk.EventMask.KEY_PRESS_MASK)
+
+        self.get_style_context().add_class('render')
+        self.get_style_context().add_provider(self._STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     def do_draw(self, cr: cairo.Context) -> None:
         viewport_widget_extents = self.props.viewport_widget_extents
@@ -38,6 +51,16 @@ class Render(Gtk.DrawingArea, protocol.Render):
             cr.clip()
             for obj in self._render_objects:
                 obj.draw(cr)
+
+        if self.has_focus():
+            # Draw focus indicator
+            stroke_width = 1
+            rectangle_pos = viewport_widget_extents.pos + (stroke_width/2, stroke_width/2)
+            rectangle_size = viewport_widget_extents.size - (stroke_width, stroke_width)
+            cr.rectangle(*rectangle_pos, *rectangle_size)
+            cr.set_source_rgb(70/255, 142/255, 220/255)
+            cr.set_line_width(stroke_width)
+            cr.stroke()
 
     @property
     def _render_objects(self) -> Sequence[protocol.RenderObject]:
@@ -73,11 +96,22 @@ class Render(Gtk.DrawingArea, protocol.Render):
     def do_button_press_event(self, event: Gdk.EventButton) -> None:
         self.emit('cursor-down-event', self._canvas_coord_from_widget(Vector2(event.x, event.y)))
 
+        if self.props.can_focus:
+            self.grab_focus()
+
     def do_button_release_event(self, event: Gdk.EventButton) -> None:
         self.emit('cursor-up-event', self._canvas_coord_from_widget(Vector2(event.x, event.y)))
 
     def do_motion_notify_event(self, event: Gdk.EventButton) -> None:
         self.emit('cursor-motion-event', self._canvas_coord_from_widget(Vector2(event.x, event.y)))
+
+    def do_key_press_event(self, event: Gdk.EventKey) -> bool:
+        if event.keyval == Gdk.KEY_Tab:
+            # Allow user to use the tab key to cycle focus to another widget
+            return False
+
+        # Stop event propagation
+        return True
 
     # Cursor signals
 
