@@ -3,6 +3,7 @@ from typing import Optional
 from gi.repository import Gdk
 
 from opendrop.mytypes import Image
+from opendrop.utility import keyboard
 from opendrop.utility.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Vector2, Rect2
@@ -20,6 +21,10 @@ class StageView:
             self.bn_cursor_name = AtomicBindableVar(None)
             self.bn_pos = AtomicBindableVar(Vector2(0, 0))
 
+    class Keyboard:
+        def __init__(self) -> None:
+            self.on_key_press = Event()
+
     def __init__(self, render: protocol.Render) -> None:
         self._render = render
 
@@ -31,6 +36,8 @@ class StageView:
         self.cursor = self.Cursor()
         self.cursor.bn_cursor_name.on_changed.connect(self._update_cursor_appearance)
 
+        self.keyboard = self.Keyboard()
+
         self.bn_canvas_source = AtomicBindableAdapter(setter=self._set_canvas_source)  # type: AtomicBindable[Optional[Image]]
 
         self._render.connect('enter-notify-event', self._hdl_render_mouse_cross)
@@ -38,6 +45,8 @@ class StageView:
         self._render.connect('cursor-down-event', self._hdl_render_cursor_down_event)
         self._render.connect('cursor-up-event', self._hdl_render_cursor_up_event)
         self._render.connect('cursor-motion-event', lambda _, pos: self.cursor.bn_pos.set(pos))
+
+        self._render.connect('key-press-event', self._hdl_render_key_press_event)
 
     def _hdl_render_cursor_down_event(self, render: protocol.Render, pos: Vector2[float]) -> None:
         self.cursor.bn_pos.set(pos)
@@ -52,6 +61,12 @@ class StageView:
             return
 
         self._is_mouse_inside = event.type is Gdk.EventType.ENTER_NOTIFY
+
+    def _hdl_render_key_press_event(self, widget: protocol.Render, event: Gdk.EventKey) -> None:
+        self.keyboard.on_key_press.fire(
+            keyboard.KeyEvent(
+                key=keyboard.Key.from_value(event.keyval),
+                modifier=int(event.state)))
 
     _is_mouse_inside_value = False
 
@@ -108,6 +123,8 @@ class StageTool:
     def do_cursor_motion(self, pos: Vector2[float]) -> None:
         pass
 
+    def do_keyboard_key_press(self, event: keyboard.KeyEvent) -> None:
+        pass
 
 class StagePresenter:
     def __init__(self, view: StageView) -> None:
@@ -124,7 +141,8 @@ class StagePresenter:
         event_connections = [
             self._view.cursor.on_down.connect(self._hdl_view_cursor_down),
             self._view.cursor.on_up.connect(self._hdl_view_cursor_up),
-            self._view.cursor.bn_pos.on_changed.connect(self._hdl_view_cursor_pos_changed)]
+            self._view.cursor.bn_pos.on_changed.connect(self._hdl_view_cursor_pos_changed),
+            self._view.keyboard.on_key_press.connect(self._hdl_view_keyboard_key_press)]
         self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
         self.__cleanup_tasks.append(self._remove_current_active_tool)
@@ -145,6 +163,12 @@ class StagePresenter:
             return
 
         self._active_tool.do_cursor_motion(self._view.cursor.bn_pos.get())
+
+    def _hdl_view_keyboard_key_press(self, event: keyboard.KeyEvent) -> None:
+        if self._active_tool is None:
+            return
+
+        self._active_tool.do_keyboard_key_press(event)
 
     @property
     def active_tool(self) -> StageTool:
