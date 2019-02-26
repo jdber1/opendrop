@@ -48,7 +48,63 @@ class ConanAnalysisSaverOptions:
         return self.bn_save_dir_parent.get() / self.bn_save_dir_name.get()
 
 
-# Main functions and classes start here
+def save_drops(drops: Iterable[ConanDropAnalysis], options: ConanAnalysisSaverOptions) -> None:
+    drops = list(drops)
+
+    full_dir = options.save_root_dir
+    assert full_dir.is_dir() or not full_dir.exists()
+    full_dir.mkdir(parents=True, exist_ok=True)
+    clear_directory_contents(full_dir)
+
+    padding = len(str(len(drops)))
+    dir_name = options.bn_save_dir_name.get()
+    for i, drop in enumerate(drops):
+        drop_dir_name = dir_name + '{n:0>{padding}}'.format(n=(i+1), padding=padding)  # i+1 for 1-based indexing.
+        _save_individual(drop, drop_dir_name, options)
+
+    with (full_dir/'contact_angles.csv').open('w', newline='') as out_file:
+        _save_angle_data(drops, out_file)
+
+    if len(drops) <= 1:
+        return
+
+    figure_opts = options.angle_figure_opts
+    if figure_opts.bn_should_save.get():
+        fig_size = figure_opts.size
+        dpi = figure_opts.bn_dpi.get()
+        with (full_dir/'left_angle_plot.png').open('wb') as out_file:
+            _save_left_angle_figure(
+                drops=drops,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
+        with (full_dir/'right_angle_plot.png').open('wb') as out_file:
+            _save_right_angle_figure(
+                drops=drops,
+                out_file=out_file,
+                fig_size=fig_size,
+                dpi=dpi)
+
+    with (full_dir/'timeline.csv').open('w', newline='') as out_file:
+        _save_timeline_data(drops, out_file)
+
+
+def _save_individual(drop: ConanDropAnalysis, drop_dir_name: str, options: ConanAnalysisSaverOptions) -> None:
+    full_dir = options.save_root_dir/drop_dir_name
+    full_dir.mkdir(parents=True)
+
+    _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
+    _save_drop_image_annotated(drop, out_file_path=full_dir / 'image_annotated.png')
+
+    with (full_dir/'profile_extracted.csv').open('wb') as out_file:
+        _save_drop_contour(drop, out_file=out_file)
+
+    with (full_dir/'tangents.csv').open('wb') as out_file:
+        _save_drop_contact_tangents(drop, out_file=out_file)
+
+    with (full_dir/'surface.csv').open('wb') as out_file:
+        _save_surface_line(drop, out_file=out_file)
+
 
 def _save_drop_image(drop: ConanDropAnalysis, out_file_path: Path) -> None:
     image = drop.image
@@ -192,56 +248,23 @@ def _save_angle_data(drops: Sequence[ConanDropAnalysis], out_file) -> None:
     writer.writerows(data)
 
 
-def _save_individual(drop: ConanDropAnalysis, drop_dir_name: str, options: ConanAnalysisSaverOptions) -> None:
-    full_dir = options.save_root_dir/drop_dir_name
-    full_dir.mkdir(parents=True)
+def _save_timeline_data(drops: Sequence[ConanDropAnalysis], out_file) -> None:
+    writer = csv.writer(out_file)
+    writer.writerow([
+        'Time (s)',
+        'Left angle (degrees)',
+        'Right angle (degrees)',
+        'Left contact x-coordinate (px)',
+        'Left contact y-coordinate (px)',
+        'Right contact x-coordinate (px)',
+        'Right contact y-coordinate (px)',
+    ])
 
-    _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
-    _save_drop_image_annotated(drop, out_file_path=full_dir / 'image_annotated.png')
-
-    with (full_dir/'profile_extracted.csv').open('wb') as out_file:
-        _save_drop_contour(drop, out_file=out_file)
-
-    with (full_dir/'tangents.csv').open('wb') as out_file:
-        _save_drop_contact_tangents(drop, out_file=out_file)
-
-    with (full_dir/'surface.csv').open('wb') as out_file:
-        _save_surface_line(drop, out_file=out_file)
-
-
-def save_drops(drops: Iterable[ConanDropAnalysis], options: ConanAnalysisSaverOptions) -> None:
-    drops = list(drops)
-
-    full_dir = options.save_root_dir
-    assert full_dir.is_dir() or not full_dir.exists()
-    full_dir.mkdir(parents=True, exist_ok=True)
-    clear_directory_contents(full_dir)
-
-    padding = len(str(len(drops)))
-    dir_name = options.bn_save_dir_name.get()
-    for i, drop in enumerate(drops):
-        drop_dir_name = dir_name + '{n:0>{padding}}'.format(n=(i+1), padding=padding)  # i+1 for 1-based indexing.
-        _save_individual(drop, drop_dir_name, options)
-
-    with (full_dir/'contact_angles.csv').open('w', newline='') as out_file:
-        _save_angle_data(drops, out_file)
-
-    if len(drops) <= 1:
-        return
-
-    figure_opts = options.angle_figure_opts
-    if figure_opts.bn_should_save.get():
-        fig_size = figure_opts.size
-        dpi = figure_opts.bn_dpi.get()
-        with (full_dir/'left_angle_plot.png').open('wb') as out_file:
-            _save_left_angle_figure(
-                drops=drops,
-                out_file=out_file,
-                fig_size=fig_size,
-                dpi=dpi)
-        with (full_dir/'right_angle_plot.png').open('wb') as out_file:
-            _save_right_angle_figure(
-                drops=drops,
-                out_file=out_file,
-                fig_size=fig_size,
-                dpi=dpi)
+    for drop in drops:
+        writer.writerow([
+            drop.image_timestamp,
+            math.degrees(drop.bn_left_angle.get()),
+            math.degrees(drop.bn_right_angle.get()),
+            *drop.bn_left_point.get(),
+            *drop.bn_right_point.get(),
+        ])
