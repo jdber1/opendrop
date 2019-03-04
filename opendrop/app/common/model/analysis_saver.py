@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.geometry import Line2, Rect2, Vector2
 from opendrop.utility.validation import check_is_positive
@@ -39,7 +39,7 @@ class FigureOptions:
                     check_is_positive),
             enabled=self.bn_should_save)
 
-        self.errors = SetBindable.union(self.dpi_err, self.size_w_err, self.size_h_err)
+        self.errors = bindable_function(set.union)(self.dpi_err, self.size_w_err, self.size_h_err)(AtomicBindableVar(False))
 
     @property
     def size(self) -> Tuple[float, float]:

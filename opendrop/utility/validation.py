@@ -7,9 +7,8 @@ from typing import Set, Sized, Any, Callable, Iterable, TypeVar, Generic, Option
 
 from gi.repository import Gtk
 
-from opendrop.utility.bindable import bindable_function, SetBindable, AtomicBindableVar, if_expr, \
-    BuiltinSetBindable
-from opendrop.utility.bindable.bindable import Bindable
+from opendrop.utility.bindable import bindable_function, AtomicBindableVar, if_expr
+from opendrop.utility.bindable.bindable import Bindable, AtomicBindable
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Rect2
 
@@ -82,7 +81,7 @@ def check_is_finite(x: float) -> Iterable[ValidationFlag]:
     return flags
 
 
-@bindable_function(autobind_return=BuiltinSetBindable)
+@bindable_function(autobind_return=lambda: AtomicBindableVar(None))
 def validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]], enabled: bool = True) \
         -> Set[ValidationFlag]:
     if not enabled:
@@ -94,17 +93,16 @@ def validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFla
 
 
 class AssociateStyleClassToWidgetWhenFlagsPresent:
-    def __init__(self, widget: Gtk.Widget, style_class: str, flags: SetBindable[ValidationFlag]) -> None:
+    def __init__(self, widget: Gtk.Widget, style_class: str, flags: AtomicBindable[ValidationFlag]) -> None:
         self._widget = widget
         self._style_class = style_class
         self._flags = flags
 
-        self._flags.on_add.connect(self._hdl_enabled_changed, ignore_args=True)
-        self._flags.on_discard.connect(self._hdl_enabled_changed, ignore_args=True)
+        self._flags.on_changed.connect(self._hdl_enabled_changed, ignore_args=True)
         self._hdl_enabled_changed()
 
     def _hdl_enabled_changed(self) -> None:
-        if len(self._flags) > 0:
+        if len(self._flags.get()) > 0:
             self._widget.get_style_context().add_class(self._style_class)
         else:
             self._widget.get_style_context().remove_class(self._style_class)
@@ -117,10 +115,10 @@ ErrorType = TypeVar('ErrorType')
 
 
 class FieldView(Generic[ValueType, ErrorType]):
-    def __init__(self, value: ValueType, *, errors_out: Optional[SetBindable[ErrorType]] = None,
+    def __init__(self, value: ValueType, *, errors_out: Optional[AtomicBindable[Set[ErrorType]]] = None,
                  on_user_finished_editing: Optional[Event] = None) -> None:
         if errors_out is None:
-            errors_out = BuiltinSetBindable()
+            errors_out = AtomicBindableVar(set())  # type: AtomicBindable[Set[ErrorType]]
 
         if on_user_finished_editing is None:
             on_user_finished_editing = Event()
@@ -131,8 +129,8 @@ class FieldView(Generic[ValueType, ErrorType]):
 
 
 class FieldPresenter(Generic[ValueType, ErrorType]):
-    def __init__(self, value: ValueType, errors: SetBindable[ErrorType], field_view: FieldView[ValueType, ErrorType]) \
-            -> None:
+    def __init__(self, value: ValueType, errors: AtomicBindable[Set[ErrorType]],
+                 field_view: FieldView[ValueType, ErrorType]) -> None:
         self.__destroyed = False
         self.__cleanup_tasks = []
 
@@ -158,7 +156,7 @@ class FieldPresenter(Generic[ValueType, ErrorType]):
 
 
 class ErrorsPresenter(Generic[ErrorType]):
-    def __init__(self, errors_in: SetBindable[ErrorType], errors_out: SetBindable[ErrorType]) -> None:
+    def __init__(self, errors_in: AtomicBindable[Set[ErrorType]], errors_out: AtomicBindable[Set[ErrorType]]) -> None:
         self._errors_in = errors_in
 
         self.__destroyed = False
@@ -170,11 +168,11 @@ class ErrorsPresenter(Generic[ErrorType]):
         data_bindings = [
             errors_out.bind_from(if_expr(cond=self._is_showing_errors,
                                          true=self._errors_in,
-                                         false=BuiltinSetBindable()))]
+                                         false=AtomicBindableVar(set())))]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
     def show_errors(self) -> None:
-        self._is_showing_errors.set(bool(self._errors_in))
+        self._is_showing_errors.set(bool(self._errors_in.get()))
 
     def destroy(self) -> None:
         assert not self.__destroyed

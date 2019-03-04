@@ -6,7 +6,7 @@ import numpy as np
 from opendrop.app.ift.model.analyser import IFTImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.geometry import Rect2
 from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty, check_custom_condition
@@ -85,7 +85,8 @@ class IFTImageAnnotator:
             value=self.bn_needle_width,
             checks=(check_is_positive, check_is_not_empty))
 
-        self._errors = SetBindable.union(self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)
+        self._errors = bindable_function(set.union)(
+            self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)(AtomicBindableVar(True))
 
     def extract_drop_contour(self, image: Image) -> np.ndarray:
         drop_region_px = self.bn_drop_region_px.get()
@@ -139,4 +140,4 @@ class IFTImageAnnotator:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors)
+        return bool(self._errors.get())

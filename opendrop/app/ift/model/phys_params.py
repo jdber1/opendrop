@@ -2,7 +2,7 @@ import math
 from typing import Optional
 
 from opendrop.app.ift.model.analyser import IFTPhysicalParameters
-from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive, check_is_finite
 
@@ -32,11 +32,11 @@ class IFTPhysicalParametersFactory:
             checks=(check_is_not_empty,
                     check_is_positive))
 
-        self._errors = SetBindable.union(
+        self._errors = bindable_function(set.union)(
             self.inner_density_err,
             self.outer_density_err,
             self.needle_width_err,
-            self.gravity_err)
+            self.gravity_err)(AtomicBindableVar(False))
 
     # Property adapters for atomic bindables
     inner_density = AtomicBindable.property_adapter(lambda self: self.bn_inner_density)
@@ -46,7 +46,7 @@ class IFTPhysicalParametersFactory:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors)
+        return bool(self._errors.get())
 
     def create_physical_parameters(self) -> IFTPhysicalParameters:
         inner_density = self.inner_density

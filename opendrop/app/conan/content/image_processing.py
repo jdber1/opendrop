@@ -7,7 +7,6 @@ from opendrop.app.common.content.image_processing.image_processing import ImageP
     ImageProcessingFormView, RectangleView, MaskHighlightView, PolylineView, LineView
 from opendrop.app.common.content.image_processing.stage.tools import RegionDragToDefine, LineDragToDefine
 from opendrop.app.conan.model.image_annotator.image_annotator import ConanImageAnnotator
-from opendrop.utility.bindable import BuiltinSetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
@@ -209,8 +208,8 @@ class ConanImageProcessingFormView(ImageProcessingFormView):
         self.bn_using_needle = GObjectPropertyBindable(using_needle_inp, 'active')
 
         # Error highlighting
-        self.bn_drop_region_err = BuiltinSetBindable()
-        self.bn_surface_line_err = BuiltinSetBindable()
+        self.bn_drop_region_err = AtomicBindableVar(set())
+        self.bn_surface_line_err = AtomicBindableVar(set())
 
         self.bn_drop_region_err.__refs = [
             add_style_class_when_flags(self._drop_region_mode_inp, 'error-text', self.bn_drop_region_err)]

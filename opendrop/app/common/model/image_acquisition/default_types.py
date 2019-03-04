@@ -134,7 +134,7 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
             # Images can't be empty
             return True
 
-        return bool(self.frame_interval_err)
+        return bool(self.frame_interval_err.get())
 
 
 class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
@@ -356,7 +356,7 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
         if self._camera is None:
             return True
 
-        return bool(self.frame_interval_err) or bool(self.num_frames_err)
+        return bool(self.frame_interval_err.get()) or bool(self.num_frames_err.get())
 
 
 class USBCamera(Camera):
@@ -481,7 +481,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
     def has_errors(self) -> bool:
         if super().has_errors:
             return True
-        return bool(self.current_camera_index_err)
+        return bool(self.current_camera_index_err.get())
 
     def destroy(self) -> None:
         if self._camera is not None:

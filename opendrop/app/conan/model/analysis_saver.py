@@ -8,7 +8,7 @@ import numpy as np
 
 from opendrop.app.common.model.analysis_saver import FigureOptions, simple_grapher, draw_line, draw_angle_marker
 from opendrop.app.conan.model.analyser import ConanDropAnalysis
-from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.misc import clear_directory_contents
 from opendrop.utility.validation import validate, check_is_not_empty
@@ -37,11 +37,11 @@ class ConanAnalysisSaverOptions:
             checks=(check_is_not_empty,))
 
         errors = [self.save_dir_parent_err, self.save_dir_name_err, self.angle_figure_opts.errors]
-        self._errors = SetBindable.union(*errors)
+        self._errors = bindable_function(set.union)(*errors)(AtomicBindableVar(False))
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors)
+        return bool(self._errors.get())
 
     @property
     def save_root_dir(self) -> Path:

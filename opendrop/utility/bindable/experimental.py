@@ -1,9 +1,7 @@
-import collections
 import itertools
-from typing import TypeVar, Optional, Sequence, Callable, Mapping, Union, Any, overload
+from typing import TypeVar, Optional, Sequence, Callable, Mapping, Any, overload
 
 from .bindable import AtomicBindable, Bindable, AtomicBindableVar
-from .set import SetBindable, BuiltinSetBindable
 
 BindableType = TypeVar('BindableType', bound=Bindable)
 TxT1 = TypeVar('TxT1')
@@ -67,11 +65,9 @@ if_expr = IfExpr
 
 # AtomicBindableFunction
 
-ArgType = Union[AtomicBindable, SetBindable]
-
 
 class FunctionApplierBindable(BindableProxy[TxT1, TxT2]):
-    def __init__(self, func: Callable, args: Sequence[ArgType], kwargs: Mapping[str, ArgType]) -> None:
+    def __init__(self, func: Callable, args: Sequence[AtomicBindable], kwargs: Mapping[str, AtomicBindable]) -> None:
         self._func = func
         self._args = tuple(args)
         self._kwargs = dict(kwargs)
@@ -85,23 +81,18 @@ class FunctionApplierBindable(BindableProxy[TxT1, TxT2]):
             x.on_new_tx.connect(self._update, ignore_args=True)
 
     @staticmethod
-    def _convert_to_pod(x: ArgType) -> Any:
+    def _convert_to_pod(x: AtomicBindable) -> Any:
         if not isinstance(x, Bindable):
             return x
         bindable = x
         if isinstance(bindable, AtomicBindable):
             return bindable.get()
-        elif isinstance(bindable, SetBindable):
-            return set(bindable)
         else:
             raise ValueError('Unrecognized bindable type')
 
     @staticmethod
-    def _convert_to_bindable(x: ArgType) -> Any:
-        if isinstance(x, collections.Set):
-            return BuiltinSetBindable(x)
-        else:
-            return AtomicBindableVar(x)
+    def _convert_to_bindable(x: Any) -> AtomicBindable:
+        return AtomicBindableVar(x)
 
     def _calculate_result(self) -> Any:
         args_pod = [self._convert_to_pod(x) for x in self._args]

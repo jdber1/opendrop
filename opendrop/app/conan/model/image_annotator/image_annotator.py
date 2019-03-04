@@ -7,7 +7,7 @@ import numpy as np
 from opendrop.app.conan.model.analyser.container import ConanImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable import SetBindable
+from opendrop.utility.bindable import bindable_function
 from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.geometry import Rect2, Line2
 from opendrop.utility.mycv import _realign_squished_contour
@@ -76,7 +76,7 @@ class ConanImageAnnotator:
             value=self.bn_surface_line_px,
             checks=(check_is_not_empty,))
 
-        self._errors = SetBindable.union(self.drop_region_px_err, self.surface_line_px_err)
+        self._errors = bindable_function(set.union)(self.drop_region_px_err, self.surface_line_px_err)(AtomicBindableVar(False))
 
     def extract_drop_contours(self, image: Image) -> Sequence[np.ndarray]:
         drop_region_px = self.bn_drop_region_px.get()
@@ -138,4 +138,4 @@ class ConanImageAnnotator:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors)
+        return bool(self._errors.get())

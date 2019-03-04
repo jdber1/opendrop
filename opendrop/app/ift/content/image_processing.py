@@ -7,7 +7,6 @@ from opendrop.app.common.content.image_processing.image_processing import ImageP
     ImageProcessingFormView, RectangleView, MaskHighlightView, PolylineView
 from opendrop.app.common.content.image_processing.stage.tools import RegionDragToDefine
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
-from opendrop.utility.bindable import BuiltinSetBindable
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindableVar
 from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
@@ -202,8 +201,8 @@ class IFTImageProcessingFormView(ImageProcessingFormView):
         self.bn_define_region_mode = AtomicBindableAdapter(setter=self._set_define_region_mode)
 
         # Error highlighting
-        self.bn_drop_region_err = BuiltinSetBindable()
-        self.bn_needle_region_err = BuiltinSetBindable()
+        self.bn_drop_region_err = AtomicBindableVar(set())
+        self.bn_needle_region_err = AtomicBindableVar(set())
 
         self.bn_drop_region_err.__refs = [
             add_style_class_when_flags(self._drop_region_mode_inp, 'error-text', self.bn_drop_region_err)]
