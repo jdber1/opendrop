@@ -5,10 +5,10 @@ from gi.repository import Gio, Gtk, GdkPixbuf, GLib
 
 from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
+from opendrop.utility.bindable import AtomicBindable
 from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
 from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
+from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator
 
@@ -22,12 +22,7 @@ class HeaderView(GtkWidgetView[Gtk.Grid]):
     def __init__(self) -> None:
         self.widget = Gtk.HeaderBar(hexpand=True)
 
-        self.bn_header_title = AtomicBindableAdapter()  # type: AtomicBindableAdapter[str]
-        self.bn_return_to_menu_btn_visible = AtomicBindableAdapter()  # type: AtomicBindableAdapter[bool]
-
         self.on_return_to_menu_btn_clicked = Event()
-
-        link_atomic_bn_adapter_to_g_prop(self.bn_header_title, self.widget, 'title')
 
         logo_pixbuf = self.LOGO_WIDE_PIXBUF.scale_simple(
             dest_width=100,
@@ -39,7 +34,9 @@ class HeaderView(GtkWidgetView[Gtk.Grid]):
         return_to_menu_btn = Gtk.Button(label='Return to menu')
         self.widget.pack_end(return_to_menu_btn)
         return_to_menu_btn.connect('clicked', lambda *_: self.on_return_to_menu_btn_clicked.fire())
-        link_atomic_bn_adapter_to_g_prop(self.bn_return_to_menu_btn_visible, return_to_menu_btn, 'visible')
+
+        self.bn_header_title = GObjectPropertyBindable(self.widget, 'title')  # type: AtomicBindable[str]
+        self.bn_return_to_menu_btn_visible = GObjectPropertyBindable(return_to_menu_btn, 'visible')  # type: AtomicBindable[bool]
 
 
 class HeaderPresenter:

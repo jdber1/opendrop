@@ -11,7 +11,7 @@ from opendrop.app.common.model.operation import Operation
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
 from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import link_atomic_bn_adapter_to_g_prop
+from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
 
 
@@ -176,13 +176,10 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
                 GObject.BindingFlags.SYNC_CREATE,  # flags
                 lambda _, v: '{:.0%}'.format(v))  # transform_to
 
-            self.bn_fraction = AtomicBindableAdapter()
+            self.bn_fraction = GObjectPropertyBindable(progress_bar, 'fraction')
             self.bn_time_elapsed = AtomicBindableAdapter(setter=self._set_time_elapsed)
             self.bn_time_remaining = AtomicBindableAdapter(setter=self._set_time_remaining)
-            self.bn_time_remaining_visible = AtomicBindableAdapter()
-
-            link_atomic_bn_adapter_to_g_prop(self.bn_fraction, progress_bar, 'fraction')
-            link_atomic_bn_adapter_to_g_prop(self.bn_time_remaining_visible, self._time_remaining_lbl, 'visible')
+            self.bn_time_remaining_visible = GObjectPropertyBindable(self._time_remaining_lbl, 'visible')
 
         def _set_time_elapsed(self, seconds: float) -> None:
             self._time_elapsed_lbl.props.label = 'Elapsed: {}'.format(pretty_time(seconds))
@@ -338,11 +335,8 @@ class LinearNavigatorFooterView(GtkWidgetView[Gtk.Box]):
         self.on_back_btn_clicked = Event()
         back_btn.connect('clicked', lambda *_: self.on_back_btn_clicked.fire())
 
-        self.bn_back_btn_visible = AtomicBindableAdapter()
-        self.bn_next_btn_visible = AtomicBindableAdapter()
-
-        link_atomic_bn_adapter_to_g_prop(self.bn_back_btn_visible, back_btn, 'visible')
-        link_atomic_bn_adapter_to_g_prop(self.bn_next_btn_visible, next_btn, 'visible')
+        self.bn_back_btn_visible = GObjectPropertyBindable(back_btn, 'visible')
+        self.bn_next_btn_visible = GObjectPropertyBindable(next_btn, 'visible')
 
 
 # Helper functions
