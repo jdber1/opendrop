@@ -103,8 +103,8 @@ class EventConnection:
         if asyncio.iscoroutinefunction(self.handler):
             loop = loop if loop is not None else asyncio.get_event_loop()
             self._track_task(loop.create_task(self.handler(*args, **kwargs)))
-            # Increment the invocation count after the task is tracked, otherwise if `self._opts['once'] is True`,
-            # incrementing before tracking the task would disconnect the connection and then it wouldn't allow us to
+            # Increment the invocation count after the task is tracked, otherwise, if `self._opts['once'] is True`,
+            # incrementing before tracking the task would disconnect the connection first and we wouldn't be able to
             # track the task afterwards.
             self._invocation_count += 1
         else:
@@ -249,7 +249,7 @@ class Event:
         bare list of connections while inadvertently modifying the elements during iteration (either through disconnects
         or new connections). It is therefore recommended to use this property if you require read-only access to the
         list of current connections. There is no guarantee that all connections in the tuple returned will always be
-        connected during the tuple's lifetime, as it is after all, only an immutable copy.
+        connected during the tuple's lifetime, as it is after all only an immutable copy.
         """
         return tuple(self.__connections)
 
