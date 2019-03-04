@@ -42,7 +42,7 @@ bibliography: paper.bib
 ---
 
 # Summary
-
+Two key quantities in colloid science and surface chemistry are interfacial tension, a measure of the amount of energy required to make an interface between two fluids, and the contact angle, a measure of the wettability of a surface. Currently, researchers generally measure these quantities using expensive commercial equipment due to the complexity of the underlying image processing and numerical algorithms required. Here we present an open-source software package OpenDrop, capable of measuring interfacial tension and contact angle in a variety of configurations with field-leading accuracy and reproducibility. The availability of the software allows the interested reader to e↵ectively implement, explore and further develop the techniques for both research and teaching at a small fraction of the cost of commercial options.
 
 # Acknowledgements
 
