@@ -85,7 +85,7 @@ class IFTImageAnnotator:
             checks=(check_is_positive, check_is_not_empty))
 
         self._errors = bn_apply(
-            set.union,
+            lambda *args: any(args),
             self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)
 
     def extract_drop_contour(self, image: Image) -> np.ndarray:
