@@ -31,9 +31,12 @@ class Bindable(Generic[_T]):
         return self._get_value()
 
     def set(self, new_value: _T) -> None:
-        current_value = self.get()
-        if self._check_equals(current_value, new_value):
-            return
+        try:
+            current_value = self.get()
+            if self._check_equals(current_value, new_value):
+                return
+        except AttributeError:
+            pass
 
         self._set_value(new_value)
         self.on_changed.fire()

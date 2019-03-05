@@ -29,6 +29,22 @@ class TestBindable:
         self.my_bindable._set_value.assert_called_once_with(new_value)
 
 
+class TestBindable_WriteOnly:
+    @pytest.fixture(autouse=True)
+    def fixture(self):
+        self.my_bindable = StubBindable()
+        self.my_bindable._get_value = Mock(side_effect=AttributeError)
+        self.my_bindable._set_value = Mock()
+
+    def test_set(self):
+        self.my_bindable._get_value.assert_not_called()
+
+        new_value = object()
+        self.my_bindable.set(new_value)
+
+        self.my_bindable._set_value.assert_called_once_with(new_value)
+
+
 class TestBindable_OnChanged:
     @pytest.fixture(autouse=True)
     def fixture(self):
