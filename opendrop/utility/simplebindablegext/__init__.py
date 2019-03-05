@@ -1,0 +1,1 @@
+from .property_bindable import GObjectPropertyBindable
