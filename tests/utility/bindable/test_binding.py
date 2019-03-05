@@ -75,7 +75,7 @@ class TestBinding_With_DstIsWriteOnly:
     def fixture(self):
         self.src_bindable = MockBindable()
         self.dst_bindable = MockBindable()
-        self.dst_bindable.get.side_effect = AttributeError
+        self.dst_bindable.get.side_effect = NotImplementedError
 
         self.binding = Binding(src=self.src_bindable, dst=self.dst_bindable)
 

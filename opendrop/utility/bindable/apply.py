@@ -27,7 +27,7 @@ class _FunctionApplierBindable(Bindable[_T]):
         return self._function(*args, **kwargs)
 
     def _set_value(self, new_value: _T) -> None:
-        raise AttributeError("can't set bindable result of apply()")
+        raise NotImplementedError("can't set bindable result of apply()")
 
 
 apply = _FunctionApplierBindable

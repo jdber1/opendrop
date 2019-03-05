@@ -62,7 +62,7 @@ def test_moderator_active_speaker_key_readonly():
     # Try to set the active_speaker attribute
     with pytest.raises(AttributeError):
         mod.active_speaker_key = 1
-    with pytest.raises(AttributeError):
+    with pytest.raises(NotImplementedError):
         mod.bn_active_speaker_key.set(1)
 
 

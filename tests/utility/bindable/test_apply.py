@@ -36,6 +36,11 @@ class TestApply:
 
         self.my_function.assert_called_once_with(*args, **kwargs)
 
+    def test_result_set(self):
+        # Can't set the value of result
+        with pytest.raises(NotImplementedError):
+            self.result.set(object())
+
     def test_no_indirect_references_to_result(self):
         result_wr = weakref.ref(self.result)
         del self.result

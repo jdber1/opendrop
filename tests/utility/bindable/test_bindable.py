@@ -33,7 +33,7 @@ class TestBindable_WriteOnly:
     @pytest.fixture(autouse=True)
     def fixture(self):
         self.my_bindable = StubBindable()
-        self.my_bindable._get_value = Mock(side_effect=AttributeError)
+        self.my_bindable._get_value = Mock(side_effect=NotImplementedError)
         self.my_bindable._set_value = Mock()
 
     def test_set(self):
@@ -162,7 +162,7 @@ class TestAccessorBindable_ReadOnly:
         self.my_bindable = AccessorBindable(getter=Mock())
 
     def test_set(self):
-        with pytest.raises(AttributeError):
+        with pytest.raises(NotImplementedError):
             self.my_bindable.set(123)
 
 
@@ -172,7 +172,7 @@ class TestAccessorBindable_WriteOnly:
         self.my_bindable = AccessorBindable(setter=Mock())
 
     def test_get(self):
-        with pytest.raises(AttributeError):
+        with pytest.raises(NotImplementedError):
             self.my_bindable.get()
 
 

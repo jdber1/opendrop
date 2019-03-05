@@ -33,10 +33,11 @@ class Bindable(Generic[_T]):
     def set(self, new_value: _T) -> None:
         try:
             current_value = self.get()
+        except NotImplementedError:
+            pass
+        else:
             if self._check_equals(current_value, new_value):
                 return
-        except AttributeError:
-            pass
 
         self._set_value(new_value)
         self.on_changed.fire()
@@ -54,10 +55,12 @@ class Bindable(Generic[_T]):
     @abstractmethod
     def _get_value(self) -> _T:
         """Actual implementation used to get the value"""
+        raise NotImplementedError
 
     @abstractmethod
     def _set_value(self, new_value: _T) -> None:
         """Actual implementation used to set a new value"""
+        raise NotImplementedError
 
 
 class BoxBindable(Bindable[_T]):
@@ -86,12 +89,12 @@ class AccessorBindable(Bindable[_T]):
 
     def _get_value(self) -> _T:
         if self._getter is None:
-            raise AttributeError("unreadable bindable")
+            raise NotImplementedError
 
         return self._getter()
 
     def _set_value(self, new_value: _T) -> None:
         if self._setter is None:
-            raise AttributeError("can't set bindable")
+            raise NotImplementedError
 
         self._setter(new_value)

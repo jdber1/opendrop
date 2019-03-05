@@ -30,13 +30,18 @@ class Binding(Generic[_T, _U]):
     def _hdl_bindable_changed(self, from_: Bindable[_U]) -> None:
         ...
     def _hdl_bindable_changed(self, from_) -> None:
-        target = self._get_other(from_)
-
         try:
             value = from_.get()
-            target.set(self._transform_value(value, target=target))
-        except AttributeError:
-            pass
+        except NotImplementedError:
+            return
+
+        target = self._get_other(from_)
+        value = self._transform_value(value, target=target)
+
+        try:
+            target.set(value)
+        except NotImplementedError:
+            return
 
     @overload
     def _get_other(self, this: Bindable[_T]) -> Bindable[_U]:
