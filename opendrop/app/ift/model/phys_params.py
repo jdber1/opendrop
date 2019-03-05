@@ -31,7 +31,7 @@ class IFTPhysicalParametersFactory:
             checks=(check_is_not_empty,
                     check_is_positive))
 
-        self._errors = bn_apply(set.union,
+        self._errors = bn_apply(lambda *args: any(args),
             self.inner_density_err,
             self.outer_density_err,
             self.needle_width_err,
@@ -71,7 +71,7 @@ class IFTPhysicalParametersFactory:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors.get())
+        return self._errors.get()
 
     def create_physical_parameters(self) -> IFTPhysicalParameters:
         inner_density = self.inner_density

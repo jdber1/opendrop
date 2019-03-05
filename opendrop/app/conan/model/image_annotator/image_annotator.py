@@ -75,7 +75,7 @@ class ConanImageAnnotator:
             value=self.bn_surface_line_px,
             checks=(check_is_not_empty,))
 
-        self._errors = bn_apply(set.union, self.drop_region_px_err, self.surface_line_px_err)
+        self._errors = bn_apply(lambda *args: any(args), self.drop_region_px_err, self.surface_line_px_err)
 
     def extract_drop_contours(self, image: Image) -> Sequence[np.ndarray]:
         drop_region_px = self.bn_drop_region_px.get()
@@ -137,4 +137,4 @@ class ConanImageAnnotator:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors.get())
+        return self._errors.get()

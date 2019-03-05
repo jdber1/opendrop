@@ -38,7 +38,8 @@ class FigureOptions:
                     check_is_positive),
             enabled=self.bn_should_save)
 
-        self.errors = bn_apply(set.union, self.dpi_err, self.size_w_err, self.size_h_err)
+        self.errors = bn_apply(lambda *args: any(args), self.dpi_err, self.size_w_err, self.size_h_err)
+
 
     @property
     def size(self) -> Tuple[float, float]:

@@ -140,4 +140,4 @@ class IFTImageAnnotator:
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors.get())
+        return self._errors.get()

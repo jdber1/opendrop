@@ -58,11 +58,11 @@ class IFTAnalysisSaverOptions:
                             self.surface_area_figure_opts):
             errors.append(figure_opts.errors)
 
-        self._errors = bn_apply(set.union, *errors)
+        self._errors = bn_apply(lambda *args: any(args), *errors)
 
     @property
     def has_errors(self) -> bool:
-        return bool(self._errors.get())
+        return self._errors.get()
 
     @property
     def save_root_dir(self) -> Path:
