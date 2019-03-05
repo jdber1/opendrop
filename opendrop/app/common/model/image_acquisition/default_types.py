@@ -3,7 +3,6 @@ import functools
 import time
 from abc import abstractmethod
 from asyncio import Future
-from operator import attrgetter
 from pathlib import Path
 from typing import Union, Sequence, MutableSequence, Tuple, Optional, TypeVar, Generic
 
@@ -11,9 +10,8 @@ import cv2
 import numpy as np
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar, AtomicBindableAdapter
 from opendrop.utility.events import Event, EventConnection
+from opendrop.utility.simplebindable import Bindable, BoxBindable, AccessorBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
 from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview, ScheduledImage
 
@@ -36,10 +34,10 @@ class ImageSequenceImageAcquisitionPreview(ImageAcquisitionPreview[ImageSequence
         self._index = 0
         self._images = images
 
-        self._bn_index = AtomicBindableAdapter(self._get_index, self._set_index)  # type: AtomicBindableAdapter[int]
-        self._bn_num_images = AtomicBindableAdapter(self._get_num_images)  # type: AtomicBindableAdapter[int]
+        self._bn_index = AccessorBindable(self._get_index, self._set_index)
+        self._bn_num_images = AccessorBindable(self._get_num_images)
 
-        self.bn_alive = AtomicBindableVar(True)  # type: AtomicBindable[bool]
+        self.bn_alive = BoxBindable(True)
         self.config = ImageSequenceImageAcquisitionPreviewConfig(self)
 
     @property
@@ -72,21 +70,27 @@ class BaseImageSequenceImageAcquisitionImpl(ImageAcquisitionImpl):
 
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
-        self._bn_images = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[Image]]
+        self._bn_images = BoxBindable(tuple())  # type: Bindable[Sequence[Image]]
 
-        self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[int]
+        self.bn_frame_interval = BoxBindable(None)  # type: Bindable[Optional[int]]
 
         # Input validation
 
-        frame_interval_err_enabled = bindable_function(
-            lambda images: len(images) != 1 if images is not None else True
-        )(self._bn_images)(AtomicBindableVar(False))
+        frame_interval_err_enabled = bn_apply(
+            lambda images: len(images) != 1 if images is not None else True,
+            self._bn_images)
         self.frame_interval_err = validate(
             value=self.bn_frame_interval,
             checks=(check_is_not_empty, check_is_positive),
             enabled=frame_interval_err_enabled)
 
-    _images = AtomicBindable.property_adapter(attrgetter('_bn_images'))
+    @property
+    def _images(self) -> Sequence[Image]:
+        return self._bn_images.get()
+
+    @_images.setter
+    def _images(self, new_images: Sequence[Image]) -> None:
+        self._bn_images.set(new_images)
 
     def acquire_images(self) -> Tuple[Sequence[Future], Sequence[float]]:
         images = self._images
@@ -141,7 +145,7 @@ class LocalImagesImageAcquisitionImpl(BaseImageSequenceImageAcquisitionImpl):
     def __init__(self) -> None:
         super().__init__()
         self._last_loaded_paths = tuple()  # type: Sequence[Path]
-        self.bn_last_loaded_paths = AtomicBindableAdapter(self._get_last_loaded_paths)  # type: AtomicBindableVar[Sequence[Path]]
+        self.bn_last_loaded_paths = AccessorBindable(self._get_last_loaded_paths)
 
     def _get_last_loaded_paths(self) -> Sequence[Path]:
         return self._last_loaded_paths
@@ -194,7 +198,7 @@ class CameraImageAcquisitionPreview(ImageAcquisitionPreview):
         self._buffer_outdated = False
         self._poke_image_loop_timer_handle = None  # type: Optional[asyncio.TimerHandle]
 
-        self.bn_alive = AtomicBindableVar(True)  # type: AtomicBindableAdapter[bool]
+        self.bn_alive = BoxBindable(True)
 
         self.__event_connections = [
             self._src_impl._on_camera_changed.connect(self.destroy)
@@ -259,13 +263,13 @@ class BaseCameraImageAcquisitionImpl(Generic[CameraType], ImageAcquisitionImpl):
 
         self._actual_camera = None  # type: Optional[CameraType]
         self._on_camera_changed = Event()
-        self.bn_num_frames = AtomicBindableVar(1)  # type: AtomicBindable[int]
-        self.bn_frame_interval = AtomicBindableVar(None)  # type: AtomicBindable[float]
+        self.bn_num_frames = BoxBindable(1)
+        self.bn_frame_interval = BoxBindable(None)  # type: Bindable[Optional[float]]
 
         # Input validation
         self.num_frames_err = validate(self.bn_num_frames, checks=(check_is_not_empty, check_is_positive))
 
-        frame_interval_err_enabled = bindable_function(lambda n: n != 1)(self.bn_num_frames)(AtomicBindableVar(False))
+        frame_interval_err_enabled = bn_apply(lambda n: n != 1, self.bn_num_frames)
         self.frame_interval_err = validate(
             self.bn_frame_interval,
             checks=(check_is_not_empty, check_is_positive),
@@ -369,15 +373,20 @@ class USBCamera(Camera):
         if not self.check_vc_works(timeout=5):
             raise ValueError('Camera failed to open.')
 
-        self.bn_alive = AtomicBindableVar(True)
+        self.bn_alive = BoxBindable(True)
 
         # For some reason, on some cameras, the first few images captured will be dark. Consume those images
         # now so the camera will be "fully operational" after initialisation.
         for i in range(self._PRECAPTURE):
             self._vc.read()
 
-    # Property adapters for atomic bindables
-    alive = AtomicBindable.property_adapter(lambda self: self.bn_alive)
+    @property
+    def alive(self) -> bool:
+        return self.bn_alive.get()
+
+    @alive.setter
+    def alive(self, value: bool) -> None:
+        self.bn_alive.set(value)
 
     def capture(self) -> np.ndarray:
         start_time = time.time()
@@ -418,7 +427,7 @@ class USBCameraImageAcquisitionImpl(BaseCameraImageAcquisitionImpl[USBCamera]):
     def __init__(self):
         super().__init__()
         self._current_camera_index = None  # type: Optional[int]
-        self.bn_current_camera_index = AtomicBindableAdapter(self._get_current_camera_index)  # type: AtomicBindableAdapter[Optional[int]]
+        self.bn_current_camera_index = AccessorBindable(self._get_current_camera_index)
         self._camera_alive_changed_event_connection = None  # type: Optional[EventConnection]
 
         # Input validation

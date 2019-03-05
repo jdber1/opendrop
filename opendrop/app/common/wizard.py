@@ -9,7 +9,7 @@ from gi.repository import Gtk
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackView, StackModel, StackPresenter
 from opendrop.mytypes import Destroyable
-from opendrop.utility.bindable import AtomicBindableVar
+from opendrop.utility.simplebindable import BoxBindable
 from .sidebar import TasksSidebarView, TasksSidebarPresenter
 
 PresenterType = TypeVar('PresenterType', bound=Destroyable)
@@ -47,7 +47,7 @@ class WizardPresenter(Generic[WizardViewType, PageIDType]):
 
         # UI stuff
         self._page_options = collections.OrderedDict(
-            (page_id, AtomicBindableVar(False))
+            (page_id, BoxBindable(False))
             for page_id in self._page_order)
 
         self._sidebar_presenter = TasksSidebarPresenter(

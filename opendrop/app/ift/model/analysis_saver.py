@@ -10,9 +10,8 @@ import numpy as np
 
 from opendrop.app.common.model.analysis_saver import FigureOptions, simple_grapher
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.misc import clear_directory_contents
+from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty
 
 
@@ -20,8 +19,8 @@ from opendrop.utility.validation import validate, check_is_not_empty
 
 class IFTAnalysisSaverOptions:
     def __init__(self) -> None:
-        self.bn_save_dir_parent = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Path]]
-        self.bn_save_dir_name = AtomicBindableVar('')  # type: AtomicBindable[str]
+        self.bn_save_dir_parent = BoxBindable(None)  # type: Bindable[Optional[Path]]
+        self.bn_save_dir_name = BoxBindable('')
 
         self.drop_residuals_figure_opts = FigureOptions(
             should_save=True,
@@ -59,7 +58,7 @@ class IFTAnalysisSaverOptions:
                             self.surface_area_figure_opts):
             errors.append(figure_opts.errors)
 
-        self._errors = bindable_function(set.union)(*errors)(AtomicBindableVar(False))
+        self._errors = bn_apply(set.union, *errors)
 
     @property
     def has_errors(self) -> bool:

@@ -1,14 +1,14 @@
 from typing import Sequence
 
-from opendrop.utility.bindable import AtomicBindable, AtomicBindableAdapter, AtomicBindableVar
+from opendrop.utility.simplebindable import Bindable, AccessorBindable, BoxBindable
 
 
 class Operation:
-    bn_done = None  # type: AtomicBindable[bool]
-    bn_cancelled = None  # type: AtomicBindable[bool]
-    bn_progress = None  # type: AtomicBindable[float]
-    bn_time_start = None  # type: AtomicBindable[float]
-    bn_time_est_complete = None  # type: AtomicBindable[float]
+    bn_done = None  # type: Bindable[bool]
+    bn_cancelled = None  # type: Bindable[bool]
+    bn_progress = None  # type: Bindable[float]
+    bn_time_start = None  # type: Bindable[float]
+    bn_time_est_complete = None  # type: Bindable[float]
 
     def cancel(self) -> None:
         pass
@@ -18,11 +18,11 @@ class OperationGroup(Operation):
     def __init__(self, operations: Sequence[Operation]) -> None:
         self._operations = operations
 
-        self.bn_done = AtomicBindableAdapter(self._get_done)
-        self.bn_cancelled = AtomicBindableVar(False)
-        self.bn_progress = AtomicBindableAdapter(self._get_progress)
-        self.bn_time_start = AtomicBindableAdapter(self._get_time_start)
-        self.bn_time_est_complete = AtomicBindableAdapter(self._get_time_est_complete)
+        self.bn_done = AccessorBindable(self._get_done)
+        self.bn_cancelled = BoxBindable(False)
+        self.bn_progress = AccessorBindable(self._get_progress)
+        self.bn_time_start = AccessorBindable(self._get_time_start)
+        self.bn_time_est_complete = AccessorBindable(self._get_time_est_complete)
 
         for op in self._operations:
             op.bn_done.on_changed.connect(self.bn_done.poke)

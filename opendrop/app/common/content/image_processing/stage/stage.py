@@ -4,10 +4,10 @@ from gi.repository import Gdk
 
 from opendrop.mytypes import Image
 from opendrop.utility import keyboard
-from opendrop.utility.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Vector2, Rect2
 from opendrop.utility.gmisc import pixbuf_from_array
+from opendrop.utility.simplebindable import AccessorBindable, Bindable, BoxBindable
 from opendrop.widgets.render import protocol
 from opendrop.widgets.render.objects.pixbuf_fill import PixbufFill
 
@@ -18,8 +18,8 @@ class StageView:
             self.on_down = Event()
             self.on_up = Event()
 
-            self.bn_cursor_name = AtomicBindableVar(None)
-            self.bn_pos = AtomicBindableVar(Vector2(0, 0))
+            self.bn_cursor_name = BoxBindable(None)  # type: Bindable[Optional[str]]
+            self.bn_pos = BoxBindable(Vector2(0, 0))
 
     class Keyboard:
         def __init__(self) -> None:
@@ -38,7 +38,7 @@ class StageView:
 
         self.keyboard = self.Keyboard()
 
-        self.bn_canvas_source = AtomicBindableAdapter(setter=self._set_canvas_source)  # type: AtomicBindable[Optional[Image]]
+        self.bn_canvas_source = AccessorBindable(setter=self._set_canvas_source)
 
         self._render.connect('enter-notify-event', self._hdl_render_mouse_cross)
         self._render.connect('leave-notify-event', self._hdl_render_mouse_cross)
@@ -112,7 +112,7 @@ class StageView:
 
 
 class StageTool:
-    bn_cursor_name = AtomicBindableAdapter(lambda: None)  # type: AtomicBindable[Optional[str]]
+    bn_cursor_name = AccessorBindable(lambda: None)  # type: Bindable[Optional[str]]
 
     def do_cursor_down(self, pos: Vector2[float]) -> None:
         pass
@@ -125,6 +125,7 @@ class StageTool:
 
     def do_keyboard_key_press(self, event: keyboard.KeyEvent) -> None:
         pass
+
 
 class StagePresenter:
     def __init__(self, view: StageView) -> None:

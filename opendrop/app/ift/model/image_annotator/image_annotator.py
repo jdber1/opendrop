@@ -6,8 +6,7 @@ import numpy as np
 from opendrop.app.ift.model.analyser import IFTImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
+from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.geometry import Rect2
 from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty, check_custom_condition
 from .needle_width import get_needle_width_from_contours
@@ -55,14 +54,14 @@ class IFTImageAnnotator:
         # Used for validation
         self._get_image_size_hint = get_image_size_hint
 
-        self.bn_canny_min = AtomicBindableVar(30)  # type: AtomicBindable[int]
-        self.bn_canny_max = AtomicBindableVar(60)  # type: AtomicBindable[int]
+        self.bn_canny_min = BoxBindable(30)
+        self.bn_canny_max = BoxBindable(60)
 
-        self.bn_drop_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
-        self.bn_needle_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
+        self.bn_drop_region_px = BoxBindable(None)  # type: Bindable[Optional[Rect2]]
+        self.bn_needle_region_px = BoxBindable(None)  # type: Bindable[Optional[Rect2]]
 
         # Physical needle width (in metres) is used to calculate the image scale.
-        self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
+        self.bn_needle_width = BoxBindable(None)  # type: Bindable[Optional[float]]
 
         # Input validation
         self.drop_region_px_err = validate(
@@ -85,8 +84,9 @@ class IFTImageAnnotator:
             value=self.bn_needle_width,
             checks=(check_is_positive, check_is_not_empty))
 
-        self._errors = bindable_function(set.union)(
-            self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)(AtomicBindableVar(True))
+        self._errors = bn_apply(
+            set.union,
+            self.drop_region_px_err, self.needle_region_px_err, self.needle_width_err)
 
     def extract_drop_contour(self, image: Image) -> np.ndarray:
         drop_region_px = self.bn_drop_region_px.get()

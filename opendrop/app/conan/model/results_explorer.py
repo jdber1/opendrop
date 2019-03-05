@@ -1,9 +1,8 @@
-from operator import attrgetter
 from typing import Optional, Sequence, MutableSequence, Callable
 
 import numpy as np
 
-from opendrop.utility.bindable import AtomicBindableAdapter, AtomicBindableVar, AtomicBindable
+from opendrop.utility.simplebindable import AccessorBindable, BoxBindable, Bindable
 from .analyser import ConanAnalysis, ConanDropAnalysis
 
 
@@ -15,8 +14,8 @@ class ConanResultsExplorer:
 
             self._drops = []  # type: MutableSequence[ConanDropAnalysis]
 
-            self.bn_left_angle_data = AtomicBindableAdapter(self._get_left_angle_data)
-            self.bn_right_angle_data = AtomicBindableAdapter(self._get_right_angle_data)
+            self.bn_left_angle_data = AccessorBindable(self._get_left_angle_data)
+            self.bn_right_angle_data = AccessorBindable(self._get_right_angle_data)
 
             self._track_drops(drops)
 
@@ -55,13 +54,33 @@ class ConanResultsExplorer:
 
     def __init__(self):
         self._analysis = None
-        self.bn_analysis = AtomicBindableAdapter(getter=lambda: self._analysis, setter=self._set_analysis)  # type: AtomicBindable[Optional[(IFTAnalysis)]]
-        self.bn_individual_drops = AtomicBindableVar(tuple())  # type: AtomicBindable[Sequence[ConanDropAnalysis]]
-        self.bn_summary_data = AtomicBindableVar(None)  # type: AtomicBindable[Optional[ConanResultsExplorer.SummaryData]]
+        self.bn_analysis = AccessorBindable(getter=lambda: self._analysis, setter=self._set_analysis)  # type: Bindable[Optional[ConanAnalysis]]
+        self.bn_individual_drops = BoxBindable(tuple())  # type: Bindable[Sequence[ConanDropAnalysis]]
+        self.bn_summary_data = BoxBindable(None)  # type: Bindable[Optional[ConanResultsExplorer.SummaryData]]
 
-    analysis = AtomicBindable.property_adapter(attrgetter('bn_analysis'))  # type: Optional[ConanAnalysis]
-    individual_drops = AtomicBindable.property_adapter(attrgetter('bn_individual_drops'))  # type: Sequence[ConanDropAnalysis]
-    summary_data = AtomicBindable.property_adapter(attrgetter('bn_summary_data'))  # type: SummaryData
+    @property
+    def analysis(self) -> Optional[ConanAnalysis]:
+        return self.bn_analysis.get()
+
+    @analysis.setter
+    def analysis(self, new_analysis: Optional[ConanAnalysis]) -> None:
+        self.bn_analysis.set(new_analysis)
+
+    @property
+    def individual_drops(self) -> Sequence[ConanDropAnalysis]:
+        return self.bn_individual_drops.get()
+
+    @individual_drops.setter
+    def individual_drops(self, new_drops: Sequence[ConanDropAnalysis]) -> None:
+        self.bn_individual_drops.set(new_drops)
+
+    @property
+    def summary_data(self) -> SummaryData:
+        return self.bn_summary_data.get()
+
+    @summary_data.setter
+    def summary_data(self, new_data: SummaryData) -> None:
+        self.bn_summary_data.set(new_data)
 
     def _set_analysis(self, analysis: Optional[ConanAnalysis]) -> None:
         self._analysis = analysis

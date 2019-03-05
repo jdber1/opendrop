@@ -3,9 +3,8 @@ from typing import Set
 from gi.repository import Gtk, Gdk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.simplebindable import AccessorBindable, apply as bn_apply
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, ValidationFlag, FieldView, \
     FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry
@@ -83,7 +82,7 @@ class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
 
         # Wiring things up
 
-        self.bn_more_options_sensitive = AtomicBindableAdapter(setter=self._set_figure_options_sensitive)
+        self.bn_more_options_sensitive = AccessorBindable(setter=self._set_figure_options_sensitive)
 
         # Fields
 
@@ -100,7 +99,6 @@ class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
             GObjectPropertyBindable(dpi_err_lbl, 'label').bind_from(
                 message_from_flags(field_name='Figure DPI', flags=self.dpi_field.errors_out))]
 
-        @bindable_function
         def figure_size_err_message(w_errors: Set[ValidationFlag], h_errors: Set[ValidationFlag]) -> str:
             if len(w_errors) + len(h_errors) == 0:
                 return ''
@@ -133,7 +131,7 @@ class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
             add_style_class_when_flags(size_w_inp, 'error', flags=self.size_w_field.errors_out),
             add_style_class_when_flags(size_h_inp, 'error', flags=self.size_h_field.errors_out),
             GObjectPropertyBindable(size_err_lbl, 'label').bind_from(
-                figure_size_err_message(self.size_w_field.errors_out, self.size_h_field.errors_out))]
+                bn_apply(figure_size_err_message, self.size_w_field.errors_out, self.size_h_field.errors_out))]
 
         dpi_inp.connect('focus-out-event', lambda *_: self.dpi_field.on_user_finished_editing.fire())
         size_w_inp.connect('focus-out-event', lambda *_: self.size_w_field.on_user_finished_editing.fire())

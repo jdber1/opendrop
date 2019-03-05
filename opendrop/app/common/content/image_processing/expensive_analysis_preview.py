@@ -8,8 +8,8 @@ import numpy as np
 
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisitionPreview
 from opendrop.mytypes import Image
-from opendrop.utility.bindable import AtomicBindable
 from opendrop.utility.geometry import Vector2
+from opendrop.utility.simplebindable import Bindable
 from opendrop.utility.worker import WorkerThread
 
 AnalysisResultType = TypeVar('OperationResultType')
@@ -147,7 +147,7 @@ class ExpensiveAnalysisPreview(Generic[AnalysisResultType]):
 
 
 class MaskAnalysis(ExpensiveAnalysisPreview[np.ndarray]):
-    def __init__(self, mask_out: AtomicBindable[Optional[np.ndarray]], **kwargs) -> None:
+    def __init__(self, mask_out: Bindable[Optional[np.ndarray]], **kwargs) -> None:
         self._mask_out = mask_out
         super().__init__(**kwargs)
 
@@ -159,7 +159,7 @@ class MaskAnalysis(ExpensiveAnalysisPreview[np.ndarray]):
 
 
 class PolylineAnalysis(ExpensiveAnalysisPreview[Sequence[Vector2[float]]]):
-    def __init__(self, polyline_out: AtomicBindable[Optional[Sequence[Vector2[float]]]], **kwargs) -> None:
+    def __init__(self, polyline_out: Bindable[Optional[Sequence[Vector2[float]]]], **kwargs) -> None:
         self._polyline_out = polyline_out
         super().__init__(**kwargs)
 

@@ -2,17 +2,15 @@ import asyncio
 import math
 import time
 from enum import Enum
-from operator import attrgetter
 from typing import Optional, Callable
 
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.model.operation import Operation
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
-from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
+from opendrop.utility.simplebindable import AccessorBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 
 
 class OperationFooterStatus(Enum):
@@ -31,7 +29,7 @@ class OperationFooterModel:
         self.__destroyed = False
         self.__cleanup_tasks = []
 
-        self.bn_status = AtomicBindableAdapter(getter=self._get_status)  # type: AtomicBindableAdapter[OperationFooterStatus]
+        self.bn_status = AccessorBindable(getter=lambda: self.status)
         self.bn_time_start = operation.bn_time_start
         self.bn_time_est_complete = operation.bn_time_est_complete
         self.bn_progress_fraction = operation.bn_progress
@@ -46,11 +44,6 @@ class OperationFooterModel:
             operation.bn_cancelled.on_changed.connect(self.bn_status.poke)]
         self.__cleanup_tasks.extend(ec.disconnect for ec in event_connections)
 
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: OperationFooterStatus
-    time_start = AtomicBindable.property_adapter(attrgetter('bn_time_start'))  # type: float
-    time_est_complete = AtomicBindable.property_adapter(attrgetter('bn_time_est_complete'))  # type: float
-    progress_fraction = AtomicBindable.property_adapter(attrgetter('bn_progress_fraction'))  # type: float
-
     def back(self) -> None:
         self._back_action()
 
@@ -60,7 +53,8 @@ class OperationFooterModel:
     def save(self) -> None:
         self._save_action()
 
-    def _get_status(self) -> OperationFooterStatus:
+    @property
+    def status(self) -> OperationFooterStatus:
         cancelled = self._operation.bn_cancelled.get()
         if cancelled:
             return OperationFooterStatus.CANCELLED
@@ -70,6 +64,18 @@ class OperationFooterModel:
             return OperationFooterStatus.FINISHED
 
         return OperationFooterStatus.IN_PROGRESS
+
+    @property
+    def time_start(self) -> float:
+        return self.bn_time_start.get()
+
+    @property
+    def time_est_complete(self) -> float:
+        return self.bn_time_est_complete.get()
+
+    @property
+    def progress_fraction(self) -> float:
+        return self.bn_progress_fraction.get()
 
     def destroy(self) -> None:
         assert not self.__destroyed
@@ -87,8 +93,8 @@ class OperationFooterPresenter:
         self.__cleanup_tasks = []
 
         data_bindings = [
-            Binding(self._model.bn_status, self._view.bn_status),
-            Binding(self._model.bn_progress_fraction, self._view.progress.bn_fraction)]
+            self._model.bn_status.bind_to(self._view.bn_status),
+            self._model.bn_progress_fraction.bind_to(self._view.progress.bn_fraction)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [
@@ -177,8 +183,8 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
                 lambda _, v: '{:.0%}'.format(v))  # transform_to
 
             self.bn_fraction = GObjectPropertyBindable(progress_bar, 'fraction')
-            self.bn_time_elapsed = AtomicBindableAdapter(setter=self._set_time_elapsed)
-            self.bn_time_remaining = AtomicBindableAdapter(setter=self._set_time_remaining)
+            self.bn_time_elapsed = AccessorBindable(setter=self._set_time_elapsed)
+            self.bn_time_remaining = AccessorBindable(setter=self._set_time_remaining)
             self.bn_time_remaining_visible = GObjectPropertyBindable(self._time_remaining_lbl, 'visible')
 
         def _set_time_elapsed(self, seconds: float) -> None:
@@ -254,7 +260,7 @@ class OperationFooterView(GtkWidgetView[Gtk.Grid]):
         self._cancel_btn.connect('clicked', lambda *_: self.on_cancel_btn_clicked.fire())
         self._save_btn.connect('clicked', lambda *_: self.on_save_btn_clicked.fire())
 
-        self.bn_status = AtomicBindableAdapter(setter=self._set_status)
+        self.bn_status = AccessorBindable(setter=self._set_status)
 
     def _set_status(self, status: OperationFooterStatus) -> None:
         self.progress._set_status(status)

@@ -5,7 +5,7 @@ from typing import Sequence, Tuple, TypeVar, Generic
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
+from opendrop.utility.simplebindable import Bindable, AccessorBindable
 
 TaskType = TypeVar('TaskType')
 
@@ -28,7 +28,7 @@ class TasksSidebarView(Generic[TaskType], GtkWidgetView[Gtk.Box]):
 
         self._active_task_name = None  # type: Optional[str]
         self._task_name_to_lbl = {}  # type: MutableMapping[str, Gtk.Label]
-        self.bn_active_task = AtomicBindableAdapter(setter=self._set_active_task)
+        self.bn_active_task = AccessorBindable(setter=self._set_active_task)
 
         self.widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15, vexpand=True)
         self.widget.get_style_context().add_class('wizard-sidebar')
@@ -88,7 +88,7 @@ class TasksSidebarView(Generic[TaskType], GtkWidgetView[Gtk.Box]):
 
 
 class TasksSidebarPresenter(Generic[TaskType]):
-    def __init__(self, task_and_is_active: Sequence[Tuple[TaskType, AtomicBindable[bool]]], view: TasksSidebarView) \
+    def __init__(self, task_and_is_active: Sequence[Tuple[TaskType, Bindable[bool]]], view: TasksSidebarView) \
             -> None:
         self._view = view
         self.__event_connections = []
@@ -101,7 +101,7 @@ class TasksSidebarPresenter(Generic[TaskType]):
                                          weak_ref=False)
             self._hdl_task_is_active_changed(task, is_active)
 
-    def _hdl_task_is_active_changed(self, task: TaskType, is_active: AtomicBindable[bool]) -> None:
+    def _hdl_task_is_active_changed(self, task: TaskType, is_active: Bindable[bool]) -> None:
         if is_active.get():
             self._view.bn_active_task.set(task)
 

@@ -9,10 +9,10 @@ from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
     ImageAcquisitionPreviewConfigPresenter
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableAdapter
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.gmisc import pixbuf_from_array
+from opendrop.utility.simplebindable import Bindable, AccessorBindable
 from opendrop.widgets.render import Render
 from opendrop.widgets.render.objects import PixbufFill, Polyline, Rectangle, Line
 
@@ -34,7 +34,7 @@ class MaskHighlightView:
     def __init__(self, ro: PixbufFill, color: Tuple[float, float, float, float] = (127, 127, 255, 255)) -> None:
         self._ro = ro
         self._color = color
-        self.bn_mask = AtomicBindableAdapter(setter=self._set_mask)  # type: AtomicBindable[Optional[Image]]
+        self.bn_mask = AccessorBindable(setter=self._set_mask)  # type: Bindable[Optional[Image]]
 
     def _set_mask(self, mask: Optional[Image]) -> None:
         if mask is None:
@@ -50,7 +50,7 @@ class MaskHighlightView:
 class PolylineView:
     def __init__(self, ro: Polyline) -> None:
         self._ro = ro
-        self.bn_polyline = GObjectPropertyBindable(self._ro, 'polyline')  # type: AtomicBindable[Optional[Sequence[Vector2[float]]]]
+        self.bn_polyline = GObjectPropertyBindable(self._ro, 'polyline')  # type: Bindable[Optional[Sequence[Vector2[float]]]]
 
 
 class ImageProcessingFormView(GtkWidgetView[Gtk.Stack]):

@@ -2,17 +2,16 @@ import math
 from typing import Optional
 
 from opendrop.app.ift.model.analyser import IFTPhysicalParameters
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
+from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive, check_is_finite
 
 
 class IFTPhysicalParametersFactory:
     def __init__(self):
-        self.bn_inner_density = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
-        self.bn_outer_density = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
-        self.bn_needle_width = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
-        self.bn_gravity = AtomicBindableVar(None)  # type: AtomicBindable[Optional[float]]
+        self.bn_inner_density = BoxBindable(None)  # type: Bindable[Optional[float]]
+        self.bn_outer_density = BoxBindable(None)  # type: Bindable[Optional[float]]
+        self.bn_needle_width = BoxBindable(None)  # type: Bindable[Optional[float]]
+        self.bn_gravity = BoxBindable(None)  # type: Bindable[Optional[float]]
 
         # Input validation
         self.inner_density_err = validate(
@@ -32,17 +31,43 @@ class IFTPhysicalParametersFactory:
             checks=(check_is_not_empty,
                     check_is_positive))
 
-        self._errors = bindable_function(set.union)(
+        self._errors = bn_apply(set.union,
             self.inner_density_err,
             self.outer_density_err,
             self.needle_width_err,
-            self.gravity_err)(AtomicBindableVar(False))
+            self.gravity_err)
 
-    # Property adapters for atomic bindables
-    inner_density = AtomicBindable.property_adapter(lambda self: self.bn_inner_density)
-    outer_density = AtomicBindable.property_adapter(lambda self: self.bn_outer_density)
-    needle_width = AtomicBindable.property_adapter(lambda self: self.bn_needle_width)
-    gravity = AtomicBindable.property_adapter(lambda self: self.bn_gravity)
+    @property
+    def inner_density(self) -> float:
+        return self.bn_inner_density.get()
+
+    @inner_density.setter
+    def inner_density(self, new_density: float) -> None:
+        self.bn_inner_density.set(new_density)
+
+    @property
+    def outer_density(self) -> float:
+        return self.bn_outer_density.get()
+
+    @outer_density.setter
+    def outer_density(self, new_density: float) -> None:
+        self.bn_outer_density.set(new_density)
+
+    @property
+    def needle_width(self) -> float:
+        return self.bn_needle_width.get()
+
+    @needle_width.setter
+    def needle_width(self, new_width: float) -> None:
+        self.bn_needle_width.set(new_width)
+
+    @property
+    def gravity(self) -> float:
+        return self.bn_gravity.get()
+
+    @gravity.setter
+    def gravity(self, new_gravity: float) -> None:
+        self.bn_gravity.set(new_gravity)
 
     @property
     def has_errors(self) -> bool:

@@ -2,20 +2,20 @@ import math
 from typing import Optional, Tuple
 
 from opendrop.utility import keyboard
-from opendrop.utility.bindable import AtomicBindable, AtomicBindableVar
 from opendrop.utility.geometry import Vector2, Rect2, Line2
 from opendrop.utility.misc import clamp
+from opendrop.utility.simplebindable import Bindable, BoxBindable
 from .stage import StageTool
 
 
 class RegionDragToDefine(StageTool):
     def __init__(self, canvas_size: Optional[Vector2]) -> None:
-        self.bn_cursor_name = AtomicBindableVar('crosshair')
+        self.bn_cursor_name = BoxBindable('crosshair')
 
         self._canvas_size = canvas_size
 
-        self.bn_selection = AtomicBindableVar(None)  # type: Optional[AtomicBindable[Rect2]]
-        self.bn_selection_transient = AtomicBindableVar(None)  # type: Optional[AtomicBindable[Rect2]]
+        self.bn_selection = BoxBindable(None)  # type: Bindable[Optional[Rect2]]
+        self.bn_selection_transient = BoxBindable(None)  # type: Bindable[Optional[Rect2]]
         self._drag_start = None  # type: Optional[Vector2[float]]
 
     def do_cursor_down(self, pos: Vector2[float]) -> None:
@@ -61,12 +61,12 @@ class RegionDragToDefine(StageTool):
 
 class LineDragToDefine(StageTool):
     def __init__(self, canvas_size: Optional[Vector2]) -> None:
-        self.bn_cursor_name = AtomicBindableVar('crosshair')
+        self.bn_cursor_name = BoxBindable('crosshair')
 
         self._canvas_size = canvas_size
 
-        self.bn_selection = AtomicBindableVar(None)  # type: Optional[AtomicBindable[Line2]]
-        self.bn_selection_transient = AtomicBindableVar(None)  # type: Optional[AtomicBindable[Line2]]
+        self.bn_selection = BoxBindable(None)  # type: Bindable[Optional[Line2]]
+        self.bn_selection_transient = BoxBindable(None)  # type: Bindable[Optional[Line2]]
         self._drag_start = None  # type: Optional[Vector2[float]]
 
     def do_cursor_down(self, pos: Vector2[float]) -> None:

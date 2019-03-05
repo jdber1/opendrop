@@ -8,8 +8,7 @@ from matplotlib.figure import Figure
 
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
-from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.simplebindable import AccessorBindable
 
 
 class GraphsView(GtkWidgetView[Gtk.Stack]):
@@ -51,9 +50,9 @@ class GraphsView(GtkWidgetView[Gtk.Stack]):
         self.widget.show_all()
 
         # Wiring things up
-        self.bn_ift_data = AtomicBindableAdapter(setter=self._set_ift_data)
-        self.bn_volume_data = AtomicBindableAdapter(setter=self._set_volume_data)
-        self.bn_surface_area_data = AtomicBindableAdapter(setter=self._set_surface_area_data)
+        self.bn_ift_data = AccessorBindable(setter=self._set_ift_data)
+        self.bn_volume_data = AccessorBindable(setter=self._set_volume_data)
+        self.bn_surface_area_data = AccessorBindable(setter=self._set_surface_area_data)
 
         # Set initial sufficient_data state.
         self._sufficient_data = False
@@ -131,9 +130,9 @@ class GraphsPresenter:
             return
 
         data_bindings = [
-            Binding(self._summary_data.bn_ift_data, self._view.bn_ift_data),
-            Binding(self._summary_data.bn_volume_data, self._view.bn_volume_data),
-            Binding(self._summary_data.bn_surface_area_data, self._view.bn_surface_area_data)]
+            self._summary_data.bn_ift_data.bind_to(self._view.bn_ift_data),
+            self._summary_data.bn_volume_data.bind_to(self._view.bn_volume_data),
+            self._summary_data.bn_surface_area_data.bind_to(self._view.bn_surface_area_data)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [

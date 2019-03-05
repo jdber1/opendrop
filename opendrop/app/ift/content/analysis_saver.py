@@ -6,8 +6,8 @@ from gi.repository import Gtk, Gdk
 from opendrop.app.common.content.analysis_saver import FigureOptionsView, FigureOptionsPresenter
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.simplebindable import AccessorBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.utility.events import Event
 from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, FieldView, \
     FieldPresenter
@@ -125,7 +125,7 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
         self.widget.connect('delete-event', self._hdl_widget_delete_event)
 
         self.save_dir_parent_field = FieldView(
-            value=AtomicBindableAdapter(self._get_save_dir_parent, self._set_save_dir_parent))
+            value=AccessorBindable(self._get_save_dir_parent, self._set_save_dir_parent))
         self.save_dir_name_field = FieldView(
             value=GObjectPropertyBindable(save_dir_name_inp, 'text'))
 

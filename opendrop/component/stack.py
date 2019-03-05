@@ -3,8 +3,8 @@ from typing import Generic, TypeVar, MutableMapping, Optional, Sequence
 from gi.repository import Gtk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
 from opendrop.utility.events import Event
+from opendrop.utility.simplebindable import AccessorBindable
 
 KeyType = TypeVar('KeyType')
 ChildType = TypeVar('ChildType')
@@ -13,18 +13,22 @@ ChildType = TypeVar('ChildType')
 class StackModel(Generic[KeyType, ChildType]):
     def __init__(self) -> None:
         self._visible_child_key = None  # type: Optional[KeyType]
-        self.bn_visible_child_key = AtomicBindableAdapter(
+        self.bn_visible_child_key = AccessorBindable(
             self._get_visible_child_key,
-            self._set_visible_child_key
-        )  # type: AtomicBindableAdapter[Optional[KeyType]]
+            self._set_visible_child_key)
 
         self.on_child_added = Event()
         self.on_child_removed = Event()
 
         self._key_to_child = {}  # type: MutableMapping[KeyType, ChildType]
 
-    # Property adapters for atomic bindables.
-    visible_child_key = AtomicBindable.property_adapter(lambda self: self.bn_visible_child_key)
+    @property
+    def visible_child_key(self) -> Optional[KeyType]:
+        return self.bn_visible_child_key.get()
+
+    @visible_child_key.setter
+    def visible_child_key(self, new_key: Optional[KeyType]) -> None:
+        return self.bn_visible_child_key.set(new_key)
 
     def add_child(self, key: KeyType, child: ChildType) -> None:
         if key is None:

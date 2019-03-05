@@ -9,8 +9,7 @@ from matplotlib.figure import Figure
 
 from opendrop.app.conan.model.results_explorer import ConanResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
-from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.simplebindable import AccessorBindable
 
 
 class GraphsView(GtkWidgetView[Gtk.Stack]):
@@ -49,8 +48,8 @@ class GraphsView(GtkWidgetView[Gtk.Stack]):
         self.widget.show_all()
 
         # Wiring things up
-        self.bn_left_angle_data = AtomicBindableAdapter(setter=self._set_left_angle_data)
-        self.bn_right_angle_data = AtomicBindableAdapter(setter=self._set_right_angle_data)
+        self.bn_left_angle_data = AccessorBindable(setter=self._set_left_angle_data)
+        self.bn_right_angle_data = AccessorBindable(setter=self._set_right_angle_data)
 
         # Set initial sufficient_data state.
         self._sufficient_data = False
@@ -116,8 +115,8 @@ class GraphsPresenter:
             return
 
         data_bindings = [
-            Binding(self._summary_data.bn_left_angle_data, self._view.bn_left_angle_data),
-            Binding(self._summary_data.bn_right_angle_data, self._view.bn_right_angle_data)]
+            self._summary_data.bn_left_angle_data.bind_to(self._view.bn_left_angle_data),
+            self._summary_data.bn_right_angle_data.bind_to(self._view.bn_right_angle_data)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [

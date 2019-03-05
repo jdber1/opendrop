@@ -2,16 +2,22 @@ from typing import Optional, MutableSequence
 
 from gi.repository import Gtk, Gdk
 
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
+from opendrop.utility.simplebindable import Bindable, BoxBindable
 from opendrop.utility.events import EventConnection
 from opendrop.utility.geometry import Vector2
 
 
 class MouseSwitchTarget:
     def __init__(self) -> None:
-        self.bn_cursor_name = AtomicBindableVar(None)  # type: AtomicBindable[Optional[str]]
+        self.bn_cursor_name = BoxBindable(None)  # type: Bindable[Optional[str]]
 
-    cursor_name = AtomicBindable.property_adapter(lambda self: self.bn_cursor_name)
+    @property
+    def cursor_name(self) -> Optional[str]:
+        return self.bn_cursor_name.get()
+
+    @cursor_name.setter
+    def cursor_name(self, new_name: Optional[str]) -> None:
+        self.bn_cursor_name.set(new_name)
 
     def do_mouse_move(self, coord: Vector2) -> None:
         """Invoked when mouse is moved"""

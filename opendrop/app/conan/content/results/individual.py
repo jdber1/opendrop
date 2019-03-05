@@ -7,8 +7,8 @@ from gi.repository import Gtk, Gdk, GObject
 from opendrop.app.common.content.image_processing.stage import StageView
 from opendrop.app.conan.model.analyser import ConanDropAnalysis
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.simplebindable import Bindable, BoxBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.widgets.render import Render
 from opendrop.widgets.render.objects import Angle, Line, Polyline
 
@@ -110,7 +110,7 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
             self._model = model
             self._row_ref = row_ref
 
-            self.bn_selected = AtomicBindableVar(False)
+            self.bn_selected = BoxBindable(False)
 
         status_text = property()
 
@@ -325,7 +325,7 @@ class MasterPresenter:
         self.__cleanup_tasks = []
 
         self._drop_to_row = {}  # type: MutableMapping[ConanDropAnalysis, MasterView.Row]
-        self.bn_selected = AtomicBindableVar(None)  # type: AtomicBindable[Optional[ConanDropAnalysis]]
+        self.bn_selected = BoxBindable(None)  # type: Bindable[Optional[ConanDropAnalysis]]
 
         self._view.clear()
         self.add_drops(drops)

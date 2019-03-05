@@ -12,8 +12,7 @@ from matplotlib.image import AxesImage
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindableAdapter, AtomicBindable
-from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.simplebindable import Bindable, BoxBindable, AccessorBindable
 
 
 class DetailView(GtkWidgetView[Gtk.Grid]):
@@ -93,19 +92,19 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
 
             # Wiring things up
 
-            self.bn_interfacial_tension = AtomicBindableAdapter(
+            self.bn_interfacial_tension = AccessorBindable(
                 setter=lambda v: interfacial_tension_val.set_text('{:.4g}'.format(v*1e3)))
-            self.bn_volume = AtomicBindableAdapter(
+            self.bn_volume = AccessorBindable(
                 setter=lambda v: volume_val.set_text('{:.4g}'.format(v*1e9)))
-            self.bn_surface_area = AtomicBindableAdapter(
+            self.bn_surface_area = AccessorBindable(
                 setter=lambda v: surface_area_val.set_text('{:.4g}'.format(v*1e6)))
-            self.bn_worthington = AtomicBindableAdapter(
+            self.bn_worthington = AccessorBindable(
                 setter=lambda v: worthington_val.set_text('{:.4g}'.format(v)))
-            self.bn_bond_number = AtomicBindableAdapter(
+            self.bn_bond_number = AccessorBindable(
                 setter=lambda v: bond_number_val.set_text('{:.4g}'.format(v)))
-            self.bn_apex_coords = AtomicBindableAdapter(
+            self.bn_apex_coords = AccessorBindable(
                 setter=lambda v: apex_coords_val.set_text('({0[0]:.4g}, {0[1]:.4g})'.format(v)))
-            self.bn_image_angle = AtomicBindableAdapter(
+            self.bn_image_angle = AccessorBindable(
                 setter=lambda v: image_angle_val.set_text('{:.4g}°'.format(math.degrees(v))))
 
     class DropContourFitResidualsView(GtkWidgetView[Gtk.Grid]):
@@ -126,7 +125,7 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
                 item.set_fontsize(8)
 
             # Wiring things up
-            self.bn_residuals = AtomicBindableAdapter(setter=self._set_residuals)
+            self.bn_residuals = AccessorBindable(setter=self._set_residuals)
 
         def _set_residuals(self, residuals: np.ndarray) -> None:
             axes = self._residuals_figure_axes
@@ -168,9 +167,9 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
             self._drop_contour_fit_line = self._drop_fig_ax.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
 
             # Wiring things up
-            self.bn_drop_image = AtomicBindableAdapter(setter=self._set_drop_image)
-            self.bn_drop_contour = AtomicBindableAdapter(setter=self._set_drop_contour)
-            self.bn_drop_contour_fit = AtomicBindableAdapter(setter=self._set_drop_contour_fit)
+            self.bn_drop_image = AccessorBindable(setter=self._set_drop_image)
+            self.bn_drop_contour = AccessorBindable(setter=self._set_drop_contour)
+            self.bn_drop_contour_fit = AccessorBindable(setter=self._set_drop_contour_fit)
 
         def _set_drop_image(self, image: Optional[Image]) -> None:
             if image is None:
@@ -206,7 +205,7 @@ class DetailView(GtkWidgetView[Gtk.Grid]):
 
             # Wiring things up
 
-            self.bn_log_text = AtomicBindableAdapter(setter=lambda v: log_text_view.get_buffer().set_text(v))
+            self.bn_log_text = AccessorBindable(setter=lambda v: log_text_view.get_buffer().set_text(v))
 
     def __init__(self) -> None:
         self.widget = Gtk.Stack(margin=10)
@@ -267,7 +266,7 @@ class MasterView(GtkWidgetView[Gtk.Grid]):
             self._model = model
             self._row_ref = row_ref
 
-            self.bn_selected = AtomicBindableVar(False)
+            self.bn_selected = BoxBindable(False)
 
         status_text = property()
 
@@ -423,14 +422,14 @@ class DetailPresenter:
         log_view = self._view.log
 
         data_bindings = [
-            Binding(self._drop.bn_interfacial_tension, params_view.bn_interfacial_tension),
-            Binding(self._drop.bn_volume, params_view.bn_volume),
-            Binding(self._drop.bn_surface_area, params_view.bn_surface_area),
-            Binding(self._drop.bn_worthington, params_view.bn_worthington),
-            Binding(self._drop.bn_bond_number, params_view.bn_bond_number),
-            Binding(self._drop.bn_apex_coords_px, params_view.bn_apex_coords),
-            Binding(self._drop.bn_apex_rot, params_view.bn_image_angle),
-            Binding(self._drop.bn_log, log_view.bn_log_text)]
+            self._drop.bn_interfacial_tension.bind_to(params_view.bn_interfacial_tension),
+            self._drop.bn_volume.bind_to(params_view.bn_volume),
+            self._drop.bn_surface_area.bind_to(params_view.bn_surface_area),
+            self._drop.bn_worthington.bind_to(params_view.bn_worthington),
+            self._drop.bn_bond_number.bind_to(params_view.bn_bond_number),
+            self._drop.bn_apex_coords_px.bind_to(params_view.bn_apex_coords),
+            self._drop.bn_apex_rot.bind_to(params_view.bn_image_angle),
+            self._drop.bn_log.bind_to(log_view.bn_log_text)]
         self.__cleanup_tasks.extend([db.unbind for db in data_bindings])
 
         event_connections = [
@@ -495,7 +494,7 @@ class MasterPresenter:
         self.__cleanup_tasks = []
 
         self._drop_to_row = {}  # type: MutableMapping[IFTDropAnalysis, MasterView.Row]
-        self.bn_selected = AtomicBindableVar(None)  # type: AtomicBindable[Optional[IFTDropAnalysis]]
+        self.bn_selected = BoxBindable(None)  # type: Bindable[Optional[IFTDropAnalysis]]
 
         self._view.clear()
         self.add_drops(drops)

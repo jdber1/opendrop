@@ -3,7 +3,6 @@ import math
 import time
 from asyncio import Future
 from enum import Enum
-from operator import attrgetter
 from typing import Tuple, Callable, Optional, Union, Iterable, Type, Sequence, Any
 
 import numpy as np
@@ -14,8 +13,8 @@ from opendrop.app.common.model.operation import Operation, OperationGroup
 from opendrop.iftcalc import phys_props
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from opendrop.utility.events import Event
+from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
 from .container import IFTPhysicalParameters, IFTImageAnnotations
 
 
@@ -82,78 +81,43 @@ class IFTDropAnalysis(Operation):
         self._calculate_worthington = calculate_worthington
 
         self._status_ = IFTDropAnalysis.Status.WAITING_FOR_IMAGE
-        self.bn_status = AtomicBindableAdapter(lambda: self._status_)
+        self.bn_status = AccessorBindable(lambda: self._status)
 
         self._image = None  # type: Optional[Image]
-        self.bn_image = AtomicBindableAdapter(lambda: self._image)
-
         self._image_annotations = None  # type: Optional[IFTImageAnnotations]
-        self.bn_image_annotations = AtomicBindableAdapter(lambda: self._image_annotations)
-
         # The time (in Unix time) that the image was captured.
         self._image_timestamp = math.nan  # type: float
-        self.bn_image_timestamp = AtomicBindableAdapter(lambda: self._image_timestamp)
 
         self._yl_fit_ = None  # type: Optional[YoungLaplaceFit]
 
-        # Outputs
-        self.bn_objective = AtomicBindableAdapter(self._get_objective)
-        self.bn_bond_number = AtomicBindableAdapter(self._get_bond_number)
-        self.bn_apex_coords_px = AtomicBindableAdapter(self._get_apex_coords_px)
-        self.bn_apex_radius = AtomicBindableAdapter(self._get_apex_radius)
-        self.bn_apex_rot = AtomicBindableAdapter(self._get_apex_rot)
-        self.bn_interfacial_tension = AtomicBindableAdapter(self._get_interfacial_tension)
-        self.bn_volume = AtomicBindableAdapter(self._get_volume)
-        self.bn_surface_area = AtomicBindableAdapter(self._get_surface_area)
-        self.bn_worthington = AtomicBindableAdapter(self._get_worthington)
+        self.bn_image = AccessorBindable(lambda: self.image)
+        self.bn_image_annotations = AccessorBindable(lambda: self.image_annotations)
+        self.bn_image_timestamp = AccessorBindable(lambda: self.image_timestamp)
+        self.bn_objective = AccessorBindable(lambda: self.objective)
+        self.bn_bond_number = AccessorBindable(lambda: self.bond_number)
+        self.bn_apex_coords_px = AccessorBindable(lambda: self.apex_coords_px)
+        self.bn_apex_radius = AccessorBindable(lambda: self.apex_radius)
+        self.bn_apex_rot = AccessorBindable(lambda: self.apex_rot)
+        self.bn_interfacial_tension = AccessorBindable(lambda: self.interfacial_tension)
+        self.bn_volume = AccessorBindable(lambda: self.volume)
+        self.bn_surface_area = AccessorBindable(lambda: self.surface_area)
+        self.bn_worthington = AccessorBindable(lambda: self.worthington)
 
         self.on_drop_contour_fit_changed = Event()
 
         # Log
-        self.bn_log = AtomicBindableVar('')
+        self.bn_log = BoxBindable('')
         self._log_shim = self.LogShim(write=lambda s: self.bn_log.set(self.bn_log.get() + s))
 
         # Operation attributes
-        self.bn_done = AtomicBindableAdapter(self._get_done)
-        self.bn_cancelled = AtomicBindableAdapter(lambda: self.status is self.Status.CANCELLED)
-        self.bn_progress = AtomicBindableAdapter(self._get_progress)
-        self.bn_time_start = AtomicBindableAdapter(self._get_time_start)
-        self.bn_time_est_complete = AtomicBindableAdapter(self._get_time_est_complete)
+        self.bn_done = AccessorBindable(lambda: self.done)
+        self.bn_cancelled = AccessorBindable(lambda: self.status is self.Status.CANCELLED)
+        self.bn_progress = AccessorBindable(lambda: self.progress)
+        self.bn_time_start = AccessorBindable(lambda: self.time_start)
+        self.bn_time_est_complete = AccessorBindable(lambda: self.time_est_complete)
 
         self.bn_status.on_changed.connect(self.bn_done.poke)
         self.bn_status.on_changed.connect(self.bn_progress.poke)
-
-    # Property adapters for bindables (type annotations are not strictly correct but is a bit of a hack to allow PyCharm
-    # recognise the types)
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: IFTDropAnalysis.Status
-    image = AtomicBindable.property_adapter(attrgetter('bn_image'))  # type: Image
-    image_annotations = AtomicBindable.property_adapter(attrgetter('bn_image_annotations'))  # type: IFTImageAnnotations
-    image_timestamp = AtomicBindable.property_adapter(attrgetter('bn_image_timestamp'))  # type: float
-    objective = AtomicBindable.property_adapter(attrgetter('bn_objective'))  # type: float
-    bond_number = AtomicBindable.property_adapter(attrgetter('bn_bond_number'))  # type: float
-    apex_coords_px = AtomicBindable.property_adapter(attrgetter('bn_apex_coords_px'))  # type: Tuple[int, int]
-    apex_radius = AtomicBindable.property_adapter(attrgetter('bn_apex_radius'))  # type: si.Length
-    apex_rot = AtomicBindable.property_adapter(attrgetter('bn_apex_rot'))  # type: float
-    interfacial_tension = AtomicBindable.property_adapter(attrgetter('bn_interfacial_tension'))  # type: si.SurfaceTension
-    volume = AtomicBindable.property_adapter(attrgetter('bn_volume'))  # type: si.Volume
-    surface_area = AtomicBindable.property_adapter(attrgetter('bn_surface_area'))  # type: si.Area
-    worthington = AtomicBindable.property_adapter(attrgetter('bn_worthington'))  # type: float
-    log = AtomicBindable.property_adapter(attrgetter('bn_log'))  # type: str
-
-    def _get_done(self) -> bool:
-        return self.status.terminal
-
-    def _get_progress(self) -> float:
-        if self.bn_done.get():
-            return 1
-        else:
-            return 0
-
-    def _get_time_start(self) -> float:
-        return self._time_start
-
-    def _get_time_est_complete(self) -> float:
-        return self._scheduled_image.est_ready
 
     def _hdl_scheduled_img_read(self, read_task: Future) -> None:
         if read_task.cancelled():
@@ -257,7 +221,7 @@ class IFTDropAnalysis(Operation):
             contour_xy[:, 1] *= -1
 
         contour_xy = bl_tl_coords_swap(self._image.shape[0], *contour_xy.T).T
-        contour_xy -= self._get_apex_coords_px()
+        contour_xy -= self.apex_coords_px
 
         return contour_xy
 
@@ -266,11 +230,15 @@ class IFTDropAnalysis(Operation):
         return self.phys_params.inner_density < self.phys_params.outer_density
 
     @property
-    def _status(self) -> 'IFTDropAnalysis.Status':
+    def status(self) -> Status:
+        return self._status
+
+    @property
+    def _status(self) -> Status:
         return self._status_
 
     @_status.setter
-    def _status(self, new_status: 'IFTDropAnalysis.Status') -> None:
+    def _status(self, new_status: Status) -> None:
         self._status_ = new_status
         self.bn_status.poke()
         self.bn_cancelled.poke()
@@ -286,14 +254,6 @@ class IFTDropAnalysis(Operation):
         self._yl_fit_ = yl_fit
         self._yl_fit_.on_params_changed.connect(self._hdl_yl_fit_params_changed)
 
-    @property
-    def drop_contour_fit_residuals(self) -> Optional[np.ndarray]:
-        yl_fit = self._yl_fit
-        if yl_fit is None:
-            return None
-
-        return yl_fit.residuals
-
     def _hdl_yl_fit_params_changed(self) -> None:
         self.bn_objective.poke()
         self.bn_bond_number.poke()
@@ -306,14 +266,44 @@ class IFTDropAnalysis(Operation):
         self.bn_apex_rot.poke()
         self.on_drop_contour_fit_changed.fire()
 
-    def _get_bond_number(self) -> float:
+    @property
+    def drop_contour_fit_residuals(self) -> Optional[np.ndarray]:
+        yl_fit = self._yl_fit
+        if yl_fit is None:
+            return None
+
+        return yl_fit.residuals
+
+    @property
+    def image(self) -> Optional[Image]:
+        return self._image
+
+    @property
+    def image_annotations(self) -> Optional[IFTImageAnnotations]:
+        return self._image_annotations
+
+    @property
+    def image_timestamp(self) -> float:
+        return self._image_timestamp
+
+    @property
+    def log(self) -> str:
+        return self.bn_log.get()
+
+    @property
+    def log(self) -> str:
+        return self.bn_log.get()
+
+    @property
+    def bond_number(self) -> float:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
 
         return yl_fit.bond_number
 
-    def _get_interfacial_tension(self) -> si.SurfaceTension:
+    @property
+    def interfacial_tension(self) -> si.SurfaceTension:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
@@ -322,36 +312,39 @@ class IFTDropAnalysis(Operation):
         outer_density = self.phys_params.outer_density  # type: si.Density
         gravity = self.phys_params.gravity  # type: si.Acceleration
 
-        bond_number = self._get_bond_number()
-        apex_radius = self._get_apex_radius()  # type: si.Length
+        bond_number = self.bond_number
+        apex_radius = self.apex_radius  # type: si.Length
 
         return self._calculate_ift(inner_density, outer_density, bond_number, apex_radius, gravity)
 
-    def _get_volume(self) -> si.Volume:
+    @property
+    def volume(self) -> si.Volume:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
 
         profile_domain = yl_fit.profile_domain
 
-        bond_number = self._get_bond_number()
-        apex_radius = self._get_apex_radius()  # type: si.Length
+        bond_number = self.bond_number
+        apex_radius = self.apex_radius  # type: si.Length
 
         return self._calculate_volume(profile_domain, bond_number, apex_radius)
 
-    def _get_surface_area(self) -> si.Area:
+    @property
+    def surface_area(self) -> si.Area:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
 
         profile_size = yl_fit.profile_domain
 
-        bond_number = self._get_bond_number()
-        apex_radius = self._get_apex_radius()  # type: si.Length
+        bond_number = self.bond_number
+        apex_radius = self.apex_radius  # type: si.Length
 
         return self._calculate_surface_area(profile_size, bond_number, apex_radius)
 
-    def _get_worthington(self) -> float:
+    @property
+    def worthington(self) -> float:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
@@ -360,19 +353,21 @@ class IFTDropAnalysis(Operation):
         outer_density = self.phys_params.outer_density  # type: si.Density
         needle_width = self.phys_params.needle_width  # type: si.Length
         gravity = self.phys_params.gravity  # type: si.Acceleration
-        ift = self._get_interfacial_tension()
-        volume = self._get_volume()
+        ift = self.interfacial_tension
+        volume = self.volume
 
         return self._calculate_worthington(inner_density, outer_density, gravity, ift, volume, needle_width)
 
-    def _get_objective(self) -> float:
+    @property
+    def objective(self) -> float:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
 
         return yl_fit.objective
 
-    def _get_apex_coords_px(self) -> Tuple[float, float]:
+    @property
+    def apex_coords_px(self) -> Tuple[float, float]:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return (math.nan, math.nan)
@@ -387,7 +382,8 @@ class IFTDropAnalysis(Operation):
 
         return tuple(apex_coords)
 
-    def _get_apex_radius(self) -> si.Length:
+    @property
+    def apex_radius(self) -> si.Length:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
@@ -397,7 +393,8 @@ class IFTDropAnalysis(Operation):
 
         return apex_radius_px * m_per_px
 
-    def _get_apex_rot(self) -> float:
+    @property
+    def apex_rot(self) -> float:
         yl_fit = self._yl_fit
         if yl_fit is None:
             return math.nan
@@ -409,6 +406,26 @@ class IFTDropAnalysis(Operation):
             angle *= -1
 
         return angle
+
+    @property
+    def done(self) -> bool:
+        return self.status.terminal
+
+    @property
+    def progress(self) -> float:
+        if self.bn_done.get():
+            return 1
+        else:
+            return 0
+
+    @property
+    def time_start(self) -> float:
+        return self._time_start
+
+    @property
+    def time_est_complete(self) -> float:
+        return self._scheduled_image.est_ready
+
 
 
 class IFTAnalysis(OperationGroup):

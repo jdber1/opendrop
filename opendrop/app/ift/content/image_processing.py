@@ -7,8 +7,9 @@ from opendrop.app.common.content.image_processing.image_processing import ImageP
     ImageProcessingFormView, RectangleView, MaskHighlightView, PolylineView
 from opendrop.app.common.content.image_processing.stage.tools import RegionDragToDefine
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindableVar
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
+from opendrop.utility.events import Event
+from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.validation import add_style_class_when_flags, ErrorsPresenter
 from opendrop.widgets.canny_parameters import CannyParameters
@@ -31,7 +32,7 @@ class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProc
             return
 
         # Drop region and needle region defining tools
-        self._bn_define_region_mode = AtomicBindableVar(DefineRegionMode.DROP)
+        self._bn_define_region_mode = BoxBindable(DefineRegionMode.DROP)
         self._drop_region_tool = RegionDragToDefine(canvas_size=Vector2(*self._preview.image.shape[1::-1]))
         self._needle_region_tool = RegionDragToDefine(canvas_size=Vector2(*self._preview.image.shape[1::-1]))
 
@@ -64,7 +65,7 @@ class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProc
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [
-            self._bn_define_region_mode.on_changed.connect(self._update_stage_active_tool),
+            self._view.on_select_new_mode.connect(self._change_tool),
 
             self._drop_region_tool.bn_selection.on_changed.connect(self._auto_choose_next_tool),
             self._needle_region_tool.bn_selection.on_changed.connect(self._auto_choose_next_tool),
@@ -84,11 +85,9 @@ class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProc
         self.__cleanup_tasks.extend(e.destroy for e in self._errors)
 
         self._auto_choose_next_tool()
-        self._update_stage_active_tool()
+        self._change_tool(self._bn_define_region_mode.get())
 
-    def _update_stage_active_tool(self) -> None:
-        mode = self._bn_define_region_mode.get()
-
+    def _change_tool(self, mode: 'DefineRegionMode') -> None:
         if mode is DefineRegionMode.DROP:
             self._stage.active_tool = self._drop_region_tool
         elif mode is DefineRegionMode.NEEDLE:
@@ -139,6 +138,8 @@ class IFTImageProcessingFormView(ImageProcessingFormView):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+        self.on_select_new_mode = Event()
 
         define_region_mode_lbl = Gtk.Label('Cursor is defining:')
         self._toolbar_area.attach(define_region_mode_lbl, 0, 0, 1, 1)
@@ -198,11 +199,11 @@ class IFTImageProcessingFormView(ImageProcessingFormView):
         self.bn_canny_max = GObjectPropertyBindable(canny_parameters, 'max-thresh')
 
         # Bindable properties
-        self.bn_define_region_mode = AtomicBindableAdapter(setter=self._set_define_region_mode)
+        self.bn_define_region_mode = AccessorBindable(setter=self._set_define_region_mode)
 
         # Error highlighting
-        self.bn_drop_region_err = AtomicBindableVar(set())
-        self.bn_needle_region_err = AtomicBindableVar(set())
+        self.bn_drop_region_err = BoxBindable(set())
+        self.bn_needle_region_err = BoxBindable(set())
 
         self.bn_drop_region_err.__refs = [
             add_style_class_when_flags(self._drop_region_mode_inp, 'error-text', self.bn_drop_region_err)]
@@ -211,10 +212,10 @@ class IFTImageProcessingFormView(ImageProcessingFormView):
 
         # Event wiring
         self._drop_region_mode_inp.connect(
-            'toggled', lambda w: self.bn_define_region_mode.set(DefineRegionMode.DROP) if w.props.active else None)
+            'toggled', lambda w: self.on_select_new_mode.fire(DefineRegionMode.DROP) if w.props.active else None)
 
         self._needle_region_mode_inp.connect(
-            'toggled', lambda w: self.bn_define_region_mode.set(DefineRegionMode.NEEDLE) if w.props.active else None)
+            'toggled', lambda w: self.on_select_new_mode.fire(DefineRegionMode.NEEDLE) if w.props.active else None)
 
     def _set_define_region_mode(self, mode: 'DefineRegionMode') -> None:
         if mode is DefineRegionMode.DROP:

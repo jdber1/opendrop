@@ -7,19 +7,18 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar
 from opendrop.utility.geometry import Line2, Rect2, Vector2
+from opendrop.utility.simplebindable import apply as bn_apply, BoxBindable
 from opendrop.utility.validation import check_is_positive
 from opendrop.utility.validation import validate, check_is_not_empty
 
 
 class FigureOptions:
     def __init__(self, should_save: bool, dpi: int, size_w: float, size_h: float) -> None:
-        self.bn_should_save = AtomicBindableVar(should_save)
-        self.bn_dpi = AtomicBindableVar(dpi)
-        self.bn_size_w = AtomicBindableVar(size_w)
-        self.bn_size_h = AtomicBindableVar(size_h)
+        self.bn_should_save = BoxBindable(should_save)
+        self.bn_dpi = BoxBindable(dpi)
+        self.bn_size_w = BoxBindable(size_w)
+        self.bn_size_h = BoxBindable(size_h)
 
         # Validation
 
@@ -39,7 +38,7 @@ class FigureOptions:
                     check_is_positive),
             enabled=self.bn_should_save)
 
-        self.errors = bindable_function(set.union)(self.dpi_err, self.size_w_err, self.size_h_err)(AtomicBindableVar(False))
+        self.errors = bn_apply(set.union, self.dpi_err, self.size_w_err, self.size_h_err)
 
     @property
     def size(self) -> Tuple[float, float]:

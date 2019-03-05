@@ -5,15 +5,15 @@ import pytest
 
 from opendrop.app.app import AppSpeakerID
 from opendrop.app.header import HeaderPresenter
-from opendrop.utility.bindable.bindable import AtomicBindableVar
+from opendrop.utility.simplebindable import BoxBindable
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator, Speaker
 
 
 class MockHeaderView:
     def __init__(self):
-        self.bn_header_title = AtomicBindableVar('')
-        self.bn_return_to_menu_btn_visible = AtomicBindableVar(True)
+        self.bn_header_title = BoxBindable('')
+        self.bn_return_to_menu_btn_visible = BoxBindable(True)
 
         self.on_return_to_menu_btn_clicked = Event()
 
@@ -23,7 +23,7 @@ class MockModerator:
 
     def __init__(self):
         super().__init__()
-        self.bn_active_speaker_key = AtomicBindableVar(None)
+        self.bn_active_speaker_key = BoxBindable(None)
 
         self.log = []
 

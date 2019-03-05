@@ -3,7 +3,6 @@ import math
 import time
 from asyncio import Future
 from enum import Enum
-from operator import attrgetter
 from typing import Callable, Optional, Sequence, Any, Union, Iterable
 
 import numpy as np
@@ -12,8 +11,8 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import Schedu
 from opendrop.app.common.model.operation import Operation, OperationGroup
 from opendrop.conancalc.conancalc import ContactAngleCalculator
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable, AtomicBindableVar
 from opendrop.utility.geometry import Line2, Vector2
+from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
 from .container import ConanImageAnnotations
 
 
@@ -72,49 +71,61 @@ class ConanDropAnalysis(Operation):
         self._loop.create_task(self._scheduled_image.read()).add_done_callback(self._hdl_scheduled_img_read)
 
         self._status_value = self.Status.WAITING_FOR_IMAGE
-        self.bn_status = AtomicBindableAdapter(lambda: self._status_value)
+        self.bn_status = AccessorBindable(lambda: self._status_value)
 
         self._image = None  # type: Optional[Image]
-        self.bn_image = AtomicBindableAdapter(lambda: self._image)
+        self.bn_image = AccessorBindable(lambda: self._image)
 
         # The time (in Unix time) that the image was captured.
         self._image_timestamp = math.nan  # type: float
-        self.bn_image_timestamp = AtomicBindableAdapter(lambda: self._image_timestamp)
+        self.bn_image_timestamp = AccessorBindable(lambda: self._image_timestamp)
 
         self._image_annotations = None  # type: Optional[ConanImageAnnotations]
-        self.bn_image_annotations = AtomicBindableAdapter(lambda: self._image_annotations)
+        self.bn_image_annotations = AccessorBindable(lambda: self._image_annotations)
 
         self._conan_calc_value = None  # type: Optional[ContactAngleCalculator]
 
-        self.bn_left_tangent = AtomicBindableAdapter(self._get_left_tangent)
-        self.bn_left_angle = AtomicBindableAdapter(self._get_left_angle)
-        self.bn_left_point = AtomicBindableAdapter(self._get_left_point)
+        self.bn_left_tangent = AccessorBindable(self._get_left_tangent)
+        self.bn_left_angle = AccessorBindable(self._get_left_angle)
+        self.bn_left_point = AccessorBindable(self._get_left_point)
 
-        self.bn_right_tangent = AtomicBindableAdapter(self._get_right_tangent)
-        self.bn_right_angle = AtomicBindableAdapter(self._get_right_angle)
-        self.bn_right_point = AtomicBindableAdapter(self._get_right_point)
+        self.bn_right_tangent = AccessorBindable(self._get_right_tangent)
+        self.bn_right_angle = AccessorBindable(self._get_right_angle)
+        self.bn_right_point = AccessorBindable(self._get_right_point)
 
         # Log
-        self.bn_log = AtomicBindableVar('')
+        self.bn_log = BoxBindable('')
         self._log_shim = self.LogShim(write=lambda s: self.bn_log.set(self.bn_log.get() + s))
 
         # Operation attributes
-        self.bn_done = AtomicBindableAdapter(self._get_done)
-        self.bn_canceleld = AtomicBindableAdapter(lambda: self.status is self.Status.CANCELLED)
-        self.bn_progress = AtomicBindableAdapter(self._get_progress)
-        self.bn_time_start = AtomicBindableAdapter(self._get_time_start)
-        self.bn_time_est_complete = AtomicBindableAdapter(self._get_time_est_complete)
+        self.bn_done = AccessorBindable(self._get_done)
+        self.bn_canceleld = AccessorBindable(lambda: self.status is self.Status.CANCELLED)
+        self.bn_progress = AccessorBindable(self._get_progress)
+        self.bn_time_start = AccessorBindable(self._get_time_start)
+        self.bn_time_est_complete = AccessorBindable(self._get_time_est_complete)
 
         self.bn_status.on_changed.connect(self.bn_done.poke)
         self.bn_status.on_changed.connect(self.bn_progress.poke)
 
-    # Property adapters for bindables (type annotations are not strictly correct but is a bit of a hack to allow PyCharm
-    # recognise the types)
-    status = AtomicBindable.property_adapter(attrgetter('bn_status'))  # type: Status
-    image = AtomicBindable.property_adapter(attrgetter('bn_image'))  # type: Image
-    image_annotations = AtomicBindable.property_adapter(attrgetter('bn_image_annotations'))  # type: ConanImageAnnotations
-    image_timestamp = AtomicBindable.property_adapter(attrgetter('bn_image_timestamp'))  # type: float
-    log = AtomicBindable.property_adapter(attrgetter('bn_log'))  # type: str
+    @property
+    def status(self) -> Status:
+        return self._status
+
+    @property
+    def image(self) -> Image:
+        return self._image
+
+    @property
+    def image_annotations(self) -> ConanImageAnnotations:
+        return self._image_annotations
+
+    @property
+    def image_timestamp(self) -> float:
+        return self._image_timestamp
+
+    @property
+    def log(self) -> str:
+        return self.bn_log.get()
 
     def _hdl_scheduled_img_read(self, read_task: Future) -> None:
         if read_task.cancelled():

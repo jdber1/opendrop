@@ -7,10 +7,9 @@ import numpy as np
 from opendrop.app.conan.model.analyser.container import ConanImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.bindable import bindable_function
-from opendrop.utility.bindable.bindable import AtomicBindableVar, AtomicBindable
 from opendrop.utility.geometry import Rect2, Line2
 from opendrop.utility.mycv import _realign_squished_contour
+from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_custom_condition
 
 
@@ -55,13 +54,13 @@ class ConanImageAnnotator:
         # Used for validation
         self._get_image_size_hint = get_image_size_hint
 
-        self.bn_canny_min = AtomicBindableVar(30)  # type: AtomicBindable[int]
-        self.bn_canny_max = AtomicBindableVar(60)  # type: AtomicBindable[int]
+        self.bn_canny_min = BoxBindable(30)
+        self.bn_canny_max = BoxBindable(60)
 
-        self.bn_drop_region_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Rect2]]
-        self.bn_surface_line_px = AtomicBindableVar(None)  # type: AtomicBindable[Optional[Line2]]
+        self.bn_drop_region_px = BoxBindable(None)  # type: Bindable[Optional[Rect2]]
+        self.bn_surface_line_px = BoxBindable(None)  # type: Bindable[Optional[Line2]]
 
-        self.bn_using_needle = AtomicBindableVar(False)  # type: AtomicBindable[bool]
+        self.bn_using_needle = BoxBindable(False)
 
         # Input validation
         self.drop_region_px_err = validate(
@@ -76,7 +75,7 @@ class ConanImageAnnotator:
             value=self.bn_surface_line_px,
             checks=(check_is_not_empty,))
 
-        self._errors = bindable_function(set.union)(self.drop_region_px_err, self.surface_line_px_err)(AtomicBindableVar(False))
+        self._errors = bn_apply(set.union, self.drop_region_px_err, self.surface_line_px_err)
 
     def extract_drop_contours(self, image: Image) -> Sequence[np.ndarray]:
         drop_region_px = self.bn_drop_region_px.get()

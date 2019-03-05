@@ -5,11 +5,9 @@ from gi.repository import Gio, Gtk, GdkPixbuf, GLib
 
 from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable import AtomicBindable
-from opendrop.utility.bindable.atomic_binding_mitm import AtomicBindingMITM
-from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
+from opendrop.utility.simplebindable import Bindable, apply as bn_apply
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
 from opendrop.utility.speaker import Moderator
 
 
@@ -35,8 +33,8 @@ class HeaderView(GtkWidgetView[Gtk.Grid]):
         self.widget.pack_end(return_to_menu_btn)
         return_to_menu_btn.connect('clicked', lambda *_: self.on_return_to_menu_btn_clicked.fire())
 
-        self.bn_header_title = GObjectPropertyBindable(self.widget, 'title')  # type: AtomicBindable[str]
-        self.bn_return_to_menu_btn_visible = GObjectPropertyBindable(return_to_menu_btn, 'visible')  # type: AtomicBindable[bool]
+        self.bn_header_title = GObjectPropertyBindable(self.widget, 'title')  # type: Bindable[str]
+        self.bn_return_to_menu_btn_visible = GObjectPropertyBindable(return_to_menu_btn, 'visible')  # type: Bindable[bool]
 
 
 class HeaderPresenter:
@@ -50,10 +48,14 @@ class HeaderPresenter:
         ]
 
         self.__data_bindings = [
-            Binding(self._main_mod.bn_active_speaker_key, self._view.bn_header_title,
-                    mitm=AtomicBindingMITM(to_dst=lambda key: key.header_title if key is not None else '')),
-            Binding(self._main_mod.bn_active_speaker_key, self._view.bn_return_to_menu_btn_visible,
-                    mitm=AtomicBindingMITM(to_dst=lambda key: key is not AppSpeakerID.MAIN_MENU))
+            self._view.bn_header_title.bind_from(
+                bn_apply(
+                    lambda key: key.header_title if key is not None else '',
+                    self._main_mod.bn_active_speaker_key)),
+            self._view.bn_return_to_menu_btn_visible.bind_from(
+                bn_apply(
+                    lambda key: key is not AppSpeakerID.MAIN_MENU,
+                    self._main_mod.bn_active_speaker_key))
         ]
 
     def hdl_view_return_to_menu_btn_clicked(self) -> None:

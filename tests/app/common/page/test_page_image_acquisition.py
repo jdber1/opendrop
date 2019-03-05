@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.content.image_acquisition import _ImageAcquisitionFormPresenter
-from opendrop.utility.bindable.bindable import AtomicBindableVar
+from opendrop.utility.simplebindable import BoxBindable
 
 
 def test_root_presenter_connects_new_image_acquisition_impl_to_child_view():
@@ -99,7 +99,7 @@ def test_root_presenter_tells_view_of_available_types():
 def test_root_presenter_syncs_view_user_input_impl_type():
     image_acquisition = ImageAcquisition()
     mock_view = Mock()
-    mock_view.bn_user_input_impl_type = AtomicBindableVar(None)
+    mock_view.bn_user_input_impl_type = BoxBindable(None)
 
     mock_impl_type_0 = Mock()
     image_acquisition.type = mock_impl_type_0
@@ -126,7 +126,7 @@ def test_root_presenter_syncs_view_user_input_impl_type():
 def test_root_presenter_destroy():
     image_acquisition = ImageAcquisition()
     mock_view = Mock()
-    mock_view.bn_user_input_impl_type = AtomicBindableVar(None)
+    mock_view.bn_user_input_impl_type = BoxBindable(None)
     presenter = _ImageAcquisitionFormPresenter(image_acquisition, Mock(), Mock(), mock_view)
 
     # Destroy the presenter.

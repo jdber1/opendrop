@@ -1,5 +1,5 @@
 # A mish mash of functions that have something to do with input validation. (todo: refactor this)
-
+import functools
 import itertools
 import math
 from enum import Enum
@@ -7,10 +7,10 @@ from typing import Set, Sized, Any, Callable, Iterable, TypeVar, Generic, Option
 
 from gi.repository import Gtk
 
-from opendrop.utility.bindable import bindable_function, AtomicBindableVar, if_expr
-from opendrop.utility.bindable.bindable import Bindable, AtomicBindable
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Rect2
+from opendrop.utility.simplebindable import Bindable, BoxBindable
+from opendrop.utility.simplebindable import apply as bn_apply
 
 
 class ValidationFlag(Enum):
@@ -19,8 +19,11 @@ class ValidationFlag(Enum):
     MUST_BE_POSITIVE = 2
 
 
-@bindable_function
-def message_from_flags(field_name: str, flags: Set[ValidationFlag]) -> str:
+def message_from_flags(field_name: str, flags: Bindable[Set[ValidationFlag]]) -> str:
+    return bn_apply(functools.partial(_message_from_flags, field_name), flags)
+
+
+def _message_from_flags(field_name: str, flags: Set[ValidationFlag]) -> str:
     if len(flags) == 0:
         return ''
 
@@ -81,19 +84,29 @@ def check_is_finite(x: float) -> Iterable[ValidationFlag]:
     return flags
 
 
-@bindable_function(autobind_return=lambda: AtomicBindableVar(None))
-def validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]], enabled: bool = True) \
+def validate(value: Bindable, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]],
+             enabled: Optional[Bindable[bool]] = None) -> Bindable[Set[ValidationFlag]]:
+    options = {}
+
+    if enabled is not None:
+        options['enabled'] = enabled
+
+    return bn_apply(functools.partial(_validate, checks=checks), value, **options)
+
+
+def _validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFlag]]], enabled: bool = True) \
         -> Set[ValidationFlag]:
     if not enabled:
         return set()
 
     flags = {*itertools.chain(*(check(value) for check in checks))}
     flags.discard(None)
+
     return flags
 
 
 class AssociateStyleClassToWidgetWhenFlagsPresent:
-    def __init__(self, widget: Gtk.Widget, style_class: str, flags: AtomicBindable[ValidationFlag]) -> None:
+    def __init__(self, widget: Gtk.Widget, style_class: str, flags: Bindable[Set[ValidationFlag]]) -> None:
         self._widget = widget
         self._style_class = style_class
         self._flags = flags
@@ -115,10 +128,10 @@ ErrorType = TypeVar('ErrorType')
 
 
 class FieldView(Generic[ValueType, ErrorType]):
-    def __init__(self, value: ValueType, *, errors_out: Optional[AtomicBindable[Set[ErrorType]]] = None,
+    def __init__(self, value: ValueType, *, errors_out: Optional[Bindable[Set[ErrorType]]] = None,
                  on_user_finished_editing: Optional[Event] = None) -> None:
         if errors_out is None:
-            errors_out = AtomicBindableVar(set())  # type: AtomicBindable[Set[ErrorType]]
+            errors_out = BoxBindable(set())  # type: Bindable[Set[ErrorType]]
 
         if on_user_finished_editing is None:
             on_user_finished_editing = Event()
@@ -129,7 +142,7 @@ class FieldView(Generic[ValueType, ErrorType]):
 
 
 class FieldPresenter(Generic[ValueType, ErrorType]):
-    def __init__(self, value: ValueType, errors: AtomicBindable[Set[ErrorType]],
+    def __init__(self, value: ValueType, errors: Bindable[Set[ErrorType]],
                  field_view: FieldView[ValueType, ErrorType]) -> None:
         self.__destroyed = False
         self.__cleanup_tasks = []
@@ -156,19 +169,17 @@ class FieldPresenter(Generic[ValueType, ErrorType]):
 
 
 class ErrorsPresenter(Generic[ErrorType]):
-    def __init__(self, errors_in: AtomicBindable[Set[ErrorType]], errors_out: AtomicBindable[Set[ErrorType]]) -> None:
+    def __init__(self, errors_in: Bindable[Set[ErrorType]], errors_out: Bindable[Set[ErrorType]]) -> None:
         self._errors_in = errors_in
 
         self.__destroyed = False
         self.__cleanup_tasks = []
 
-        self._is_showing_errors = AtomicBindableVar(False)
+        self._is_showing_errors = BoxBindable(False)
         self.__cleanup_tasks.append(lambda: self._is_showing_errors.set(False))
 
         data_bindings = [
-            errors_out.bind_from(if_expr(cond=self._is_showing_errors,
-                                         true=self._errors_in,
-                                         false=AtomicBindableVar(set())))]
+            errors_out.bind_from(bn_apply(lambda x, y: x if y else set(), self._errors_in, self._is_showing_errors))]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
     def show_errors(self) -> None:

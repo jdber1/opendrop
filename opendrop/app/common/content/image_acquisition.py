@@ -9,12 +9,11 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
     ImageAcquisitionImpl, ImageAcquisitionImplType
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter
-from opendrop.utility.bindable.binding import Binding
-from opendrop.utility.bindablegext.bindable import GObjectPropertyBindable
 from opendrop.utility.events import Event
-from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter, \
-    check_is_not_empty, validate
+from opendrop.utility.simplebindable import Bindable, AccessorBindable
+from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.validation import FieldPresenter, FieldView, validate, add_style_class_when_flags, \
+    check_is_not_empty, message_from_flags
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
@@ -171,7 +170,7 @@ class LocalImagesImageAcquisitionImplPresenter(Destroyable):
         self.__destroyed = False
         self.__cleanup_tasks = []  # type: MutableSequence[Callable]
 
-        self._selected_image_paths = AtomicBindableAdapter(
+        self._selected_image_paths = AccessorBindable(
             getter=self._get_selected_image_paths,
             setter=self._set_selected_image_paths)
 
@@ -320,9 +319,9 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
             self.on_request_close_window = Event()
             self.widget.connect('delete-event', self._hdl_widget_delete_event)
 
-            self.bn_camera_index = GObjectPropertyBindable(camera_index_inp, 'value')  # type: AtomicBindableAdapter[int]
+            self.bn_camera_index = GObjectPropertyBindable(camera_index_inp, 'value')  # type: Bindable[int]
 
-            self.bn_camera_inp_text = GObjectPropertyBindable(camera_index_inp, 'text')  # type: AtomicBindableAdapter[str]
+            self.bn_camera_inp_text = GObjectPropertyBindable(camera_index_inp, 'text')  # type: Bindable[str]
 
             self.bn_connect_btn_sensitive = GObjectPropertyBindable(connect_btn, 'sensitive')
 
@@ -420,7 +419,7 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
         self._active_change_camera_dialog_view = None  # type: Optional[USBCameraImageAcquisitionImplView.ChangeCameraDialogView]
 
         # Fields
-        self.current_camera_index_field = FieldView(value=AtomicBindableAdapter(setter=self._set_current_camera_index))
+        self.current_camera_index_field = FieldView(value=AccessorBindable(setter=self._set_current_camera_index))
         self.num_frames_field = FieldView(value=GObjectPropertyBindable(self._num_frames_inp, 'value'))
         self.frame_interval_field = FieldView(value=GObjectPropertyBindable(self._frame_interval_inp, 'value'))
 
@@ -621,7 +620,7 @@ class ImageAcquisitionFormView(Generic[ImplType], GtkWidgetView[Gtk.Grid]):
 
         self.bn_user_input_impl_type = GObjectPropertyBindable(self._user_input_impl_type_combobox, 'active-id',
                                                                transform_to=self._combobox_id_from_impl_type,
-                                                               transform_from=self._impl_type_from_combobox_id)  # type: AtomicBindableAdapter[Optional[str]]
+                                                               transform_from=self._impl_type_from_combobox_id)  # type: Bindable[Optional[str]]
 
     def _impl_type_from_combobox_id(self, combobox_id: Optional[str]) -> Optional[ImageAcquisitionImplType]:
         if combobox_id is None:
@@ -676,7 +675,7 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         ]
 
         self.__data_bindings = [
-            Binding(self._image_acquisition.bn_type, self._view.bn_user_input_impl_type)
+            self._image_acquisition.bn_type.bind_to(self._view.bn_user_input_impl_type)
         ]
 
         # Call the handler to connect the existing image acquisition implementation to the view.

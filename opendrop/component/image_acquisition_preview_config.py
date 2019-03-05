@@ -6,8 +6,7 @@ from opendrop.app.common.model.image_acquisition.default_types import \
     ImageSequenceImageAcquisitionPreviewConfig
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
-from opendrop.utility.bindable.bindable import AtomicBindable, AtomicBindableVar
-from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.simplebindable import Bindable, BoxBindable
 from opendrop.utility.events import Event
 
 
@@ -68,8 +67,8 @@ class LocalImagesImageAcquisitionPreviewConfigView(GtkWidgetView[Gtk.Grid]):
         left_btn.connect('clicked', lambda *_: self.on_left_btn_clicked.fire())
         right_btn.connect('clicked', lambda *_: self.on_right_btn_clicked.fire())
 
-        self.bn_num_images = AtomicBindableVar(0)  # type: AtomicBindable[int]
-        self.bn_index = AtomicBindableVar(0)  # type: AtomicBindable[int]
+        self.bn_num_images = BoxBindable(0)  # type: Bindable[int]
+        self.bn_index = BoxBindable(0)  # type: Bindable[int]
 
         self.bn_num_images.on_changed.connect(self._update_index_lbl)
         self.bn_index.on_changed.connect(self._update_index_lbl)
@@ -91,8 +90,8 @@ class LocalImagesImageAcquisitionPreviewConfigPresenter:
         ]
 
         self.__data_bindings = [
-            Binding(self._config.bn_num_images, self._view.bn_num_images),
-            Binding(self._config.bn_index, self._view.bn_index)
+            self._config.bn_num_images.bind_to(self._view.bn_num_images),
+            self._config.bn_index.bind_to(self._view.bn_index)
         ]
 
     def _hdl_view_right_btn_clicked(self) -> None:

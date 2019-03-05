@@ -11,7 +11,7 @@ from opendrop.app.common.model.image_acquisition.default_types import DefaultIma
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.wizard import WizardPresenter, WizardPageID, WizardView
 from opendrop.component.stack import StackModel
-from opendrop.utility.bindable.bindable import AtomicBindableVar
+from opendrop.utility.simplebindable import BoxBindable
 from opendrop.utility.speaker import Speaker
 from .content.analysis_saver import ConanAnalysisSaverPresenter, ConanAnalysisSaverView
 from .content.image_processing import ConanImageProcessingFormView
@@ -98,7 +98,7 @@ class Context:
         self.image_annotator = image_annotator
         self.results_explorer = results_explorer
 
-        self.bn_current_analysis_done = AtomicBindableVar(False)
+        self.bn_current_analysis_done = BoxBindable(False)
         self._analysis_unbind_tasks = []
 
     def new_analysis(self) -> None:

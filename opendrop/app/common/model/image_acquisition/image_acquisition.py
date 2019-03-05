@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Sequence
 
 from opendrop.mytypes import Image
-from opendrop.utility.bindable.bindable import AtomicBindableAdapter, AtomicBindable
+from opendrop.utility.simplebindable import Bindable, AccessorBindable
 from opendrop.utility.events import Event
 
 
@@ -51,7 +51,7 @@ class ImageAcquisitionPreview(Generic[ConfigType]):
         JUMP = 0
         SMOOTH = 1
 
-    bn_alive = None  # type: AtomicBindable[bool]
+    bn_alive = None  # type: Bindable[bool]
 
     image = None  # type: Image
     config = None  # type: ConfigType
@@ -69,12 +69,20 @@ class ImageAcquisition(Generic[ImplType]):
     def __init__(self) -> None:
         self._type = None  # type: Optional[ImplType]
         self._impl = None  # type: Optional[ImageAcquisitionImpl]
-        self.bn_impl = AtomicBindableAdapter(self._get_impl)  # type: AtomicBindableAdapter[Optional[ImageAcquisitionImpl]]
-        self.bn_type = AtomicBindableAdapter(self._get_type, self._set_type)  # type: AtomicBindableAdapter[Optional[ImplType]]
+        self.bn_impl = AccessorBindable(self._get_impl)
+        self.bn_type = AccessorBindable(self._get_type, self._set_type)
 
-    # Property adapters for atomic bindables.
-    type = AtomicBindable.property_adapter(lambda self: self.bn_type)
-    impl = AtomicBindable.property_adapter(lambda self: self.bn_impl)
+    @property
+    def type(self) -> ImplType:
+        return self.bn_type.get()
+
+    @type.setter
+    def type(self, new_type: ImplType) -> None:
+        self.bn_type.set(new_type)
+
+    @property
+    def impl(self) -> ImageAcquisitionImpl:
+        return self.bn_impl.get()
 
     def acquire_images(self) -> Sequence[ScheduledImage]:
         """Return a tuple, with the first element being a sequence of futures which will be resolved to a tuple of an
