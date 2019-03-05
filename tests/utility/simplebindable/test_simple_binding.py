@@ -70,6 +70,24 @@ class TestBinding:
         assert dst_bindable_wr() is None
 
 
+class TestBinding_With_DstIsWriteOnly:
+    @pytest.fixture(autouse=True)
+    def fixture(self):
+        self.src_bindable = MockBindable()
+        self.dst_bindable = MockBindable()
+        self.dst_bindable.get.side_effect = AttributeError
+
+        self.binding = Binding(src=self.src_bindable, dst=self.dst_bindable)
+
+    def test_dst_poke(self):
+        self.src_bindable.reset()
+        self.dst_bindable.reset()
+
+        self.dst_bindable.poke()
+
+        self.src_bindable.set.assert_not_called()
+
+
 class TestBinding_With_ToDstTransform:
     @pytest.fixture(autouse=True)
     def fixture(self):
