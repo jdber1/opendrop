@@ -24,6 +24,16 @@ class Bindable(Generic[_T]):
         self._set_value(new_value)
         self.on_changed.fire()
 
+    # Convenience methods for creating Bindings
+
+    def bind_from(self, src: 'Bindable[_T]') -> 'Binding':
+        from .binding import Binding
+        return Binding(src=src, dst=self)
+
+    def bind_to(self, dst: 'Bindable[_T]') -> 'Binding':
+        from .binding import Binding
+        return Binding(src=self, dst=dst)
+
     @abstractmethod
     def _get_value(self) -> _T:
         """Actual implementation used to get the value"""
