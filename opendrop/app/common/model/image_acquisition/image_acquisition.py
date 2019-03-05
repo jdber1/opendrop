@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Callable, Optional, Tuple, Sequence
 
 from opendrop.mytypes import Image
-from opendrop.utility.simplebindable import Bindable, AccessorBindable
+from opendrop.utility.bindable import Bindable, AccessorBindable
 from opendrop.utility.events import Event
 
 

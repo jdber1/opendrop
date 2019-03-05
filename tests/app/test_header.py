@@ -5,7 +5,7 @@ import pytest
 
 from opendrop.app.app import AppSpeakerID
 from opendrop.app.header import HeaderPresenter
-from opendrop.utility.simplebindable import BoxBindable
+from opendrop.utility.bindable import BoxBindable
 from opendrop.utility.events import Event
 from opendrop.utility.speaker import Moderator, Speaker
 

@@ -9,10 +9,10 @@ from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.image_acquisition_preview_config import ImageAcquisitionPreviewConfigView, \
     ImageAcquisitionPreviewConfigPresenter
 from opendrop.mytypes import Image
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.gmisc import pixbuf_from_array
-from opendrop.utility.simplebindable import Bindable, AccessorBindable
+from opendrop.utility.bindable import Bindable, AccessorBindable
 from opendrop.widgets.render import Render
 from opendrop.widgets.render.objects import PixbufFill, Polyline, Rectangle, Line
 

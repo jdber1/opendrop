@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable.apply import apply
+from opendrop.utility.bindable.apply import apply
 
 
 class TestApply:

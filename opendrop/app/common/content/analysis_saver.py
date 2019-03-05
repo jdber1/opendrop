@@ -3,8 +3,8 @@ from typing import Set
 from gi.repository import Gtk, Gdk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindable import AccessorBindable, apply as bn_apply
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import AccessorBindable, apply as bn_apply
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, ValidationFlag, FieldView, \
     FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry

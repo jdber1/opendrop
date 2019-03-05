@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from opendrop.utility.simplebindable.bindable import Bindable, BoxBindable, AccessorBindable
+from opendrop.utility.bindable.bindable import Bindable, BoxBindable, AccessorBindable
 
 
 class TestBindable:

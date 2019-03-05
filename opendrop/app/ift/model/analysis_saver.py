@@ -11,7 +11,7 @@ import numpy as np
 from opendrop.app.common.model.analysis_saver import FigureOptions, simple_grapher
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
 from opendrop.utility.misc import clear_directory_contents
-from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty
 
 

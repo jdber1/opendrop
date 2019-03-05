@@ -3,7 +3,7 @@ from typing import Optional, Sequence, MutableSequence, Callable, Tuple
 import numpy as np
 
 from opendrop.app.ift.model.analyser import IFTAnalysis, IFTDropAnalysis
-from opendrop.utility.simplebindable import Bindable, BoxBindable, AccessorBindable
+from opendrop.utility.bindable import Bindable, BoxBindable, AccessorBindable
 
 
 class IFTResultsExplorer:

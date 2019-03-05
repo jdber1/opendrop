@@ -9,8 +9,8 @@ from gi.repository import Gtk
 
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Rect2
-from opendrop.utility.simplebindable import Bindable, BoxBindable
-from opendrop.utility.simplebindable import apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import apply as bn_apply
 
 
 class ValidationFlag(Enum):

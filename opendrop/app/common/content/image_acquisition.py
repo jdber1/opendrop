@@ -10,8 +10,8 @@ from opendrop.app.common.model.image_acquisition.image_acquisition import ImageA
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import Bindable, AccessorBindable
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import Bindable, AccessorBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.validation import FieldPresenter, FieldView, validate, add_style_class_when_flags, \
     check_is_not_empty, message_from_flags
 from opendrop.widgets.file_chooser_button import FileChooserButton

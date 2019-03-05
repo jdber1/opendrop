@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, Optional, MutableMapping
 
-from opendrop.utility.simplebindable import AccessorBindable
+from opendrop.utility.bindable import AccessorBindable
 
 K = TypeVar('K')
 

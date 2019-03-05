@@ -6,8 +6,8 @@ from gi.repository import Gio, Gtk, GdkPixbuf, GLib
 from opendrop.app.app_speaker_id import AppSpeakerID
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import Bindable, apply as bn_apply
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import Bindable, apply as bn_apply
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.speaker import Moderator
 
 

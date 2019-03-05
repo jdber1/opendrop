@@ -9,8 +9,8 @@ from gi.repository import Gtk, Gdk, GObject
 from opendrop.app.common.model.operation import Operation
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import AccessorBindable
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import AccessorBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 
 
 class OperationFooterStatus(Enum):

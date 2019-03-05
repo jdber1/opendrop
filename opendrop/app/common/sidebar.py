@@ -5,7 +5,7 @@ from typing import Sequence, Tuple, TypeVar, Generic
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindable import Bindable, AccessorBindable
+from opendrop.utility.bindable import Bindable, AccessorBindable
 
 TaskType = TypeVar('TaskType')
 

@@ -3,7 +3,7 @@ from typing import TypeVar, Callable, Any
 
 from gi.repository import GObject
 
-from opendrop.utility.simplebindable import Bindable
+from opendrop.utility.bindable import Bindable
 
 _T = TypeVar('_T')
 

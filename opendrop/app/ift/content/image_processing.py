@@ -8,8 +8,8 @@ from opendrop.app.common.content.image_processing.image_processing import ImageP
 from opendrop.app.common.content.image_processing.stage.tools import RegionDragToDefine
 from opendrop.app.ift.model.image_annotator.image_annotator import IFTImageAnnotator
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import AccessorBindable, BoxBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.validation import add_style_class_when_flags, ErrorsPresenter
 from opendrop.widgets.canny_parameters import CannyParameters

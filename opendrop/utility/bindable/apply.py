@@ -1,7 +1,7 @@
 import itertools
 from typing import Callable, TypeVar
 
-from opendrop.utility.simplebindable.bindable import Bindable
+from opendrop.utility.bindable.bindable import Bindable
 
 _T = TypeVar('_T')
 

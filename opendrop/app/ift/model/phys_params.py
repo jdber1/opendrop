@@ -2,7 +2,7 @@ import math
 from typing import Optional
 
 from opendrop.app.ift.model.analyser import IFTPhysicalParameters
-from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive, check_is_finite
 
 

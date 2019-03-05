@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable.binding import Binding
+from opendrop.utility.bindable.binding import Binding
 
 
 class TestBinding:

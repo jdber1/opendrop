@@ -6,8 +6,8 @@ from gi.repository import Gtk, Gdk
 from opendrop.app.common.content.analysis_saver import FigureOptionsView, FigureOptionsPresenter
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindable import AccessorBindable
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import AccessorBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.events import Event
 from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, FieldView, \
     FieldPresenter

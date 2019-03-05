@@ -12,7 +12,7 @@ from matplotlib.image import AxesImage
 from opendrop.app.ift.model.analyser import IFTDropAnalysis
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Image
-from opendrop.utility.simplebindable import Bindable, BoxBindable, AccessorBindable
+from opendrop.utility.bindable import Bindable, BoxBindable, AccessorBindable
 
 
 class DetailView(GtkWidgetView[Gtk.Grid]):

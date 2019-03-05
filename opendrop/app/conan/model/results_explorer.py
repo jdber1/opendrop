@@ -2,7 +2,7 @@ from typing import Optional, Sequence, MutableSequence, Callable
 
 import numpy as np
 
-from opendrop.utility.simplebindable import AccessorBindable, BoxBindable, Bindable
+from opendrop.utility.bindable import AccessorBindable, BoxBindable, Bindable
 from .analyser import ConanAnalysis, ConanDropAnalysis
 
 

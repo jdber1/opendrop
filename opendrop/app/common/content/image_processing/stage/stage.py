@@ -7,7 +7,7 @@ from opendrop.utility import keyboard
 from opendrop.utility.events import Event
 from opendrop.utility.geometry import Vector2, Rect2
 from opendrop.utility.gmisc import pixbuf_from_array
-from opendrop.utility.simplebindable import AccessorBindable, Bindable, BoxBindable
+from opendrop.utility.bindable import AccessorBindable, Bindable, BoxBindable
 from opendrop.widgets.render import protocol
 from opendrop.widgets.render.objects.pixbuf_fill import PixbufFill
 

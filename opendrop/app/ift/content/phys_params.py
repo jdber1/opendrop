@@ -2,7 +2,7 @@ from gi.repository import Gtk, Gdk
 
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter
 from opendrop.widgets.float_entry import FloatEntry
 

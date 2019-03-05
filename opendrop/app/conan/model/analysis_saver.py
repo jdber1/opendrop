@@ -9,7 +9,7 @@ import numpy as np
 from opendrop.app.common.model.analysis_saver import FigureOptions, simple_grapher, draw_line, draw_angle_marker
 from opendrop.app.conan.model.analyser import ConanDropAnalysis
 from opendrop.utility.misc import clear_directory_contents
-from opendrop.utility.simplebindable import BoxBindable, Bindable, apply as bn_apply
+from opendrop.utility.bindable import BoxBindable, Bindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty
 
 

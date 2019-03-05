@@ -12,7 +12,7 @@ from opendrop.app.common.model.operation import Operation, OperationGroup
 from opendrop.conancalc.conancalc import ContactAngleCalculator
 from opendrop.mytypes import Image
 from opendrop.utility.geometry import Line2, Vector2
-from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
+from opendrop.utility.bindable import AccessorBindable, BoxBindable
 from .container import ConanImageAnnotations
 
 

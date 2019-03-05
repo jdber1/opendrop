@@ -7,8 +7,8 @@ from gi.repository import Gtk, Gdk, GObject
 from opendrop.app.common.content.image_processing.stage import StageView
 from opendrop.app.conan.model.analyser import ConanDropAnalysis
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindable import Bindable, BoxBindable
-from opendrop.utility.simplebindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable
 from opendrop.widgets.render import Render
 from opendrop.widgets.render.objects import Angle, Line, Polyline
 

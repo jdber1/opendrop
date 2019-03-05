@@ -14,7 +14,7 @@ from opendrop.iftcalc import phys_props
 from opendrop.iftcalc.younglaplace.yl_fit import YoungLaplaceFit
 from opendrop.mytypes import Image
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import AccessorBindable, BoxBindable
+from opendrop.utility.bindable import AccessorBindable, BoxBindable
 from .container import IFTPhysicalParameters, IFTImageAnnotations
 
 

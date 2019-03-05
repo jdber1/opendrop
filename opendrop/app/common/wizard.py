@@ -9,7 +9,7 @@ from gi.repository import Gtk
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.component.stack import StackView, StackModel, StackPresenter
 from opendrop.mytypes import Destroyable
-from opendrop.utility.simplebindable import BoxBindable
+from opendrop.utility.bindable import BoxBindable
 from .sidebar import TasksSidebarView, TasksSidebarPresenter
 
 PresenterType = TypeVar('PresenterType', bound=Destroyable)

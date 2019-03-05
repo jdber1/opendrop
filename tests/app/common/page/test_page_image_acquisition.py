@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.content.image_acquisition import _ImageAcquisitionFormPresenter
-from opendrop.utility.simplebindable import BoxBindable
+from opendrop.utility.bindable import BoxBindable
 
 
 def test_root_presenter_connects_new_image_acquisition_impl_to_child_view():

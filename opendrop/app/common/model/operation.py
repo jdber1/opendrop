@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from opendrop.utility.simplebindable import Bindable, AccessorBindable, BoxBindable
+from opendrop.utility.bindable import Bindable, AccessorBindable, BoxBindable
 
 
 class Operation:

@@ -9,7 +9,7 @@ import numpy as np
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisitionPreview
 from opendrop.mytypes import Image
 from opendrop.utility.geometry import Vector2
-from opendrop.utility.simplebindable import Bindable
+from opendrop.utility.bindable import Bindable
 from opendrop.utility.worker import WorkerThread
 
 AnalysisResultType = TypeVar('OperationResultType')

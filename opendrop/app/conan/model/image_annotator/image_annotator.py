@@ -9,7 +9,7 @@ from opendrop.mytypes import Image
 from opendrop.utility import mycv
 from opendrop.utility.geometry import Rect2, Line2
 from opendrop.utility.mycv import _realign_squished_contour
-from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_custom_condition
 
 

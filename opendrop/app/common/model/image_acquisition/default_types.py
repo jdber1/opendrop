@@ -11,7 +11,7 @@ import numpy as np
 
 from opendrop.mytypes import Image
 from opendrop.utility.events import Event, EventConnection
-from opendrop.utility.simplebindable import Bindable, BoxBindable, AccessorBindable, apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable, AccessorBindable, apply as bn_apply
 from opendrop.utility.validation import validate, check_is_not_empty, check_is_positive
 from .image_acquisition import ImageAcquisitionImplType, ImageAcquisitionImpl, ImageAcquisitionPreview, ScheduledImage
 

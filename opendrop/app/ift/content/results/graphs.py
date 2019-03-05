@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 
 from opendrop.app.ift.model.results_explorer import IFTResultsExplorer
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.simplebindable import AccessorBindable
+from opendrop.utility.bindable import AccessorBindable
 
 
 class GraphsView(GtkWidgetView[Gtk.Stack]):

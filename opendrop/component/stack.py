@@ -4,7 +4,7 @@ from gi.repository import Gtk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.events import Event
-from opendrop.utility.simplebindable import AccessorBindable
+from opendrop.utility.bindable import AccessorBindable
 
 KeyType = TypeVar('KeyType')
 ChildType = TypeVar('ChildType')

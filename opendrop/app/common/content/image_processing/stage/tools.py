@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from opendrop.utility import keyboard
 from opendrop.utility.geometry import Vector2, Rect2, Line2
 from opendrop.utility.misc import clamp
-from opendrop.utility.simplebindable import Bindable, BoxBindable
+from opendrop.utility.bindable import Bindable, BoxBindable
 from .stage import StageTool
 
 

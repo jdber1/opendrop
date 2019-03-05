@@ -11,7 +11,7 @@ from opendrop.app.common.model.image_acquisition.default_types import DefaultIma
 from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition
 from opendrop.app.common.wizard import WizardPresenter, WizardPageID, WizardView
 from opendrop.component.stack import StackModel
-from opendrop.utility.simplebindable import BoxBindable
+from opendrop.utility.bindable import BoxBindable
 from opendrop.utility.speaker import Speaker
 from .content.analysis_saver import ConanAnalysisSaverPresenter, ConanAnalysisSaverView
 from .content.image_processing import ConanImageProcessingFormView

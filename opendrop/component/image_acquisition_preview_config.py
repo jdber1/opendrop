@@ -6,7 +6,7 @@ from opendrop.app.common.model.image_acquisition.default_types import \
     ImageSequenceImageAcquisitionPreviewConfig
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
-from opendrop.utility.simplebindable import Bindable, BoxBindable
+from opendrop.utility.bindable import Bindable, BoxBindable
 from opendrop.utility.events import Event
 
 

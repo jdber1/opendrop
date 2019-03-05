@@ -1,7 +1,7 @@
 import functools
 from typing import Callable, Generic, TypeVar, overload
 
-from opendrop.utility.simplebindable.bindable import Bindable
+from opendrop.utility.bindable.bindable import Bindable
 
 _T = TypeVar('_T')
 _U = TypeVar('_U')

@@ -8,7 +8,7 @@ from matplotlib.ticker import MultipleLocator
 
 from opendrop.mytypes import Image
 from opendrop.utility.geometry import Line2, Rect2, Vector2
-from opendrop.utility.simplebindable import apply as bn_apply, BoxBindable
+from opendrop.utility.bindable import apply as bn_apply, BoxBindable
 from opendrop.utility.validation import check_is_positive
 from opendrop.utility.validation import validate, check_is_not_empty
 

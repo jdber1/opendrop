@@ -6,7 +6,7 @@ import numpy as np
 from opendrop.app.ift.model.analyser import IFTImageAnnotations
 from opendrop.mytypes import Image
 from opendrop.utility import mycv
-from opendrop.utility.simplebindable import Bindable, BoxBindable, apply as bn_apply
+from opendrop.utility.bindable import Bindable, BoxBindable, apply as bn_apply
 from opendrop.utility.geometry import Rect2
 from opendrop.utility.validation import validate, check_is_positive, check_is_not_empty, check_custom_condition
 from .needle_width import get_needle_width_from_contours
