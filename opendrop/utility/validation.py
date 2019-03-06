@@ -17,7 +17,7 @@ class ValidationFlag(Enum):
     MUST_BE_POSITIVE = 2
 
 
-def message_from_flags(field_name: str, flags: Bindable[Set[ValidationFlag]]) -> str:
+def message_from_flags(field_name: str, flags: Bindable[Set[ValidationFlag]]) -> Bindable[str]:
     return bn_apply(functools.partial(_message_from_flags, field_name), flags)
 
 
