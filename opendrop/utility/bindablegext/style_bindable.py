@@ -6,7 +6,7 @@ from gi.repository import Gtk
 from opendrop.utility.bindable import Bindable
 
 
-class GStyleContextClassBindable(Bindable[bool]):
+class GStyleContextClassBindable(Bindable[Any]):
     def __init__(self, style_context: Gtk.StyleContext, class_name: str) -> None:
         super().__init__()
 
