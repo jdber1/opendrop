@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from gi.repository import Gtk
 
-from opendrop.utility.bindablegext.style_bindable import GStyleContextClassBindable
+from opendrop.utility.bindablegext.style import GStyleContextClassBindable
 
 
 class TestGStyleContextClassBindable:

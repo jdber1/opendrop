@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from gi.repository import GObject
 
-from opendrop.utility.bindablegext.property_bindable import GObjectPropertyBindable
+from opendrop.utility.bindablegext.property import GObjectPropertyBindable
 
 
 class TestGObjectPropertyBindable:
