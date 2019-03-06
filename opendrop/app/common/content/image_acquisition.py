@@ -5,15 +5,14 @@ from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.model.image_acquisition.default_types import DefaultImageAcquisitionImplType, \
     LocalImagesImageAcquisitionImpl, USBCameraImageAcquisitionImpl
-from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition, \
-    ImageAcquisitionImpl, ImageAcquisitionImplType
+from opendrop.app.common.model.image_acquisition.image_acquisition import ImageAcquisition, ImageAcquisitionImpl, \
+    ImageAcquisitionImplType
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.mytypes import Destroyable
-from opendrop.utility.events import Event
 from opendrop.utility.bindable import Bindable, AccessorBindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
-from opendrop.utility.validation import FieldPresenter, FieldView, validate, add_style_class_when_flags, \
-    check_is_not_empty, message_from_flags
+from opendrop.utility.bindablegext import GObjectPropertyBindable, GWidgetStyleClassBindable
+from opendrop.utility.events import Event
+from opendrop.utility.validation import FieldPresenter, FieldView, validate, check_is_not_empty, message_from_flags
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
@@ -142,14 +141,14 @@ class LocalImagesImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
 
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self.selected_image_paths_field.__my_refs = [
-            add_style_class_when_flags(
-                self._file_chooser_inp, style_class='error', flags=self.selected_image_paths_field.errors_out),
+            GWidgetStyleClassBindable(self._file_chooser_inp, 'error').bind_from(
+                self.selected_image_paths_field.errors_out),
             GObjectPropertyBindable(self._file_chooser_err_msg_lbl, 'label').bind_from(
                 message_from_flags(field_name='Selected images', flags=self.selected_image_paths_field.errors_out))]
 
         self.frame_interval_field.__my_refs = [
-            add_style_class_when_flags(
-                self._frame_interval_inp, style_class='error', flags=self.frame_interval_field.errors_out),
+            GWidgetStyleClassBindable(self._frame_interval_inp, 'error').bind_from(
+                self.frame_interval_field.errors_out),
             GObjectPropertyBindable(self._frame_interval_err_msg_lbl, 'label').bind_from(
                 message_from_flags(field_name='Frame interval', flags=self.frame_interval_field.errors_out))]
 
@@ -427,20 +426,20 @@ class USBCameraImageAcquisitionImplView(ImageAcquisitionImplView[Gtk.Grid]):
 
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self.current_camera_index_field.__my_refs = [
-            add_style_class_when_flags(
-                self._change_camera_btn, style_class='error', flags=self.current_camera_index_field.errors_out),
+            GWidgetStyleClassBindable(self._change_camera_btn, 'error').bind_from(
+                self.current_camera_index_field.errors_out),
             GObjectPropertyBindable(self._current_camera_err_msg_lbl, 'label').bind_from(
                 message_from_flags(field_name='Current camera', flags=self.current_camera_index_field.errors_out))]
 
         self.num_frames_field.__my_refs = [
-            add_style_class_when_flags(
-                self._num_frames_inp, style_class='error', flags=self.num_frames_field.errors_out),
+            GWidgetStyleClassBindable(self._num_frames_inp, 'error').bind_from(
+                self.num_frames_field.errors_out),
             GObjectPropertyBindable(self._num_frames_err_msg_lbl, 'label').bind_from(
                 message_from_flags(field_name='Number of frames', flags=self.num_frames_field.errors_out))]
 
         self.frame_interval_field.__my_refs = [
-            add_style_class_when_flags(
-                self._frame_interval_inp, style_class='error', flags=self.frame_interval_field.errors_out),
+            GWidgetStyleClassBindable(self._frame_interval_inp, 'error').bind_from(
+                self.frame_interval_field.errors_out),
             GObjectPropertyBindable(self._frame_interval_err_msg_lbl, 'label').bind_from(
                 message_from_flags(field_name='Frame interval', flags=self.frame_interval_field.errors_out))]
 

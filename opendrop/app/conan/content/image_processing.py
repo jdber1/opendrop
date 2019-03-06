@@ -7,11 +7,11 @@ from opendrop.app.common.content.image_processing.image_processing import ImageP
     ImageProcessingFormView, RectangleView, MaskHighlightView, PolylineView, LineView
 from opendrop.app.common.content.image_processing.stage.tools import RegionDragToDefine, LineDragToDefine
 from opendrop.app.conan.model.image_annotator.image_annotator import ConanImageAnnotator
-from opendrop.utility.events import Event
 from opendrop.utility.bindable import AccessorBindable, BoxBindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable, GWidgetStyleClassBindable
+from opendrop.utility.events import Event
 from opendrop.utility.geometry import Vector2
-from opendrop.utility.validation import add_style_class_when_flags, ErrorsPresenter
+from opendrop.utility.validation import ErrorsPresenter
 from opendrop.widgets.canny_parameters import CannyParameters
 from opendrop.widgets.render.objects import Line, PixbufFill, Polyline, Rectangle, RectangleWithLabel
 
@@ -215,9 +215,9 @@ class ConanImageProcessingFormView(ImageProcessingFormView):
         self.bn_surface_line_err = BoxBindable(set())
 
         self.bn_drop_region_err.__refs = [
-            add_style_class_when_flags(self._drop_region_mode_inp, 'error-text', self.bn_drop_region_err)]
+            GWidgetStyleClassBindable(self._drop_region_mode_inp, 'error-text').bind_from(self.bn_drop_region_err)]
         self.bn_surface_line_err.__refs = [
-            add_style_class_when_flags(self._surface_line_mode_inp, 'error-text', self.bn_surface_line_err)]
+            GWidgetStyleClassBindable(self._surface_line_mode_inp, 'error-text').bind_from(self.bn_surface_line_err)]
 
         # Event wiring
         self._drop_region_mode_inp.connect(

@@ -7,10 +7,9 @@ from opendrop.app.common.content.analysis_saver import FigureOptionsView, Figure
 from opendrop.app.ift.model.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable import AccessorBindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindablegext import GObjectPropertyBindable, GWidgetStyleClassBindable
 from opendrop.utility.events import Event
-from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, FieldView, \
-    FieldPresenter
+from opendrop.utility.validation import FieldPresenter, FieldView, message_from_flags
 
 
 class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
@@ -133,12 +132,14 @@ class IFTAnalysisSaverView(GtkWidgetView[Gtk.Window]):
 
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self.save_dir_parent_field.__my_refs = [
-            add_style_class_when_flags(self._save_dir_parent_inp, 'error', flags=self.save_dir_parent_field.errors_out),
+            GWidgetStyleClassBindable(self._save_dir_parent_inp, 'error').bind_from(
+                self.save_dir_parent_field.errors_out),
             GObjectPropertyBindable(save_dir_parent_err_lbl, 'label').bind_from(
                 message_from_flags(field_name='Parent', flags=self.save_dir_parent_field.errors_out))]
 
         self.save_dir_name_field.__my_refs = [
-            add_style_class_when_flags(save_dir_name_inp, 'error', flags=self.save_dir_name_field.errors_out),
+            GWidgetStyleClassBindable(save_dir_name_inp, 'error').bind_from(
+                self.save_dir_name_field.errors_out),
             GObjectPropertyBindable(save_dir_name_err_lbl, 'label').bind_from(
                 message_from_flags(field_name='Name', flags=self.save_dir_name_field.errors_out))]
 

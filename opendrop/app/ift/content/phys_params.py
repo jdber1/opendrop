@@ -2,8 +2,8 @@ from gi.repository import Gtk, Gdk
 
 from opendrop.app.ift.model.phys_params import IFTPhysicalParametersFactory
 from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindablegext import GObjectPropertyBindable
-from opendrop.utility.validation import FieldView, add_style_class_when_flags, message_from_flags, FieldPresenter
+from opendrop.utility.bindablegext import GObjectPropertyBindable, GWidgetStyleClassBindable
+from opendrop.utility.validation import FieldPresenter, FieldView, message_from_flags
 from opendrop.widgets.float_entry import FloatEntry
 
 
@@ -142,18 +142,22 @@ class IFTPhysicalParametersFormView(GtkWidgetView[Gtk.Grid]):
 
         # Error highlighting
         self.inner_density_field.__refs = [
-            add_style_class_when_flags(self._inner_density_inp, 'error', self.inner_density_field.errors_out),
+            GWidgetStyleClassBindable(self._inner_density_inp, 'error').bind_from(
+                self.inner_density_field.errors_out),
             GObjectPropertyBindable(self._inner_density_err_msg_lbl, 'label').bind_from(
                 message_from_flags('Inner density', self.inner_density_field.errors_out))]
         self.outer_density_field.__refs = [
-            add_style_class_when_flags(self._outer_density_inp, 'error', self.outer_density_field.errors_out),
+            GWidgetStyleClassBindable(self._outer_density_inp, 'error').bind_from(
+                self.outer_density_field.errors_out),
             GObjectPropertyBindable(self._outer_density_err_msg_lbl, 'label').bind_from(
                 message_from_flags('Outer density', self.outer_density_field.errors_out))]
         self.needle_width_field.__refs = [
-            add_style_class_when_flags(self._needle_width_inp, 'error', self.needle_width_field.errors_out),
+            GWidgetStyleClassBindable(self._needle_width_inp, 'error').bind_from(
+                self.needle_width_field.errors_out),
             GObjectPropertyBindable(self._needle_width_err_msg_lbl, 'label').bind_from(
                 message_from_flags('Needle width', self.needle_width_field.errors_out))]
         self.gravity_field.__refs = [
-            add_style_class_when_flags(self._gravity_inp, 'error', self.gravity_field.errors_out),
+            GWidgetStyleClassBindable(self._gravity_inp, 'error').bind_from(
+                self.gravity_field.errors_out),
             GObjectPropertyBindable(self._gravity_err_msg_lbl, 'label').bind_from(
                 message_from_flags('Gravity', self.gravity_field.errors_out))]

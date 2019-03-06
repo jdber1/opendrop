@@ -5,12 +5,10 @@ import math
 from enum import Enum
 from typing import Set, Sized, Any, Callable, Iterable, TypeVar, Generic, Optional
 
-from gi.repository import Gtk
-
-from opendrop.utility.events import Event
-from opendrop.utility.geometry import Rect2
 from opendrop.utility.bindable import Bindable, BoxBindable
 from opendrop.utility.bindable import apply as bn_apply
+from opendrop.utility.events import Event
+from opendrop.utility.geometry import Rect2
 
 
 class ValidationFlag(Enum):
@@ -104,24 +102,6 @@ def _validate(value: Any, checks: Iterable[Callable[[Any], Iterable[ValidationFl
 
     return flags
 
-
-class AssociateStyleClassToWidgetWhenFlagsPresent:
-    def __init__(self, widget: Gtk.Widget, style_class: str, flags: Bindable[Set[ValidationFlag]]) -> None:
-        self._widget = widget
-        self._style_class = style_class
-        self._flags = flags
-
-        self._flags.on_changed.connect(self._hdl_enabled_changed, ignore_args=True)
-        self._hdl_enabled_changed()
-
-    def _hdl_enabled_changed(self) -> None:
-        if len(self._flags.get()) > 0:
-            self._widget.get_style_context().add_class(self._style_class)
-        else:
-            self._widget.get_style_context().remove_class(self._style_class)
-
-
-add_style_class_when_flags = AssociateStyleClassToWidgetWhenFlagsPresent
 
 ValueType = TypeVar('ValueType', bound=Bindable)
 ErrorType = TypeVar('ErrorType')

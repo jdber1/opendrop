@@ -4,9 +4,9 @@ from gi.repository import Gtk, Gdk
 
 from opendrop.component.gtk_widget_view import GtkWidgetView
 from opendrop.utility.bindable import AccessorBindable, apply as bn_apply
-from opendrop.utility.bindablegext import GObjectPropertyBindable
-from opendrop.utility.validation import message_from_flags, add_style_class_when_flags, ValidationFlag, FieldView, \
-    FieldPresenter
+from opendrop.utility.bindablegext import GObjectPropertyBindable, GWidgetStyleClassBindable
+from opendrop.utility.validation import FieldPresenter, FieldView, ValidationFlag, message_from_flags
+
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
 from ..model.analysis_saver import FigureOptions
@@ -95,7 +95,8 @@ class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
 
         # Keep a reference to unnamed objects to prevent them from being garbage collected
         self.dpi_field.__my_refs = [
-            add_style_class_when_flags(dpi_inp, 'error', flags=self.dpi_field.errors_out),
+            GWidgetStyleClassBindable(dpi_inp, 'error').bind_from(
+                self.dpi_field.errors_out),
             GObjectPropertyBindable(dpi_err_lbl, 'label').bind_from(
                 message_from_flags(field_name='Figure DPI', flags=self.dpi_field.errors_out))]
 
@@ -128,8 +129,8 @@ class FigureOptionsView(GtkWidgetView[Gtk.Grid]):
                 return message
 
         self.size_w_field.__my_refs = [
-            add_style_class_when_flags(size_w_inp, 'error', flags=self.size_w_field.errors_out),
-            add_style_class_when_flags(size_h_inp, 'error', flags=self.size_h_field.errors_out),
+            GWidgetStyleClassBindable(size_w_inp, 'error').bind_from(self.size_w_field.errors_out),
+            GWidgetStyleClassBindable(size_h_inp, 'error').bind_from(self.size_h_field.errors_out),
             GObjectPropertyBindable(size_err_lbl, 'label').bind_from(
                 bn_apply(figure_size_err_message, self.size_w_field.errors_out, self.size_h_field.errors_out))]
 
