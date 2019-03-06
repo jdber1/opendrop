@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from opendrop.utility.events import Event
 from opendrop.utility.bindable.binding import Binding
+from opendrop.utility.events import Event
 
 
 class TestBinding:
@@ -182,6 +182,29 @@ class TestBinding_With_ToSrcTransform:
         gc.collect()
 
         assert to_src_wr() is None
+
+
+class TestBinding_OneWay:
+    @pytest.fixture(autouse=True)
+    def fixture(self):
+        self.src_bindable = MockBindable()
+        self.dst_bindable = MockBindable()
+
+        self.binding = Binding(src=self.src_bindable, dst=self.dst_bindable, one_way=True)
+
+        self.src_bindable.reset()
+        self.dst_bindable.reset()
+
+    def test_src_poke(self):
+        self.src_bindable.poke()
+
+        self.dst_bindable.set.assert_called_once_with(
+            self.src_bindable.get.return_value)
+
+    def test_dst_poke(self):
+        self.dst_bindable.poke()
+
+        self.src_bindable.set.assert_not_called()
 
 
 class MockBindable:

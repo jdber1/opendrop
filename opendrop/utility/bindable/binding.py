@@ -9,16 +9,16 @@ _U = TypeVar('_U')
 
 class Binding(Generic[_T, _U]):
     def __init__(self, src: Bindable[_T], dst: Bindable[_U], to_dst: Callable[[_T], _U] = lambda x: x,
-                 to_src: Callable[[_U], _T] = lambda x: x) -> None:
+                 to_src: Callable[[_U], _T] = lambda x: x, *, one_way: bool = False) -> None:
         self._src = src
         self._dst = dst
 
         self._to_dst = to_dst
         self._to_src = to_src
 
-        self._on_changed_conns = {
-            id(bn): bn.on_changed.connect(functools.partial(self._hdl_bindable_changed, bn), weak_ref=False)
-            for bn in (src, dst)}
+        self._on_changed_conns = [
+            bn.on_changed.connect(functools.partial(self._hdl_bindable_changed, bn), weak_ref=False)
+            for bn in ((src, dst) if not one_way else (src,))]
 
         # Update the value of `dst` to the current value of `src`.
         self._hdl_bindable_changed(src)
@@ -76,7 +76,7 @@ class Binding(Generic[_T, _U]):
         """Unbind the bound bindables, new transactions in one will no longer be applied to the other. This Binding will
         will also no longer hold a reference to the bounded bindables.
         """
-        for conn in self._on_changed_conns.values():
+        for conn in self._on_changed_conns:
             conn.disconnect()
 
         del self._src
