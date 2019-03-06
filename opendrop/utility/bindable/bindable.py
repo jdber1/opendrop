@@ -43,14 +43,17 @@ class Bindable(Generic[_T]):
         self.on_changed.fire()
 
     # Convenience methods for creating Bindings
-
-    def bind_from(self, src: 'Bindable[_T]') -> 'Binding':
+    def bind(self, dst: 'Bindable[_T]') -> 'Binding':
         from .binding import Binding
-        return Binding(src=src, dst=self)
+        return Binding(src=self, dst=dst)
 
     def bind_to(self, dst: 'Bindable[_T]') -> 'Binding':
         from .binding import Binding
-        return Binding(src=self, dst=dst)
+        return Binding(src=self, dst=dst, one_way=True)
+
+    def bind_from(self, src: 'Bindable[_T]') -> 'Binding':
+        from .binding import Binding
+        return Binding(src=src, dst=self, one_way=True)
 
     @abstractmethod
     def _get_value(self) -> _T:

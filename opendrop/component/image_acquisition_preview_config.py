@@ -90,8 +90,8 @@ class LocalImagesImageAcquisitionPreviewConfigPresenter:
         ]
 
         self.__data_bindings = [
-            self._config.bn_num_images.bind_to(self._view.bn_num_images),
-            self._config.bn_index.bind_to(self._view.bn_index)
+            self._config.bn_num_images.bind(self._view.bn_num_images),
+            self._config.bn_index.bind(self._view.bn_index)
         ]
 
     def _hdl_view_right_btn_clicked(self) -> None:

@@ -184,7 +184,7 @@ class StagePresenter:
 
         self._active_tool = new_tool
         data_bindings = [
-            self._active_tool.bn_cursor_name.bind_to(self._view.cursor.bn_cursor_name)]
+            self._active_tool.bn_cursor_name.bind(self._view.cursor.bn_cursor_name)]
         self._active_tool_cleanup_tasks.extend(db.unbind for db in data_bindings)
 
     def _remove_current_active_tool(self) -> None:

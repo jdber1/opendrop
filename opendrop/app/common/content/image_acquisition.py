@@ -675,7 +675,7 @@ class _ImageAcquisitionFormPresenter(Generic[ImplType]):
         ]
 
         self.__data_bindings = [
-            self._image_acquisition.bn_type.bind_to(self._view.bn_user_input_impl_type)
+            self._image_acquisition.bn_type.bind(self._view.bn_user_input_impl_type)
         ]
 
         # Call the handler to connect the existing image acquisition implementation to the view.

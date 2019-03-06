@@ -52,15 +52,15 @@ class ConanImageProcessingFormPresenter(ImageProcessingFormPresenter['ConanImage
         data_bindings = [
             self._bn_define_feature_mode.bind_to(self._view.bn_define_feature_mode),
 
-            self._image_annotator.bn_canny_min.bind_to(self._view.bn_canny_min),
-            self._image_annotator.bn_canny_max.bind_to(self._view.bn_canny_max),
-            self._image_annotator.bn_using_needle.bind_to(self._view.bn_using_needle),
-            self._image_annotator.bn_drop_region_px.bind_to(self._drop_region_tool.bn_selection),
-            self._image_annotator.bn_surface_line_px.bind_to(self._surface_line_tool.bn_selection),
+            self._image_annotator.bn_canny_min.bind(self._view.bn_canny_min),
+            self._image_annotator.bn_canny_max.bind(self._view.bn_canny_max),
+            self._image_annotator.bn_using_needle.bind(self._view.bn_using_needle),
+
+            self._image_annotator.bn_drop_region_px.bind(self._drop_region_tool.bn_selection),
+            self._image_annotator.bn_surface_line_px.bind(self._surface_line_tool.bn_selection),
 
             self._drop_region_tool.bn_selection.bind_to(self._view.drop_region.bn_extents),
             self._surface_line_tool.bn_selection.bind_to(self._view.surface_line.bn_line),
-
             self._drop_region_tool.bn_selection_transient.bind_to(self._view.drop_region_transient.bn_extents),
             self._surface_line_tool.bn_selection_transient.bind_to(self._view.surface_line_transient.bn_line)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)

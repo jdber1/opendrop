@@ -151,7 +151,7 @@ class FieldPresenter(Generic[ValueType, ErrorType]):
         self.__cleanup_tasks.append(self._errors.destroy)
 
         data_bindings = [
-            value.bind_to(field_view.value)]
+            value.bind(field_view.value)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         event_connections = [

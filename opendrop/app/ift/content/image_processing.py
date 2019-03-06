@@ -52,14 +52,15 @@ class IFTImageProcessingFormPresenter(ImageProcessingFormPresenter['IFTImageProc
 
         data_bindings = [
             self._bn_define_region_mode.bind_to(self._view.bn_define_region_mode),
-            self._image_annotator.bn_canny_min.bind_to(self._view.bn_canny_min),
-            self._image_annotator.bn_canny_max.bind_to(self._view.bn_canny_max),
-            self._image_annotator.bn_drop_region_px.bind_to(self._drop_region_tool.bn_selection),
-            self._image_annotator.bn_needle_region_px.bind_to(self._needle_region_tool.bn_selection),
+
+            self._image_annotator.bn_canny_min.bind(self._view.bn_canny_min),
+            self._image_annotator.bn_canny_max.bind(self._view.bn_canny_max),
+
+            self._image_annotator.bn_drop_region_px.bind(self._drop_region_tool.bn_selection),
+            self._image_annotator.bn_needle_region_px.bind(self._needle_region_tool.bn_selection),
 
             self._drop_region_tool.bn_selection.bind_to(self._view.drop_region.bn_extents),
             self._needle_region_tool.bn_selection.bind_to(self._view.needle_region.bn_extents),
-
             self._drop_region_tool.bn_selection_transient.bind_to(self._view.drop_region_transient.bn_extents),
             self._needle_region_tool.bn_selection_transient.bind_to(self._view.needle_region_transient.bn_extents)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)

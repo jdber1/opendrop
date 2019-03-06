@@ -149,8 +149,8 @@ class FigureOptionsPresenter:
         self.__cleanup_tasks = []
 
         data_bindings = [
-            self._options.bn_should_save.bind_to(self._view.should_save_field.value),
-            self._options.bn_should_save.bind_to(self._view.bn_more_options_sensitive)]
+            self._options.bn_should_save.bind(self._view.should_save_field.value),
+            self._options.bn_should_save.bind(self._view.bn_more_options_sensitive)]
         self.__cleanup_tasks.extend(db.unbind for db in data_bindings)
 
         self._field_presenters = [
