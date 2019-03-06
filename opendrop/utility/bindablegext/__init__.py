@@ -1,1 +1,2 @@
 from .property_bindable import GObjectPropertyBindable
+from .style_bindable import GStyleContextClassBindable, GWidgetStyleClassBindable
