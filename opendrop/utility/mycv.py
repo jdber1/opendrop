@@ -10,7 +10,7 @@ CV2_VERSION = tuple(int(v) for v in cv2.__version__.split("."))
 
 def find_contours(image):
     """
-        Calls cv2.findContours() on passed image in a way that is compatible with OpenCV 3.x or 2.x
+        Calls cv2.findContours() on passed image in a way that is compatible with OpenCV 4.x, 3.x or 2.x
         versions. Passed image is a numpy.array.
 
         Note, cv2.findContours() will treat non-zero pixels as 1 and zero pixels as 0, so the edges detected will only
@@ -21,7 +21,11 @@ def find_contours(image):
     if len(image.shape) > 2:
         raise ValueError('`image` must be a single channel image')
 
-    if CV2_VERSION >= (3, 2, 0):
+    if CV2_VERSION >= (4, 0, 0):
+        # In OpenCV 4.0, cv2.findContours() no longer returns three arguments, it reverts to the same return signature
+        # as pre 3.2.0.
+        contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_TC89_KCOS)
+    elif CV2_VERSION >= (3, 2, 0):
         # In OpenCV 3.2, cv2.findContours() does not modify the passed image and instead returns the
         # modified image as the first, of the three, return values.
         _, contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_TC89_KCOS)
