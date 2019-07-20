@@ -15,9 +15,31 @@ class PixbufFill(abc.RenderObject):
         clip_extents = cr.clip_extents()
         clip_extents = Rect2(p0=clip_extents[:2], p1=clip_extents[2:])
 
-        pixbuf_scaled = self.props.pixbuf.scale_simple(*clip_extents.size, GdkPixbuf.InterpType.BILINEAR)
-        Gdk.cairo_set_source_pixbuf(cr, pixbuf_scaled, *clip_extents.pos)
+        if clip_extents.w == 0 or clip_extents.h == 0:
+            return
 
+        source_pixbuf = self.props.pixbuf
+        cropped_pixbuf = GdkPixbuf.Pixbuf.new(
+            colorspace=source_pixbuf.get_colorspace(),
+            has_alpha=source_pixbuf.get_has_alpha(),
+            bits_per_sample=source_pixbuf.get_bits_per_sample(),
+            width=clip_extents.w,
+            height=clip_extents.h
+        )
+
+        scale = self._parent._widget_dist_from_canvas((1, 1))
+        offset = -scale * self._parent._canvas_coord_from_widget(clip_extents.pos)
+
+        self.props.pixbuf.scale(
+            cropped_pixbuf,
+            0, 0,
+            *clip_extents.size,
+            *offset,
+            *scale,
+            GdkPixbuf.InterpType.BILINEAR,
+        )
+
+        Gdk.cairo_set_source_pixbuf(cr, cropped_pixbuf, *clip_extents.pos)
         cr.paint()
 
     _pixbuf = None  # type: Optional[GdkPixbuf.Pixbuf]
