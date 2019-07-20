@@ -51,12 +51,27 @@ class Vector2(Generic[NumericType]):
 
         return Vector2(*obj)
 
-    def __mul__(self, other: SomeNumericType) -> 'Vector2':
-        if not isinstance(other, Number):
+    @overload
+    def __mul__(self, other: SomeNumericType) -> 'Vector2': ...
+
+    @overload
+    def __mul__(self, other: Iterable) -> 'Vector2': ...
+
+    def __mul__(self, other):
+        if is_iterable(other) and len(other) == 2:
+            return self._element_wise_mul(other)
+        elif isinstance(other, Number):
+            return Vector2(self.x * other, self.y * other)
+        else:
             return NotImplemented
-        return Vector2(self.x * other, self.y * other)
 
     __rmul__ = __mul__
+
+    def _element_wise_mul(self, other: 'Vector2') -> 'Vector2':
+        return Vector2(
+            x=self.x * other.x,
+            y=self.y * other.y,
+        )
 
     def __truediv__(self, other: SomeNumericType) -> 'Vector2':
         if not isinstance(other, Number):
@@ -264,3 +279,12 @@ class Line2(Generic[NumericType]):
             x = self.p0[0] + p0_to_y / self.gradient
 
         return Vector2(x, y)
+
+
+def is_iterable(x: Any) -> bool:
+    try:
+        iter(x)
+    except TypeError:
+        return False
+    else:
+        return True
