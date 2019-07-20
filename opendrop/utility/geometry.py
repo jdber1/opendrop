@@ -147,8 +147,6 @@ class Rect2(Generic[NumericType]):
     def y0(self) -> NumericType:
         return self._y0
 
-    x, y = x0, y0
-
     @property
     def x1(self) -> NumericType:
         return self._x1
@@ -173,7 +171,9 @@ class Rect2(Generic[NumericType]):
     def p1(self) -> Vector2[NumericType]:
         return Vector2(self.x1, self.y1)
 
-    pos = p0
+    @property
+    def pos(self) -> Vector2[NumericType]:
+        return self.p0
 
     @property
     def size(self) -> Vector2[NumericType]:
