@@ -11,7 +11,7 @@ _T = TypeVar('_T')
 
 def _general_purpose_equality_check(x: Any, y: Any) -> bool:
     try:
-        return np.allclose(x, y, equal_nan=True)
+        return np.allclose(x, y, atol=0, equal_nan=True)
     except (ValueError, TypeError):
         # Use np.array_equal() in case x or y are `np.ndarray`s, in which case `bool(x == y)` will throw:
         #     ValueError: The truth value of an array with more than one element is ambiguous...
