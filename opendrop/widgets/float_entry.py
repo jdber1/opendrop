@@ -50,18 +50,18 @@ class FloatEntry(ValidatedEntry):
         return value
 
     def validate(self, text: str) -> bool:
-        if '+' in text and self.upper is not None and self.upper < 0:
+        if text == '':
+            return True
+
+        if self.upper is not None and self.upper < 0 and text[0] == '+':
             return False
-        elif '-' in text and self.lower is not None and self.lower >= 0:
+        elif self.lower is not None and self.lower >= 0 and text[0] == '-':
             return False
 
         try:
             v = self.t_from_str(text)
         except ValueError:
-            if text in ('+', '-', '.'):
-                return True
-            else:
-                return False
+            return False
 
         if v is not None and math.isnan(v):
             return False
@@ -71,8 +71,24 @@ class FloatEntry(ValidatedEntry):
     def t_from_str(self, text: str) -> Optional[float]:
         if text == '':
             return None
-        elif text in ('+', '-', '.'):
+
+        if text in ('+', '-', '.'):
             return None
+
+        if text.count('e') == 1:
+            if text.endswith('e'):
+                return self.t_from_str(text[:-1])
+
+            if text.endswith('e+') or text.endswith('e-'):
+                return self.t_from_str(text[:-2])
+
+            if text.startswith('e'):
+                try:
+                    int(text[1:])
+                except ValueError:
+                    raise
+                else:
+                    return None
 
         return float(text)
 
@@ -80,4 +96,7 @@ class FloatEntry(ValidatedEntry):
         if value is None or math.isnan(value):
             return ''
 
-        return str(float(value))
+        precision = self.props.width_chars
+        precision = max(precision - 3, 1)
+
+        return format(float(value), '.{}g'.format(precision))
