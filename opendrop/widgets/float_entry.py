@@ -97,6 +97,6 @@ class FloatEntry(ValidatedEntry):
             return ''
 
         precision = self.props.width_chars
-        precision = max(precision - 3, 1)
+        precision = max(precision, 1)
 
         return format(float(value), '.{}g'.format(precision))
