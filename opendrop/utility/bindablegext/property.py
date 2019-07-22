@@ -1,4 +1,3 @@
-import weakref
 from typing import TypeVar, Callable, Any
 
 from gi.repository import GObject
@@ -15,11 +14,11 @@ class GObjectPropertyBindable(Bindable[_T]):
 
         self._alive = True
 
-        # For some reason, it seems like the GObject can be garbage collected before this object is garbage collected,
-        # the following workaround uses _g_obj_wr to check if g_obj has been garbage collected by seeing if _g_obj_wr()
-        # returns None.
         self._g_obj = g_obj
-        self._g_obj_wr = weakref.ref(g_obj)
+
+        # The underlying GObject can be garbage collected while the Python wrapper is still alive, we want to
+        # automatically call `self._unlink()` when the underlying GObject is finalized.
+        self._g_obj_wr = g_obj.weak_ref(self._unlink)
 
         self._prop_name = prop_name
 
