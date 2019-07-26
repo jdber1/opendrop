@@ -74,7 +74,7 @@ class Angle(abc.RenderObject):
         cr.set_font_size(text_font_size)
         cr.set_source_rgb(*stroke_color)
 
-        angle_text = '{:.4g}°'.format(math.degrees(abs(delta_angle)))
+        angle_text = '{:.1f}°'.format(math.degrees(abs(delta_angle)))
 
         text_extents = cr.text_extents(angle_text)
         cr.rel_move_to(-text_extents.x_bearing, -text_extents.y_bearing)

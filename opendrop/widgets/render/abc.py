@@ -33,3 +33,14 @@ class RenderObject(GObject.Object, protocol.RenderObject):
     @GObject.Signal
     def request_draw(self) -> None:
         """Let the parent know that this object needs to be redrawn."""
+
+    _z_index = 0
+
+    @GObject.Property
+    def z_index(self) -> int:
+        return self._z_index
+
+    @z_index.setter
+    def z_index(self, value: int) -> None:
+        self._z_index = value
+        self.emit('request-draw')

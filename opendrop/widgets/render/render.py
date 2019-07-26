@@ -49,8 +49,8 @@ class Render(Gtk.DrawingArea, protocol.Render):
         with cairo_saved(cr):
             cr.rectangle(*viewport_widget_extents.pos, *viewport_widget_extents.size)
             cr.clip()
-            for obj in self._render_objects:
-                obj.draw(cr)
+            for ro in self._render_objects:
+                ro.draw(cr)
 
         if self.has_focus():
             # Draw focus indicator
@@ -64,7 +64,10 @@ class Render(Gtk.DrawingArea, protocol.Render):
 
     @property
     def _render_objects(self) -> Sequence[protocol.RenderObject]:
-        return tuple(container.render_object for container in self._ro_containers)
+        return sorted(
+            (container.render_object for container in self._ro_containers),
+            key=lambda ro: ro.props.z_index,
+        )
 
     def add_render_object(self, ro: protocol.RenderObject) -> None:
         handler_ids = (

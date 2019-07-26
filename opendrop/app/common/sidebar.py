@@ -1,16 +1,15 @@
-import functools
-from typing import MutableMapping, Optional, Callable
-from typing import Sequence, Tuple, TypeVar, Generic
+from typing import MutableMapping, Mapping, Any
 
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.component.gtk_widget_view import GtkWidgetView
-from opendrop.utility.bindable import Bindable, AccessorBindable
+from opendrop.mvp import ComponentSymbol, View, Presenter
+from opendrop.utility.bindable import Bindable
 
-TaskType = TypeVar('TaskType')
+sidebar_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 
 
-class TasksSidebarView(Generic[TaskType], GtkWidgetView[Gtk.Box]):
+@sidebar_cs.view(options=['titles'])
+class SidebarView(View['SidebarPresenter', Gtk.Widget]):
     STYLE = '''
     .wizard-sidebar {
         background-color: GAINSBORO;
@@ -23,88 +22,73 @@ class TasksSidebarView(Generic[TaskType], GtkWidgetView[Gtk.Box]):
     _STYLE_PROV.load_from_data(bytes(STYLE, 'utf-8'))
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
-    def __init__(self, name_from_task: Callable[[TaskType], str]):
-        self._name_from_task = name_from_task
+    class _SidebarTitleLabel(Gtk.Label):
+        def __init__(self, label: str, **options) -> None:
+            super().__init__(label=label, xalign=0, **options)
+            self._label = label
 
-        self._active_task_name = None  # type: Optional[str]
-        self._task_name_to_lbl = {}  # type: MutableMapping[str, Gtk.Label]
-        self.bn_active_task = AccessorBindable(setter=self._set_active_task)
+            # Set the size request of the label to its maximum possible size when inactive/active, this should stop the
+            # sidebar from resizing its width when the largest child label becomes inactive/active.
+            self.bold()
+            max_width = self.get_layout().get_size().width / 1000
+            self.unbold()
+            max_width = max(max_width, self.get_layout().get_size().width / 1000)
 
-        self.widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15, vexpand=True)
-        self.widget.get_style_context().add_class('wizard-sidebar')
-        self.widget.show_all()
+            self.set_size_request(int(max_width + 1), -1)
 
-    def add_task(self, task: TaskType) -> None:
-        task_name = self._name_from_task(task)
-        lbl = self._new_label(task_name)
-        lbl.show()
-        self.widget.add(lbl)
-        self._task_name_to_lbl[task_name] = lbl
+        def bold(self) -> None:
+            self.set_markup('<b>{}</b>'.format(GObject.markup_escape_text(self._label)))
 
-    def clear(self) -> None:
-        for lbl in self._task_name_to_lbl.values():
-            lbl.destroy()
+        def unbold(self) -> None:
+            self.set_markup(GObject.markup_escape_text(self._label))
 
-        self._task_name_to_lbl = {}
-        self._active_task_name = None
+    def _do_init(self, titles: Mapping[Any, str]) -> Gtk.Widget:
+        self._titles = titles
+        self._title_lbls = {}  # type: MutableMapping[Any, self._SidebarTitleLabel]
 
-    def _set_active_task(self, task: Optional[TaskType]) -> None:
-        task_name = self._name_from_task(task)
+        self._widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15, vexpand=True)
+        self._widget.get_style_context().add_class('wizard-sidebar')
+        self._widget.show_all()
 
-        old_task_name = self._active_task_name
+        for title_id, title_text in titles.items():
+            lbl = self._SidebarTitleLabel(label=title_text)
+            lbl.show()
+            self._widget.add(lbl)
+            self._title_lbls[title_id] = lbl
 
-        if old_task_name is not None:
-            old_lbl = self._task_name_to_lbl[old_task_name]
-            self._format_label_inactive(old_lbl, old_task_name)
+        self.presenter.view_ready()
 
-        if task_name is not None:
-            lbl = self._task_name_to_lbl[task_name]
-            self._format_label_active(lbl, task_name)
+        return self._widget
 
-        self._active_task_name = task_name
+    def set_active_title(self, title_id: Any) -> None:
+        for title_lbl in self._title_lbls.values():
+            title_lbl.unbold()
 
-    # todo: the next three methods are not very object oriented.
-    def _new_label(self, text: str) -> Gtk.Widget:
-        lbl = Gtk.Label(label=text, xalign=0)
+        self._title_lbls[title_id].bold()
 
-        # Set the size request of the label to its maximum possible size when inactive/active, this should stop the
-        # sidebar from resizing its width when the largest child label becomes inactive/active.
-        self._format_label_active(lbl, text)
-        max_width = lbl.get_layout().get_size().width/1000
-        self._format_label_inactive(lbl, text)
-        max_width = max(max_width, lbl.get_layout().get_size().width/1000)
-
-        lbl.set_size_request(int(max_width + 1), -1)
-
-        return lbl
-
-    @staticmethod
-    def _format_label_active(lbl: Gtk.Label, text: str) -> None:
-        lbl.set_markup('<b>{}</b>'.format(GObject.markup_escape_text(text)))
-
-    @staticmethod
-    def _format_label_inactive(lbl: Gtk.Label, text: str) -> None:
-        lbl.set_markup(GObject.markup_escape_text(text))
+    def _do_destroy(self) -> None:
+        self._widget.destroy()
 
 
-class TasksSidebarPresenter(Generic[TaskType]):
-    def __init__(self, task_and_is_active: Sequence[Tuple[TaskType, Bindable[bool]]], view: TasksSidebarView) \
-            -> None:
-        self._view = view
-        self.__event_connections = []
+@sidebar_cs.presenter(options=['active_title'])
+class SidebarPresenter(Presenter['SidebarView']):
+    def _do_init(self, active_title: Bindable[Any]) -> None:
+        self._active_title = active_title
+        self.__event_connections = [
+            self._active_title.on_changed.connect(self._update_view_active_title)
+        ]
 
-        self._view.clear()
+        self._is_view_ready = False
 
-        for task, is_active in task_and_is_active:
-            view.add_task(task)
-            is_active.on_changed.connect(functools.partial(self._hdl_task_is_active_changed, task, is_active),
-                                         weak_ref=False)
-            self._hdl_task_is_active_changed(task, is_active)
+    def view_ready(self) -> None:
+        self._is_view_ready = True
+        self._update_view_active_title()
 
-    def _hdl_task_is_active_changed(self, task: TaskType, is_active: Bindable[bool]) -> None:
-        if is_active.get():
-            self._view.bn_active_task.set(task)
+    def _update_view_active_title(self) -> None:
+        if self._is_view_ready is False: return
 
-    def destroy(self) -> None:
+        self.view.set_active_title(self._active_title.get())
+
+    def _do_destroy(self) -> None:
         for ec in self.__event_connections:
             ec.disconnect()

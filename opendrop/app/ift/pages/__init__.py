@@ -1,5 +1,0 @@
-# noinspection PyUnresolvedReferences
-from opendrop.app.common.pages import ImageAcquisitionPagePresenter as IFTImageAcquisitionPagePresenter
-from .image_processing import IFTImageProcessingPagePresenter
-from .phys_params import IFTPhysicalParametersPagePresenter
-from .results import IFTResultsPagePresenter

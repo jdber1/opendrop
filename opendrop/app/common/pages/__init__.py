@@ -1,1 +1,0 @@
-from .image_acquisition import ImageAcquisitionPagePresenter

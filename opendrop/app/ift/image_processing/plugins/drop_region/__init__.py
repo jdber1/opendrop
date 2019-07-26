@@ -1,0 +1,1 @@
+from .component import ift_drop_region_plugin_cs

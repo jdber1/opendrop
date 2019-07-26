@@ -23,7 +23,7 @@ class StackView(View['StackPresenter', Gtk.Widget]):
         self._active_child_sid = None
 
         self.widget = Gtk.Grid(**(gtk_properties or {}))
-        self.widget.show_all()
+        self.widget.show()
 
         self.presenter.view_ready()
 

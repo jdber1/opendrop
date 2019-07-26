@@ -45,14 +45,11 @@ class Polyline(abc.RenderObject):
         if len(polylines) == 0:
             return
 
-        if len(polylines[0]) == 2:
-            polylines = [polylines]
-
         for polyline in polylines:
             self._draw_path(cr, polyline)
 
     def _draw_path(self, cr: cairo.Context, polyline: PolylineType) -> None:
-        if len(polyline) < 2:
+        if len(polyline) <= 1:
             return
 
         if len(polyline) > self._APPROX_MAX_POINTS:

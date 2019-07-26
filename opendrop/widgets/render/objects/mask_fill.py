@@ -21,11 +21,20 @@ class MaskFill(abc.RenderObject):
             cr.translate(*offset)
             cr.scale(*scale)
 
+            mask_width = mask.shape[1]
+            mask_height = mask.shape[0]
+
+            required_stride_len = cairo.Format.A8.stride_for_width(mask_width)
+            required_padding = required_stride_len - mask_width
+
+            if required_padding:
+                mask = np.pad(mask, pad_width=((0, 0), (0, required_padding)), mode='constant', constant_values=0)
+
             mask_surface = cairo.ImageSurface.create_for_data(
                 memoryview(mask),
                 cairo.FORMAT_A8,
-                mask.shape[1],
-                mask.shape[0],
+                mask_width,
+                mask_height,
             )
 
             cr.set_source_rgba(*self._color)
