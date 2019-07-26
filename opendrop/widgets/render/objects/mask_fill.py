@@ -28,7 +28,7 @@ class MaskFill(abc.RenderObject):
                 mask.shape[0],
             )
 
-            cr.set_source_rgb(*self._color)
+            cr.set_source_rgba(*self._color)
             cr.mask_surface(mask_surface, 0, 0)
 
     _mask = None  # type: Optional[np.ndarray]
