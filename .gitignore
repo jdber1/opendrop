@@ -45,3 +45,4 @@ tmtagsHistory
 .cache
 .coverage
 docs/_build
+.vscode
