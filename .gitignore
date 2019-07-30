@@ -33,6 +33,7 @@ Icon
 Thumbs.db
 .tmtags
 .idea
+.vscode
 tags
 vendor.tags
 tmtagsHistory
@@ -40,9 +41,11 @@ tmtagsHistory
 *.sublime-workspace
 .bundle
 
+# Sphinx #
+##########
+docs/_build
+
 # Other #
-######################
+#########
 .cache
 .coverage
-docs/_build
-.vscode
