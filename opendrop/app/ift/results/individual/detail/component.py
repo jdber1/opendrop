@@ -49,7 +49,7 @@ class DetailView(View['DetailPresenter', Gtk.Widget]):
             )
         )
         drop_fit_area.show()
-        notebook.append_page(drop_fit_area, Gtk.Label('Drop contour'))
+        notebook.append_page(drop_fit_area, Gtk.Label('Drop profile'))
 
         _, residuals_plot_area = self.new_component(
             residuals_plot_cs.factory(
