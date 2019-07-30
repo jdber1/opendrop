@@ -194,7 +194,7 @@ def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
             ('; regions are defined by (left, top, right, bottom) tuples', None),
             ('drop_region', tuple(drop.bn_drop_region.get())),
             ('needle_region', tuple(drop.bn_needle_region.get())),
-            ('apex_coordinates', drop.bn_apex_coords_px.get()),
+            ('apex_coordinates', tuple(drop.bn_apex_coords_px.get())),
             ('; needle width in pixels', None),
             ('needle_width', drop.bn_needle_width_px.get()),
             ('; angle is in degrees (positive is counter-clockwise)', None),
