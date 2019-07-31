@@ -97,26 +97,26 @@ Individual Fit
 
 The 'Individual Fit' view shows analysis details for an individual image. Pick an analysis in the lower panel to preview its details in the upper panel.
 
+The 'Drop profile' tab on the right of the upper panel shows the fitted drop profile (drawn in magenta) over the extracted drop profile (drawn in blue).
+
 .. image:: images/ift_results_drop_profile.png
     :alt: IFT Results, drop profile
     :width: 591
     :align: center
 
-The 'Drop profile' tab on the right of the upper panel shows the fitted drop profile (drawn in magenta) over the extracted drop profile (drawn in blue).
+The 'Fit residuals' tab shows a plot of the fit residuals. The horizontal axis is the 'drop profile parameter', ranging from 0 to 1, with 0 corresponding to one end of the drop edge outline, and 1 corresponding to the other end. The vertical axis is some dimensionless quantity indicating the deviation of the extracted profile from the fitted profile.
 
 .. image:: images/ift_results_fit_residuals.png
     :alt: IFT Results, fit residuals
     :width: 591
     :align: center
 
-The 'Fit residuals' tab shows a plot of the fit residuals. The horizontal axis is the 'drop profile parameter', ranging from 0 to 1, with 0 corresponding to one end of the drop edge outline, and 1 corresponding to the other end. The vertical axis is some dimensionless quantity indicating the deviation of the extracted profile from the fitted profile.
+The 'Log' tab shows the history of any messages logged by the fitting routine.
 
 .. image:: images/ift_results_log.png
     :alt: IFT Results, log
     :width: 591
     :align: center
-
-The 'Log' tab shows the history of any messages logged by the fitting routine.
 
 Graphs
 ^^^^^^

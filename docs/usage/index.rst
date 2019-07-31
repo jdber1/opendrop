@@ -2,7 +2,7 @@
 Usage
 *****
 
-When OpenDrop is launched, the Main Menu window first appears.
+When OpenDrop is launched, the Main Menu window will first appear.
 
 .. image:: images/main_menu.png
     :alt: Main Menu window
