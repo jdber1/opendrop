@@ -6,8 +6,6 @@ Getting Started
 Installation
 ************
 
-OpenDrop runs on Python 3.5+, and uses PyGObject's GTK bindings for the user interface, and OpenCV for image analysis.
-
 Installation instructions for some platforms have been provided below.
 
 Ubuntu 16.04+/Debian 9+

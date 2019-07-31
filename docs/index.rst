@@ -1,6 +1,4 @@
-======================
-OpenDrop documentation
-======================
+.. title:: Overview
 
 .. toctree::
     :hidden:
@@ -10,8 +8,21 @@ OpenDrop documentation
     usage/index
     developers/index
 
+.. image:: images/opendrop_logo_wide.png
+    :width: 370
+    :align: center
 
-Overview
---------
+|
 
-OpenDrop is a fully-featured pendant drop tensiometry software, allowing acquisition, analysis and fitting of pendant drop profiles to obtain surface and interfacial tension. It is released under the GNU GPL open source license, and available for free.
+.. include:: ../readme.rst
+    :end-before: ----
+
+For installation instructions, see ":doc:`getting_started/index`".
+
+----
+
+| **Git repo:**
+| https://github.com/jdber1/opendrop/
+
+| **For any questions, issues, or feedback:**
+| https://github.com/jdber1/opendrop/issues
