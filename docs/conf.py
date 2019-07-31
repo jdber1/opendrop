@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'OpenDrop'
-# copyright = ''
-# author = ''
+copyright = 'OpenDrop Contributors'
+author = 'OpenDrop Contributors'
 
 
 # -- General configuration ---------------------------------------------------
