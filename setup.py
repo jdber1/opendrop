@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='opendrop',
-    version='2.1.2dev0',
+    version='2.1.3dev0',
     packages=find_packages(exclude=['tests', 'manual_tests', 'docs']),
     package_data={
         'opendrop.res': ['images/*']

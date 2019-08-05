@@ -9,14 +9,15 @@
 # Licensed under the GNU Lesser General Public License v2.1 or later.
 #-
 
-import sys
-import traceback
-import time
-import threading
 import asyncio
-import gi
+import sys
+import threading
+import time
+import traceback
+
 from gi.repository import \
     GLib
+
 
 def _fd_fileno(fd) :
     if hasattr(fd, "fileno") :
@@ -180,7 +181,7 @@ class GLibEventLoop(asyncio.AbstractEventLoop) :
 
     # TODO: shutdown_asyncgens?
 
-    def call_soon(self, callback, *args) :
+    def call_soon(self, callback, *args, context = None) :
 
         def doit(hdl) :
             if not hdl._cancelled :
