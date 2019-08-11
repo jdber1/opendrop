@@ -21,6 +21,9 @@ class DefineLinePluginModel:
         start_pos = self._begin_define_pos
         self._begin_define_pos = None
 
+        if start_pos == end_pos:
+            return
+
         line = Line2(
             p0=start_pos,
             p1=end_pos,

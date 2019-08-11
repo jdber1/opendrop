@@ -24,6 +24,9 @@ class Line(abc.RenderObject):
         p0 = line.p0
         p1 = line.p1
 
+        if p0 == p1:
+            return
+
         start_point = line.eval_at(x=viewport_extents.x0)
         end_point = line.eval_at(x=viewport_extents.x1)
 
