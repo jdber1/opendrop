@@ -30,6 +30,7 @@ class PhysicalPropertiesCalculator:
         self.bn_interfacial_tension = BoxBindable(math.nan)
         self.bn_volume = BoxBindable(math.nan)
         self.bn_surface_area = BoxBindable(math.nan)
+        self.bn_apex_radius = BoxBindable(math.nan)
         self.bn_worthington = BoxBindable(math.nan)
 
         features.bn_needle_width_px.on_changed.connect(self._recalculate)
@@ -86,6 +87,7 @@ class PhysicalPropertiesCalculator:
         self.bn_interfacial_tension.set(interfacial_tension)
         self.bn_volume.set(volume_m3)
         self.bn_surface_area.set(surface_area_m2)
+        self.bn_apex_radius.set(apex_radius_m)
         self.bn_worthington.set(worthington)
 
     def _get_m_per_px(self) -> float:

@@ -68,7 +68,7 @@ class IFTDropAnalysis:
         # Attributes from YoungLaplaceFitter
         self.bn_bond_number = BoxBindable(math.nan)
         self.bn_apex_coords_px = BoxBindable(Vector2(math.nan, math.nan))
-        self.bn_apex_radius = BoxBindable(math.nan)
+        self.bn_apex_radius_px = BoxBindable(math.nan)
         self.bn_rotation = BoxBindable(math.nan)
         self.bn_drop_profile_fit = BoxBindable(None)
         self.bn_residuals = BoxBindable(None)
@@ -77,6 +77,7 @@ class IFTDropAnalysis:
         self.bn_interfacial_tension = BoxBindable(math.nan)
         self.bn_volume = BoxBindable(math.nan)
         self.bn_surface_area = BoxBindable(math.nan)
+        self.bn_apex_radius = BoxBindable(math.nan)
         self.bn_worthington = BoxBindable(math.nan)
 
         # Attributes from FeatureExtractor
@@ -165,7 +166,7 @@ class IFTDropAnalysis:
             self.bn_apex_coords_px
         )
         self._young_laplace_fit.bn_apex_radius.bind(
-            self.bn_apex_radius
+            self.bn_apex_radius_px
         )
         self._young_laplace_fit.bn_rotation.bind(
             self.bn_rotation
@@ -189,6 +190,9 @@ class IFTDropAnalysis:
         )
         self._physical_properties.bn_surface_area.bind(
             self.bn_surface_area
+        )
+        self._physical_properties.bn_apex_radius.bind(
+            self.bn_apex_radius
         )
         self._physical_properties.bn_worthington.bind(
             self.bn_worthington
