@@ -123,8 +123,8 @@ def _save_drop_image_annotated(drop: ConanAnalysis, out_file_path: Path) -> None
     draw_angle_marker(
         image=image,
         vertex_pos=drop.bn_left_point.get(),
-        start_angle=math.pi + surface_angle,
-        delta_angle=-drop.bn_left_angle.get(),
+        start_angle=surface_angle,
+        delta_angle=drop.bn_left_angle.get(),
         radius=int(0.1 * image.shape[0]),
         color=(255, 0, 128))
 
@@ -132,8 +132,8 @@ def _save_drop_image_annotated(drop: ConanAnalysis, out_file_path: Path) -> None
     draw_angle_marker(
         image=image,
         vertex_pos=drop.bn_right_point.get(),
-        start_angle=surface_angle,
-        delta_angle=drop.bn_right_angle.get(),
+        start_angle=math.pi + surface_angle,
+        delta_angle=-drop.bn_right_angle.get(),
         radius=int(0.1 * image.shape[0]),
         color=(255, 0, 128))
 

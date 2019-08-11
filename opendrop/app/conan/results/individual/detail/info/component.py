@@ -31,34 +31,35 @@ class InfoView(View['InfoPresenter', Gtk.Widget]):
         self._render.add_render_object(drop_contour_ro)
         self.bn_drop_contours = GObjectPropertyBindable(drop_contour_ro, 'polyline')
 
-        left_angle_ro = Angle(stroke_color=(1.0, 0.0, 0.5), clockwise=True)
+        left_angle_ro = Angle(stroke_color=(1.0, 0.0, 0.5), clockwise=False)
         self._render.add_render_object(left_angle_ro)
 
-        self.bn_left_angle = GObjectPropertyBindable(
-            left_angle_ro, 'delta-angle',
-            transform_to=lambda angle: -angle,
-            transform_from=lambda angle: -angle
-        )
+        self.bn_left_angle = GObjectPropertyBindable(left_angle_ro, 'delta-angle')
         self.bn_left_point = GObjectPropertyBindable(left_angle_ro, 'vertex-pos')
 
         surface_line_ro.bind_property(
             'line',
             left_angle_ro, 'start-angle',
             GObject.BindingFlags.SYNC_CREATE,
-            lambda _, line: math.pi - (math.atan(line.gradient) if line is not None else 0)
+            lambda _, line: -math.atan(line.gradient) if line is not None else 0
         )
 
-        right_angle_ro = Angle(stroke_color=(1.0, 0.0, 0.5))
+        right_angle_ro = Angle(stroke_color=(1.0, 0.0, 0.5), clockwise=True)
         self._render.add_render_object(right_angle_ro)
 
-        self.bn_right_angle = GObjectPropertyBindable(right_angle_ro, 'delta-angle')
+        self.bn_right_angle = GObjectPropertyBindable(
+            right_angle_ro, 'delta-angle',
+            transform_to=lambda angle: -angle,
+            transform_from=lambda angle: -angle
+        )
         self.bn_right_point = GObjectPropertyBindable(right_angle_ro, 'vertex-pos')
 
         surface_line_ro.bind_property(
             'line',
             right_angle_ro, 'start-angle',
             GObject.BindingFlags.SYNC_CREATE,
-            lambda _, line: -math.atan(line.gradient) if line is not None else 0)
+            lambda _, line: math.pi - (math.atan(line.gradient) if line is not None else 0)
+        )
 
         self.presenter.view_ready()
 

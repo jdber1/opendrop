@@ -128,7 +128,7 @@ class ContactAngle:
     def _calculate_right_contact_angle(self, right_contact_tangent: np.poly1d) -> float:
         tangent_gradient = right_contact_tangent.c[0] if len(right_contact_tangent.c) > 1 else 0
 
-        right_contact_angle = math.atan2(abs(tangent_gradient), math.copysign(1, tangent_gradient))
+        right_contact_angle = math.atan2(abs(tangent_gradient), -np.sign(tangent_gradient))
         return right_contact_angle
 
     def _calculate_right_contact_point(self, right_contact_tangent: np.poly1d) -> Vector2[float]:
