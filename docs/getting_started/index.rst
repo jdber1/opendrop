@@ -80,6 +80,23 @@ When you are asked if you want to proceed, press enter to install opencv and its
 5. Now type the following command to install opendrop::
     
     pip install git+https://github.com/jdber1/opendrop.git@development
+    
+6. Type ``opendrop`` to run the program 
+
+Oh no! Error! See below::
+
+    (base) C:\Users\dkarra>opendrop
+    Traceback (most recent call last):
+    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+    File "C:\Users\dkarra\AppData\Local\Continuum\anaconda3\Scripts\opendrop.exe\__main__.py", line 5, in <module>
+    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\site-packages\opendrop\app\__init__.py", line 1, in <module>
+    import gi
+    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\site-packages\gi\__init__.py", line 42, in <module>
+    from . import _gi
+    ImportError: DLL load failed: The specified procedure could not be found.
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
 .. _MacPorts: https://www.macports.org/
