@@ -59,6 +59,27 @@ macOS
 
 5. An ``opendrop`` script is installed into your PATH and the app can be launched by entering ``opendrop`` in the command line.
 
+Windows 10
+=======================
+1. Download and nstall Anaconda Python 3.7 from here: https://www.anaconda.com/distribution/
+
+2. Open the Anaconda prompt and install opencv with the command::
+
+    conda install -c conda-forge opencv
+
+When you are asked if you want to proceed, press enter to install opencv and its dependencies.
+
+3. Install pygobject using conda with::
+
+    conda install -c conda-forge pygobject
+    
+4. Install git using conda with::
+
+    conda install -c anaconda git
+    
+5. Now type the following command to install opendrop::
+    
+    pip install git+https://github.com/jdber1/opendrop.git@development
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
 .. _MacPorts: https://www.macports.org/
