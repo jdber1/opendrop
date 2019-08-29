@@ -97,6 +97,26 @@ Oh no! Error! See below::
     File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\site-packages\gi\__init__.py", line 42, in <module>
     from . import _gi
     ImportError: DLL load failed: The specified procedure could not be found.
+    
+    
+1. Now trying the 'Windows subsystem for Linux' feature now (installation instructions here: 
+https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+
+- Activate the feature using Windows Powershell (run as administrator)
+- Restart computer
+- Install Ubuntu 18.04 LTS from Microsoft Store
+- Launch an Ubuntu session
+- One installed, you will need to enter your username and password
+- sudo apt-get update
+- sudo apt-get upgrade
+- Follow instructions for ubuntu installation above (you may also need to install pip3 using sudo apt install python3-pip)
+- Close the Ubuntu window
+- Download Xming from here: https://sourceforge.net/projects/xming/
+- Install Xming, accepting all the default options 
+- Open Ubuntu session, run opendrop
+
+WSL doesn't support hardware yet - can't use camera live window
+
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
 .. _MacPorts: https://www.macports.org/
