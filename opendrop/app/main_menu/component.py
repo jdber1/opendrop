@@ -35,7 +35,7 @@ class MainMenuView(View['MainMenuPresenter', Gtk.Widget]):
 
     def _do_init(self) -> Gtk.Widget:
         self._window = Gtk.Window(
-            title='Opendrop',
+            title='OpenDrop',
             window_position=Gtk.WindowPosition.CENTER,
             resizable=False,
         )
