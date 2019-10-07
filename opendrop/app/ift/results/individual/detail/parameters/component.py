@@ -23,10 +23,10 @@ class ParametersView(View['ParametersPresenter', Gtk.Widget]):
         interfacial_tension_lbl = Gtk.Label('IFT (mN/m):', xalign=0)
         sheet.attach(interfacial_tension_lbl, 0, 0, 1, 1)
 
-        volume_lbl = Gtk.Label('Volume (mm²):', xalign=0)
+        volume_lbl = Gtk.Label('Volume (mm³):', xalign=0)
         sheet.attach(volume_lbl, 0, 1, 1, 1)
 
-        surface_area_lbl = Gtk.Label('Surface area (mm³):', xalign=0)
+        surface_area_lbl = Gtk.Label('Surface area (mm²):', xalign=0)
         sheet.attach(surface_area_lbl, 0, 2, 1, 1)
 
         sheet.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL, hexpand=True), 0, 3, 2, 1)
