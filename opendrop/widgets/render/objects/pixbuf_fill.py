@@ -21,6 +21,7 @@ class PixbufFill(abc.RenderObject):
             cr.scale(*scale)
 
             Gdk.cairo_set_source_pixbuf(cr, pixbuf, pixbuf_x=0, pixbuf_y=0)
+            cr.get_source().set_filter(cairo.Filter.FAST)
             cr.paint()
 
     _pixbuf = None  # type: Optional[GdkPixbuf.Pixbuf]
