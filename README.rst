@@ -6,4 +6,4 @@ OpenDrop is released under the **GNU GPL** open source license, and available fo
 
 ----
 
-For installation instructions and user guides, visit:
+For installation instructions and user guides, visit: https://opendrop.readthedocs.io/en/latest/
