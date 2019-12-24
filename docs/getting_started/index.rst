@@ -2,11 +2,9 @@
 Getting Started
 ###############
 
-************
-Installation
-************
-
-Installation instructions for some platforms have been provided below.
+******************************
+Installing as a Python package
+******************************
 
 Ubuntu 16.04+/Debian 9+
 =======================
@@ -59,63 +57,6 @@ macOS
 
 5. An ``opendrop`` script is installed into your PATH and the app can be launched by entering ``opendrop`` in the command line.
 
-Windows 10
-=======================
-1. Download and nstall Anaconda Python 3.7 from here: https://www.anaconda.com/distribution/
-
-2. Open the Anaconda prompt and install opencv with the command::
-
-    conda install -c conda-forge opencv
-
-When you are asked if you want to proceed, press enter to install opencv and its dependencies.
-
-3. Install pygobject using conda with::
-
-    conda install -c conda-forge pygobject
-    
-4. Install git using conda with::
-
-    conda install -c anaconda git
-    
-5. Now type the following command to install opendrop::
-    
-    pip install git+https://github.com/jdber1/opendrop.git@development
-    
-6. Type ``opendrop`` to run the program 
-
-Oh no! Error! See below::
-
-    (base) C:\Users\dkarra>opendrop
-    Traceback (most recent call last):
-    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\runpy.py", line 193, in _run_module_as_main
-    "__main__", mod_spec)
-    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\runpy.py", line 85, in _run_code
-    exec(code, run_globals)
-    File "C:\Users\dkarra\AppData\Local\Continuum\anaconda3\Scripts\opendrop.exe\__main__.py", line 5, in <module>
-    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\site-packages\opendrop\app\__init__.py", line 1, in <module>
-    import gi
-    File "c:\users\dkarra\appdata\local\continuum\anaconda3\lib\site-packages\gi\__init__.py", line 42, in <module>
-    from . import _gi
-    ImportError: DLL load failed: The specified procedure could not be found.
-    
-    
-1. Now trying the 'Windows subsystem for Linux' feature now (installation instructions here: 
-https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-
-- Activate the feature using Windows Powershell (run as administrator)
-- Restart computer
-- Install Ubuntu 18.04 LTS from Microsoft Store
-- Launch an Ubuntu session
-- One installed, you will need to enter your username and password
-- sudo apt-get update
-- sudo apt-get upgrade
-- Follow instructions for ubuntu installation above (you may also need to install pip3 using sudo apt install python3-pip)
-- Close the Ubuntu window
-- Download Xming from here: https://sourceforge.net/projects/xming/
-- Install Xming, accepting all the default options 
-- Open Ubuntu session, run opendrop
-
-WSL doesn't support hardware yet - can't use camera live window
 
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
