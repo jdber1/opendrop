@@ -15,6 +15,7 @@
 |
 
 .. include:: ../readme.rst
+    :start-after: |
     :end-before: ----
 
 For installation instructions, see ":doc:`getting_started/index`".
