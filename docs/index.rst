@@ -14,7 +14,7 @@
 
 |
 
-.. include:: ../readme.rst
+.. include:: ../README.rst
     :start-after: |
     :end-before: ----
 
