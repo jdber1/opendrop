@@ -71,7 +71,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._ift_axes.relim()
         self._ift_axes.margins(y=0.1)
 
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -84,7 +84,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._volume_line.axes.relim()
         self._volume_line.axes.margins(y=0.1)
 
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -97,7 +97,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._surface_area_line.axes.relim()
         self._surface_area_line.axes.margins(y=0.1)
 
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def _update_xlim(self) -> None:
         all_xdata = (

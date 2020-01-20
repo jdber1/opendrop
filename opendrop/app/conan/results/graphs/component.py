@@ -77,7 +77,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._left_angle_axes.relim()
         self._left_angle_axes.margins(y=0.1)
 
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def set_right_angle_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -90,7 +90,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._right_angle_line.axes.relim()
         self._right_angle_line.axes.margins(y=0.1)
 
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def _update_xlim(self) -> None:
         all_xdata = (

@@ -51,7 +51,7 @@ class DropFitView(View['DropFitPresenter', Gtk.Widget]):
         if image is None:
             self._axes.set_axis_off()
             self._axes_bg_image.set_data(np.zeros((1, 1, 4)))
-            self._figure_canvas.queue_draw()
+            self._figure_canvas.draw()
             return
 
         self._axes.set_axis_on()
@@ -62,27 +62,27 @@ class DropFitView(View['DropFitPresenter', Gtk.Widget]):
         self._axes_bg_image.set_data(image_thumb)
 
         self._axes_bg_image.set_extent((0, image.shape[1], image.shape[0], 0))
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def set_drop_profile_extract(self, profile: Optional[np.ndarray]) -> None:
         if profile is None:
             self._profile_fit_line.set_visible(False)
-            self._figure_canvas.queue_draw()
+            self._figure_canvas.draw()
             return
 
         self._profile_fit_line.set_data(profile.T)
         self._profile_fit_line.set_visible(True)
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def set_drop_profile_fit(self, profile: Optional[np.ndarray]) -> None:
         if profile is None:
             self._profile_extract_line.set_visible(False)
-            self._figure_canvas.queue_draw()
+            self._figure_canvas.draw()
             return
 
         self._profile_extract_line.set_data(profile.T)
         self._profile_extract_line.set_visible(True)
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def _do_destroy(self) -> None:
         self._widget.destroy()

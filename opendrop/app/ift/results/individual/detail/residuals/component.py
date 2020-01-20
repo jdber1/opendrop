@@ -41,12 +41,12 @@ class ResidualsPlotView(View['ResidualsPlotPresenter', Gtk.Widget]):
 
         if residuals is None or len(residuals) == 0:
             axes.set_axis_off()
-            self._figure_canvas.queue_draw()
+            self._figure_canvas.draw()
             return
 
         axes.set_axis_on()
         axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-        self._figure_canvas.queue_draw()
+        self._figure_canvas.draw()
 
     def _do_destroy(self) -> None:
         self._widget.destroy()
