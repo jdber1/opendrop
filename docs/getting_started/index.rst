@@ -18,7 +18,7 @@ Ubuntu 16.04+/Debian 9+
 
 #. Use pip to install Opendrop from the repository by running::
 
-       pip install git+https://github.com/jdber1/opendrop.git@development
+       pip install git+https://github.com/jdber1/opendrop.git
 
    (You may need to use ``pip3`` to refer to the Python 3 version.)
 
@@ -51,7 +51,7 @@ macOS
 
 4. Use pip to install OpenDrop from the repository by running::
 
-       pip install git+https://github.com/jdber1/opendrop.git@development
+       pip install git+https://github.com/jdber1/opendrop.git
 
    Run ``pip uninstall opendrop`` to uninstall.
 
