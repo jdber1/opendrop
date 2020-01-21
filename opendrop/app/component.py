@@ -1,3 +1,6 @@
+import pkg_resources
+from gi.repository import Gtk, GdkPixbuf, Gio, GLib
+
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from .conan import ConanSession, conan_root_cs
 from .ift import IFTSession, ift_root_cs
@@ -9,7 +12,17 @@ app_cs = ComponentSymbol()  # type: ComponentSymbol[None]
 
 @app_cs.view()
 class AppRootView(View['AppRootPresenter', None]):
+    APP_ICON = GdkPixbuf.Pixbuf.new_from_stream(
+        Gio.MemoryInputStream.new_from_bytes(
+            GLib.Bytes(
+                pkg_resources.resource_stream('opendrop.res', 'images/icon_256x256.png').read()
+            )
+        )
+    )
+
     def _do_init(self) -> None:
+        Gtk.Window.set_default_icon(self.APP_ICON)
+
         _, self._main_menu_window = self.new_component(
             main_menu_cs.factory(
                 model=self.presenter.main_menu_model
