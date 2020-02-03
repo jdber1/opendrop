@@ -7,16 +7,34 @@ tags:
   - galactic dynamics
   - milky way
 authors:
-  - name: Adrian M. Price-Whelan
-    orcid: 0000-0003-0872-7098
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Author Without ORCID
+  - name: Eugene Huang
+    orcid: 
+    affiliation: 1
+  - name: Terence Denning
+    orcid: 
+    affiliation: 1
+  - name: Adam Skoufis
+    orcid: 
     affiliation: 2
+  - name: Jianzhong Qi
+    orcid: 
+    affiliation: 1
+  - name: Raymond R. Dagastine
+    orcid: 
+    affiliation: 3
+  - name: Rico F. Tabor
+    orcid: 
+    affiliation: 2
+  - name: Joseph D. Berry
+    orcid: 
+    affiliation: 3
 affiliations:
- - name: Lyman Spitzer, Jr. Fellow, Princeton University
+ - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 1
- - name: Institution 2
+ - name: School of Chemistry, Monash University, Clayton 3800, Australia
    index: 2
+ - name: Department of Chemical Engineering, University of Melbourne, Parkville 3010, Australia
+   index: 3
 date: 13 August 2017
 bibliography: paper.bib
 ---
