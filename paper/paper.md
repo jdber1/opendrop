@@ -2,83 +2,86 @@
 title: 'OpenDrop: Open-source software for pendant drop tensiometry & contact angle measurements'
 tags:
   - Python
-  - astronomy
-  - dynamics
-  - galactic dynamics
-  - milky way
+  - pendant drop
+  - drop shape analysis
+  - tensiometry
+  - surface tension
+  - interfacial tension
+  - contact angle
 authors:
   - name: Eugene Huang
-    orcid: 
     affiliation: 1
+  - name: Terence Denning
+    affiliation: 1
+  - name: Adam Skoufis
+    affiliation: 2
+  - name: Jianzhong Qi
+    affiliation: 1
+  - name: Raymond R. Dagastine
+    affiliation: 3
+  - name: Rico F. Tabor
+    affiliation: 2
+  - name: Joseph D. Berry
+    affiliation: 3
 affiliations:
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 1
-date: 13 August 2017
+ - name: School of Chemistry, Monash University, Clayton 3800, Australia
+   index: 2
+ - name: Department of Chemical Engineering, University of Melbourne, Parkville 3010, Australia
+   index: 3
+date: 4 March 2018
 bibliography: paper.bib
 ---
 
 # Summary
+ Systems where two or more fluids exist in discrete phases
+are ubiquitous in nature and in many manufacturing processes. The
+common surface (or interface) between two fluids that do not mix
+exists in a state of tension, an intrinsic property known as
+interfacial tension. Another fundamental property of interest when the
+interface between two fluids is also in contact with a surface (for
+example a water drop resting on a leaf) is the contact angle, which
+describes how liquids spread on a surface – vital information for
+dynamic liquid-solid processes such as coating and painting.
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+Accurate measurements of interfacial tension allow researchers in
+industry and academia to make deductions regarding the chemical
+composition and crucially, the behavior of the interfaces, enabling
+optimal design of devices and processes. In many real formulations or
+applied systems, this basic but critical parameter can be quite
+challenging to accurately measure. In addition, precise measurements
+of the contact angle between a fluid-fluid interface and a solid
+surface are critical in order to deduce wetting and spreading
+characteristics of liquids on surfaces, important when considering, to
+name two examples, the application of paints to surfaces and
+pesticides to plants. It is therefore clear that accurate, rapid and
+reproducible measurements of interfacial tension and solid contact
+angle are imperative for effective design, implementation and
+optimization of processes involving multiphase systems.
 
-``Gala`` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for ``Gala`` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. ``Gala`` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the ``Astropy`` package [@astropy] (``astropy.units`` and
-``astropy.coordinates``).
+Here we present the latest version of the open-source software package OpenDrop, first released in 2015 [@Berry2017]. The previous version is in use in many research groups around the world, and is also used in teaching laboratories including Monash University.
+The new version, Barracuda, is able to
+measure interfacial tension and also contact angle in a variety of
+configurations with field-leading accuracy and reproducibility. The contact angle measurement capability is new for this release, but has been used successfully in previous studies [@Prathapan2017].
 
-``Gala`` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in ``Gala`` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+The
+availability of the software allows the interested user to
+effectively implement, explore and further develop the techniques for
+both research and teaching at a small fraction of the cost of
+commercial options. 
 
-# Mathematics
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
+<!-- Consequently, OpenDrop will make significant impact
+in both research and education by providing inexpensive access to
+high-fidelity information on the stability, function, and behaviour of
+interfaces, via a simple and user-friendly interface, with open-source
+software that will enable users to implement their own functionality. -->
 
 
-# Citations
 
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this: ![Example figure.](figure.png)
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+
 
 # References
