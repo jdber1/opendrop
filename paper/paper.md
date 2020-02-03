@@ -1,5 +1,5 @@
+---
 title: 'OpenDrop: Open-source software for pendant drop tensiometry & contact angle measurements'
-
 tags:
   - Python
   - astronomy
@@ -19,7 +19,6 @@ affiliations:
    index: 2
 date: 13 August 2017
 bibliography: paper.bib
-
 ---
 
 # Summary
