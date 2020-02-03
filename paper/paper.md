@@ -11,8 +11,6 @@ tags:
 authors:
   - name: Eugene Huang
     affiliation: 1
-  - name: Terence Denning
-    affiliation: 1
   - name: Adam Skoufis
     affiliation: 2
   - name: Jianzhong Qi
@@ -30,7 +28,7 @@ affiliations:
    index: 2
  - name: Department of Chemical Engineering, University of Melbourne, Parkville 3010, Australia
    index: 3
-date: 4 March 2018
+date: 3 February 2020
 bibliography: paper.bib
 ---
 
