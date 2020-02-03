@@ -22,7 +22,7 @@ authors:
   - name: Rico F. Tabor
     affiliation: 2
   - name: Joseph D. Berry
-    affiliation: 3
+    affiliation: "*,3"
 affiliations:
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 1
@@ -60,7 +60,7 @@ reproducible measurements of interfacial tension and solid contact
 angle are imperative for effective design, implementation and
 optimization of processes involving multiphase systems.
 
-Here we present the latest version of the open-source software package OpenDrop, first released in 2015 [@Berry2017]. The previous version is in use in many research groups around the world, and is also used in teaching laboratories including Monash University.
+Here we present the latest version of the open-source software package OpenDrop, first released in 2015 [@Berry2015]. The previous version is in use in many research groups around the world, and is also used in teaching laboratories including Monash University.
 The new version, Barracuda, is able to
 measure interfacial tension and also contact angle in a variety of
 configurations with field-leading accuracy and reproducibility. The contact angle measurement capability is new for this release, but has been used successfully in previous studies [@Prathapan2017].
