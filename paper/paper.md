@@ -22,7 +22,7 @@ authors:
   - name: Rico F. Tabor
     affiliation: 2
   - name: Joseph D. Berry
-    affiliation: "*,3"
+    affiliation: 3
 affiliations:
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 1
