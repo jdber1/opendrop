@@ -1,4 +1,4 @@
-title: 'Gala: A Python package for galactic dynamics'
+title: 'OpenDrop: Open-source software for pendant drop tensiometry & contact angle measurements'
 tags:
   - Python
   - astronomy
@@ -19,10 +19,6 @@ affiliations:
 date: 13 August 2017
 bibliography: paper.bib
 
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
