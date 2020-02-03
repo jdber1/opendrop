@@ -72,18 +72,10 @@ The new version, Barracuda, is able to
 measure interfacial tension and also contact angle in a variety of
 configurations with field-leading accuracy and reproducibility. The contact angle measurement capability is new for this release, but has been used successfully in previous studies [@Prathapan2017].
 
-The
-availability of the software allows the interested user to
+The availability of the software allows the interested user to
 effectively implement, explore and further develop the techniques for
 both research and teaching at a small fraction of the cost of
 commercial options. 
-
-<!-- Consequently, OpenDrop will make significant impact
-in both research and education by providing inexpensive access to
-high-fidelity information on the stability, function, and behaviour of
-interfaces, via a simple and user-friendly interface, with open-source
-software that will enable users to implement their own functionality. -->
-
 
 
 
