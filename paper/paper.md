@@ -14,12 +14,16 @@ authors:
   - name: Adam Skoufis
     affiliation: 2
   - name: Jianzhong Qi
+    orcid: 0000-0001-6501-9050
     affiliation: 1
   - name: Raymond R. Dagastine
+    orcid: 0000-0002-2154-4846
     affiliation: 3
   - name: Rico F. Tabor
+    orcid: 0000-0003-2926-0095
     affiliation: 2
   - name: Joseph D. Berry
+    orcid: 0000-0002-0961-7782
     affiliation: 3
 affiliations:
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
