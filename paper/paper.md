@@ -41,9 +41,9 @@ bibliography: paper.bib
 are ubiquitous in nature and in many manufacturing processes. The
 common surface (or interface) between two fluids that do not mix
 exists in a state of tension, an intrinsic property known as
-interfacial tension. Another fundamental property of interest when the
-interface between two fluids is also in contact with a surface (for
-example a water drop resting on a leaf) is the contact angle, which
+interfacial tension. The contact angle is another fundamental property of interest when the
+interface between two fluids is also in contact with a surface, for
+example a water drop resting on a leaf. The contact angle is dependent on the surface energy of the solid and 
 describes how liquids spread on a surface – vital information for
 dynamic liquid-solid processes such as coating and painting.
 
@@ -55,10 +55,10 @@ applied systems, this basic but critical parameter can be quite
 challenging to accurately measure. In addition, precise measurements
 of the contact angle between a fluid-fluid interface and a solid
 surface are critical in order to deduce wetting and spreading
-characteristics of liquids on surfaces, important when considering, to
+characteristics of liquids on surfaces, and to calculate the surface energy of a solid by measuring the contact angle of a series of liquids on one type of surface. These surface properties are important when considering, to
 name two examples, the application of paints to surfaces and
 pesticides to plants. It is therefore clear that accurate, rapid and
-reproducible measurements of interfacial tension and solid contact
+reproducible measurements of interfacial tension and contact
 angle are imperative for effective design, implementation and
 optimization of processes involving multiphase systems.
 
