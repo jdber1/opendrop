@@ -13,7 +13,7 @@ authors:
     affiliation: 1
   - name: Adam Skoufis
     affiliation: 2
-    - name: Terence Denning
+  - name: Terence Denning
     affiliation: 1
   - name: Jianzhong Qi
     orcid: 0000-0001-6501-9050
