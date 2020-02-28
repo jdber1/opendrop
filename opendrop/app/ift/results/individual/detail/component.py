@@ -34,7 +34,8 @@ from opendrop.app.ift.analysis import IFTDropAnalysis
 from opendrop.app.ift.results.individual.detail.log_view import log_cs
 from opendrop.app.ift.results.individual.detail.residuals import residuals_plot_cs
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .parameters import parameters_cs
 from .profile_fit import drop_fit_cs
 
@@ -122,21 +123,21 @@ class DetailPresenter(Presenter['DetailView']):
         self._bn_analysis = in_analysis
         self._analysis_unbind_tasks = []
 
-        self.bn_interfacial_tension = BoxBindable(math.nan)
-        self.bn_volume = BoxBindable(math.nan)
-        self.bn_surface_area = BoxBindable(math.nan)
-        self.bn_worthington = BoxBindable(math.nan)
-        self.bn_bond_number = BoxBindable(math.nan)
-        self.bn_apex_coords = BoxBindable((math.nan, math.nan))
-        self.bn_image_angle = BoxBindable(math.nan)
+        self.bn_interfacial_tension = VariableBindable(math.nan)
+        self.bn_volume = VariableBindable(math.nan)
+        self.bn_surface_area = VariableBindable(math.nan)
+        self.bn_worthington = VariableBindable(math.nan)
+        self.bn_bond_number = VariableBindable(math.nan)
+        self.bn_apex_coords = VariableBindable((math.nan, math.nan))
+        self.bn_image_angle = VariableBindable(math.nan)
 
-        self.bn_drop_image = BoxBindable(None)
-        self.bn_drop_profile_extract = BoxBindable(None)
-        self.bn_drop_profile_fit = BoxBindable(None)
+        self.bn_drop_image = VariableBindable(None)
+        self.bn_drop_profile_extract = VariableBindable(None)
+        self.bn_drop_profile_fit = VariableBindable(None)
 
-        self.bn_residuals = BoxBindable(None)
+        self.bn_residuals = VariableBindable(None)
 
-        self.bn_log_text = BoxBindable('')
+        self.bn_log_text = VariableBindable('')
 
         self.__event_connections = []
 
@@ -165,17 +166,17 @@ class DetailPresenter(Presenter['DetailView']):
         assert len(self._analysis_unbind_tasks) == 0
 
         data_bindings = [
-            analysis.bn_interfacial_tension.bind(self.bn_interfacial_tension),
-            analysis.bn_volume.bind(self.bn_volume),
-            analysis.bn_surface_area.bind(self.bn_surface_area),
-            analysis.bn_worthington.bind(self.bn_worthington),
-            analysis.bn_bond_number.bind(self.bn_bond_number),
-            analysis.bn_apex_coords_px.bind(self.bn_apex_coords),
-            analysis.bn_rotation.bind(self.bn_image_angle),
+            analysis.bn_interfacial_tension.bind_to(self.bn_interfacial_tension),
+            analysis.bn_volume.bind_to(self.bn_volume),
+            analysis.bn_surface_area.bind_to(self.bn_surface_area),
+            analysis.bn_worthington.bind_to(self.bn_worthington),
+            analysis.bn_bond_number.bind_to(self.bn_bond_number),
+            analysis.bn_apex_coords_px.bind_to(self.bn_apex_coords),
+            analysis.bn_rotation.bind_to(self.bn_image_angle),
 
-            analysis.bn_residuals.bind(self.bn_residuals),
+            analysis.bn_residuals.bind_to(self.bn_residuals),
 
-            analysis.bn_log.bind(self.bn_log_text),
+            analysis.bn_log.bind_to(self.bn_log_text),
         ]
 
         self._analysis_unbind_tasks.extend(

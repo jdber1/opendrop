@@ -31,7 +31,7 @@ from gi.repository import Gtk
 
 from opendrop.app.common.image_processing.plugins.preview.model import ImageSequenceAcquirerController
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.integer_entry import IntegerEntry
 
 image_sequence_navigator_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]

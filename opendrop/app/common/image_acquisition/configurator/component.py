@@ -31,7 +31,7 @@ from gi.repository import Gtk
 
 from opendrop.app.common.image_acquirer import ImageAcquirer, LocalStorageAcquirer, USBCameraAcquirer
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 from .local_storage import local_storage_cs
 from .usb_camera import usb_camera_cs
 

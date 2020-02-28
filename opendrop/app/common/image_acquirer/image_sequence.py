@@ -29,7 +29,8 @@ from typing import Sequence, Tuple, Optional
 
 import numpy as np
 
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .base import ImageAcquirer, InputImage
 
 
@@ -37,9 +38,9 @@ class ImageSequenceAcquirer(ImageAcquirer):
     IS_REPLICATED = False
 
     def __init__(self) -> None:
-        self.bn_images = BoxBindable(tuple())  # type: Bindable[Sequence[np.ndarray]]
+        self.bn_images = VariableBindable(tuple())  # type: Bindable[Sequence[np.ndarray]]
 
-        self.bn_frame_interval = BoxBindable(None)  # type: Bindable[Optional[int]]
+        self.bn_frame_interval = VariableBindable(None)  # type: Bindable[Optional[int]]
 
     def acquire_images(self) -> Sequence[InputImage]:
         images = self.bn_images.get()

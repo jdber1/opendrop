@@ -30,7 +30,7 @@ from gi.repository import Gtk
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
 from opendrop.app.ift.image_processing.plugins import ToolID
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.canny_parameters import CannyParameters
 from .model import EdgeDetectionPluginModel
 

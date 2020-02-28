@@ -31,14 +31,15 @@ from typing import Optional
 import numpy as np
 
 from opendrop.processing.conan import ContactAngle
-from opendrop.utility.bindable import BoxBindable, Bindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Line2, Vector2
 from .features import FeatureExtractor
 
 
 class ContactAngleCalculatorParams:
     def __init__(self) -> None:
-        self.bn_surface_line_px = BoxBindable(None)  # type: Bindable[Optional[Line2]]
+        self.bn_surface_line_px = VariableBindable(None)  # type: Bindable[Optional[Line2]]
 
 
 class ContactAngleCalculator:
@@ -46,12 +47,12 @@ class ContactAngleCalculator:
         self._features = features
         self.params = params
 
-        self.bn_left_tangent = BoxBindable(np.poly1d((math.nan, math.nan)))
-        self.bn_left_angle = BoxBindable(math.nan)
-        self.bn_left_point = BoxBindable(Vector2(math.nan, math.nan))
-        self.bn_right_tangent = BoxBindable(np.poly1d((math.nan, math.nan)))
-        self.bn_right_angle = BoxBindable(math.nan)
-        self.bn_right_point = BoxBindable(Vector2(math.nan, math.nan))
+        self.bn_left_tangent = VariableBindable(np.poly1d((math.nan, math.nan)))
+        self.bn_left_angle = VariableBindable(math.nan)
+        self.bn_left_point = VariableBindable(Vector2(math.nan, math.nan))
+        self.bn_right_tangent = VariableBindable(np.poly1d((math.nan, math.nan)))
+        self.bn_right_angle = VariableBindable(math.nan)
+        self.bn_right_point = VariableBindable(Vector2(math.nan, math.nan))
 
         # Recalculate when inputs change
         features.bn_drop_profile_px.on_changed.connect(self._recalculate)

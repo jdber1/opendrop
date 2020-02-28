@@ -28,7 +28,7 @@
 from typing import Sequence, Optional
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 
 
 class IndividualModel:

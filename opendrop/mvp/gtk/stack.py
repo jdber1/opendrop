@@ -32,7 +32,7 @@ from gi.repository import Gtk
 from opendrop.mvp.component import ComponentSymbol, ComponentFactory
 from opendrop.mvp.presenter import Presenter
 from opendrop.mvp.view import View
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 
 stack_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 

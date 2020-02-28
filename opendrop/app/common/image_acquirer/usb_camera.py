@@ -31,7 +31,7 @@ from typing import Tuple, Optional
 import cv2
 import numpy as np
 
-from opendrop.utility.bindable import BoxBindable, AccessorBindable
+from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.events import EventConnection
 from .camera import CameraAcquirer, Camera, CameraCaptureError
 
@@ -117,7 +117,7 @@ class USBCamera(Camera):
     def __init__(self, camera_index: int) -> None:
         self._vc = cv2.VideoCapture(camera_index)
 
-        self.bn_alive = BoxBindable(True)
+        self.bn_alive = VariableBindable(True)
 
         if not self.check_vc_works(timeout=5):
             raise ValueError('Camera failed to open.')

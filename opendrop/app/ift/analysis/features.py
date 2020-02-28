@@ -37,16 +37,17 @@ from opendrop.processing.ift import (
     extract_needle_profile,
     calculate_width_from_needle_profile,
 )
-from opendrop.utility.bindable import BoxBindable, AccessorBindable, thread_safe_bindable_collection, Bindable
+from opendrop.utility.bindable import VariableBindable, AccessorBindable, thread_safe_bindable_collection
+from opendrop.utility.bindable.typing import ReadBindable
 from opendrop.utility.updaterworker import UpdaterWorker
 
 
 class FeatureExtractorParams:
     def __init__(self) -> None:
-        self.bn_needle_region_px = BoxBindable(None)
-        self.bn_drop_region_px = BoxBindable(None)
-        self.bn_canny_min = BoxBindable(30)
-        self.bn_canny_max = BoxBindable(60)
+        self.bn_needle_region_px = VariableBindable(None)
+        self.bn_drop_region_px = VariableBindable(None)
+        self.bn_canny_min = VariableBindable(30)
+        self.bn_canny_max = VariableBindable(60)
 
 
 class FeatureExtractor:
@@ -59,7 +60,7 @@ class FeatureExtractor:
         ]
     )
 
-    def __init__(self, image: Bindable[np.ndarray], params: 'FeatureExtractorParams', *,
+    def __init__(self, image: ReadBindable[np.ndarray], params: 'FeatureExtractorParams', *,
                  loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
         self._loop = loop or asyncio.get_event_loop()
 
@@ -82,10 +83,10 @@ class FeatureExtractor:
             loop=self._loop,
         )
 
-        self.bn_edge_detection = self._data.bn_edge_detection  # type: Bindable[Optional[np.ndarray]]
-        self.bn_drop_profile_px = self._data.bn_drop_profile_px  # type: Bindable[Optional[np.ndarray]]
-        self.bn_needle_profile_px = self._data.bn_needle_profile_px  # type: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
-        self.bn_needle_width_px = self._data.bn_needle_width_px  # type: Bindable[float]
+        self.bn_edge_detection = self._data.bn_edge_detection  # type: ReadBindable[Optional[np.ndarray]]
+        self.bn_drop_profile_px = self._data.bn_drop_profile_px  # type: ReadBindable[Optional[np.ndarray]]
+        self.bn_needle_profile_px = self._data.bn_needle_profile_px  # type: ReadBindable[Optional[Tuple[np.ndarray, np.ndarray]]]
+        self.bn_needle_width_px = self._data.bn_needle_width_px  # type: ReadBindable[float]
 
         # Update extracted features whenever image or params change.
         self._bn_image.on_changed.connect(self._queue_update)

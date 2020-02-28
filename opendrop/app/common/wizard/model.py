@@ -27,7 +27,7 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Iterable, Callable, Any
 
-from opendrop.utility.bindable import BoxBindable
+from opendrop.utility.bindable import VariableBindable
 
 
 class WizardModel:
@@ -36,7 +36,7 @@ class WizardModel:
 
         self._interpage_actions = {}
 
-        self.bn_current_page = BoxBindable(self._pages[0])
+        self.bn_current_page = VariableBindable(self._pages[0])
 
     def next_page(self) -> None:
         current_page = self.bn_current_page.get()

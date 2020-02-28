@@ -30,7 +30,7 @@ from typing import MutableMapping, Mapping, Any
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 
 sidebar_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 

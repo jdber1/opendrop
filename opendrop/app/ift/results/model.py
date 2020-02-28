@@ -31,7 +31,8 @@ from typing import Optional, Sequence, Callable, Any
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
-from opendrop.utility.bindable import Bindable, BoxBindable, AccessorBindable
+from opendrop.utility.bindable import VariableBindable, AccessorBindable
+from opendrop.utility.bindable.typing import Bindable
 from .graphs import GraphsModel
 from .individual.model import IndividualModel
 
@@ -58,7 +59,7 @@ class IFTResultsModel:
         self._create_save_options = create_save_options
         self._check_if_safe_to_discard = check_if_safe_to_discard
 
-        self.bn_selection = BoxBindable(None)  # type: Bindable[Optional[IFTDropAnalysis]]
+        self.bn_selection = VariableBindable(None)  # type: Bindable[Optional[IFTDropAnalysis]]
 
         self.individual = IndividualModel(
             in_analyses=self.bn_analyses,

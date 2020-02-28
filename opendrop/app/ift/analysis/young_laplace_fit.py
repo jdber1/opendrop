@@ -34,7 +34,8 @@ import numpy as np
 
 from opendrop.app.ift.analysis.features import FeatureExtractor
 from opendrop.processing.ift import YoungLaplaceFit
-from opendrop.utility.bindable import thread_safe_bindable_collection, Bindable, AccessorBindable
+from opendrop.utility.bindable import thread_safe_bindable_collection, AccessorBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
 from opendrop.utility.updaterworker import UpdaterWorker
 

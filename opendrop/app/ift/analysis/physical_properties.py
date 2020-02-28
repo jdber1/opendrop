@@ -29,17 +29,18 @@ import math
 from typing import Optional
 
 from opendrop.processing.ift import calculate_ift, calculate_worthington
-from opendrop.utility.bindable import BoxBindable, Bindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .features import FeatureExtractor
 from .young_laplace_fit import YoungLaplaceFitter
 
 
 class PhysicalPropertiesCalculatorParams:
     def __init__(self) -> None:
-        self.bn_inner_density = BoxBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_outer_density = BoxBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_needle_width = BoxBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_gravity = BoxBindable(math.nan)  # type: Bindable[Optional[float]]
+        self.bn_inner_density = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
+        self.bn_outer_density = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
+        self.bn_needle_width = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
+        self.bn_gravity = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
 
 
 class PhysicalPropertiesCalculator:
@@ -54,11 +55,11 @@ class PhysicalPropertiesCalculator:
 
         self.params = params
 
-        self.bn_interfacial_tension = BoxBindable(math.nan)
-        self.bn_volume = BoxBindable(math.nan)
-        self.bn_surface_area = BoxBindable(math.nan)
-        self.bn_apex_radius = BoxBindable(math.nan)
-        self.bn_worthington = BoxBindable(math.nan)
+        self.bn_interfacial_tension = VariableBindable(math.nan)
+        self.bn_volume = VariableBindable(math.nan)
+        self.bn_surface_area = VariableBindable(math.nan)
+        self.bn_apex_radius = VariableBindable(math.nan)
+        self.bn_worthington = VariableBindable(math.nan)
 
         features.bn_needle_width_px.on_changed.connect(self._recalculate)
 

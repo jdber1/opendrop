@@ -29,8 +29,8 @@ from typing import Optional, Any, Callable
 
 from gi.repository import Gtk
 
-from opendrop.utility.bindable import Bindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.typing import Bindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 
 
 class ToolItemRef:

@@ -37,7 +37,7 @@ from opendrop.app.conan.analysis_saver import ConanAnalysisSaverOptions, conan_s
 from opendrop.app.conan.results.graphs import graphs_cs
 from opendrop.app.conan.results.individual.component import individual_cs
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import BoxBindable
+from opendrop.utility.bindable import VariableBindable
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 from .model import ConanResultsModel
 
@@ -209,10 +209,10 @@ class ConanResultsPresenter(Presenter['ConanResultsView']):
         self.individual_model = model.individual
         self.graphs_model = model.graphs
 
-        self.bn_footer_status = BoxBindable(ResultsFooterStatus.IN_PROGRESS)
+        self.bn_footer_status = VariableBindable(ResultsFooterStatus.IN_PROGRESS)
         self.bn_completion_progress = model.bn_analyses_completion_progress
-        self.bn_time_elapsed = BoxBindable(math.nan)
-        self.bn_time_remaining = BoxBindable(math.nan)
+        self.bn_time_elapsed = VariableBindable(math.nan)
+        self.bn_time_remaining = VariableBindable(math.nan)
 
         self._active_save_options = None
 

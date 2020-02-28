@@ -33,7 +33,8 @@ from opendrop.app.common.image_acquisition import ImageAcquisitionModel
 from opendrop.app.common.image_processing.plugins.define_line import DefineLinePluginModel
 from opendrop.app.common.image_processing.plugins.define_region import DefineRegionPluginModel
 from opendrop.app.conan.analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculatorParams
-from opendrop.utility.bindable import BoxBindable, Bindable, AccessorBindable
+from opendrop.utility.bindable import VariableBindable, AccessorBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Rect2
 from .plugins import ToolID
 from .plugins.foreground_detection import ForegroundDetectionPluginModel
@@ -53,7 +54,7 @@ class ConanImageProcessingModel:
         self._conancalc_params = conancalc_params
         self._do_extract_features = do_extract_features
 
-        self.bn_active_tool = BoxBindable(ToolID.DROP_REGION)
+        self.bn_active_tool = VariableBindable(ToolID.DROP_REGION)
 
         region_clip = AccessorBindable(
             getter=self._get_region_clip

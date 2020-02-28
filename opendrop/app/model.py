@@ -28,7 +28,7 @@
 import asyncio
 from enum import Enum
 
-from opendrop.utility.bindable import BoxBindable
+from opendrop.utility.bindable import VariableBindable
 from .conan import ConanSession
 from .ift import IFTSession
 from .main_menu import MainMenuModel
@@ -38,7 +38,7 @@ class AppRootModel:
     def __init__(self, *, loop: asyncio.AbstractEventLoop) -> None:
         self._loop = loop
 
-        self.bn_mode = BoxBindable(AppMode.MAIN_MENU)
+        self.bn_mode = VariableBindable(AppMode.MAIN_MENU)
 
         self.main_menu = MainMenuModel(
             do_launch_ift=(

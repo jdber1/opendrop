@@ -32,8 +32,8 @@ from gi.repository import Gtk
 from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
 from opendrop.app.common.wizard import WizardPageControls
 from opendrop.mvp import ComponentSymbol, Presenter, View
-from opendrop.utility.bindable import Bindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.typing import Bindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from .configurator import configurator_cs
 from .model import ImageAcquisitionModel, AcquirerType
 

@@ -28,7 +28,7 @@
 from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
 from .model import FigureOptions

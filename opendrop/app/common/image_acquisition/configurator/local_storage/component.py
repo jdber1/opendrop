@@ -29,7 +29,7 @@ from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.image_acquirer import LocalStorageAcquirer
 from opendrop.mvp import ComponentSymbol, Presenter, View
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.file_chooser_button import FileChooserButton
 from opendrop.widgets.float_entry import FloatEntry
 

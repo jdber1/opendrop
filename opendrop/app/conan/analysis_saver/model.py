@@ -29,13 +29,14 @@ from pathlib import Path
 from typing import Optional
 
 from opendrop.app.common.analysis_saver.figure_options import FigureOptions
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 
 
 class ConanAnalysisSaverOptions:
     def __init__(self) -> None:
-        self.bn_save_dir_parent = BoxBindable(None)  # type: Bindable[Optional[Path]]
-        self.bn_save_dir_name = BoxBindable('')
+        self.bn_save_dir_parent = VariableBindable(None)  # type: Bindable[Optional[Path]]
+        self.bn_save_dir_name = VariableBindable('')
 
         self.angle_figure_opts = FigureOptions(
             should_save=True,

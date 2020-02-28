@@ -28,7 +28,7 @@
 import math
 from typing import Optional, Tuple
 
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Rect2, Vector2, Line2
 
 

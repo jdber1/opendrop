@@ -26,11 +26,13 @@
 # should have received a copy of the GNU General Public License along
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 import math
+from typing import Tuple
 
 from gi.repository import Gtk
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable, AccessorBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
+from opendrop.utility.bindable.typing import ReadBindable, WriteBindable
 
 parameters_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 
@@ -93,54 +95,47 @@ class ParametersView(View['ParametersPresenter', Gtk.Widget]):
 
         self._widget.foreach(Gtk.Widget.show_all)
 
-        self.bn_interfacial_tension = AccessorBindable(
-            setter=(
-                lambda v:
-                    interfacial_tension_val.set_text('{:.4g}'.format(v * 1e3))
-            )
-        )
+        self.bn_interfacial_tension = GObjectPropertyBindable(
+            interfacial_tension_val,
+            'label',
+            transform_to=lambda v: '{:.4g}'.format(v * 1e3),
+        )  # type: WriteBindable[float]
 
-        self.bn_volume = AccessorBindable(
-            setter=(
-                lambda v:
-                    volume_val.set_text('{:.4g}'.format(v * 1e9))
-            )
-        )
+        self.bn_volume = GObjectPropertyBindable(
+            volume_val,
+            'label',
+            transform_to=lambda v: '{:.4g}'.format(v * 1e9),
+        )  # type: WriteBindable[float]
 
-        self.bn_surface_area = AccessorBindable(
-            setter=(
-                lambda v:
-                    surface_area_val.set_text('{:.4g}'.format(v * 1e6))
-            )
-        )
+        self.bn_surface_area = GObjectPropertyBindable(
+            surface_area_val,
+            'label',
+            transform_to=lambda v: '{:.4g}'.format(v * 1e6),
+        )  # type: WriteBindable[float]
 
-        self.bn_worthington = AccessorBindable(
-            setter=(
-                lambda v:
-                    worthington_val.set_text('{:.4g}'.format(v))
-            )
-        )
+        self.bn_worthington = GObjectPropertyBindable(
+            worthington_val,
+            'label',
+            transform_to=lambda v: '{:.4g}'.format(v),
+        )  # type: WriteBindable[float]
 
-        self.bn_bond_number = AccessorBindable(
-            setter=(
-                lambda v:
-                    bond_number_val.set_text('{:.4g}'.format(v))
-            )
-        )
+        self.bn_bond_number = GObjectPropertyBindable(
+            bond_number_val,
+            'label',
+            transform_to=lambda v: '{:.4g}'.format(v),
+        )  # type: WriteBindable[float]
 
-        self.bn_apex_coords = AccessorBindable(
-            setter=(
-                lambda v:
-                    apex_coords_val.set_text('({0[0]:.4g}, {0[1]:.4g})'.format(v))
-            )
-        )
+        self.bn_apex_coords = GObjectPropertyBindable(
+            apex_coords_val,
+            'label',
+            transform_to=lambda v: '({0[0]:.4g}, {0[1]:.4g})'.format(v)
+        )  # type: WriteBindable[Tuple[float, float]]
 
-        self.bn_image_angle = AccessorBindable(
-            setter=(
-                lambda v:
-                    image_angle_val.set_text('{:.4g}°'.format(math.degrees(v)))
-            )
-        )
+        self.bn_image_angle = GObjectPropertyBindable(
+            image_angle_val,
+            'label',
+            transform_to=lambda v: '{:.4g}°'.format(math.degrees(v))
+        )  # type: WriteBindable[float]
 
         self.presenter.view_ready()
 
@@ -164,13 +159,13 @@ class ParametersView(View['ParametersPresenter', Gtk.Widget]):
 class ParametersPresenter(Presenter['ParametersView']):
     def _do_init(
             self,
-            in_interfacial_tension: Bindable[float],
-            in_volume: Bindable[float],
-            in_surface_area: Bindable[float],
-            in_worthington: Bindable[float],
-            in_bond_number: Bindable[float],
-            in_apex_coords: Bindable[float],
-            in_image_angle: Bindable[float],
+            in_interfacial_tension: ReadBindable[float],
+            in_volume: ReadBindable[float],
+            in_surface_area: ReadBindable[float],
+            in_worthington: ReadBindable[float],
+            in_bond_number: ReadBindable[float],
+            in_apex_coords: ReadBindable[Tuple[float, float]],
+            in_image_angle: ReadBindable[float],
     ) -> None:
         self._bn_interfacial_tension = in_interfacial_tension
         self._bn_volume = in_volume
@@ -184,13 +179,13 @@ class ParametersPresenter(Presenter['ParametersView']):
 
     def view_ready(self):
         self.__data_bindings.extend([
-            self._bn_interfacial_tension.bind(self.view.bn_interfacial_tension),
-            self._bn_volume.bind(self.view.bn_volume),
-            self._bn_surface_area.bind(self.view.bn_surface_area),
-            self._bn_worthington.bind(self.view.bn_worthington),
-            self._bn_bond_number.bind(self.view.bn_bond_number),
-            self._bn_apex_coords.bind(self.view.bn_apex_coords),
-            self._bn_image_angle.bind(self.view.bn_image_angle),
+            self._bn_interfacial_tension.bind_to(self.view.bn_interfacial_tension),
+            self._bn_volume.bind_to(self.view.bn_volume),
+            self._bn_surface_area.bind_to(self.view.bn_surface_area),
+            self._bn_worthington.bind_to(self.view.bn_worthington),
+            self._bn_bond_number.bind_to(self.view.bn_bond_number),
+            self._bn_apex_coords.bind_to(self.view.bn_apex_coords),
+            self._bn_image_angle.bind_to(self.view.bn_image_angle),
         ])
 
     def _do_destroy(self) -> None:

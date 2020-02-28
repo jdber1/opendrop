@@ -32,7 +32,7 @@ from gi.repository import Gtk
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.mvp.gtk import stack_cs
 from opendrop.mvp.typing import ComponentFactory
-from opendrop.utility.bindable import BoxBindable
+from opendrop.utility.bindable import VariableBindable
 from .sidebar import sidebar_cs
 
 wizard_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
@@ -121,7 +121,7 @@ class WizardController:
     def __init__(self, pages: Iterable) -> None:
         self._pages = tuple(pages)
 
-        self.bn_current_page = BoxBindable(self._pages[0])
+        self.bn_current_page = VariableBindable(self._pages[0])
 
     def next_page(self) -> None:
         current_page = self.bn_current_page.get()

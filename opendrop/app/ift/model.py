@@ -33,7 +33,8 @@ import numpy as np
 from opendrop.app.common.image_acquisition import ImageAcquisitionModel, AcquirerType
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .analysis import (
     IFTDropAnalysis,
     FeatureExtractor,
@@ -56,7 +57,7 @@ class IFTSession:
         self._feature_extractor_params = FeatureExtractorParams()
         self._physprops_calculator_params = PhysicalPropertiesCalculatorParams()
 
-        self._bn_analyses = BoxBindable(tuple())  # type: Bindable[Sequence[IFTDropAnalysis]]
+        self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[IFTDropAnalysis]]
         self._analyses_saved = False
 
         self.image_acquisition = ImageAcquisitionModel()

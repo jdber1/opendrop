@@ -11,20 +11,22 @@
 # pendant drop tensiometry. Journal of Colloid and Interface Science 454
 # (2015) 226–237. https://doi.org/10.1016/j.jcis.2015.05.012
 #
-#E. Huang, T. Denning, A. Skoufis, J. Qi, R. R. Dagastine, R. F. Tabor
-#and J. D. Berry, OpenDrop: Open-source software for pendant drop
-#tensiometry & contact angle measurements, submitted to the Journal of
+# E. Huang, T. Denning, A. Skoufis, J. Qi, R. R. Dagastine, R. F. Tabor
+# and J. D. Berry, OpenDrop: Open-source software for pendant drop
+# tensiometry & contact angle measurements, submitted to the Journal of
 # Open Source Software
 #
-#These citations help us not only to understand who is using and
-#developing OpenDrop, and for what purpose, but also to justify
-#continued development of this code and other open source resources.
+# These citations help us not only to understand who is using and
+# developing OpenDrop, and for what purpose, but also to justify
+# continued development of this code and other open source resources.
 #
 # OpenDrop is distributed WITHOUT ANY WARRANTY; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.  See the GNU General Public License for more details.  You
 # should have received a copy of the GNU General Public License along
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
+
+
 import gc
 import weakref
 from unittest.mock import Mock
@@ -95,24 +97,6 @@ class TestBinding:
         gc.collect()
         assert src_bindable_wr() is None
         assert dst_bindable_wr() is None
-
-
-class TestBinding_With_DstIsWriteOnly:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.src_bindable = MockBindable()
-        self.dst_bindable = MockBindable()
-        self.dst_bindable.get.side_effect = NotImplementedError
-
-        self.binding = Binding(src=self.src_bindable, dst=self.dst_bindable)
-
-    def test_dst_poke(self):
-        self.src_bindable.reset()
-        self.dst_bindable.reset()
-
-        self.dst_bindable.poke()
-
-        self.src_bindable.set.assert_not_called()
 
 
 class TestBinding_With_ToDstTransform:

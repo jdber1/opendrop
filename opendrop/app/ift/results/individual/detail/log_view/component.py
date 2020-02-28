@@ -28,7 +28,7 @@
 from gi.repository import Gtk
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 
 log_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 

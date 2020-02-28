@@ -33,7 +33,8 @@ from typing import Sequence, Tuple, Optional
 
 import numpy as np
 
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .base import ImageAcquirer, InputImage
 
 
@@ -41,10 +42,10 @@ class CameraAcquirer(ImageAcquirer):
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
 
-        self.bn_camera = BoxBindable(None)  # type: Bindable[Optional[Camera]]
+        self.bn_camera = VariableBindable(None)  # type: Bindable[Optional[Camera]]
 
-        self.bn_num_frames = BoxBindable(1)
-        self.bn_frame_interval = BoxBindable(None)  # type: Bindable[Optional[float]]
+        self.bn_num_frames = VariableBindable(1)
+        self.bn_frame_interval = VariableBindable(None)  # type: Bindable[Optional[float]]
 
     def acquire_images(self) -> Sequence[InputImage]:
         camera = self.bn_camera.get()

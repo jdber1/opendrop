@@ -31,7 +31,7 @@ from typing import Union, Sequence, MutableSequence
 import cv2
 import numpy as np
 
-from opendrop.utility.bindable import BoxBindable
+from opendrop.utility.bindable import VariableBindable
 from .image_sequence import ImageSequenceAcquirer
 
 
@@ -40,7 +40,7 @@ class LocalStorageAcquirer(ImageSequenceAcquirer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.bn_last_loaded_paths = BoxBindable(tuple())  # type: BoxBindable[Sequence[Path]]
+        self.bn_last_loaded_paths = VariableBindable(tuple())  # type: VariableBindable[Sequence[Path]]
 
     def load_image_paths(self, image_paths: Sequence[Union[Path, str]]) -> None:
         # Sort image paths in lexicographic order, and ignore paths to directories.

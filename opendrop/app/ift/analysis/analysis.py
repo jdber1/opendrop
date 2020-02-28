@@ -35,7 +35,8 @@ from typing import Callable, Optional
 import numpy as np
 
 from opendrop.app.common.image_acquirer import InputImage
-from opendrop.utility.bindable import AccessorBindable, BoxBindable, Bindable
+from opendrop.utility.bindable import AccessorBindable, VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
 from .features import FeatureExtractor
 from .physical_properties import PhysicalPropertiesCalculator
@@ -93,29 +94,29 @@ class IFTDropAnalysis:
         self.bn_image_timestamp = AccessorBindable(self._get_image_timestamp)
 
         # Attributes from YoungLaplaceFitter
-        self.bn_bond_number = BoxBindable(math.nan)
-        self.bn_apex_coords_px = BoxBindable(Vector2(math.nan, math.nan))
-        self.bn_apex_radius_px = BoxBindable(math.nan)
-        self.bn_rotation = BoxBindable(math.nan)
-        self.bn_drop_profile_fit = BoxBindable(None)
-        self.bn_residuals = BoxBindable(None)
+        self.bn_bond_number = VariableBindable(math.nan)
+        self.bn_apex_coords_px = VariableBindable(Vector2(math.nan, math.nan))
+        self.bn_apex_radius_px = VariableBindable(math.nan)
+        self.bn_rotation = VariableBindable(math.nan)
+        self.bn_drop_profile_fit = VariableBindable(None)
+        self.bn_residuals = VariableBindable(None)
 
         # Attributes from PhysicalPropertiesCalculator
-        self.bn_interfacial_tension = BoxBindable(math.nan)
-        self.bn_volume = BoxBindable(math.nan)
-        self.bn_surface_area = BoxBindable(math.nan)
-        self.bn_apex_radius = BoxBindable(math.nan)
-        self.bn_worthington = BoxBindable(math.nan)
+        self.bn_interfacial_tension = VariableBindable(math.nan)
+        self.bn_volume = VariableBindable(math.nan)
+        self.bn_surface_area = VariableBindable(math.nan)
+        self.bn_apex_radius = VariableBindable(math.nan)
+        self.bn_worthington = VariableBindable(math.nan)
 
         # Attributes from FeatureExtractor
-        self.bn_drop_region = BoxBindable(None)
-        self.bn_needle_region = BoxBindable(None)
-        self.bn_drop_profile_extract = BoxBindable(None)
-        self.bn_needle_profile_extract = BoxBindable(None)
-        self.bn_needle_width_px = BoxBindable(math.nan)
+        self.bn_drop_region = VariableBindable(None)
+        self.bn_needle_region = VariableBindable(None)
+        self.bn_drop_profile_extract = VariableBindable(None)
+        self.bn_needle_profile_extract = VariableBindable(None)
+        self.bn_needle_width_px = VariableBindable(math.nan)
 
         # Log
-        self.bn_log = BoxBindable('')
+        self.bn_log = VariableBindable('')
 
         self.bn_is_done = AccessorBindable(getter=self._get_is_done)
         self.bn_is_cancelled = AccessorBindable(getter=self._get_is_cancelled)
@@ -148,7 +149,7 @@ class IFTDropAnalysis:
         # Set given image to be readonly to prevent introducing some accidental bugs.
         self._image.flags.writeable = False
 
-        extracted_features = self._do_extract_features(BoxBindable(self._image))
+        extracted_features = self._do_extract_features(VariableBindable(self._image))
         young_laplace_fit = self._do_young_laplace_fit(extracted_features)
         physical_properties = self._do_calculate_physprops(extracted_features, young_laplace_fit)
 
@@ -169,59 +170,59 @@ class IFTDropAnalysis:
 
     def _bind_fit(self) -> None:
         # Bind extracted features attributes
-        self._extracted_features.bn_drop_profile_px.bind(
+        self._extracted_features.bn_drop_profile_px.bind_to(
             self.bn_drop_profile_extract
         )
-        self._extracted_features.bn_needle_profile_px.bind(
+        self._extracted_features.bn_needle_profile_px.bind_to(
             self.bn_needle_profile_extract
         )
-        self._extracted_features.bn_needle_width_px.bind(
+        self._extracted_features.bn_needle_width_px.bind_to(
             self.bn_needle_width_px
         )
-        self._extracted_features.params.bn_drop_region_px.bind(
+        self._extracted_features.params.bn_drop_region_px.bind_to(
             self.bn_drop_region
         )
-        self._extracted_features.params.bn_needle_region_px.bind(
+        self._extracted_features.params.bn_needle_region_px.bind_to(
             self.bn_needle_region
         )
 
         # Bind Young-Laplace fit attributes
-        self._young_laplace_fit.bn_bond_number.bind(
+        self._young_laplace_fit.bn_bond_number.bind_to(
             self.bn_bond_number
         )
-        self._young_laplace_fit.bn_apex_pos.bind(
+        self._young_laplace_fit.bn_apex_pos.bind_to(
             self.bn_apex_coords_px
         )
-        self._young_laplace_fit.bn_apex_radius.bind(
+        self._young_laplace_fit.bn_apex_radius.bind_to(
             self.bn_apex_radius_px
         )
-        self._young_laplace_fit.bn_rotation.bind(
+        self._young_laplace_fit.bn_rotation.bind_to(
             self.bn_rotation
         )
-        self._young_laplace_fit.bn_profile_fit.bind(
+        self._young_laplace_fit.bn_profile_fit.bind_to(
             self.bn_drop_profile_fit
         )
-        self._young_laplace_fit.bn_residuals.bind(
+        self._young_laplace_fit.bn_residuals.bind_to(
             self.bn_residuals
         )
-        self._young_laplace_fit.bn_log.bind(
+        self._young_laplace_fit.bn_log.bind_to(
             self.bn_log
         )
 
         # Bind physical properties attributes
-        self._physical_properties.bn_interfacial_tension.bind(
+        self._physical_properties.bn_interfacial_tension.bind_to(
             self.bn_interfacial_tension
         )
-        self._physical_properties.bn_volume.bind(
+        self._physical_properties.bn_volume.bind_to(
             self.bn_volume
         )
-        self._physical_properties.bn_surface_area.bind(
+        self._physical_properties.bn_surface_area.bind_to(
             self.bn_surface_area
         )
-        self._physical_properties.bn_apex_radius.bind(
+        self._physical_properties.bn_apex_radius.bind_to(
             self.bn_apex_radius
         )
-        self._physical_properties.bn_worthington.bind(
+        self._physical_properties.bn_worthington.bind_to(
             self.bn_worthington
         )
 

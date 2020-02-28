@@ -31,7 +31,8 @@ from typing import Callable, Any
 from gi.repository import Gtk
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .model import ResultsFooterStatus
 from .progress import progress_cs
 
@@ -153,9 +154,9 @@ class ResultsFooterPresenter(Presenter['ResultsFooterView']):
         self._do_save = do_save
 
         self.bn_progress = in_progress
-        self.bn_progress_label = BoxBindable('')
+        self.bn_progress_label = VariableBindable('')
         self.bn_time_elapsed = in_time_elapsed
-        self.bn_time_remaining = BoxBindable(math.nan)
+        self.bn_time_remaining = VariableBindable(math.nan)
 
         self.__event_connections = []
 

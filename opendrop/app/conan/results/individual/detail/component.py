@@ -32,7 +32,8 @@ from gi.repository import Gtk
 
 from opendrop.app.conan.analysis import ConanAnalysis
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
 from .info import info_cs
 
@@ -89,14 +90,14 @@ class DetailPresenter(Presenter['DetailView']):
         self._bn_analysis = in_analysis
         self._analysis_unbind_tasks = []
 
-        self.bn_image = BoxBindable(None)
+        self.bn_image = VariableBindable(None)
 
-        self.bn_left_angle = BoxBindable(math.nan)
-        self.bn_left_point = BoxBindable(Vector2(math.nan, math.nan))
-        self.bn_right_angle = BoxBindable(math.nan)
-        self.bn_right_point = BoxBindable(Vector2(math.nan, math.nan))
+        self.bn_left_angle = VariableBindable(math.nan)
+        self.bn_left_point = VariableBindable(Vector2(math.nan, math.nan))
+        self.bn_right_angle = VariableBindable(math.nan)
+        self.bn_right_point = VariableBindable(Vector2(math.nan, math.nan))
 
-        self.bn_surface_line = BoxBindable(None)
+        self.bn_surface_line = VariableBindable(None)
 
         self.__event_connections = []
 
@@ -125,12 +126,12 @@ class DetailPresenter(Presenter['DetailView']):
         assert len(self._analysis_unbind_tasks) == 0
 
         data_bindings = [
-            analysis.bn_image.bind(self.bn_image),
-            analysis.bn_left_angle.bind(self.bn_left_angle),
-            analysis.bn_left_point.bind(self.bn_left_point),
-            analysis.bn_right_angle.bind(self.bn_right_angle),
-            analysis.bn_right_point.bind(self.bn_right_point),
-            analysis.bn_surface_line.bind(self.bn_surface_line),
+            analysis.bn_image.bind_to(self.bn_image),
+            analysis.bn_left_angle.bind_to(self.bn_left_angle),
+            analysis.bn_left_point.bind_to(self.bn_left_point),
+            analysis.bn_right_angle.bind_to(self.bn_right_angle),
+            analysis.bn_right_point.bind_to(self.bn_right_point),
+            analysis.bn_surface_line.bind_to(self.bn_surface_line),
         ]
 
         self._analysis_unbind_tasks.extend(

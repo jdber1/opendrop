@@ -32,7 +32,7 @@ from gi.repository import Gtk
 
 from opendrop.mvp import View, Presenter, ComponentSymbol
 from opendrop.mvp.typing import ComponentFactory
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.widgets.render import Render
 from .tool_panel.component import tool_panel_cs, ToolItemRef
 

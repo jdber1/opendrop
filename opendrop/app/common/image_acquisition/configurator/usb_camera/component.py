@@ -31,8 +31,8 @@ from gi.repository import Gtk, Gdk, GObject
 
 from opendrop.app.common.image_acquirer import USBCameraAcquirer
 from opendrop.mvp import ComponentSymbol, Presenter, View
-from opendrop.utility.bindable import Bindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.typing import Bindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.float_entry import FloatEntry
 from opendrop.widgets.integer_entry import IntegerEntry
 

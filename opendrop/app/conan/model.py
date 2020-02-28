@@ -31,7 +31,8 @@ from typing import Sequence, Callable, Any
 import numpy as np
 
 from opendrop.app.common.image_acquisition import ImageAcquisitionModel, AcquirerType
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from .analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculator, ContactAngleCalculatorParams, \
     ConanAnalysis
 from .analysis_saver import ConanAnalysisSaverOptions
@@ -49,7 +50,7 @@ class ConanSession:
         self._feature_extractor_params = FeatureExtractorParams()
         self._conancalc_params = ContactAngleCalculatorParams()
 
-        self._bn_analyses = BoxBindable(tuple())  # type: Bindable[Sequence[ConanAnalysis]]
+        self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[ConanAnalysis]]
         self._analyses_saved = False
 
         self.image_acquisition = ImageAcquisitionModel()

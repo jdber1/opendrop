@@ -36,7 +36,8 @@ from opendrop.app.common.image_processing.plugins.preview.model import (
     ImageSequenceAcquirerController,
     CameraAcquirerController)
 from opendrop.app.conan.analysis import FeatureExtractorParams, FeatureExtractor
-from opendrop.utility.bindable import BoxBindable, Bindable, AccessorBindable
+from opendrop.utility.bindable import VariableBindable, AccessorBindable
+from opendrop.utility.bindable.typing import Bindable
 
 
 class ConanPreviewPluginModel:
@@ -58,9 +59,9 @@ class ConanPreviewPluginModel:
             getter=lambda: self._acquirer_controller
         )
 
-        self.bn_source_image = BoxBindable(None)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_foreground_detection = BoxBindable(None)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_drop_profile = BoxBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_source_image = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_foreground_detection = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_drop_profile = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
 
         self._image_acquisition.bn_acquirer.on_changed.connect(
             self._update_acquirer_controller,
@@ -144,7 +145,7 @@ class ConanImageSequenceAcquirerController(ImageSequenceAcquirerController):
         )
 
     def _on_image_registered(self, image_id: Hashable, image: np.ndarray) -> None:
-        extracted_feature = self._do_extract_features(BoxBindable(image))
+        extracted_feature = self._do_extract_features(VariableBindable(image))
         self._extracted_features[image_id] = extracted_feature
 
     def _on_image_deregistered(self, image_id: Hashable) -> None:
@@ -169,10 +170,10 @@ class ConanImageSequenceAcquirerController(ImageSequenceAcquirerController):
         extracted_feature = self._showing_extracted_feature
 
         data_bindings = [
-            extracted_feature.bn_foreground_detection.bind(
+            extracted_feature.bn_foreground_detection.bind_to(
                 self._foreground_detection_out
             ),
-            extracted_feature.bn_drop_profile_px.bind(
+            extracted_feature.bn_drop_profile_px.bind_to(
                 self._drop_profile_out
             ),
         ]
@@ -227,10 +228,10 @@ class ConanCameraAcquirerController(CameraAcquirerController):
         extracted_feature = self._extracted_feature
 
         data_bindings = [
-            extracted_feature.bn_foreground_detection.bind(
+            extracted_feature.bn_foreground_detection.bind_to(
                 self._foreground_detection_out
             ),
-            extracted_feature.bn_drop_profile_px.bind(
+            extracted_feature.bn_drop_profile_px.bind_to(
                 self._drop_profile_out
             ),
         ]

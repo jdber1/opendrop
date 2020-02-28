@@ -30,7 +30,7 @@ from gi.repository import Gtk
 from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
 from opendrop.app.common.wizard import WizardPageControls
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.float_entry import FloatEntry
 from .model import PhysicalParametersModel
 

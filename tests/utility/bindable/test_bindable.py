@@ -11,155 +11,148 @@
 # pendant drop tensiometry. Journal of Colloid and Interface Science 454
 # (2015) 226–237. https://doi.org/10.1016/j.jcis.2015.05.012
 #
-#E. Huang, T. Denning, A. Skoufis, J. Qi, R. R. Dagastine, R. F. Tabor
-#and J. D. Berry, OpenDrop: Open-source software for pendant drop
-#tensiometry & contact angle measurements, submitted to the Journal of
+# E. Huang, T. Denning, A. Skoufis, J. Qi, R. R. Dagastine, R. F. Tabor
+# and J. D. Berry, OpenDrop: Open-source software for pendant drop
+# tensiometry & contact angle measurements, submitted to the Journal of
 # Open Source Software
 #
-#These citations help us not only to understand who is using and
-#developing OpenDrop, and for what purpose, but also to justify
-#continued development of this code and other open source resources.
+# These citations help us not only to understand who is using and
+# developing OpenDrop, and for what purpose, but also to justify
+# continued development of this code and other open source resources.
 #
 # OpenDrop is distributed WITHOUT ANY WARRANTY; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.  See the GNU General Public License for more details.  You
 # should have received a copy of the GNU General Public License along
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
-from unittest.mock import Mock
+
+
+from unittest.mock import Mock, patch
 
 import pytest
 
-from opendrop.utility.bindable.bindable import Bindable, BoxBindable, AccessorBindable
+from opendrop.utility.bindable import abc, VariableBindable, AccessorBindable
 
 
 class TestBindable:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.my_bindable = StubBindable()
-        self.my_bindable._get_value = Mock()
-        self.my_bindable._set_value = Mock()
+    def setup(self) -> None:
+        self.bindable = StubBindable()
 
-    def test_get(self):
-        self.my_bindable._get_value.assert_not_called()
+    def test_get(self) -> None:
+        with patch.object(self.bindable, '_get_value') as get_value:
+            get_value.assert_not_called()
 
-        value = self.my_bindable.get()
+            value = self.bindable.get()
 
-        assert value == self.my_bindable._get_value.return_value
-        self.my_bindable._get_value.assert_called_once_with()
+            assert value == get_value.return_value
+            get_value.assert_called_once_with()
 
-    def test_set(self):
-        self.my_bindable._get_value.assert_not_called()
+    def test_set(self) -> None:
+        get_value = Mock(return_value=0)
+        set_value = Mock()
 
-        new_value = object()
-        self.my_bindable.set(new_value)
+        with patch.multiple(self.bindable, _get_value=get_value, _set_value=set_value):
+            get_value.assert_not_called()
 
-        self.my_bindable._set_value.assert_called_once_with(new_value)
+            self.bindable.set(123)
+
+            set_value.assert_called_once_with(123)
 
 
-class TestBindable_WriteOnly:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.my_bindable = StubBindable()
-        self.my_bindable._get_value = Mock(side_effect=NotImplementedError)
-        self.my_bindable._set_value = Mock()
+class TestBindable_WithUnimplementedGetter:
+    def setup(self) -> None:
+        self.bindable = StubBindable()
 
-    def test_set(self):
-        self.my_bindable._get_value.assert_not_called()
+        patcher = patch.object(self.bindable, '_get_value', Mock(side_effect=NotImplementedError))
+        patcher.start()
 
-        new_value = object()
-        self.my_bindable.set(new_value)
+    def test_set(self) -> None:
+        with patch.object(self.bindable, '_set_value') as set_value:
+            self.bindable.set(123)
 
-        self.my_bindable._set_value.assert_called_once_with(new_value)
+            set_value.assert_called_once_with(123)
 
 
 class TestBindable_OnChanged:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.my_bindable = StubBindable()
+    def setup(self):
+        self.bindable = StubBindable()
 
-        self.on_changed_callback = Mock()
-        self.my_bindable.on_changed.connect(self.on_changed_callback)
+        self.changed_callback = Mock()
+        self.bindable.on_changed.connect(self.changed_callback)
 
     def test_on_changed_fires_after_set(self):
-        self.on_changed_callback.assert_not_called()
+        self.changed_callback.assert_not_called()
 
-        self.my_bindable.set(object())
+        self.bindable.set(123)
 
-        self.on_changed_callback.assert_called_once_with()
+        self.changed_callback.assert_called_once_with()
 
     def test_on_changed_does_not_fire_if_set_to_same_value(self):
         value = object()
 
-        self.my_bindable._get_value = lambda: value
-        self.my_bindable.set(value)
-
-        self.on_changed_callback.assert_not_called()
+        with patch.object(self.bindable, '_get_value', Mock(return_value=value)):
+            self.bindable.set(value)
+            self.changed_callback.assert_not_called()
 
 
 class TestBindable_OnChanged_With_CustomEqualityChecker:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
+    def setup(self):
         self.check_equals = Mock()
 
-        self.my_bindable = StubBindable(check_equals=self.check_equals)
+        self.bindable = StubBindable(check_equals=self.check_equals)
 
-        self.on_changed_callback = Mock()
-        self.my_bindable.on_changed.connect(self.on_changed_callback)
+        self.changed_callback = Mock()
+        self.bindable.on_changed.connect(self.changed_callback)
 
-    def test_check_equals_is_passed_current_value_and_new_value(self):
-        current_value = object()
-        self.my_bindable._get_value = lambda: current_value
-
-        new_value = object()
-        self.my_bindable.set(new_value)
-
-        self.check_equals.assert_called_with(current_value, new_value)
+    def test_check_equals_is_passed_old_value_and_new_value(self):
+        with patch.object(self.bindable, '_get_value', Mock(return_value=123)):
+            self.bindable.set(456)
+            self.check_equals.assert_called_with(123, 456)
 
     def test_on_changed_does_not_fire_if_check_equals_returns_true(self):
         self.check_equals.return_value = True
 
-        self.my_bindable.set(object())
+        self.bindable.set(123)
 
-        self.on_changed_callback.assert_not_called()
+        self.changed_callback.assert_not_called()
 
     def test_on_changed_fires_if_check_equals_returns_false(self):
         self.check_equals.return_value = False
 
-        self.on_changed_callback.assert_not_called()
+        self.changed_callback.assert_not_called()
 
-        self.my_bindable.set(object())
+        self.bindable.set(123)
 
-        self.on_changed_callback.assert_called_once_with()
+        self.changed_callback.assert_called_once_with()
 
 
-class TestBoxBindable:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
+class TestVariableBindable:
+    def setup(self):
         self.initial = object()
-        self.my_bindable = BoxBindable(self.initial)
+        self.bindable = VariableBindable(self.initial)
 
     def test_initial_value(self):
-        assert self.my_bindable.get() == self.initial
+        assert self.bindable.get() == self.initial
 
     def test_set_and_get(self):
         new_value = object()
-        self.my_bindable.set(new_value)
 
-        assert self.my_bindable.get() == new_value
+        self.bindable.set(new_value)
+
+        assert self.bindable.get() == new_value
 
 
 class TestAccessorBindable_WithGetterAndSetter:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
+    def setup(self):
         self.getter = Mock()
         self.setter = Mock()
 
-        self.my_bindable = AccessorBindable(getter=self.getter, setter=self.setter)
+        self.bindable = AccessorBindable(getter=self.getter, setter=self.setter)
 
     def test_get(self):
         self.getter.assert_not_called()
 
-        value = self.my_bindable.get()
+        value = self.bindable.get()
         assert value == self.getter.return_value
 
         self.getter.assert_called_once_with()
@@ -168,44 +161,40 @@ class TestAccessorBindable_WithGetterAndSetter:
         self.setter.assert_not_called()
 
         new_value = object()
-        self.my_bindable.set(new_value)
+        self.bindable.set(new_value)
 
         self.setter.assert_called_once_with(new_value)
 
     def test_poke(self):
         on_changed_callback = Mock()
-        self.my_bindable.on_changed.connect(on_changed_callback)
+        self.bindable.on_changed.connect(on_changed_callback)
 
-        self.my_bindable.poke()
+        self.bindable.poke()
 
         on_changed_callback.assert_called_once_with()
 
 
-class TestAccessorBindable_ReadOnly:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.getter = Mock()
-
-        self.my_bindable = AccessorBindable(getter=Mock())
+class TestAccessorBindable_WithNoSetter:
+    def setup(self):
+        self.bindable = AccessorBindable(getter=Mock())
 
     def test_set(self):
         with pytest.raises(NotImplementedError):
-            self.my_bindable.set(123)
+            self.bindable.set(123)
 
 
-class TestAccessorBindable_WriteOnly:
-    @pytest.fixture(autouse=True)
-    def fixture(self):
-        self.my_bindable = AccessorBindable(setter=Mock())
+class TestAccessorBindable_WithNoGetter:
+    def setup(self):
+        self.bindable = AccessorBindable(setter=Mock())
 
     def test_get(self):
         with pytest.raises(NotImplementedError):
-            self.my_bindable.get()
+            self.bindable.get()
 
 
-class StubBindable(Bindable):
+class StubBindable(abc.Bindable):
     def _get_value(self):
-        """stub"""
+        pass
 
     def _set_value(self, new_value):
-        """stub"""
+        pass

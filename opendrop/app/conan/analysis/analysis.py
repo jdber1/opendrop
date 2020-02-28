@@ -35,7 +35,8 @@ from typing import Callable, Optional
 import numpy as np
 
 from opendrop.app.common.image_acquirer import InputImage
-from opendrop.utility.bindable import AccessorBindable, BoxBindable, Bindable
+from opendrop.utility.bindable import AccessorBindable, VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
 from .contact_angle import ContactAngleCalculator
 from .features import FeatureExtractor
@@ -90,18 +91,18 @@ class ConanAnalysis:
         self.bn_image_timestamp = AccessorBindable(self._get_image_timestamp)
 
         # Attributes from ContactAngleCalculator
-        self.bn_left_angle = BoxBindable(math.nan)
-        self.bn_left_tangent = BoxBindable(np.poly1d((math.nan, math.nan)))
-        self.bn_left_point = BoxBindable(Vector2(math.nan, math.nan))
-        self.bn_right_angle = BoxBindable(math.nan)
-        self.bn_right_tangent = BoxBindable(np.poly1d((math.nan, math.nan)))
-        self.bn_right_point = BoxBindable(Vector2(math.nan, math.nan))
+        self.bn_left_angle = VariableBindable(math.nan)
+        self.bn_left_tangent = VariableBindable(np.poly1d((math.nan, math.nan)))
+        self.bn_left_point = VariableBindable(Vector2(math.nan, math.nan))
+        self.bn_right_angle = VariableBindable(math.nan)
+        self.bn_right_tangent = VariableBindable(np.poly1d((math.nan, math.nan)))
+        self.bn_right_point = VariableBindable(Vector2(math.nan, math.nan))
 
-        self.bn_surface_line = BoxBindable(None)
+        self.bn_surface_line = VariableBindable(None)
 
         # Attributes from FeatureExtractor
-        self.bn_drop_region = BoxBindable(None)
-        self.bn_drop_profile_extract = BoxBindable(None)
+        self.bn_drop_region = VariableBindable(None)
+        self.bn_drop_profile_extract = VariableBindable(None)
 
         # Log
         self.bn_is_done = AccessorBindable(getter=self._get_is_done)
@@ -135,7 +136,7 @@ class ConanAnalysis:
         # Set given image to be readonly to prevent introducing some accidental bugs.
         self._image.flags.writeable = False
 
-        extracted_features = self._do_extract_features(BoxBindable(self._image))
+        extracted_features = self._do_extract_features(VariableBindable(self._image))
         calculated_conan = self._do_calculate_conan(extracted_features)
 
         self._extracted_features = extracted_features
@@ -150,33 +151,33 @@ class ConanAnalysis:
 
     def _bind_fit(self) -> None:
         # Bind extracted features attributes
-        self._extracted_features.bn_drop_profile_px.bind(
+        self._extracted_features.bn_drop_profile_px.bind_to(
             self.bn_drop_profile_extract
         )
-        self._extracted_features.params.bn_drop_region_px.bind(
+        self._extracted_features.params.bn_drop_region_px.bind_to(
             self.bn_drop_region
         )
 
         # Bind contact angle attributes
-        self._calculated_conan.bn_left_angle.bind(
+        self._calculated_conan.bn_left_angle.bind_to(
             self.bn_left_angle
         )
-        self._calculated_conan.bn_left_tangent.bind(
+        self._calculated_conan.bn_left_tangent.bind_to(
             self.bn_left_tangent
         )
-        self._calculated_conan.bn_left_point.bind(
+        self._calculated_conan.bn_left_point.bind_to(
             self.bn_left_point
         )
-        self._calculated_conan.bn_right_angle.bind(
+        self._calculated_conan.bn_right_angle.bind_to(
             self.bn_right_angle
         )
-        self._calculated_conan.bn_right_tangent.bind(
+        self._calculated_conan.bn_right_tangent.bind_to(
             self.bn_right_tangent
         )
-        self._calculated_conan.bn_right_point.bind(
+        self._calculated_conan.bn_right_point.bind_to(
             self.bn_right_point
         )
-        self._calculated_conan.params.bn_surface_line_px.bind(
+        self._calculated_conan.params.bn_surface_line_px.bind_to(
             self.bn_surface_line
         )
 

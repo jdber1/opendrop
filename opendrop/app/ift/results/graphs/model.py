@@ -29,7 +29,8 @@ import math
 from typing import Sequence
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.utility.bindable import Bindable, BoxBindable
+from opendrop.utility.bindable import VariableBindable
+from opendrop.utility.bindable.typing import Bindable
 
 
 class GraphsModel:
@@ -39,9 +40,9 @@ class GraphsModel:
         self._tracked_analyses = []
         self._tracked_analysis_unbind_tasks = {}
 
-        self.bn_ift_data = BoxBindable((tuple(), tuple()))
-        self.bn_volume_data = BoxBindable((tuple(), tuple()))
-        self.bn_surface_area_data = BoxBindable((tuple(), tuple()))
+        self.bn_ift_data = VariableBindable((tuple(), tuple()))
+        self.bn_volume_data = VariableBindable((tuple(), tuple()))
+        self.bn_surface_area_data = VariableBindable((tuple(), tuple()))
 
         self._bn_analyses.on_changed.connect(
             self._hdl_analyses_changed

@@ -1,42 +1,22 @@
-# Copyright © 2020, Joseph Berry, Rico Tabor (opendrop.dev@gmail.com)
-# OpenDrop is released under the GNU GPL License. You are free to
-# modify and distribute the code, but always under the same license
-# (i.e. you cannot make commercial derivatives).
-#
-# If you use this software in your research, please cite the following
-# journal articles:
-#
-# J. D. Berry, M. J. Neeson, R. R. Dagastine, D. Y. C. Chan and
-# R. F. Tabor, Measurement of surface and interfacial tension using
-# pendant drop tensiometry. Journal of Colloid and Interface Science 454
-# (2015) 226–237. https://doi.org/10.1016/j.jcis.2015.05.012
-#
-#E. Huang, T. Denning, A. Skoufis, J. Qi, R. R. Dagastine, R. F. Tabor
-#and J. D. Berry, OpenDrop: Open-source software for pendant drop
-#tensiometry & contact angle measurements, submitted to the Journal of
-# Open Source Software
-#
-#These citations help us not only to understand who is using and
-#developing OpenDrop, and for what purpose, but also to justify
-#continued development of this code and other open source resources.
-#
-# OpenDrop is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-# PURPOSE.  See the GNU General Public License for more details.  You
-# should have received a copy of the GNU General Public License along
-# with this software.  If not, see <https://www.gnu.org/licenses/>.
 import functools
-from typing import Callable, Generic, TypeVar, overload
+from typing import Callable, Generic, TypeVar, overload, Union
 
-from opendrop.utility.bindable.bindable import Bindable
+from . import typing
 
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 
 
-class Binding(Generic[_T, _U]):
-    def __init__(self, src: Bindable[_T], dst: Bindable[_U], to_dst: Callable[[_T], _U] = lambda x: x,
-                 to_src: Callable[[_U], _T] = lambda x: x, *, one_way: bool = False) -> None:
+class Binding(typing.Binding, Generic[_T, _U]):
+    def __init__(
+            self,
+            src: Union[typing.ReadBindable[_T], typing.Bindable[_T]],
+            dst: Union[typing.WriteBindable[_U], typing.Bindable[_U]],
+            to_dst: Callable[[_T], _U] = lambda x: x,
+            to_src: Callable[[_U], _T] = lambda x: x,
+            *,
+            one_way: bool = False
+    ) -> None:
         self._src = src
         self._dst = dst
 
@@ -45,39 +25,34 @@ class Binding(Generic[_T, _U]):
 
         self._on_changed_conns = [
             bn.on_changed.connect(functools.partial(self._hdl_bindable_changed, bn), weak_ref=False)
-            for bn in ((src, dst) if not one_way else (src,))]
+            for bn in ((src, dst) if not one_way else (src,))
+        ]
 
         # Update the value of `dst` to the current value of `src`.
         self._hdl_bindable_changed(src)
 
     @overload
-    def _hdl_bindable_changed(self, from_: Bindable[_T]) -> None:
-        ...
+    def _hdl_bindable_changed(self, from_: typing.ReadBindable[_T]) -> None: ...
+
     @overload
-    def _hdl_bindable_changed(self, from_: Bindable[_U]) -> None:
-        ...
+    def _hdl_bindable_changed(self, from_: typing.ReadBindable[_U]) -> None: ...
+
     def _hdl_bindable_changed(self, from_) -> None:
-        try:
-            value = from_.get()
-        except NotImplementedError:
-            return
+        target = self._get_target(from_)
 
-        target = self._get_other(from_)
-        value = self._transform_value(value, target=target)
+        new_value = from_.get()
+        new_value = self._transform_value(new_value, target=target)
 
-        try:
-            target.set(value)
-        except NotImplementedError:
-            return
+        target.set(new_value)
 
     @overload
-    def _get_other(self, this: Bindable[_T]) -> Bindable[_U]:
-        ...
+    def _get_target(self, this: typing.ReadBindable[_T]) -> typing.WriteBindable[_U]: ...
+
     @overload
-    def _get_other(self, this: Bindable[_U]) -> Bindable[_T]:
-        ...
-    def _get_other(self, this):
-        """Return the `src` bindable if `this` is `dst`, else return the `dst` bindable."""
+    def _get_target(self, this: typing.ReadBindable[_U]) -> typing.WriteBindable[_T]: ...
+
+    def _get_target(self, this):
+        """Return the `src` Bindable if `this` is `dst`, else return the `dst` Bindable."""
         assert this in (self._src, self._dst)
 
         if this is self._src:
@@ -86,11 +61,11 @@ class Binding(Generic[_T, _U]):
             return self._src
 
     @overload
-    def _transform_value(self, value: _T, target: Bindable[_U]) -> _U:
-        ...
+    def _transform_value(self, value: _T, target: typing.WriteBindable[_U]) -> _U: ...
+
     @overload
-    def _transform_value(self, value: _U, target: Bindable[_T]) -> _T:
-        ...
+    def _transform_value(self, value: _U, target: typing.WriteBindable[_T]) -> _T: ...
+
     def _transform_value(self, value, target):
         assert target in (self._src, self._dst)
 
@@ -100,9 +75,6 @@ class Binding(Generic[_T, _U]):
             return self._to_src(value)
 
     def unbind(self) -> None:
-        """Unbind the bound bindables, new transactions in one will no longer be applied to the other. This Binding will
-        will also no longer hold a reference to the bounded bindables.
-        """
         for conn in self._on_changed_conns:
             conn.disconnect()
 

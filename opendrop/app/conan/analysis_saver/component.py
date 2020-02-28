@@ -33,7 +33,7 @@ from gi.repository import Gtk, Gdk
 from opendrop.app.common.analysis_saver.figure_options import figure_options_cs
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.utility.bindable import AccessorBindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.error_dialog import ErrorDialog
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 from .model import ConanAnalysisSaverOptions

@@ -32,8 +32,8 @@ import numpy as np
 from gi.repository import Gtk, GObject
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable
-from opendrop.utility.bindablegext import GObjectPropertyBindable
+from opendrop.utility.bindable.typing import Bindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.utility.geometry import Rect2, Vector2, Line2
 from opendrop.utility.gmisc import pixbuf_from_array
 from opendrop.widgets.render import Render

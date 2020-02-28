@@ -30,7 +30,7 @@ from typing import Any, Callable, MutableSequence, Mapping
 from gi.repository import Gtk, Gdk
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable import Bindable
+from opendrop.utility.bindable.typing import Bindable
 from .model import ToolItemRef
 
 tool_panel_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
