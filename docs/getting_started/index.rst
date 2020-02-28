@@ -3,6 +3,11 @@ Getting Started
 ###############
 
 ******************************
+Windows
+******************************
+Download the Windows executable here:
+https://github.com/jdber1/opendrop/releases/tag/v3.1.6dev0
+******************************
 Installing as a Python package
 ******************************
 
