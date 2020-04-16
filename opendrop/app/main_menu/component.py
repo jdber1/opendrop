@@ -41,7 +41,7 @@ class MainMenuView(View['MainMenuPresenter', Gtk.Widget]):
     OPENDROP_LOGO = GdkPixbuf.Pixbuf.new_from_stream(
         Gio.MemoryInputStream.new_from_bytes(
             GLib.Bytes(
-                pkg_resources.resource_stream('opendrop.res', 'images/logo_tall.png').read()
+                pkg_resources.resource_stream('opendrop.res', 'images/logo_wide.png').read()
             )
         )
     )
@@ -67,69 +67,40 @@ class MainMenuView(View['MainMenuPresenter', Gtk.Widget]):
             title='OpenDrop',
             window_position=Gtk.WindowPosition.CENTER,
             resizable=False,
-            default_width=500,
-            default_height=330,
+            default_width=400,
+            default_height=240,
         )
 
-        body = Gtk.Grid()
+        body = Gtk.Grid(row_spacing=15, column_spacing=40)
         self._window.add(body)
 
+        body.get_style_context().add_class('body')
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(bytes("""
+            .body {
+                background: white;
+            }
+            """, encoding='utf-8'))
+        body.get_style_context().add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
         logo_image_pixbuf = self.OPENDROP_LOGO.scale_simple(
-            dest_width=140,
-            dest_height=140 / self.OPENDROP_LOGO.props.width * self.OPENDROP_LOGO.props.height,
+            dest_width=240,
+            dest_height=240 / self.OPENDROP_LOGO.props.width * self.OPENDROP_LOGO.props.height,
             interp_type=GdkPixbuf.InterpType.BILINEAR
         )
         logo = Gtk.Image(pixbuf=logo_image_pixbuf, margin=20, hexpand=True)
-        body.attach(logo, 2, 0, 1, 1)
+        body.attach(logo, 0, 0, 2, 1)
 
-        body.attach(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL, visible=True), 1, 0, 1, 1)
+        ift_btn = Gtk.Button(relief=Gtk.ReliefStyle.NONE, width_request=120, hexpand=True, vexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.START)
+        body.attach(ift_btn, 0, 1, 1, 1)
 
-        menu_items = Gtk.Box(
-            vexpand=True,
-            margin=0,
-            spacing=0,
-            halign=Gtk.Align.START,
-            orientation=Gtk.Orientation.VERTICAL,
-        )
-        body.attach(menu_items, 0, 0, 1, 1)
-
-        menu_items.get_style_context().add_class('menu-items')
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(bytes("""
-            .menu-items {
-                background: whitesmoke;
-            }
-            """, encoding='utf-8'))
-
-        menu_items.get_style_context().add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-        new_analysis_label = Gtk.Label(halign=Gtk.Align.START, margin_left=9, margin_top=6, margin_bottom=0)
-        new_analysis_label.set_markup('<b>NEW ANALYSIS</b>')
-
-        new_analysis_label.get_style_context().add_class('new-analysis-label')
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(bytes("""
-            .new-analysis-label {
-                font-size: 11pt;
-                color: dimgray;
-            }
-            """, encoding='utf-8'))
-
-        new_analysis_label.get_style_context().add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-        menu_items.pack_start(new_analysis_label, expand=False, fill=False, padding=4)
-        menu_items.show_all()
-
-        ift_btn = Gtk.Button(width_request=160, relief=Gtk.ReliefStyle.NONE)
-        menu_items.pack_start(ift_btn, expand=False, fill=False, padding=0)
-
-        ift_btn_inner = Gtk.Grid(hexpand=False, valign=Gtk.Align.CENTER, column_spacing=8, margin_top=4,
+        ift_btn_inner = Gtk.Grid(hexpand=True, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER, row_spacing=12, margin_top=4,
                                  margin_bottom=4)
         ift_btn.add(ift_btn_inner)
 
         ift_btn_image_pixbuf = self.IFT_BUTTON_IMAGE.scale_simple(
-            dest_width=24,
-            dest_height=24 / self.IFT_BUTTON_IMAGE.props.width * self.IFT_BUTTON_IMAGE.props.height,
+            dest_width=48,
+            dest_height=48 / self.IFT_BUTTON_IMAGE.props.width * self.IFT_BUTTON_IMAGE.props.height,
             interp_type=GdkPixbuf.InterpType.BILINEAR
         )
 
@@ -138,33 +109,33 @@ class MainMenuView(View['MainMenuPresenter', Gtk.Widget]):
 
         ift_btn_lbl = Gtk.Label(
             label='Interfacial Tension',
-            halign=Gtk.Align.START,
+            halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER,
         )
-        ift_btn_inner.attach(ift_btn_lbl, 1, 0, 1, 1)
+        ift_btn_inner.attach(ift_btn_lbl, 0, 1, 1, 1)
 
-        conan_btn = Gtk.Button(width_request=160, relief=Gtk.ReliefStyle.NONE)
+        conan_btn = Gtk.Button(relief=Gtk.ReliefStyle.NONE, width_request=120, halign=Gtk.Align.START, valign=Gtk.Align.START)
 
-        conan_btn_inner = Gtk.Grid(hexpand=False, valign=Gtk.Align.CENTER, column_spacing=8, margin_top=4,
+        conan_btn_inner = Gtk.Grid(hexpand=True, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER, row_spacing=12, margin_top=4,
                                    margin_bottom=4)
         conan_btn.add(conan_btn_inner)
 
         conan_btn_image_pixbuf = self.CONAN_BUTTON_IMAGE.scale_simple(
-            dest_width=24,
-            dest_height=24 / self.CONAN_BUTTON_IMAGE.props.width * self.CONAN_BUTTON_IMAGE.props.height,
+            dest_width=48,
+            dest_height=48 / self.CONAN_BUTTON_IMAGE.props.width * self.CONAN_BUTTON_IMAGE.props.height,
             interp_type=GdkPixbuf.InterpType.BILINEAR
         )
-        menu_items.pack_start(conan_btn, expand=False, fill=False, padding=0)
+        body.attach(conan_btn, 1, 1, 1, 1)
 
         conan_btn_image = Gtk.Image(pixbuf=conan_btn_image_pixbuf)
         conan_btn_inner.attach(conan_btn_image, 0, 0, 1, 1)
 
         conan_btn_lbl = Gtk.Label(
             label='Contact Angle',
-            halign=Gtk.Align.START,
+            halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER,
         )
-        conan_btn_inner.attach(conan_btn_lbl, 1, 0, 1, 1)
+        conan_btn_inner.attach(conan_btn_lbl, 0, 1, 1, 1)
 
         ift_btn.connect('clicked', lambda *_: self.presenter.launch_ift())
         conan_btn.connect('clicked', lambda *_: self.presenter.launch_conan())
