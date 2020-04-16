@@ -62,8 +62,16 @@ class LocalStorageView(View['LocalStoragePresenter', Gtk.Widget]):
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _STYLE_PROV, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     _FILE_INPUT_FILTER = Gtk.FileFilter()
+
+    # OpenCV supported image types
+    _FILE_INPUT_FILTER.add_mime_type('image/bmp')
     _FILE_INPUT_FILTER.add_mime_type('image/png')
-    _FILE_INPUT_FILTER.add_mime_type('image/jpg')
+    _FILE_INPUT_FILTER.add_mime_type('image/jpeg')
+    _FILE_INPUT_FILTER.add_mime_type('image/jp2')
+    _FILE_INPUT_FILTER.add_mime_type('image/tiff')
+    _FILE_INPUT_FILTER.add_mime_type('image/webp')
+    _FILE_INPUT_FILTER.add_mime_type('image/x‑portable‑anymap')
+    _FILE_INPUT_FILTER.add_mime_type('image/vnd.radiance')
 
     def _do_init(self) -> Gtk.Widget:
         self._widget = Gtk.Grid(row_spacing=10, column_spacing=10)
