@@ -149,12 +149,12 @@ class FeatureExtractor:
         if drop_region is None:
             return None
 
-        drop_region = drop_region.as_type(int)
+        drop_region = drop_region.map(int)
 
         drop_image = binary_image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
 
         drop_profile_px = extract_drop_profile(drop_image)
-        drop_profile_px += drop_region.pos
+        drop_profile_px += drop_region.position
 
         return drop_profile_px
 
@@ -166,12 +166,12 @@ class FeatureExtractor:
         if needle_region is None:
             return None
 
-        needle_region = needle_region.as_type(int)
+        needle_region = needle_region.map(int)
 
         needle_image = binary_image[needle_region.y0:needle_region.y1, needle_region.x0:needle_region.x1]
 
         needle_profile_px = extract_needle_profile(needle_image)
-        needle_profile_px = tuple(x + needle_region.pos for x in needle_profile_px)
+        needle_profile_px = tuple(x + needle_region.position for x in needle_profile_px)
 
         return needle_profile_px
 
@@ -190,7 +190,7 @@ class FeatureExtractor:
             # Can't determine if is sessile, just return False.
             return False
 
-        if needle_region.p0.y > drop_region.p0.y:
+        if needle_region.pt0.y > drop_region.pt0.y:
             # Needle region is below drop region, probably sessile drop.
             return True
 

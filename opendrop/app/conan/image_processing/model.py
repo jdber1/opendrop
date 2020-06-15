@@ -82,12 +82,12 @@ class ConanImageProcessingModel:
             do_extract_features=do_extract_features,
         )
 
-    def _get_region_clip(self) -> Optional[Rect2]:
+    def _get_region_clip(self) -> Optional[Rect2[int]]:
         image_size_hint = self._image_acquisition.get_image_size_hint()
         if image_size_hint is None:
             return None
 
         return Rect2(
-            pos=(0, 0),
+            position=(0, 0),
             size=image_size_hint,
         )

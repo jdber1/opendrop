@@ -28,255 +28,474 @@
 
 
 import math
-from numbers import Number
-from typing import Generic, TypeVar, Tuple, Callable, Iterator, Any, overload, Iterable, Union
+import operator
+from typing import Any, Callable, Iterable, Tuple, TypeVar, overload
 
-NumericType = TypeVar('NT', bound=Number)
-SomeNumericType = TypeVar('SomeNumericType', bound=Number)
+from typing_extensions import Literal, Protocol
 
 
-class Vector2(Generic[NumericType]):
-    def __init__(self, x: NumericType, y: NumericType) -> None:
-        self._x = x
-        self._y = y
+T_co = TypeVar('T_co', covariant=True)
+U_co = TypeVar('U_co', covariant=True)
+
+T_contra = TypeVar('T_contra', contravariant=True)
+
+
+class SupportsAdd(Protocol[T_contra, U_co]):
+    def __add__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsRAdd(Protocol[T_contra, U_co]):
+    def __radd__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsMul(Protocol[T_contra, U_co]):
+    def __mul__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsRMul(Protocol[T_contra, U_co]):
+    def __rmul__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsSub(Protocol[T_contra, U_co]):
+    def __sub__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsRSub(Protocol[T_contra, U_co]):
+    def __rsub__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsTrueDiv(Protocol[T_contra, U_co]):
+    def __truediv__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsRTrueDiv(Protocol[T_contra, U_co]):
+    def __rtruediv__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsFloorDiv(Protocol[T_contra, U_co]):
+    def __floordiv__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsRFloorDiv(Protocol[T_contra, U_co]):
+    def __rfloordiv__(self, other: T_contra) -> U_co: ...
+
+
+class SupportsNeg(Protocol[T_co]):
+    def __neg__(self) -> T_co: ...
+
+
+class SupportsPos(Protocol[T_co]):
+    def __pos__(self) -> T_co: ...
+
+
+class Comparable(Protocol[T_contra]):
+    def __lt__(self, other: T_contra) -> bool: ...
+
+    def __gt__(self, other: T_contra) -> bool: ...
+
+    def __le__(self, other: T_contra) -> bool: ...
+
+    def __ge__(self, other: T_contra) -> bool: ...
+
+
+class Number(
+        SupportsAdd,
+        SupportsSub,
+        SupportsMul,
+        SupportsTrueDiv,
+        SupportsNeg,
+        SupportsPos,
+        Comparable,
+        Protocol,
+):
+    ...
+
+
+NumberT_co = TypeVar('NumberT_co', bound=Number, covariant=True)
+NumberU = TypeVar('NumberU', bound=Number)
+NumberV = TypeVar('NumberV', bound=Number)
+
+
+class _PlainVector2(Tuple[T_co, T_co]):
+    def __getitem__(self, index: Literal[0, 1]) -> T_co:
+        return super().__getitem__(index)
 
     @property
-    def x(self) -> NumericType:
-        return self._x
+    def x(self) -> T_co:
+        return self[0]
 
     @property
-    def y(self) -> NumericType:
-        return self._y
+    def y(self) -> T_co:
+        return self[1]
 
-    def as_type(self, cast: Callable[[NumericType], SomeNumericType]) -> 'Vector2[SomeNumericType]':
-        return Vector2(cast(self.x), cast(self.y))
-
-    def __neg__(self) -> 'Vector2[NumericType]':
-        return Vector2(-self.x, -self.y)
-
-    def __add__(self, other: Iterable[SomeNumericType]) -> 'Vector2':
-        try:
-            other = self._ensure_vector2(other)
-        except TypeError:
-            return NotImplemented
-
-        return Vector2(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other: Iterable[SomeNumericType]) -> 'Vector2':
-        try:
-            other = self._ensure_vector2(other)
-        except TypeError:
-            return NotImplemented
-
-        return self + (-other)
-
-    @classmethod
-    def _ensure_vector2(cls, obj: Iterable[SomeNumericType]) -> 'Vector2[SomeNumericType]':
-        if isinstance(obj, cls):
-            return obj
-
-        if not isinstance(obj, Iterable) or len(tuple(obj)) != 2:
-            raise TypeError
-
-        return Vector2(*obj)
-
-    @overload
-    def __mul__(self, other: SomeNumericType) -> 'Vector2': ...
-
-    @overload
-    def __mul__(self, other: Iterable) -> 'Vector2': ...
-
-    def __mul__(self, other):
-        if is_iterable(other) and len(other) == 2:
-            return self._element_wise_mul(other)
-        elif isinstance(other, Number):
-            return Vector2(self.x * other, self.y * other)
-        else:
-            return NotImplemented
-
-    __rmul__ = __mul__
-
-    def _element_wise_mul(self, other: 'Vector2') -> 'Vector2':
-        return Vector2(
-            x=self.x * other.x,
-            y=self.y * other.y,
-        )
-
-    def __truediv__(self, other: SomeNumericType) -> 'Vector2':
-        if not isinstance(other, Number):
-            return NotImplemented
-        return Vector2(self.x / other, self.y / other)
-
-    def __floordiv__(self, other: SomeNumericType) -> 'Vector2':
-        if not isinstance(other, Number):
-            return NotImplemented
-        return Vector2(self.x // other, self.y // other)
-
-    def __len__(self) -> int:
+    def __len__(self) -> Literal[2]:
         return 2
 
-    def __iter__(self) -> Iterator[NumericType]:
-        return iter((self.x, self.y))
 
-    def __getitem__(self, i: int):
-        if i == 0:
-            return self.x
-        elif i == 1:
-            return self.y
+class Vector2(_PlainVector2[NumberT_co]):
+    @overload
+    def __new__(cls, x: NumberT_co, y: NumberT_co) -> 'Vector2[NumberT_co]': ...
+    @overload
+    def __new__(cls, iterable: Iterable[NumberT_co]) -> 'Vector2[NumberT_co]': ...
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1:
+            return cls._from_iterable(*args)
+        elif len(args) == 2:
+            return cls._from_xy(*args)
+        elif 'x' in kwargs and 'y' in kwargs:
+            return cls._from_xy(**kwargs)
+        elif 'iterable' in kwargs:
+            return cls._from_iterable(**kwargs)
         else:
-            raise IndexError
+            raise TypeError(
+                    'No {} constructor found for arguments {} and keyword arguments {}'
+                    .format(cls.__name__, args, kwargs)
+            )
+
+    @classmethod
+    def _from_xy(cls, x: NumberT_co, y: NumberT_co) -> 'Vector2[NumberT_co]':
+        return super().__new__(cls, (x, y))
+
+    @classmethod
+    def _from_iterable(cls, iterable: Iterable[NumberT_co]) -> 'Vector2[NumberT_co]':
+        x, y = iterable
+        return cls._from_xy(x, y)
+
+    def replace(self: 'Vector2[NumberU]', **kwargs: NumberU) -> 'Vector2[NumberU]':
+        unexpected_names = set(kwargs.keys()) - {'x', 'y'}
+        if unexpected_names:
+            raise ValueError(
+                    'Got unexpected field names: {!r}'
+                    .format(list(unexpected_names))
+            )
+
+        new_x = self.x
+        new_y = self.y
+
+        if 'x' in kwargs:
+            new_x = kwargs['x']
+        elif 'y' in kwargs:
+            new_y = kwargs['y']
+
+        return Vector2(new_x, new_y)
+
+    def map(self, func: Callable[[NumberT_co], NumberU]) -> 'Vector2[NumberU]':
+        return Vector2(map(func, self))
+
+    def __neg__(self: _PlainVector2[SupportsNeg[NumberU]]) -> 'Vector2[NumberU]':
+        try:
+            return Vector2(map(operator.neg, self))
+        except TypeError:
+            return NotImplemented
+
+    def __pos__(self: _PlainVector2[SupportsPos[NumberU]]) -> 'Vector2[NumberU]':
+        try:
+            return Vector2(map(operator.pos, self))
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __add__(self: _PlainVector2[SupportsAdd[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    @overload
+    def __add__(self, other: Iterable[SupportsRAdd[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __add__(self, other):
+        try:
+            return Vector2(map(operator.add, self, other))
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __radd__(self: _PlainVector2[SupportsRAdd[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    @overload
+    def __radd__(self, other: Iterable[SupportsAdd[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __radd__(self, other):
+        try:
+            return Vector2(map(operator.add, other, self))
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __sub__(self: _PlainVector2[SupportsSub[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    @overload
+    def __sub__(self, other: Iterable[SupportsRSub[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __sub__(self, other):
+        try:
+            return Vector2(map(operator.sub, self, other))
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __rsub__(self: _PlainVector2[SupportsRSub[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    @overload
+    def __rsub__(self, other: Iterable[SupportsSub[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __rsub__(self, other):
+        try:
+            return Vector2(map(operator.sub, other, self))
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __mul__(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+
+    @overload
+    def __mul__(self, other: SupportsRMul[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+
+    @overload
+    def __mul__(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+
+    @overload
+    def __mul__(self, other: Iterable[SupportsRMul[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __mul__(self, other):
+        try:
+            if isiterable(other):
+                return self._elementwise_mul(other)
+            else:
+                return Vector2(x*other for x in self)
+        except TypeError:
+            return NotImplemented
+
+    def _elementwise_mul(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]':
+        return Vector2(map(operator.mul, self, other))
+
+    @overload
+    def __rmul__(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+
+    @overload
+    def __rmul__(self, other: SupportsMul[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+
+    @overload
+    def __rmul__(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+
+    @overload
+    def __rmul__(self, other: Iterable[SupportsMul[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+
+    def __rmul__(self, other):
+        try:
+            if isiterable(other):
+                return self._elementwise_rmul(other)
+            else:
+                return Vector2(other*x for x in self)
+        except TypeError:
+            return NotImplemented
+
+    def _elementwise_rmul(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]':
+        return Vector2(map(operator.mul, other, self))
+
+    @overload
+    def __truediv__(self: _PlainVector2[SupportsTrueDiv[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    @overload
+    def __truediv__(self, other: SupportsRTrueDiv[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+
+    def __truediv__(self, other):
+        try:
+            return Vector2(x/other for x in self)
+        except TypeError:
+            return NotImplemented
+
+    @overload
+    def __floordiv__(self: _PlainVector2[SupportsFloorDiv[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    @overload
+    def __floordiv__(self, other: SupportsRFloorDiv[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+
+    def __floordiv__(self, other):
+        try:
+            return Vector2(x//other for x in self)
+        except TypeError:
+            return NotImplemented
 
     def __repr__(self) -> str:
-        return '{class_name}(x={self.x}, y={self.y})' \
-               .format(class_name=type(self).__name__, self=self)
-
-    def __eq__(self, other: Tuple[NumericType, NumericType]) -> bool:
-        if not (isinstance(other, Vector2) or isinstance(other, tuple)):
-            return False
-
-        return self[0] == other[0] and self[1] == other[1]
+        return '{class_name}({x}, {y})'.format(
+                class_name=type(self).__name__,
+                x=self[0],
+                y=self[1],
+        )
 
 
-Vector2Like = Union[Vector2[NumericType], Tuple[NumericType, NumericType]]
+class _PlainRect2(Tuple[T_co, T_co, T_co, T_co]):
+    def __getitem__(self, index: Literal[0, 1, 2, 3]) -> T_co:
+        return super().__getitem__(index)
+    
+    @property
+    def x0(self) -> T_co:
+        return self[0]
+    
+    @property
+    def y0(self) -> T_co:
+        return self[1]
+    
+    @property
+    def x1(self) -> T_co:
+        return self[2]
+    
+    @property
+    def y1(self) -> T_co:
+        return self[3]
 
+    def __len__(self) -> Literal[4]:
+        return 4
+ 
 
-class Rect2(Generic[NumericType]):
+class Rect2(_PlainRect2[NumberT_co]):
     @overload
-    def __init__(self, *, x0: NumericType, y0: NumericType, x1: NumericType, y1: NumericType): ...
-
+    def __new__(cls, iterable: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
     @overload
-    def __init__(self, *, x: NumericType, y: NumericType, w: NumericType, h: NumericType): ...
-
+    def __new__(cls, x0: NumberT_co, y0: NumberT_co, x1: NumberT_co, y1: NumberT_co) -> 'Rect2[NumberT_co]': ...
     @overload
-    def __init__(self, *, p0: Vector2Like[NumericType], p1: Vector2Like[NumericType]): ...
-
+    def __new__(cls, pt0: Iterable[NumberT_co], pt1: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
     @overload
-    def __init__(self, *, pos: Vector2Like[NumericType], size: Vector2Like[NumericType]): ...
-
-    def __init__(self, **kwargs: NumericType):
-        if 'x' in kwargs:
-            x0, y0 = kwargs.pop('x'), kwargs.pop('y')
-            x1, y1 = x0 + kwargs.pop('w'), y0 + kwargs.pop('h')
-            if kwargs:
-                raise ValueError("Expected only ('x', 'y', 'w', 'h'), got {} extra".format(kwargs.keys()))
+    def __new__(cls, *, x: NumberT_co, y: NumberT_co, w: NumberT_co, h: NumberT_co) -> 'Rect2[NumberT_co]': ...
+    @overload
+    def __new__(cls, *, position: Iterable[NumberT_co], size: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
+     
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1:
+            return cls._from_iterable(*args)
+        elif len(args) == 4:
+            return cls._from_x0y0x1y1(*args)
+        elif len(args) == 2:
+            return cls._from_pt0pt1(*args)
         elif 'x0' in kwargs:
-            x0, y0 = kwargs.pop('x0'), kwargs.pop('y0')
-            x1, y1 = kwargs.pop('x1'), kwargs.pop('y1')
-            if kwargs:
-                raise ValueError("Expected only ('x0', 'y0', 'x1', 'y1'), got {} extra".format(tuple(kwargs.keys())))
-        elif 'p0' in kwargs:
-            x0, y0 = kwargs.pop('p0')
-            x1, y1 = kwargs.pop('p1')
-        elif 'pos' in kwargs:
-            (x0, x1), (y0, y1) = ((p, p+s) for p, s in zip(kwargs.pop('pos'), kwargs.pop('size')))
+            return cls._from_x0y0x1y1(**kwargs)
+        elif 'x' in kwargs:
+            return cls._from_xywh(**kwargs)
+        elif 'pt0' in kwargs:
+            return cls._from_pt0pt1(**kwargs)
+        elif 'position' in kwargs:
+            return cls._from_position_and_size(**kwargs)
         else:
-            raise ValueError('Unrecognised arguments {}'.format(kwargs.keys()))
+            raise TypeError(
+                    'No {} constructor found for arguments {} and keyword arguments {}'
+                    .format(cls.__name__, args, kwargs)
+            )
 
-        self._x0 = x0
-        self._y0 = y0
-        self._x1 = x1
-        self._y1 = y1
-
+    @classmethod
+    def _from_x0y0x1y1(cls, x0: NumberT_co, y0: NumberT_co, x1: NumberT_co, y1: NumberT_co) -> 'Rect2[NumberT_co]':
         if x0 > x1:
-            self._x0, self._x1 = x1, x0
-
+            x0, x1 = x1, x0
+ 
         if y0 > y1:
-            self._y0, self._y1 = y1, y0
+            y0, y1 = y1, y0
 
-    @property
-    def x0(self) -> NumericType:
-        return self._x0
+        return super().__new__(cls, (x0, y0, x1, y1))
 
-    @property
-    def y0(self) -> NumericType:
-        return self._y0
+    @classmethod
+    def _from_pt0pt1(cls, pt0: Iterable[NumberT_co], pt1: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+        x0, y0 = pt0
+        x1, y1 = pt1
+        return cls._from_x0y0x1y1(x0, y0, x1, y1)
 
-    @property
-    def x1(self) -> NumericType:
-        return self._x1
+    @classmethod
+    def _from_xywh(cls, x: NumberT_co, y: NumberT_co, w: NumberT_co, h: NumberT_co) -> 'Rect2[NumberT_co]':
+        x0, y0 = x, y
+        x1, y1 = x+w, y+h
+        return cls._from_x0y0x1y1(x0, y0, x1, y1)
 
-    @property
-    def y1(self) -> NumericType:
-        return self._y1
+    @classmethod
+    def _from_position_and_size(cls, position: Iterable[NumberT_co], size: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+        x, y = position
+        w, h = size
+        return cls._from_xywh(x, y, w, h)
 
+    @classmethod
+    def _from_iterable(cls, iterable: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+        x0, y0, x1, y1 = iterable
+        return cls._from_x0y0x1y1(x0, y0, x1, y1)
+ 
     @property
-    def w(self) -> NumericType:
-        return self.x1 - self.x0
-
-    @property
-    def h(self) -> NumericType:
-        return self.y1 - self.y0
-
-    @property
-    def p0(self) -> Vector2[NumericType]:
+    def pt0(self) -> Vector2[NumberT_co]:
         return Vector2(self.x0, self.y0)
 
     @property
-    def p1(self) -> Vector2[NumericType]:
+    def pt1(self) -> Vector2[NumberT_co]:
         return Vector2(self.x1, self.y1)
 
     @property
-    def pos(self) -> Vector2[NumericType]:
-        return self.p0
+    def x(self) -> NumberT_co:
+        return self.x0
 
     @property
-    def size(self) -> Vector2[NumericType]:
+    def y(self) -> NumberT_co:
+        return self.y0
+
+    @property
+    def w(self) -> NumberT_co:
+        return self.x1 - self.x0
+
+    @property
+    def h(self) -> NumberT_co:
+        return self.y1 - self.y0
+
+    @property
+    def position(self) -> Vector2[NumberT_co]:
+        return Vector2(self.x, self.y)
+
+    @property
+    def size(self) -> Vector2[NumberT_co]:
         return Vector2(self.w, self.h)
 
-    def as_type(self, cast: Callable[[NumericType], SomeNumericType]) -> 'Rect2[SomeNumericType]':
-        return Rect2(x0=cast(self.x0), y0=cast(self.y0), x1=cast(self.x1), y1=cast(self.y1))
+    def replace(self: 'Rect2[NumberU]', **kwargs: NumberU) -> 'Rect2[NumberU]':
+        raise NotImplementedError
 
-    def __iter__(self) -> Iterator[NumericType]:
-        return iter((self.x0, self.y0, self.x1, self.y1))
+    def map(self, func: Callable[[NumberT_co], NumberU]) -> 'Rect2[NumberU]':
+        return Rect2(map(func, self))
 
     def __repr__(self) -> str:
-        return '{class_name}(x0={self.x0}, y0={self.y0}, x1={self.x1}, y1={self.y1})' \
-               .format(class_name=type(self).__name__, self=self)
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Rect2):
-            return False
-
-        return (self.p0 == other.p0) and (self.p1 == other.p1)
-
-    def contains_point(self, point: Vector2Like, include_boundary: bool = True):
-        point = Vector2(*point)
-        if include_boundary and (self.x0 <= point.x <= self.x1 and self.y0 <= point.y <= self.y1):
-            return True
-        elif self.x0 < point.x < self.x1 and self.y0 < point.y < self.y1:
-            return True
-
-        return False
-
-    def is_intersecting(self, other: 'Rect2') -> bool:
-        """Return True if the region defined by this Rect2 is intersecting with the region defined by `other`.
-        Return False if they do not intersect or if they are only 'touching' (i.e. share edges but do not intersect)."""
-        if self.x1 > other.x0 and self.x0 < other.x1 and self.y1 > other.y0 and self.y0 < other.y1:
-            return True
+        return '{class_name}(x0={x0}, y0={y0}, x1={x1}, y1={y1})' \
+               .format(class_name=type(self).__name__, x0=self.x0, y0=self.y0, x1=self.x1, y1=self.y1)
+ 
+    @overload
+    def contains(self: _PlainRect2[Comparable[NumberU]], point: Iterable[NumberU], include_boundary: bool = True) -> bool: ...
+    @overload
+    def contains(self, point: Iterable[Comparable[NumberT_co]], include_boundary: bool = True) -> bool: ...
+    
+    def contains(self, point, include_boundary=True):
+        point_vec = Vector2(point)
+        if include_boundary:
+            return self.x0 <= point_vec.x <= self.x1 and self.y0 <= point_vec.y <= self.y1
         else:
-            return False
+            return self.x0 < point_vec.x < self.x1 and self.y0 < point_vec.y < self.y1
+ 
+    @overload
+    def intersects(self: _PlainRect2[Comparable[NumberU]], other: Iterable[NumberU]) -> bool: ...
+    @overload
+    def intersects(self, other: Iterable[Comparable[NumberT_co]]) -> bool: ...
 
+    def intersects(self, other):
+        """Return True if this Rect2 is intersecting with the `other` Rect2. Return False if they do not
+        intersect or if they are only 'touching' (i.e. share edges)."""
+        other = Rect2(other)
+        return self.x1 > other.x0 and self.x0 < other.x1 and self.y1 > other.y0 and self.y0 < other.y1
+ 
+ 
+class Line2:
+    def __init__(self, pt0: Iterable[float], pt1: Iterable[float]) -> None:
+        pt0_vec = Vector2(pt0)
+        pt1_vec = Vector2(pt1)
 
-class Line2(Generic[NumericType]):
-    def __init__(self, p0: Vector2[NumericType], p1: Vector2[NumericType]):
-        if p1[0] < p0[0]:
-            p1, p0 = p0, p1
+        if pt1_vec.x < pt0_vec.x:
+            pt1_vec, pt0_vec = pt0_vec, pt1_vec
 
-        self._p0 = p0  # Left point
-        self._p1 = p1  # Right point
+        self._pt0 = pt0_vec  # Left point
+        self._pt1 = pt1_vec  # Right point
 
     @property
-    def p0(self) -> Vector2[NumericType]:
-        return self._p0
+    def pt0(self) -> Vector2[float]:
+        return self._pt0
 
     @property
-    def p1(self) -> Vector2[NumericType]:
-        return self._p1
+    def pt1(self) -> Vector2[float]:
+        return self._pt1
 
     @property
     def gradient(self) -> float:
-        dx = self._p1[0] - self._p0[0]
-        dy = self._p1[1] - self._p0[1]
+        dx = self._pt1[0] - self._pt0[0]
+        dy = self._pt1[1] - self._pt0[1]
 
         if dx == 0:
             return math.copysign(dy, math.inf)
@@ -284,33 +503,50 @@ class Line2(Generic[NumericType]):
         return dy/dx
 
     @overload
-    def eval_at(self, *, x: NumericType) -> Vector2[NumericType]:
-        ...
+    def eval(self, *, x: float) -> Vector2[float]: ...
     @overload
-    def eval_at(self, *, y: NumericType) -> Vector2[NumericType]:
-        ...
-    def eval_at(self, **kwargs) -> Vector2[NumericType]:
+    def eval(self, *, y: float) -> Vector2[float]: ...
+
+    def eval(self, **kwargs):
         if 'x' in kwargs:
-            return self._eval_at_x(kwargs['x'])
+            x = kwargs['x']
+            return Vector2(x, self.solve(x=x))
         elif 'y' in kwargs:
-            return self._eval_at_y(kwargs['y'])
+            y = kwargs['y']
+            return Vector2(self.solve(y=y), y)
+        else:
+            raise TypeError
+        
+    @overload
+    def solve(self, *, x: float) -> float: ...
+    @overload
+    def solve(self, *, y: float) -> float: ...
 
-    def _eval_at_x(self, x: NumericType) -> Vector2[NumericType]:
-        p0_to_x = x - self.p0[0]
-        return Vector2(x, self.p0[1] + p0_to_x * self.gradient)
+    def solve(self, **kwargs):
+        if 'x' in kwargs:
+            return self._solve_for_y(**kwargs)
+        elif 'y' in kwargs:
+            return self._solve_for_x(**kwargs)
+        else:
+            raise TypeError
 
-    def _eval_at_y(self, y: NumericType) -> Vector2[NumericType]:
-        p0_to_y = y - self.p0[1]
+    def _solve_for_y(self, x: float) -> float:
+        dx = x - self._pt0.x
+        dy = dx * self.gradient
+        return self._pt0.y + dy
+
+    def _solve_for_x(self, y: float) -> float:
+        dy = y - self._pt0.y
 
         if self.gradient == 0:
-            x = math.copysign(p0_to_y, math.inf)
-        else:
-            x = self.p0[0] + p0_to_y / self.gradient
+            x = math.copysign(dy, math.inf)
+            return x
 
-        return Vector2(x, y)
+        dx = dy / self.gradient
+        return self._pt0.x + dx
 
 
-def is_iterable(x: Any) -> bool:
+def isiterable(x: Any) -> bool:
     try:
         iter(x)
     except TypeError:

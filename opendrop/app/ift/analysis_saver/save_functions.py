@@ -187,8 +187,8 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
         # Draw needle region
         image = cv2.rectangle(
             img=image,
-            pt1=tuple(needle_region.p0),
-            pt2=tuple(needle_region.p1),
+            pt1=tuple(needle_region.pt0),
+            pt2=tuple(needle_region.pt1),
             color=(13, 26, 255),
             thickness=1)
 
@@ -197,8 +197,8 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
         # Draw drop region
         image = cv2.rectangle(
             img=image,
-            pt1=tuple(drop_region.p0),
-            pt2=tuple(drop_region.p1),
+            pt1=tuple(drop_region.pt0),
+            pt2=tuple(drop_region.pt1),
             color=(255, 26, 13),
             thickness=1,
         )

@@ -27,19 +27,19 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import MutableSequence, Sequence
+from typing import MutableSequence, Sequence, Tuple
 
 import cairo
 from gi.repository import Gtk, GObject, Gdk
 
 from opendrop.utility.cairomisc import cairo_saved
-from opendrop.utility.geometry import Vector2, Rect2, Vector2Like
+from opendrop.utility.geometry import Vector2, Rect2
 from . import protocol
 
 
 class Render(Gtk.DrawingArea, protocol.Render):
     _canvas_size = Vector2(1, 1)
-    _viewport_extents = Rect2(pos=(0, 0), size=_canvas_size)  # type: Rect2[float]
+    _viewport_extents = Rect2(position=(0, 0), size=_canvas_size)  # type: Rect2[float]
     _viewport_stretch = protocol.Render.ViewportStretch.FIT
 
     STYLE = """
@@ -76,7 +76,7 @@ class Render(Gtk.DrawingArea, protocol.Render):
         viewport_widget_extents = self.props.viewport_widget_extents
 
         with cairo_saved(cr):
-            cr.rectangle(*viewport_widget_extents.pos, *viewport_widget_extents.size)
+            cr.rectangle(*viewport_widget_extents.position, *viewport_widget_extents.size)
             cr.clip()
             for ro in self._render_objects:
                 ro.draw(cr)
@@ -84,7 +84,7 @@ class Render(Gtk.DrawingArea, protocol.Render):
         if self.has_focus():
             # Draw focus indicator
             stroke_width = 1
-            rectangle_pos = viewport_widget_extents.pos + (stroke_width/2, stroke_width/2)
+            rectangle_pos = viewport_widget_extents.position + (stroke_width/2, stroke_width/2)
             rectangle_size = viewport_widget_extents.size - (stroke_width, stroke_width)
             cr.rectangle(*rectangle_pos, *rectangle_size)
             cr.set_source_rgb(70/255, 142/255, 220/255)
@@ -161,37 +161,37 @@ class Render(Gtk.DrawingArea, protocol.Render):
 
     # Coordinate transform functions
 
-    def _widget_coord_from_canvas(self, coord_canvas: Vector2Like[float]) -> Vector2[float]:
+    def _widget_coord_from_canvas(self, coord_canvas: Tuple[float, float]) -> Vector2[float]:
         coord_canvas = Vector2(*coord_canvas)
 
         viewport_extents = self.props.viewport_extents
         viewport_widget_extents = self.props.viewport_widget_extents
 
-        coord_viewport = coord_canvas - viewport_extents.pos
+        coord_viewport = coord_canvas - viewport_extents.position
         coord_viewport_pct = Vector2(coord_viewport.x / viewport_extents.size.x,
                                      coord_viewport.y / viewport_extents.size.y)
         coord_viewport_widget = Vector2(coord_viewport_pct.x * viewport_widget_extents.size.x,
                                         coord_viewport_pct.y * viewport_widget_extents.size.y)
-        coord_widget = viewport_widget_extents.pos + coord_viewport_widget
+        coord_widget = viewport_widget_extents.position + coord_viewport_widget
 
         return coord_widget
 
-    def _canvas_coord_from_widget(self, coord_widget: Vector2Like[float]) -> Vector2[float]:
+    def _canvas_coord_from_widget(self, coord_widget: Tuple[float, float]) -> Vector2[float]:
         coord_widget = Vector2(*coord_widget)
 
         viewport_extents = self.props.viewport_extents
         viewport_widget_extents = self.props.viewport_widget_extents
 
-        coord_viewport_widget = coord_widget - viewport_widget_extents.pos
+        coord_viewport_widget = coord_widget - viewport_widget_extents.position
         coord_viewport_pct = Vector2(coord_viewport_widget.x / viewport_widget_extents.size.x,
                                      coord_viewport_widget.y / viewport_widget_extents.size.y)
         coord_viewport = Vector2(coord_viewport_pct.x * viewport_extents.size.x,
                                  coord_viewport_pct.y * viewport_extents.size.y)
-        coord_canvas = viewport_extents.pos + coord_viewport
+        coord_canvas = viewport_extents.position + coord_viewport
 
         return coord_canvas
 
-    def _widget_dist_from_canvas(self, dist_canvas: Vector2Like[float]) -> Vector2[float]:
+    def _widget_dist_from_canvas(self, dist_canvas: Tuple[float, float]) -> Vector2[float]:
         dist_canvas = Vector2(*dist_canvas)
 
         viewport_size = self.props.viewport_extents.size
@@ -202,7 +202,7 @@ class Render(Gtk.DrawingArea, protocol.Render):
 
         return dist_widget
 
-    def _canvas_dist_from_widget(self, dist_widget: Vector2Like[float]) -> Vector2[float]:
+    def _canvas_dist_from_widget(self, dist_widget: Tuple[float, float]) -> Vector2[float]:
         dist_widget = Vector2(*dist_widget)
 
         viewport_size = self.props.viewport_extents.size
@@ -235,7 +235,7 @@ class Render(Gtk.DrawingArea, protocol.Render):
 
     @GObject.Property
     def viewport_widget_extents(self) -> Rect2[float]:
-        return Rect2(pos=self._viewport_widget_pos, size=self._viewport_widget_size)
+        return Rect2(position=self._viewport_widget_pos, size=self._viewport_widget_size)
 
     @property
     def _viewport_widget_size(self) -> Vector2[float]:

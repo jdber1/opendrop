@@ -41,7 +41,7 @@ class Line(abc.RenderObject):
     _stroke_color = (0.0, 0.0, 0.0)
     _stroke_width = 1
     _draw_control_points = False
-    _line = None  # type: Optional[Line2[int]]
+    _line = None  # type: Optional[Line2]
 
     def draw(self, cr: cairo.Context) -> None:
         line = self._line
@@ -50,28 +50,28 @@ class Line(abc.RenderObject):
 
         viewport_extents = self._parent.props.viewport_extents
 
-        p0 = line.p0
-        p1 = line.p1
+        p0 = line.pt0
+        p1 = line.pt1
 
         if p0 == p1:
             return
 
-        start_point = line.eval_at(x=viewport_extents.x0)
-        end_point = line.eval_at(x=viewport_extents.x1)
+        start_point = line.eval(x=viewport_extents.x0)
+        end_point = line.eval(x=viewport_extents.x1)
 
-        if not viewport_extents.contains_point(start_point):
+        if not viewport_extents.contains(start_point):
             if start_point.y < viewport_extents.y0:
                 y_to_eval = viewport_extents.y0
             else:
                 y_to_eval = viewport_extents.y1
-            start_point = line.eval_at(y=y_to_eval)
+            start_point = line.eval(y=y_to_eval)
 
-        if not viewport_extents.contains_point(end_point):
+        if not viewport_extents.contains(end_point):
             if end_point.y < viewport_extents.y0:
                 y_to_eval = viewport_extents.y0
             else:
                 y_to_eval = viewport_extents.y1
-            end_point = line.eval_at(y=y_to_eval)
+            end_point = line.eval(y=y_to_eval)
 
         p0, p1, start_point, end_point = map(self._parent._widget_coord_from_canvas, (p0, p1, start_point, end_point))
 

@@ -131,12 +131,12 @@ class FeatureExtractor:
         if drop_region is None:
             return None
 
-        drop_region = drop_region.as_type(int)
+        drop_region = drop_region.map(int)
 
         drop_image = binary_image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
 
         drop_profile_px = extract_drop_profile(drop_image)
-        drop_profile_px += drop_region.pos
+        drop_profile_px += drop_region.position
 
         return drop_profile_px
 

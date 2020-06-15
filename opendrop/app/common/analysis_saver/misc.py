@@ -75,35 +75,35 @@ def simple_grapher(label_x: str, label_y: str, data_x: Sequence[float], data_y: 
 
 
 def draw_line(image: np.ndarray, line: Line2, color: Tuple[float, float, float], thickness: int = 1) -> None:
-    image_extents = Rect2(pos=(0, 0), size=image.shape[1::-1])
+    image_extents = Rect2(position=(0, 0), size=image.shape[1::-1])
 
-    start_point = line.eval_at(x=image_extents.x0)
-    end_point = line.eval_at(x=image_extents.x1)
+    start_point = line.eval(x=image_extents.x0)
+    end_point = line.eval(x=image_extents.x1)
 
-    if not image_extents.contains_point(start_point):
+    if not image_extents.contains(start_point):
         if start_point.y < image_extents.y0:
             y_to_eval = image_extents.y0
         else:
             y_to_eval = image_extents.y1
-        start_point = line.eval_at(y=y_to_eval)
+        start_point = line.eval(y=y_to_eval)
 
-    if not image_extents.contains_point(end_point):
+    if not image_extents.contains(end_point):
         if end_point.y < image_extents.y0:
             y_to_eval = image_extents.y0
         else:
             y_to_eval = image_extents.y1
-        end_point = line.eval_at(y=y_to_eval)
+        end_point = line.eval(y=y_to_eval)
 
     cv2.line(image,
-             pt1=tuple(start_point.as_type(int)),
-             pt2=tuple(end_point.as_type(int)),
+             pt1=tuple(start_point.map(int)),
+             pt2=tuple(end_point.map(int)),
              color=color,
              thickness=thickness)
 
 
 def draw_angle_marker(image: np.ndarray, vertex_pos: Vector2[float], start_angle: float, delta_angle: float, radius: float,
                       color: Tuple[float, float, float]) -> None:
-    if not Rect2(pos=(0, 0), size=image.shape[1::-1]).contains_point(vertex_pos):
+    if not Rect2(position=(0, 0), size=image.shape[1::-1]).contains(vertex_pos):
         # Vertex is outside of the image, ignore.
         return
 
@@ -114,7 +114,7 @@ def draw_angle_marker(image: np.ndarray, vertex_pos: Vector2[float], start_angle
     end_pos = start_pos + delta_pos
 
     cv2.line(image,
-             pt1=tuple(start_pos.as_type(int)),
-             pt2=tuple(end_pos.as_type(int)),
+             pt1=tuple(start_pos.map(int)),
+             pt2=tuple(end_pos.map(int)),
              color=color,
              thickness=1)

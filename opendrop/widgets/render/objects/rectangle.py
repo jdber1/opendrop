@@ -45,7 +45,7 @@ class Rectangle(abc.RenderObject):
         if extents is None:
             return
 
-        cr.rectangle(*self._parent._widget_coord_from_canvas(extents.pos),
+        cr.rectangle(*self._parent._widget_coord_from_canvas(extents.position),
                      *self._parent._widget_dist_from_canvas(extents.size))
 
         cr.set_line_width(border_width)
@@ -55,11 +55,11 @@ class Rectangle(abc.RenderObject):
     _extents = None  # type: Optional[Rect2[float]]
 
     @GObject.Property
-    def extents(self) -> Optional[Rect2]:
+    def extents(self) -> Optional[Rect2[float]]:
         return self._extents
 
     @extents.setter
-    def extents(self, value: Optional[Rect2]) -> None:
+    def extents(self, value: Optional[Rect2[float]]) -> None:
         self._extents = value
         self.emit('request-draw')
 
@@ -98,7 +98,7 @@ class RectangleWithLabel(Rectangle):
         if extents is None:
             return
 
-        text_pos = self._parent._widget_coord_from_canvas(extents.pos + (0, extents.size.y)) + (0, 10)
+        text_pos = self._parent._widget_coord_from_canvas(extents.position + (0, extents.size.y)) + (0, 10)
 
         cr.set_source_rgb(*border_color)
         cr.set_font_size(10)

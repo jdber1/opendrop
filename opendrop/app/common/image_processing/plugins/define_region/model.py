@@ -51,9 +51,9 @@ class DefineRegionPluginModel:
         self._begin_define_pos = None
 
         region = Rect2(
-            p0=start_pos,
-            p1=end_pos,
-        ).as_type(int)
+            pt0=start_pos,
+            pt1=end_pos,
+        ).map(int)
 
         clip = self._bn_clip.get()
 
@@ -79,5 +79,5 @@ class DefineRegionPluginModel:
         return self._begin_define_pos is not None
 
     @property
-    def begin_define_pos(self) -> Vector2:
+    def begin_define_pos(self) -> Optional[Vector2]:
         return self._begin_define_pos

@@ -193,8 +193,8 @@ class DefineLinePluginPresenter(Presenter['DefineLinePluginView']):
             return
 
         self.view.bn_dragging.set(Line2(
-            p0=self._model.begin_define_pos,
-            p1=current_cursor_pos,
+            pt0=self._model.begin_define_pos,
+            pt1=current_cursor_pos,
         ))
 
     def _do_destroy(self) -> None:

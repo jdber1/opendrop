@@ -86,7 +86,7 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         self._background_ro.props.pixbuf = pixbuf_from_array(image)
 
         self._render.props.canvas_size = image.shape[1::-1]
-        self._render.viewport_extents = Rect2(pos=(0, 0), size=image.shape[1::-1])
+        self._render.viewport_extents = Rect2(position=(0, 0), size=image.shape[1::-1])
 
     def set_edge_detection(self, mask: Optional[np.ndarray]) -> None:
         self._edge_detection_ro.props.mask = mask

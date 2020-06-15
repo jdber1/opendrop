@@ -28,7 +28,7 @@
 
 
 import math
-from typing import Tuple
+from typing import Tuple, Optional
 
 import cairo
 from gi.repository import GObject
@@ -164,7 +164,7 @@ class Angle(abc.RenderObject):
         self.emit('request-draw')
 
     @GObject.Property
-    def vertex_pos(self) -> Vector2[float]:
+    def vertex_pos(self) -> Optional[Vector2[float]]:
         return self._vertex_pos
 
     @vertex_pos.setter

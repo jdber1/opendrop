@@ -75,7 +75,7 @@ class ContactAngleCalculator:
             return
 
         drop_profile = drop_profile.copy()
-        surface_poly1d = np.poly1d((surface.gradient, surface.eval_at(x=0).y))
+        surface_poly1d = np.poly1d((surface.gradient, surface.eval(x=0).y))
 
         # ContactAngle expects the coordinates of drop profile to be such that the surface has a lower y-coordinate than
         # the drop, so mirror the drop in y-direction. (Remember drop profile is in 'image coordinates', where

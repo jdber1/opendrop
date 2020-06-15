@@ -35,7 +35,7 @@ from opendrop.utility.geometry import Rect2, Vector2, Line2
 
 
 class DefineLinePluginModel:
-    def __init__(self, in_line: Bindable[Line2[int]], in_clip: Bindable[Optional[Rect2[int]]]) -> None:
+    def __init__(self, in_line: Bindable[Line2], in_clip: Bindable[Optional[Rect2[int]]]) -> None:
         self.bn_line = in_line
         self._bn_clip = in_clip
 
@@ -54,8 +54,8 @@ class DefineLinePluginModel:
             return
 
         line = Line2(
-            p0=start_pos,
-            p1=end_pos,
+            pt0=start_pos,
+            pt1=end_pos,
         )
 
         self.bn_line.set(line)
@@ -69,7 +69,7 @@ class DefineLinePluginModel:
         return self._begin_define_pos is not None
 
     @property
-    def begin_define_pos(self) -> Vector2:
+    def begin_define_pos(self) -> Optional[Vector2[float]]:
         return self._begin_define_pos
 
     def nudge_up(self) -> None:
@@ -85,8 +85,8 @@ class DefineLinePluginModel:
             return
 
         new_line = Line2(
-            p0=line.p0 + delta,
-            p1=line.p1 + delta
+            pt0=line.pt0 + delta,
+            pt1=line.pt1 + delta
         )
 
         self.bn_line.set(new_line)
@@ -108,14 +108,14 @@ class DefineLinePluginModel:
         if clip is not None:
             center_x = (clip.x0 + clip.x1)/2
         else:
-            center_x = line.p0.x
+            center_x = line.pt0.x
 
         line_angle = math.atan(line.gradient)
         new_line_angle = line_angle - delta
 
-        new_p0 = line.eval_at(x=center_x)
+        new_p0 = line.eval(x=center_x)
         new_p1 = new_p0 + (math.cos(new_line_angle), math.sin(new_line_angle))
 
-        new_line = Line2(p0=new_p0, p1=new_p1)
+        new_line = Line2(pt0=new_p0, pt1=new_p1)
 
         self.bn_line.set(new_line)

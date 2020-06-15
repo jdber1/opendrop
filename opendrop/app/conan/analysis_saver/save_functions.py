@@ -131,11 +131,11 @@ def _save_drop_image_annotated(drop: ConanAnalysis, out_file_path: Path) -> None
     # Draw drop region
     drop_region = drop.bn_drop_region.get()
     if drop_region is not None:
-        drop_region = drop_region.as_type(int)
+        drop_region = drop_region.map(int)
         image = cv2.rectangle(
             img=image,
-            pt1=tuple(drop_region.p0),
-            pt2=tuple(drop_region.p1),
+            pt1=tuple(drop_region.pt0),
+            pt2=tuple(drop_region.pt1),
             color=(255, 26, 13),
             thickness=1
         )
@@ -190,7 +190,7 @@ def _save_surface_line(drop: ConanAnalysis, out_file) -> None:
     if surface_line is None:
         return
 
-    coefficients = np.array([surface_line.gradient, surface_line.eval_at(x=0).y])
+    coefficients = np.array([surface_line.gradient, surface_line.eval(x=0).y])
     coefficients = coefficients.reshape(1, 2)
     np.savetxt(out_file, coefficients, fmt='%.6e,%.6e')
 

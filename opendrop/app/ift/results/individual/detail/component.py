@@ -230,7 +230,7 @@ class DetailPresenter(Presenter['DetailView']):
         drop_region = analysis.bn_drop_region.get()
         assert drop_region is not None
 
-        drop_profile_ext_rel_drop_image = drop_profile_ext - drop_region.pos
+        drop_profile_ext_rel_drop_image = drop_profile_ext - drop_region.position
         self.bn_drop_profile_extract.set(drop_profile_ext_rel_drop_image)
 
     def _hdl_analysis_drop_profile_fit_changed(self) -> None:
@@ -243,7 +243,7 @@ class DetailPresenter(Presenter['DetailView']):
         drop_region = analysis.bn_drop_region.get()
         assert drop_region is not None
 
-        drop_profile_fit_rel_drop_image = drop_profile_fit - drop_region.pos
+        drop_profile_fit_rel_drop_image = drop_profile_fit - drop_region.position
         self.bn_drop_profile_fit.set(drop_profile_fit_rel_drop_image)
 
     def _unbind_analysis(self) -> None:
