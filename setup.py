@@ -48,5 +48,6 @@ setup(
         'pytest',
         'setuptools',
         'typing_extensions',
+        'injector',
     ]
 )
