@@ -47,7 +47,7 @@ setup(
         'pygobject',
         'pytest',
         'setuptools',
-        'typing_extensions',
+        "typing_extensions; python_version<'3.8'",
         'injector',
     ]
 )
