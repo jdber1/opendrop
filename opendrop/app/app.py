@@ -45,8 +45,8 @@ class App(EntryPoint):
         self._model = None  # type: Optional[AppRootModel]
 
     def start(self) -> None:
-        from opendrop.vendor.glibcoro import glibcoro
-        glibcoro.install()
+        from opendrop.vendor import aioglib
+        asyncio.set_event_loop_policy(aioglib.GLibEventLoopPolicy())
 
         self._loop = asyncio.get_event_loop()
         self._model = AppRootModel(loop=self._loop)
