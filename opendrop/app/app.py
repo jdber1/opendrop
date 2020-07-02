@@ -31,12 +31,11 @@ import asyncio
 from gi.repository import Gtk, GLib, Gio
 from enum import Enum
 
-from injector import Binder, Module, InstanceProvider
 from opendrop.vendor import aioglib
 
-from opendrop.appfw import Injector
+from opendrop.appfw import Injector, Binder, Module, InstanceProvider
 from .services.app import OpendropService
-from .main_menu import main_menu_cs
+from .main_menu import MainMenu
 from .ift import ift_root_cs, IFTSession
 from .conan import conan_root_cs, ConanSession
 
@@ -64,7 +63,9 @@ class OpendropApplication(Gtk.Application):
         )
 
         self._state = OpendropApplication._State.NONE
+
         self._current_component = None
+        self._current_window = None
 
         self._goto_main_menu()
 
@@ -73,12 +74,11 @@ class OpendropApplication(Gtk.Application):
             return
 
         self._clear_current_component()
-        self._current_component = main_menu_cs.factory(
-            model=self._root_injector.get(OpendropService)
-        ).create()
 
-        self.add_window(self._current_component.view_rep)
-        self._current_component.view_rep.show()
+        self._current_window = self._root_injector.create_object(MainMenu)
+        self._current_window.show()
+
+        self.add_window(self._current_window)
 
     def _goto_ift(self) -> None:
         if self._state is OpendropApplication._State.IFT:
@@ -105,10 +105,11 @@ class OpendropApplication(Gtk.Application):
         self._current_component.view_rep.show()
 
     def _clear_current_component(self) -> None:
-        if self._current_component is None:
-            return
+        if self._current_component is not None:
+            self._current_component.destroy()
 
-        self._current_component.destroy()
+        if self._current_window is not None:
+            self._current_window.destroy()
 
     def _new_ift_session(self) -> IFTSession:
         session = IFTSession(

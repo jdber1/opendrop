@@ -36,7 +36,7 @@ gi.require_version('GLib', '2.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, Gtk
 
 try:
     import importlib.resources as importlib_resources
@@ -55,6 +55,8 @@ else:
     resource = Gio.Resource.new_from_data(GLib.Bytes(resource_data))
     resource._register()
 
+
+Gtk.IconTheme.get_default().add_resource_path('/opendrop/assets/icons')
 
 # Install custom event loop policy.
 asyncio.set_event_loop_policy(aioglib.GLibEventLoopPolicy())
