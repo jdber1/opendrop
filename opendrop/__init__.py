@@ -27,3 +27,34 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import asyncio
+import warnings
+
+import gi
+gi.require_version('Gio', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+
+from gi.repository import Gio, GLib
+
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    import importlib_resources
+
+from opendrop.vendor import aioglib
+
+
+# Register application resources.
+try:
+    resource_data = importlib_resources.read_binary(__spec__.parent, 'data.gresource')
+except FileNotFoundError:
+    warnings.warn("Failed to load 'data.gresource' file")
+else:
+    resource = Gio.Resource.new_from_data(GLib.Bytes(resource_data))
+    resource._register()
+
+
+# Install custom event loop policy.
+asyncio.set_event_loop_policy(aioglib.GLibEventLoopPolicy())

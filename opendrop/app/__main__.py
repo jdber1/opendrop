@@ -27,7 +27,10 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from opendrop.app.app import App
+import sys
+from opendrop.app import OpendropApplication
 
-app = App()
-app.start()
+
+if __name__ == '__main__':
+    app = OpendropApplication()
+    app.run(sys.argv)

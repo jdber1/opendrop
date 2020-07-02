@@ -28,32 +28,129 @@
 
 
 import asyncio
-from typing import Optional
+from gi.repository import Gtk, GLib, Gio
+from enum import Enum
 
-from opendrop.app.model import AppRootModel
-from opendrop.mvp import EntryPoint
-from .component import app_cs
+from injector import Binder, Module, InstanceProvider
+from opendrop.vendor import aioglib
+
+from opendrop.appfw import Injector
+from .services.app import OpendropService
+from .main_menu import main_menu_cs
+from .ift import ift_root_cs, IFTSession
+from .conan import conan_root_cs, ConanSession
 
 
-class App(EntryPoint):
-    root_component = app_cs
+class OpendropApplication(Gtk.Application):
+    application_id = 'jdber1.opendrop'
+    resource_base_path = None
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    class _State(Enum):
+        NONE = 0
+        MAIN_MENU = 1
+        IFT = 2
+        CONAN = 3
 
-        self._loop = None  # type: Optional[asyncio.AbstractEventLoop]
-        self._model = None  # type: Optional[AppRootModel]
+    def __init__(self, **properties) -> None:
+        super().__init__(**properties)
+        self._loop = aioglib.GLibEventLoop(GLib.MainContext.default())
 
-    def start(self) -> None:
-        from opendrop.vendor import aioglib
-        asyncio.set_event_loop_policy(aioglib.GLibEventLoopPolicy())
+    def do_activate(self) -> None:
+        self._root_injector = Injector(
+            modules=[
+                _InstallOpendropService(app=self),
+            ],
+            auto_bind=True,
+        )
 
-        self._loop = asyncio.get_event_loop()
-        self._model = AppRootModel(loop=self._loop)
+        self._state = OpendropApplication._State.NONE
+        self._current_component = None
 
-        super().start(model=self._model)
+        self._goto_main_menu()
 
-        self._loop.run_forever()
+    def _goto_main_menu(self) -> None:
+        if self._state is OpendropApplication._State.MAIN_MENU:
+            return
 
-    def _do_stop(self) -> None:
-        self._loop.stop()
+        self._clear_current_component()
+        self._current_component = main_menu_cs.factory(
+            model=self._root_injector.get(OpendropService)
+        ).create()
+
+        self.add_window(self._current_component.view_rep)
+        self._current_component.view_rep.show()
+
+    def _goto_ift(self) -> None:
+        if self._state is OpendropApplication._State.IFT:
+            return
+
+        self._clear_current_component()
+        self._current_component = ift_root_cs.factory(
+            session=self._new_ift_session()
+        ).create()
+
+        self.add_window(self._current_component.view_rep)
+        self._current_component.view_rep.show()
+
+    def _goto_conan(self) -> None:
+        if self._state is OpendropApplication._State.CONAN:
+            return
+
+        self._clear_current_component()
+        self._current_component = conan_root_cs.factory(
+            session=self._new_conan_session()
+        ).create()
+
+        self.add_window(self._current_component.view_rep)
+        self._current_component.view_rep.show()
+
+    def _clear_current_component(self) -> None:
+        if self._current_component is None:
+            return
+
+        self._current_component.destroy()
+
+    def _new_ift_session(self) -> IFTSession:
+        session = IFTSession(
+            do_exit=self._goto_main_menu,
+            loop=self._loop,
+        )
+
+        return session
+
+    def _new_conan_session(self) -> ConanSession:
+        session = ConanSession(
+            do_exit=self._goto_main_menu,
+            loop=self._loop,
+        )
+
+        return session
+
+    def do_startup(self) -> None:
+        # Chain up to parent implementation.
+        Gio.Application.do_startup.invoke(Gtk.Application, self)
+
+        asyncio.set_event_loop(self._loop)
+        self._loop.set_is_running(True)
+
+    def do_shutdown(self) -> None:
+        self._loop.set_is_running(False)
+
+        # Chain up to parent implementation.
+        Gio.Application.do_shutdown.invoke(Gtk.Application, self)
+
+
+class _InstallOpendropService(Module):
+    def __init__(self, app: OpendropApplication) -> None:
+        self._app = app
+
+    def configure(self, binder: Binder) -> None:
+        app = self._app
+        app_service = OpendropService(
+            do_main_menu=app._goto_main_menu,
+            do_ift=app._goto_ift,
+            do_conan=app._goto_conan,
+            do_quit=app.quit,
+        )
+
+        binder.bind(OpendropService, to=InstanceProvider(app_service))

@@ -31,7 +31,7 @@ import pkg_resources
 from gi.repository import Gtk, GdkPixbuf, Gio, GLib, Gdk
 
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from .model import MainMenuModel
+from opendrop.app.services.app import OpendropService
 
 main_menu_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 
@@ -156,14 +156,14 @@ class MainMenuView(View['MainMenuPresenter', Gtk.Widget]):
 
 @main_menu_cs.presenter(options=['model'])
 class MainMenuPresenter(Presenter['MainMenuView']):
-    def _do_init(self, model: MainMenuModel):
+    def _do_init(self, model: OpendropService):
         self._model = model
 
     def launch_ift(self) -> None:
-        self._model.launch_ift()
+        self._model.goto_ift()
 
     def launch_conan(self) -> None:
-        self._model.launch_conan()
+        self._model.goto_conan()
 
     def exit(self) -> None:
-        self._model.exit()
+        self._model.quit()

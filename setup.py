@@ -49,5 +49,6 @@ setup(
         'setuptools',
         "typing_extensions; python_version<'3.8'",
         'injector',
+        "importlib_resources; python_version<'3.7'",
     ]
 )
