@@ -33,4 +33,4 @@ from opendrop.app import OpendropApplication
 
 if __name__ == '__main__':
     app = OpendropApplication()
-    app.run(sys.argv)
+    sys.exit(app.run(sys.argv))
