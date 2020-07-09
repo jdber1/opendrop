@@ -7,18 +7,7 @@ env = Environment(
 
     PACKAGE_METADATA = {
         'Requires-Python': '>=3.5',
-        'Requires-Dist': [
-            'matplotlib',
-            'numpy',
-            'scipy',
-            'pycairo',
-            'pygobject',
-            'pytest',
-            'setuptools',
-            "typing_extensions; python_version<'3.8'",
-            'injector',
-            "importlib_resources; python_version<'3.7'",
-        ],
+        'Requires-Dist': File('requirements.txt').get_text_contents().splitlines(),
         'Home-page': 'https://github.com/jdber1/opendrop',
         'Classifier': [
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
