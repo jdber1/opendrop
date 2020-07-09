@@ -50,3 +50,6 @@ docs/_build
 #########
 .cache
 .coverage
+*.gresource.xml
+.sconsign*
+build/

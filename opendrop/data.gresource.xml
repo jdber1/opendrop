@@ -1,9 +1,0 @@
-<gresources>
-  <gresource prefix="/opendrop">
-    <file compressed="true">app/main_menu.ui</file>
-    <file>assets/banner.png</file>
-    <file>assets/icons/48x48/categories/opendrop-ift.png</file>
-    <file>assets/icons/48x48/categories/opendrop-conan.png</file>
-    <file>assets/icons/256x256/apps/opendrop.png</file>
-  </gresource>
-</gresources>

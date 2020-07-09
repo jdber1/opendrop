@@ -1,4 +1,2 @@
 [build-system]
-requires = []
-build-backend = "buildapi"
-backend-path = ["build_backend"]
+requires = ["enscons"]

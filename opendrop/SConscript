@@ -1,0 +1,26 @@
+Import('env')
+
+
+env = env.Clone(tools=['gresource'])
+
+# Check build dependencies.
+if not env['GLIB_COMPILE_RESOURCES']:
+    print("Could not detect glib-compile-resources")
+    Exit(1)
+
+
+# SCons does not have recursive globs yet, use python glob module for now.
+from glob import glob
+
+py_modules = glob('**/*.py', recursive=True)
+
+gresource_file = env.GResourceBundle('data.gresource', [
+    env.GResource('/opendrop', glob('**/*.ui', recursive=True), compressed=True),
+    env.GResource('/opendrop', glob('assets/**/*.png', recursive=True), compressed=False),
+])
+
+
+# Resolve all file paths now instead of returning strings.
+package_files = env.File(py_modules + gresource_file)
+
+Return('package_files')
