@@ -1,6 +1,9 @@
+from setuptools_scm import get_version
+
+
 env = Environment(
     NAME='opendrop',
-    VERSION='3.1.7dev0',
+    VERSION=get_version(),
 
     PACKAGE_METADATA = {
         'Requires-Python': '>=3.5',

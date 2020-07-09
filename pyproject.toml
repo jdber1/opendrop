@@ -1,2 +1,2 @@
 [build-system]
-requires = ["enscons"]
+requires = ["enscons", "setuptools_scm"]
