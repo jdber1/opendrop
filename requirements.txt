@@ -4,7 +4,6 @@ scipy
 pycairo
 pygobject
 pytest
-setuptools
 injector
 importlib_resources; python_version<'3.7'
 typing_extensions; python_version<'3.8'
