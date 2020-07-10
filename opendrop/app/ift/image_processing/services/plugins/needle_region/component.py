@@ -31,7 +31,7 @@ from gi.repository import Gtk
 
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
 from opendrop.app.common.image_processing.plugins.define_region import define_region_plugin_cs, DefineRegionPluginModel
-from opendrop.app.ift.image_processing.plugins import ToolID
+from ..tool_id import ToolID
 from opendrop.mvp import ComponentSymbol, View, Presenter
 
 ift_needle_region_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]

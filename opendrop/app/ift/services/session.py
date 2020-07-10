@@ -34,47 +34,47 @@ import numpy as np
 
 from opendrop.app.common.image_acquisition import AcquirerType, ImageAcquisitionModel
 from opendrop.app.ift.analysis import (
-    FeatureExtractor,
-    FeatureExtractorParams,
     IFTDropAnalysis,
     YoungLaplaceFitter,
 )
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
-from opendrop.app.ift.image_processing import IFTImageProcessingModel
 from opendrop.app.ift.results import IFTResultsModel
 from opendrop.appfw import Module, Binder, singleton, inject
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from .quantities import PhysicalPropertiesCalculatorParams, PhysicalPropertiesCalculator
+from .features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
 
 
 class IFTSessionModule(Module):
     def configure(self, binder: Binder):
+        binder.bind(ImageAcquisitionModel, to=ImageAcquisitionModel, scope=singleton)
         binder.bind(PhysicalPropertiesCalculatorParams, to=PhysicalPropertiesCalculatorParams, scope=singleton)
+        binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
+        binder.bind(FeatureExtractorService, to=FeatureExtractorService, scope=singleton)
         binder.bind(IFTSession, to=IFTSession, scope=singleton)
 
 
 @singleton
 class IFTSession:
     @inject
-    def __init__(self, physprops_calculator_params: PhysicalPropertiesCalculatorParams) -> None:
+    def __init__(
+            self,
+            image_acquisition: ImageAcquisitionModel,
+            physprops_calculator_params: PhysicalPropertiesCalculatorParams,
+            feature_extractor_params: FeatureExtractorParams,
+    ) -> None:
         self._loop = asyncio.get_event_loop()
 
-        self._feature_extractor_params = FeatureExtractorParams()
         self._physprops_calculator_params = physprops_calculator_params
+        self._feature_extractor_params = feature_extractor_params
 
         self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[IFTDropAnalysis]]
         self._analyses_saved = False
 
-        self.image_acquisition = ImageAcquisitionModel()
+        self.image_acquisition = image_acquisition
         self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
-
-        self.image_processing = IFTImageProcessingModel(
-            image_acquisition=self.image_acquisition,
-            feature_extractor_params=self._feature_extractor_params,
-            do_extract_features=self.extract_features,
-        )
 
         self.results = IFTResultsModel(
             in_analyses=self._bn_analyses,

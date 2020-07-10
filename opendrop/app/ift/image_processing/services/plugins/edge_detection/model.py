@@ -27,7 +27,7 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from opendrop.app.ift.analysis import FeatureExtractorParams
+from opendrop.app.ift.services.features import FeatureExtractorParams
 
 
 class EdgeDetectionPluginModel:

@@ -37,7 +37,7 @@ from .services.plugins.edge_detection import edge_detection_plugin_cs
 from .services.plugins.needle_region import ift_needle_region_plugin_cs
 from .services.plugins.preview import ift_preview_plugin_cs
 
-from opendrop.appfw import injection_container, Inject
+from opendrop.appfw import componentclass, Inject
 
 
 class DrawPriority:
@@ -45,7 +45,7 @@ class DrawPriority:
     OVERLAY = 1
 
 
-@injection_container()
+@componentclass()
 class IFTImageProcessing(Gtk.Grid):
     _service = Inject(IFTImageProcessingModel)
 

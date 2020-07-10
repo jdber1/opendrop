@@ -40,8 +40,8 @@ from opendrop.app.common.image_acquirer import InputImage
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
-from .features import FeatureExtractor
 from .young_laplace_fit import YoungLaplaceFitter
+from opendrop.app.ift.services.features import FeatureExtractor
 from opendrop.app.ift.services.quantities import PhysicalPropertiesCalculator
 
 

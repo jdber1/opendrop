@@ -37,7 +37,7 @@ from opendrop.app.common.image_processing.plugins.preview.model import (
     AcquirerController,
     ImageSequenceAcquirerController,
     CameraAcquirerController)
-from opendrop.app.ift.analysis import FeatureExtractorParams, FeatureExtractor
+from opendrop.app.ift.services.features import FeatureExtractorParams, FeatureExtractor
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.bindable.typing import Bindable
 

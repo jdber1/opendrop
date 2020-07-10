@@ -52,6 +52,11 @@ class FeatureExtractorParams:
         self.bn_canny_max = VariableBindable(60)
 
 
+class FeatureExtractorService:
+    def extract_features(self, image: np.ndarray, params: FeatureExtractorParams):
+        return FeatureExtractor(image, params)
+
+
 class FeatureExtractor:
     _Data = thread_safe_bindable_collection(
         fields=[

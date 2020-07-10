@@ -35,10 +35,9 @@ from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
 from opendrop.appfw import Inject, Injector, TemplateChild, componentclass
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
-from .image_processing import ift_image_processing_cs
+from .image_processing import IFTImageProcessing
 from .services.session import IFTSession
 from .physical_parameters import IFTPhysicalParametersForm
-from .services.quantities import PhysicalPropertiesCalculatorParams
 from .results import ift_results_cs
 
 
@@ -66,13 +65,13 @@ class IFTExperiment(Gtk.Assistant):
             do_next=self.next_page,
         ).create()
         self._lin_footer_component.view_rep.show()
-        self._footer1.add(self._lin_footer_component.view_rep)
+        self._footer0.add(self._lin_footer_component.view_rep)
 
         # Image acquisition.
         self._image_acquisition_component = image_acquisition_cs.factory(
             model=session.image_acquisition,
-            footer_area=self._footer0,
-            page_controls=WizardPageControls(do_next_page=self.next_page, do_prev_page=self.previous_page),
+            footer_area=Gtk.Grid(),  # ignore footer area for now
+            page_controls=WizardPageControls(do_next_page=lambda: None, do_prev_page=lambda: None),
         ).create()
         self._image_acquisition_component.view_rep.show()
 
@@ -81,12 +80,8 @@ class IFTExperiment(Gtk.Assistant):
         self._physical_parameters_page.show()
 
         # Image processing.
-        self._ift_image_processing_component = ift_image_processing_cs.factory(
-            model=session.image_processing,
-            footer_area=self._footer2,
-            page_controls=WizardPageControls(do_next_page=self.next_page, do_prev_page=self.previous_page),
-        ).create()
-        self._ift_image_processing_component.view_rep.show()
+        self._ift_image_processing_page = self._injector.create_object(IFTImageProcessing)
+        self._ift_image_processing_page.show()
 
         # Results.
         self._ift_results_component = ift_results_cs.factory(
@@ -111,9 +106,9 @@ class IFTExperiment(Gtk.Assistant):
             complete=True,
         )
 
-        self.append_page(self._ift_image_processing_component.view_rep)
+        self.append_page(self._ift_image_processing_page)
         self.child_set(
-            self._ift_image_processing_component.view_rep,
+            self._ift_image_processing_page,
             page_type=Gtk.AssistantPageType.CUSTOM,
             title='Image processing',
         )
@@ -151,7 +146,11 @@ class IFTExperiment(Gtk.Assistant):
 
     def do_prepare(self, page: Gtk.Widget) -> None:
         # Update footer to show current page's action widgets.
-        self._footer_area.set_visible_child_name(str(self.get_current_page()))
+        cur_page = self.get_current_page()
+        if cur_page in (0, 1, 2):
+            self._footer_area.set_visible_child_name('0')
+        else:
+            self._footer_area.set_visible_child_name(str(self.get_current_page()))
 
     def do_delete_event(self, event: Gdk.EventAny) -> bool:
         self._request_close()
@@ -192,7 +191,6 @@ class IFTExperiment(Gtk.Assistant):
 
     def do_destroy(self) -> None:
         self._image_acquisition_component.destroy()
-        self._ift_image_processing_component.destroy()
         self._ift_results_component.destroy()
         self._lin_footer_component.destroy()
 

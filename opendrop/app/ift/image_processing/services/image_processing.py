@@ -32,26 +32,31 @@ from typing import Callable, Optional
 import numpy as np
 
 from opendrop.app.common.image_acquisition import ImageAcquisitionModel
-from opendrop.app.common.image_processing.plugins.define_region import DefineRegionPluginModel
-from opendrop.app.ift.analysis import FeatureExtractor, FeatureExtractorParams
-from opendrop.utility.bindable import VariableBindable, AccessorBindable
+from opendrop.app.common.image_processing.plugins.define_region import (
+    DefineRegionPluginModel,
+)
+from opendrop.app.ift.services.features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
+from opendrop.appfw import inject
+from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Rect2
+
 from .plugins import ToolID
 from .plugins.edge_detection import EdgeDetectionPluginModel
 from .plugins.preview import IFTPreviewPluginModel
 
 
 class IFTImageProcessingModel:
+    @inject
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionModel,
             feature_extractor_params: FeatureExtractorParams,
-            do_extract_features: Callable[[Bindable[np.ndarray], FeatureExtractorParams], FeatureExtractor]
+            feature_extractor_service: FeatureExtractorService,
     ) -> None:
         self._image_acquisition = image_acquisition
         self._feature_extractor_params = feature_extractor_params
-        self._do_extract_features = do_extract_features
+        self._feature_extractor_service = feature_extractor_service
 
         self.bn_active_tool = VariableBindable(ToolID.DROP_REGION)
 
@@ -76,7 +81,7 @@ class IFTImageProcessingModel:
         self.preview_plugin = IFTPreviewPluginModel(
             image_acquisition=image_acquisition,
             feature_extractor_params=feature_extractor_params,
-            do_extract_features=do_extract_features,
+            do_extract_features=lambda x: self._feature_extractor_service.extract_features(x, feature_extractor_params),
         )
 
     def _get_region_clip(self) -> Optional[Rect2[int]]:

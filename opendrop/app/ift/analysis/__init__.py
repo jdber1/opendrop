@@ -28,5 +28,4 @@
 
 
 from .analysis import IFTDropAnalysis
-from .features import FeatureExtractor, FeatureExtractorParams
 from .young_laplace_fit import YoungLaplaceFitter
