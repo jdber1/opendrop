@@ -1,3 +1,3 @@
 from ._injector import *
-from ._template import templated, TemplateChild
-from ._component import component
+from ._template import templatewidget, TemplateChild
+from ._component import componentclass

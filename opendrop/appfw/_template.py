@@ -8,7 +8,7 @@ WidgetClassT = TypeVar('WidgetClassT', bound=Type[Gtk.Widget])
 WidgetT = TypeVar('WidgetT', bound=Gtk.Widget)
 
 
-def templated(path: str) -> Callable[[WidgetClassT], WidgetClassT]:
+def templatewidget(path: str) -> Callable[[WidgetClassT], WidgetClassT]:
     def wrapper(widget_class: WidgetClassT) -> WidgetClassT:
         mark_as_templated(widget_class, template_path=path)
         return widget_class

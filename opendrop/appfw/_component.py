@@ -7,7 +7,7 @@ from ._injector import mark_as_injection_container
 WidgetClassT = TypeVar('WidgetClassT', bound=Type[Gtk.Widget])
 
 
-def component(
+def componentclass(
         template_path: str = '',
         modules: Sequence = (),
         auto_bind: bool = True,

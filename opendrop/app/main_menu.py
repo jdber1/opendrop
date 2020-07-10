@@ -1,10 +1,10 @@
 from gi.repository import Gtk
 
-from opendrop.appfw import Inject, component
+from opendrop.appfw import Inject, componentclass
 from opendrop.app.services.app import OpendropService
 
 
-@component(
+@componentclass(
     template_path='./main_menu.ui',
 )
 class MainMenu(Gtk.Window):
