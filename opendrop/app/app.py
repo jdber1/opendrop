@@ -36,7 +36,7 @@ from opendrop.vendor import aioglib
 from opendrop.appfw import Injector, Binder, Module, InstanceProvider
 from .services.app import OpendropService
 from .main_menu import MainMenu
-from .ift import ift_root_cs, IFTSession
+from .ift import IFTExperiment
 from .conan import conan_root_cs, ConanSession
 
 
@@ -85,12 +85,13 @@ class OpendropApplication(Gtk.Application):
             return
 
         self._clear_current_component()
-        self._current_component = ift_root_cs.factory(
-            session=self._new_ift_session()
-        ).create()
 
-        self.add_window(self._current_component.view_rep)
-        self._current_component.view_rep.show()
+        self._current_window = self._root_injector.create_object(IFTExperiment)
+        self._current_window.show()
+
+        self._current_window.connect('destroy', lambda *args: self._goto_main_menu())
+
+        self.add_window(self._current_window)
 
     def _goto_conan(self) -> None:
         if self._state is OpendropApplication._State.CONAN:
@@ -110,14 +111,6 @@ class OpendropApplication(Gtk.Application):
 
         if self._current_window is not None:
             self._current_window.destroy()
-
-    def _new_ift_session(self) -> IFTSession:
-        session = IFTSession(
-            do_exit=self._goto_main_menu,
-            loop=self._loop,
-        )
-
-        return session
 
     def _new_conan_session(self) -> ConanSession:
         session = ConanSession(

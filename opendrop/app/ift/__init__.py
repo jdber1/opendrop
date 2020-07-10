@@ -27,5 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import ift_root_cs
-from .model import IFTSession
+from .ift_experiment import IFTExperiment
