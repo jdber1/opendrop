@@ -30,43 +30,57 @@
 import math
 from typing import Optional
 
-from gi.repository import GObject
+from gi.repository import GObject, Gtk
 
 from opendrop.widgets.validated_entry import ValidatedEntry
 
 
-class FloatEntry(ValidatedEntry):
-    # TODO: Remove this code duplication with IntegerEntry
-    _lower = None  # type: Optional[int]
-    _upper = None  # type: Optional[int]
-    _default = None  # type: Optional[int]
+class FloatEntry(ValidatedEntry, Gtk.Buildable):
+    __gtype_name__ = "FloatEntry"
 
-    @GObject.Property
-    def lower(self) -> Optional[int]:
+    # TODO: Remove this code duplication with IntegerEntry
+    _lower = -math.inf  # type: float
+    _upper = math.inf  # type: float
+    _default = 0  # type: float
+    _default_set = False
+
+    @GObject.Property(type=float)
+    def lower(self) -> float:
         return self._lower
 
     @lower.setter
-    def lower(self, value: Optional[int]) -> None:
+    def lower(self, value: float) -> None:
         self._lower = value
 
-    @GObject.Property
-    def upper(self) -> Optional[int]:
+    @GObject.Property(type=float)
+    def upper(self) -> float:
         return self._upper
 
     @upper.setter
-    def upper(self, value: Optional[int]) -> None:
+    def upper(self, value: float) -> None:
         self._upper = value
 
-    @GObject.Property
-    def default(self) -> Optional[int]:
+    @GObject.Property(type=float)
+    def default(self) -> float:
         return self._default
 
     @default.setter
-    def default(self, value: Optional[int]) -> None:
+    def default(self, value: float) -> None:
         self._default = value
+        self.default_set = True
 
-    def restrict(self, value: Optional[int]) -> Optional[int]:
-        value = self.default if value is None else value
+    @GObject.Property(type=bool, default=False)
+    def default_set(self) -> bool:
+        return self._default_set
+
+    @default_set.setter
+    def default_set(self, value: bool) -> None:
+        self._default_set = value
+
+    def restrict(self, value: Optional[float]) -> Optional[float]:
+        if value is None and self._default_set:
+            value = self._default
+
         if value is None:
             return None
 
