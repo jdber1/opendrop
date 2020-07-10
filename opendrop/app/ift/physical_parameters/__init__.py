@@ -27,5 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import physical_parameters_cs
-from .model import PhysicalParametersModel
+from .physical_parameters import IFTPhysicalParametersForm

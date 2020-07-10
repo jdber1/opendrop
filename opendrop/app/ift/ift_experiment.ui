@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <template class="IFTExperiment" parent="GtkAssistant">
+    <property name="title">Interfacial Tension</property>
+    <property name="window-position">center</property>
+    <property name="width-request">800</property>
+    <property name="height-request">600</property>
+    <property name="can_focus">False</property>
+    <property name="use_header_bar">0</property>
+    <child internal-child="action_area">
+      <object class="GtkBox">
+        <property name="halign">fill</property>
+        <child>
+          <object class="GtkStack" id="action_area">
+            <property name="visible">True</property>
+            <child><object class="GtkGrid" id="action0"><property name="visible">True</property></object><packing><property name="name">0</property></packing></child>
+            <child><object class="GtkGrid" id="action1"><property name="visible">True</property></object><packing><property name="name">1</property></packing></child>
+            <child><object class="GtkGrid" id="action2"><property name="visible">True</property></object><packing><property name="name">2</property></packing></child>
+            <child><object class="GtkGrid" id="action3"><property name="visible">True</property></object><packing><property name="name">3</property></packing></child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

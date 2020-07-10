@@ -27,14 +27,17 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from opendrop.app.ift.analysis.physical_properties import PhysicalPropertiesCalculatorParams
+from opendrop.app.ift.services.quantities import PhysicalPropertiesCalculatorParams
+from opendrop.appfw import inject, singleton
 
 
-class PhysicalParametersModel:
-    def __init__(self, physprops_calculator_params: PhysicalPropertiesCalculatorParams) -> None:
-        self._params = physprops_calculator_params
+@singleton
+class PhysicalParametersFormModel:
+    @inject
+    def __init__(self, params: PhysicalPropertiesCalculatorParams) -> None:
+        self._params = params
 
-        self.bn_inner_density = physprops_calculator_params.bn_inner_density
-        self.bn_outer_density = physprops_calculator_params.bn_outer_density
-        self.bn_needle_width = physprops_calculator_params.bn_needle_width
-        self.bn_gravity = physprops_calculator_params.bn_gravity
+        self.bn_inner_density = params.bn_inner_density
+        self.bn_outer_density = params.bn_outer_density
+        self.bn_needle_width = params.bn_needle_width
+        self.bn_gravity = params.bn_gravity

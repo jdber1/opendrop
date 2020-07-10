@@ -33,8 +33,8 @@ from typing import Optional
 from opendrop.processing.ift import calculate_ift, calculate_worthington
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
-from .features import FeatureExtractor
-from .young_laplace_fit import YoungLaplaceFitter
+from opendrop.app.ift.analysis.features import FeatureExtractor
+from opendrop.app.ift.analysis.young_laplace_fit import YoungLaplaceFitter
 
 
 class PhysicalPropertiesCalculatorParams:
