@@ -16,7 +16,7 @@ def templated(path: str) -> Callable[[WidgetClassT], WidgetClassT]:
     return wrapper
 
 
-def mark_as_templated(widget_class: Type[Gtk.Widget], template_path: str) -> None:
+def mark_as_templated(widget_class: WidgetClassT, template_path: str) -> WidgetClassT:
     # If resource name is not an absolute path, we use some tricks to resolve it.
     if not template_path.startswith('/'):
         package_name = get_owner_package(widget_class)
@@ -30,19 +30,18 @@ def mark_as_templated(widget_class: Type[Gtk.Widget], template_path: str) -> Non
 
     template = Gio.resources_lookup_data(template_path, Gio.ResourceLookupFlags.NONE).get_data().decode()
 
-    widget_class.__widget_template__ = TemplateSpec(template)
+    widget_class.__widget_template__ = TemplateSpec(template, widget_class.__init__)
 
-    # This is a hack that mirrors Gtk.Template's implementation, see:
-    #     https://gitlab.gnome.org/GNOME/pygobject/-/blob/c745866df9e4394c6615e79779fff1221a84953a/gi/_gtktemplate.py#L94
-    # It is essentially a post __init__() hook baked into GObjects.
-    widget_class.__dontuse_ginstance_init__ = template_init
+    # Hacky.., override with our own __init__ function.
+    widget_class.__init__ = override_init
 
     return widget_class
 
 
 class TemplateSpec:
-    def __init__(self, template: str) -> None:
+    def __init__(self, template: str, original_init: Callable) -> None:
         self.template = template
+        self.original_init = original_init
 
 
 class TemplatePrivate:
@@ -60,8 +59,11 @@ class TemplatePrivate:
         return owner.__dict__[__class__.private_key]
 
 
-def template_init(self):
+def override_init(self, *args, **kwargs) -> None:
     template_spec = self.__widget_template__
+
+    # Invoke original __init__ function
+    template_spec.original_init(self, *args, **kwargs)
 
     # Build template
     template = template_spec.template
