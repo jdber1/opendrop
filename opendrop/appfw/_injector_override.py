@@ -41,8 +41,23 @@ class InjectionContainerPrivate:
         return owner.__dict__[__class__.private_key]
 
 
+# Make our custom Injector compare equal to the actual injector.Injector so it can be used as an injection key
+# to get a reference to the injector, i.e. (where Injector refers to our redefined Injector class)
+#     injector = Injector()
+#     @inject
+#     def func(self: Injector):
+#         assert self is injector
+#     injector.call_with_injection(func)
+class InjectorMeta(type):
+    def __eq__(self, other) -> bool:
+        return other == injector.Injector
+
+    def __hash__(self) -> int:
+        return hash(injector.Injector)
+
+
 # Add extra code to Injector that deals with injection container creation.
-class Injector(injector.Injector):
+class Injector(injector.Injector, metaclass=InjectorMeta):
     def create_object(self, cls: Type[T], additional_kwargs: Any = None) -> T:
         additional_kwargs = additional_kwargs or {}
         
