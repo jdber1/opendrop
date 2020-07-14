@@ -27,4 +27,16 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import detail_cs
+from opendrop.appfw import Binder, Module, singleton
+
+from .report import IFTReportService
+from .graphs import IFTReportGraphsService
+from .progress import IFTReportProgressService
+
+
+class IFTReportModule(Module):
+    def configure(self, binder: Binder):
+        binder.bind(IFTReportService, to=IFTReportService, scope=singleton)
+
+        binder.bind(IFTReportGraphsService, to=IFTReportGraphsService, scope=singleton)
+        binder.bind(IFTReportProgressService, to=IFTReportProgressService, scope=singleton)

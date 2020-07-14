@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import parameters_cs
+from .overview import IFTReportOverview

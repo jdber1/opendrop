@@ -29,30 +29,25 @@
 
 from typing import Optional
 
-import numpy as np
-from gi.repository import Gtk
+from gi.repository import GObject
+from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 
-from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable.typing import Bindable
-
-residuals_plot_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
+from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.appfw import componentclass
 
 
-@residuals_plot_cs.view()
-class ResidualsPlotView(View['ResidualsPlotPresenter', Gtk.Widget]):
-    def _do_init(self) -> Gtk.Widget:
-        from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+@componentclass()
+class IFTReportOverviewResiduals(FigureCanvas):
+    __gtype_name__ = 'IFTReportOverviewResiduals'
+
+    _analysis = None
+    _event_connections = ()
+
+    def __init__(self) -> None:
         from matplotlib.figure import Figure
 
-        self._widget = Gtk.Grid()
-
         figure = Figure(tight_layout=True)
-
-        self._figure_canvas = FigureCanvas(figure)
-        self._figure_canvas.props.hexpand = True
-        self._figure_canvas.props.vexpand = True
-        self._figure_canvas.show()
-        self._widget.add(self._figure_canvas)
+        super().__init__(figure)
 
         self._axes = figure.add_subplot(1, 1, 1)
 
@@ -60,50 +55,49 @@ class ResidualsPlotView(View['ResidualsPlotPresenter', Gtk.Widget]):
         for item in (*self._axes.get_xticklabels(), *self._axes.get_yticklabels()):
             item.set_fontsize(8)
 
-        self.presenter.view_ready()
+    def do_map(self) -> None:
+        FigureCanvas.do_map.invoke(FigureCanvas, self)
+        self.draw()
 
-        return self._widget
+    @GObject.Property
+    def analysis(self) -> Optional[IFTDropAnalysis]:
+        return self._analysis
 
-    def set_data(self, residuals: np.ndarray) -> None:
+    @analysis.setter
+    def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
+        for conn in self._event_connections:
+            conn.disconnect()
+        self._event_connections = ()
+        
+        self._analysis = value
+
+        if self._analysis is None:
+            return
+
+        self._event_connections = (
+            self._analysis.bn_residuals.on_changed.connect(self._hdl_analysis_residuals_changed),
+        )
+
+        self._hdl_analysis_residuals_changed()
+
+    def _hdl_analysis_residuals_changed(self) -> None:
+        if self._analysis is None: return
+
+        residuals = self._analysis.bn_residuals.get()
+
         axes = self._axes
         axes.clear()
 
         if residuals is None or len(residuals) == 0:
             axes.set_axis_off()
-            self._figure_canvas.draw()
+            self.draw()
             return
 
         axes.set_axis_on()
         axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-        self._figure_canvas.draw()
+        self.draw()
 
-    def _do_destroy(self) -> None:
-        self._widget.destroy()
-
-
-@residuals_plot_cs.presenter(options=['in_residuals'])
-class ResidualsPlotPresenter(Presenter['ResidualsPlotView']):
-    def _do_init(
-            self,
-            in_residuals: Bindable[Optional[np.ndarray]]
-    ) -> None:
-        self._bn_residuals = in_residuals
-
-        self.__event_connections = []
-
-    def view_ready(self):
-        self.__event_connections.extend([
-            self._bn_residuals.on_changed.connect(
-                self._hdl_residuals_changed
-            ),
-        ])
-
-        self._hdl_residuals_changed()
-
-    def _hdl_residuals_changed(self) -> None:
-        residuals = self._bn_residuals.get()
-        self.view.set_data(residuals)
-
-    def _do_destroy(self) -> None:
-        for ec in self.__event_connections:
-            ec.disconnect()
+    def do_destroy(self) -> None:
+        for conn in self._event_connections:
+            conn.disconnect()
+        FigureCanvas.do_destroy.invoke(FigureCanvas, self)

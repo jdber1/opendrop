@@ -34,27 +34,29 @@ from matplotlib import ticker
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from matplotlib.figure import Figure
 
-from opendrop.mvp import ComponentSymbol, View, Presenter
-from .model import GraphsModel
-
-graphs_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
+from opendrop.app.ift.services.report.graphs import IFTReportGraphsService
+from opendrop.appfw import Inject, TemplateChild, componentclass
 
 
-@graphs_cs.view()
-class GraphsView(View['GraphsPresenter', Gtk.Widget]):
-    def _do_init(self) -> Gtk.Widget:
-        self._widget = Gtk.Stack(margin=5)
+@componentclass(
+    template_path='./graphs.ui',
+)
+class IFTReportGraphs(Gtk.Stack):
+    __gtype_name__ = 'IFTReportGraphs'
 
-        self._waiting_placeholder = Gtk.Label()
-        self._waiting_placeholder.set_markup('<b>No data</b>')
-        self._widget.add(self._waiting_placeholder)
+    _no_data_label = TemplateChild('no_data_label')
+    _figure_container = TemplateChild('figure_container')
 
+    _graphs_service = Inject(IFTReportGraphsService)
+
+    def after_template_init(self) -> None:
         figure = Figure(tight_layout=True)
 
         self._figure_canvas = FigureCanvas(figure)
         self._figure_canvas.props.hexpand = True
         self._figure_canvas.props.vexpand = True
-        self._widget.add(self._figure_canvas)
+        self._figure_canvas.props.visible = True
+        self._figure_container.add(self._figure_canvas)
 
         self._ift_axes = figure.add_subplot(3, 1, 1)
         self._ift_axes.set_ylabel('IFT (mN/m)')
@@ -77,19 +79,38 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
         self._volume_line = volume_axes.plot([], marker='o', color='blue')[0]
         self._surface_area_line = surface_area_axes.plot([], marker='o', color='green')[0]
 
-        self._widget.show_all()
+        self._graphs_service.connect('notify::ift', self._hdl_model_data_changed)
+        self._graphs_service.connect('notify::volume', self._hdl_model_data_changed)
+        self._graphs_service.connect('notify::surface-area', self._hdl_model_data_changed)
 
-        self.presenter.view_ready()
+        self._hdl_model_data_changed()
 
-        return self._widget
+    def _hdl_model_data_changed(self, *args) -> None:
+        ift_data = self._graphs_service.ift
+        volume_data = self._graphs_service.volume
+        surface_area_data = self._graphs_service.surface_area
 
-    def show_waiting_placeholder(self) -> None:
-        self._widget.set_visible_child(self._waiting_placeholder)
+        if (
+                len(ift_data[0]) <= 1 and
+                len(volume_data[0]) <= 1 and
+                len(surface_area_data[0]) <= 1
+        ):
+            self._show_waiting_placeholder()
+            return
 
-    def hide_waiting_placeholder(self) -> None:
-        self._widget.set_visible_child(self._figure_canvas)
+        self._hide_waiting_placeholder()
 
-    def set_ift_data(self, data: Sequence[Tuple[float, float]]) -> None:
+        self._set_ift_data(ift_data)
+        self._set_volume_data(volume_data)
+        self._set_surface_area_data(surface_area_data)
+
+    def _show_waiting_placeholder(self) -> None:
+        self.set_visible_child(self._no_data_label)
+
+    def _hide_waiting_placeholder(self) -> None:
+        self.set_visible_child(self._figure_container)
+
+    def _set_ift_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
@@ -102,7 +123,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
 
         self._figure_canvas.draw()
 
-    def set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
+    def _set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
@@ -115,7 +136,7 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
 
         self._figure_canvas.draw()
 
-    def set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
+    def _set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
@@ -145,51 +166,3 @@ class GraphsView(View['GraphsPresenter', Gtk.Widget]):
             return
 
         self._ift_axes.set_xlim(xmin, xmax)
-
-    def _do_destroy(self) -> None:
-        self._widget.destroy()
-
-
-@graphs_cs.presenter(options=['model'])
-class GraphsPresenter(Presenter['GraphsView']):
-    def _do_init(self, model: GraphsModel) -> None:
-        self._model = model
-        self.__event_connections = []
-
-    def view_ready(self) -> None:
-        self.__event_connections.extend([
-            self._model.bn_ift_data.on_changed.connect(
-                self._hdl_model_data_changed
-            ),
-            self._model.bn_volume_data.on_changed.connect(
-                self._hdl_model_data_changed
-            ),
-            self._model.bn_surface_area_data.on_changed.connect(
-                self._hdl_model_data_changed
-            ),
-        ])
-
-        self._hdl_model_data_changed()
-
-    def _hdl_model_data_changed(self) -> None:
-        ift_data = self._model.bn_ift_data.get()
-        volume_data = self._model.bn_volume_data.get()
-        surface_area_data = self._model.bn_surface_area_data.get()
-
-        if (
-                len(ift_data[0]) <= 1 and
-                len(volume_data[0]) <= 1 and
-                len(surface_area_data[0]) <= 1
-        ):
-            self.view.show_waiting_placeholder()
-            return
-
-        self.view.hide_waiting_placeholder()
-
-        self.view.set_ift_data(ift_data)
-        self.view.set_volume_data(volume_data)
-        self.view.set_surface_area_data(surface_area_data)
-
-    def _do_destroy(self) -> None:
-        for ec in self.__event_connections:
-            ec.disconnect()

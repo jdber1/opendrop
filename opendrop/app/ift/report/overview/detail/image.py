@@ -31,30 +31,27 @@ from typing import Optional
 
 import cv2
 import numpy as np
-from gi.repository import Gtk
 
-from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable.typing import Bindable
+from gi.repository import GObject
 
-drop_fit_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
+from opendrop.app.ift.analysis import IFTDropAnalysis
+from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+from opendrop.appfw import componentclass
 
 
-@drop_fit_cs.view()
-class DropFitView(View['DropFitPresenter', Gtk.Widget]):
-    def _do_init(self) -> Gtk.Widget:
-        from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+@componentclass()
+class IFTReportOverviewImage(FigureCanvas):
+    __gtype_name__ = 'IFTReportOverviewImage'
+
+    _analysis = None
+    _event_connections = ()
+
+    def __init__(self) -> None:
         from matplotlib.figure import Figure
         from matplotlib.image import AxesImage
 
-        self._widget = Gtk.Grid()
-
         figure = Figure(tight_layout=True)
-
-        self._figure_canvas = FigureCanvas(figure)
-        self._figure_canvas.props.hexpand = True
-        self._figure_canvas.props.vexpand = True
-        self._figure_canvas.show()
-        self._widget.add(self._figure_canvas)
+        super().__init__(figure)
 
         # Axes
         self._axes = figure.add_subplot(1, 1, 1)
@@ -67,21 +64,57 @@ class DropFitView(View['DropFitPresenter', Gtk.Widget]):
 
         # Placeholder transparent 1x1 image (rgba format)
         self._axes_bg_image.set_data(np.zeros((1, 1, 4)))
+        self._axes_bg_image.set_extent((0, 1, 0, 1))
         self._axes.add_image(self._axes_bg_image)
 
         self._profile_extract_line = self._axes.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
         self._profile_fit_line = self._axes.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
 
-        self.presenter.view_ready()
+    def do_map(self) -> None:
+        FigureCanvas.do_map.invoke(FigureCanvas, self)
+        self.draw()
 
-        return self._widget
+    @GObject.Property
+    def analysis(self) -> Optional[IFTDropAnalysis]:
+        return self._analysis
 
-    def set_drop_image(self, image: Optional[np.ndarray]) -> None:
+    @analysis.setter
+    def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
+        for conn in self._event_connections:
+            conn.disconnect()
+        self._event_connections = ()
+
+        self._analysis = value
+
+        if self._analysis is None:
+            return
+
+        self._event_connections = (
+            self._analysis.bn_image.on_changed.connect(self._hdl_analysis_image_changed),
+            self._analysis.bn_drop_profile_extract.on_changed.connect(self._hdl_analysis_drop_profile_fit_extract_changed),
+            self._analysis.bn_drop_profile_fit.on_changed.connect(self._hdl_analysis_drop_profile_fit_changed),
+        )
+
+        self._hdl_analysis_image_changed()
+        self._hdl_analysis_drop_profile_fit_extract_changed()
+        self._hdl_analysis_drop_profile_fit_changed()
+
+    def _hdl_analysis_image_changed(self) -> None:
+        if self._analysis is None: return
+
+        image = self._analysis.bn_image.get()
+
         if image is None:
             self._axes.set_axis_off()
             self._axes_bg_image.set_data(np.zeros((1, 1, 4)))
-            self._figure_canvas.draw()
+            self._axes_bg_image.set_extent((0, 1, 0, 1))
+            self.draw()
             return
+
+        drop_region = self._analysis.bn_drop_region.get()
+        assert drop_region is not None
+
+        image = image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
 
         self._axes.set_axis_on()
 
@@ -91,75 +124,46 @@ class DropFitView(View['DropFitPresenter', Gtk.Widget]):
         self._axes_bg_image.set_data(image_thumb)
 
         self._axes_bg_image.set_extent((0, image.shape[1], image.shape[0], 0))
-        self._figure_canvas.draw()
+        self.draw()
 
-    def set_drop_profile_extract(self, profile: Optional[np.ndarray]) -> None:
+    def _hdl_analysis_drop_profile_fit_extract_changed(self) -> None:
+        if self._analysis is None: return
+
+        profile = self._analysis.bn_drop_profile_extract.get()
+
         if profile is None:
             self._profile_fit_line.set_visible(False)
-            self._figure_canvas.draw()
+            self.draw()
             return
+
+        drop_region = self._analysis.bn_drop_region.get()
+        assert drop_region is not None
+
+        profile = profile - drop_region.position
 
         self._profile_fit_line.set_data(profile.T)
         self._profile_fit_line.set_visible(True)
-        self._figure_canvas.draw()
+        self.draw()
 
-    def set_drop_profile_fit(self, profile: Optional[np.ndarray]) -> None:
+    def _hdl_analysis_drop_profile_fit_changed(self) -> None:
+        if self._analysis is None: return
+
+        profile = self._analysis.bn_drop_profile_fit.get()
+
         if profile is None:
             self._profile_extract_line.set_visible(False)
-            self._figure_canvas.draw()
+            self.draw()
             return
+
+        drop_region = self._analysis.bn_drop_region.get()
+        assert drop_region is not None
+
+        profile = profile - drop_region.position
 
         self._profile_extract_line.set_data(profile.T)
         self._profile_extract_line.set_visible(True)
-        self._figure_canvas.draw()
+        self.draw()
 
-    def _do_destroy(self) -> None:
-        self._widget.destroy()
-
-
-@drop_fit_cs.presenter(options=['in_drop_image', 'in_drop_profile_extract', 'in_drop_profile_fit'])
-class DropFitPresenter(Presenter['DropFitView']):
-    def _do_init(
-            self,
-            in_drop_image: Bindable[Optional[np.ndarray]],
-            in_drop_profile_extract: Bindable[Optional[np.ndarray]],
-            in_drop_profile_fit: Bindable[Optional[np.ndarray]],
-    ) -> None:
-        self._bn_drop_image = in_drop_image
-        self._bn_drop_profile_extract = in_drop_profile_extract
-        self._bn_drop_profile_fit = in_drop_profile_fit
-
-        self.__event_connections = []
-
-    def view_ready(self):
-        self.__event_connections.extend([
-            self._bn_drop_image.on_changed.connect(
-                self._hdl_drop_image_changed
-            ),
-            self._bn_drop_profile_extract.on_changed.connect(
-                self._hdl_drop_profile_extract_changed
-            ),
-            self._bn_drop_profile_fit.on_changed.connect(
-                self._hdl_drop_profile_fit_changed
-            ),
-        ])
-
-        self._hdl_drop_image_changed()
-        self._hdl_drop_profile_extract_changed()
-        self._hdl_drop_profile_fit_changed()
-
-    def _hdl_drop_image_changed(self) -> None:
-        drop_image = self._bn_drop_image.get()
-        self.view.set_drop_image(drop_image)
-
-    def _hdl_drop_profile_extract_changed(self) -> None:
-        drop_profile_extract = self._bn_drop_profile_extract.get()
-        self.view.set_drop_profile_extract(drop_profile_extract)
-
-    def _hdl_drop_profile_fit_changed(self) -> None:
-        drop_profile_fit = self._bn_drop_profile_fit.get()
-        self.view.set_drop_profile_fit(drop_profile_fit)
-
-    def _do_destroy(self) -> None:
-        for ec in self.__event_connections:
-            ec.disconnect()
+    def do_destroy(self) -> None:
+        self.analysis = None
+        FigureCanvas.do_destroy.invoke(FigureCanvas, self)

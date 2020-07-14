@@ -81,8 +81,15 @@ class IFTPhysicalParametersForm(Gtk.Grid):
 
     @GObject.Property
     def needle_width(self) -> Optional[float]:
-        return self._form.bn_needle_width.get()*1000
+        needle_width_m = self._form.bn_needle_width.get()
+        if needle_width_m is None:
+            return None
+
+        return needle_width_m*1000
 
     @needle_width.setter
     def needle_width(self, value: Optional[float]) -> None:
-        self._form.bn_needle_width.set(value)/1000
+        if value is None:
+            self._form.bn_needle_width.set(None)
+        else:
+            self._form.bn_needle_width.set(value/1000)

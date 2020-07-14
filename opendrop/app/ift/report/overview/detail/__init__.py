@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import log_cs
+from .detail import IFTReportOverviewDetail

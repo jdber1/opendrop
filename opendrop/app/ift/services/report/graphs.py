@@ -28,80 +28,76 @@
 
 
 import math
-from typing import Sequence
+from typing import Tuple, Sequence
 
+from gi.repository import GObject
+
+from . import IFTReportService
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.utility.bindable import VariableBindable
-from opendrop.utility.bindable.typing import Bindable
+from opendrop.appfw import inject
 
 
-class GraphsModel:
-    def __init__(self, in_analyses: Bindable[Sequence[IFTDropAnalysis]]) -> None:
-        self._bn_analyses = in_analyses
+class IFTReportGraphsService(GObject.Object):
+    class _AnalysisWatcher:
+        def __init__(self, analysis: IFTDropAnalysis, owner: 'IFTReportGraphsService') -> None:
+            self.analysis = analysis
+            self._owner = owner
+            self._cleanup_tasks = []
 
-        self._tracked_analyses = []
-        self._tracked_analysis_unbind_tasks = {}
+            event_connections = [
+                self.analysis.bn_interfacial_tension.on_changed.connect(
+                    owner._hdl_tracked_analysis_data_changed
+                ),
+                self.analysis.bn_volume.on_changed.connect(
+                    owner._hdl_tracked_analysis_data_changed
+                ),
+                self.analysis.bn_surface_area.on_changed.connect(
+                    owner._hdl_tracked_analysis_data_changed
+                ),
+            ]
 
-        self.bn_ift_data = VariableBindable((tuple(), tuple()))
-        self.bn_volume_data = VariableBindable((tuple(), tuple()))
-        self.bn_surface_area_data = VariableBindable((tuple(), tuple()))
+            self._cleanup_tasks.extend(conn.disconnect for conn in event_connections)
 
-        self._bn_analyses.on_changed.connect(
-            self._hdl_analyses_changed
-        )
+        def destroy(self) -> None:
+            for f in self._cleanup_tasks:
+                f()
 
+    @inject
+    def __init__(self, report: IFTReportService) -> None:
+        super().__init__()
+        self._report = report
+        self._watchers = []
+
+        self._ift = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
+        self._volume = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
+        self._surface_area = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
+
+        self._report.bn_analyses.on_changed.connect(self._hdl_analyses_changed)
         self._hdl_analyses_changed()
 
     def _hdl_analyses_changed(self) -> None:
-        analyses = self._bn_analyses.get()
-        tracked_analyses = self._tracked_analyses
+        analyses = self._report.bn_analyses.get()
+        watching = [watcher.analysis for watcher in self._watchers]
 
-        to_track = set(analyses) - set(tracked_analyses)
-        for analysis in to_track:
-            self._track_analysis(analysis)
+        to_watch = set(analyses) - set(watching)
+        for analysis in to_watch:
+            self._watchers.append(self._AnalysisWatcher(analysis, self))
 
-        to_untrack = set(tracked_analyses) - set(analyses)
-        for analysis in to_untrack:
-            self._untrack_analysis(analysis)
-
-    def _track_analysis(self, analysis: IFTDropAnalysis) -> None:
-        unbind_tasks = []
-
-        event_connections = [
-            analysis.bn_interfacial_tension.on_changed.connect(
-                self._hdl_tracked_analysis_data_changed
-            ),
-            analysis.bn_volume.on_changed.connect(
-                self._hdl_tracked_analysis_data_changed
-            ),
-            analysis.bn_surface_area.on_changed.connect(
-                self._hdl_tracked_analysis_data_changed
-            ),
-        ]
-
-        unbind_tasks.extend(
-            ec.disconnect for ec in event_connections
-        )
-
-        self._tracked_analyses.append(analysis)
-        self._tracked_analysis_unbind_tasks[analysis] = unbind_tasks
+        to_unwatch = set(watching) - set(analyses)
+        for analysis in to_unwatch:
+            for watcher in self._watchers:
+                if watcher.analysis == analysis:
+                    self._watchers.remove(watcher)
+                    watcher.destroy()
 
         self._hdl_tracked_analysis_data_changed()
-
-    def _untrack_analysis(self, analysis: IFTDropAnalysis) -> None:
-        unbind_tasks = self._tracked_analysis_unbind_tasks[analysis]
-        for task in unbind_tasks:
-            task()
-
-        del self._tracked_analysis_unbind_tasks[analysis]
-        self._tracked_analyses.remove(analysis)
 
     def _hdl_tracked_analysis_data_changed(self) -> None:
         ift_data = []
         vol_data = []
         sur_data = []
 
-        analyses = self._bn_analyses.get()
+        analyses = self._report.bn_analyses.get()
 
         for analysis in analyses:
             timestamp = analysis.bn_image_timestamp.get()
@@ -139,6 +135,22 @@ class GraphsModel:
         if len(sur_data) == 0:
             sur_data = (tuple(), tuple())
 
-        self.bn_ift_data.set(ift_data)
-        self.bn_volume_data.set(vol_data)
-        self.bn_surface_area_data.set(sur_data)
+        self._ift = ift_data
+        self._volume = vol_data
+        self._surface_area = sur_data
+
+        self.notify('ift')
+        self.notify('volume')
+        self.notify('surface-area')
+
+    @GObject.Property
+    def ift(self) -> Tuple[Sequence[float], Sequence[float]]:
+        return self._ift
+
+    @GObject.Property
+    def volume(self) -> Tuple[Sequence[float], Sequence[float]]:
+        return self._volume
+
+    @GObject.Property
+    def surface_area(self) -> Tuple[Sequence[float], Sequence[float]]:
+        return self._surface_area

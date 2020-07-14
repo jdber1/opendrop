@@ -36,7 +36,7 @@ from opendrop.app.common.image_processing.plugins.define_region import (
     DefineRegionPluginModel,
 )
 from opendrop.app.ift.services.features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
-from opendrop.appfw import inject
+from opendrop.appfw import inject, singleton
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Rect2
@@ -46,6 +46,7 @@ from .plugins.edge_detection import EdgeDetectionPluginModel
 from .plugins.preview import IFTPreviewPluginModel
 
 
+@singleton
 class IFTImageProcessingModel:
     @inject
     def __init__(

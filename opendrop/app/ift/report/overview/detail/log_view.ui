@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkTextBuffer" id="text_buffer"/>
+  <template class="IFTReportOverviewLogView" parent="GtkScrolledWindow">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <property name="shadow_type">in</property>
+    <child>
+      <object class="GtkTextView">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="editable">False</property>
+        <property name="wrap_mode">char</property>
+        <property name="left_margin">10</property>
+        <property name="right_margin">10</property>
+        <property name="top_margin">10</property>
+        <property name="bottom_margin">10</property>
+        <property name="buffer">text_buffer</property>
+        <property name="monospace">True</property>
+      </object>
+    </child>
+  </template>
+</interface>

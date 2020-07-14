@@ -39,12 +39,12 @@ from opendrop.app.ift.analysis import (
 )
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
-from opendrop.app.ift.results import IFTResultsModel
 from opendrop.appfw import Module, Binder, singleton, inject
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from .quantities import PhysicalPropertiesCalculatorParams, PhysicalPropertiesCalculator
 from .features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
+from .report import IFTReportModule, IFTReportService
 
 
 class IFTSessionModule(Module):
@@ -53,6 +53,8 @@ class IFTSessionModule(Module):
         binder.bind(PhysicalPropertiesCalculatorParams, to=PhysicalPropertiesCalculatorParams, scope=singleton)
         binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
         binder.bind(FeatureExtractorService, to=FeatureExtractorService, scope=singleton)
+        binder.install(IFTReportModule)
+
         binder.bind(IFTSession, to=IFTSession, scope=singleton)
 
 
@@ -64,28 +66,25 @@ class IFTSession:
             image_acquisition: ImageAcquisitionModel,
             physprops_calculator_params: PhysicalPropertiesCalculatorParams,
             feature_extractor_params: FeatureExtractorParams,
+            report_service: IFTReportService,
     ) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._physprops_calculator_params = physprops_calculator_params
         self._feature_extractor_params = feature_extractor_params
 
-        self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[IFTDropAnalysis]]
+        self.bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[IFTDropAnalysis]]
         self._analyses_saved = False
 
         self.image_acquisition = image_acquisition
         self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
 
-        self.results = IFTResultsModel(
-            in_analyses=self._bn_analyses,
-            do_cancel_analyses=self.cancel_analyses,
-            do_save_analyses=self.save_analyses,
-            create_save_options=self._create_save_options,
-            check_if_safe_to_discard=self.check_if_safe_to_discard_analyses,
-        )
+        self._report = report_service
+
+        self.bn_analyses.bind_to(self._report.bn_analyses)
 
     def start_analyses(self) -> None:
-        assert len(self._bn_analyses.get()) == 0
+        assert len(self.bn_analyses.get()) == 0
 
         new_analyses = []
 
@@ -100,35 +99,35 @@ class IFTSession:
 
             new_analyses.append(new_analysis)
 
-        self._bn_analyses.set(new_analyses)
+        self.bn_analyses.set(new_analyses)
         self._analyses_saved = False
 
     def cancel_analyses(self) -> None:
-        analyses = self._bn_analyses.get()
+        analyses = self.bn_analyses.get()
 
         for analysis in analyses:
             analysis.cancel()
 
     def clear_analyses(self) -> None:
         self.cancel_analyses()
-        self._bn_analyses.set(tuple())
+        self.bn_analyses.set(tuple())
 
     def save_analyses(self, options: IFTAnalysisSaverOptions) -> None:
-        analyses = self._bn_analyses.get()
+        analyses = self.bn_analyses.get()
         if len(analyses) == 0:
             return
 
         save_drops(analyses, options)
         self._analyses_saved = True
 
-    def _create_save_options(self) -> IFTAnalysisSaverOptions:
+    def create_save_options(self) -> IFTAnalysisSaverOptions:
         return IFTAnalysisSaverOptions()
 
     def check_if_safe_to_discard_analyses(self) -> bool:
         if self._analyses_saved:
             return True
         else:
-            analyses = self._bn_analyses.get()
+            analyses = self.bn_analyses.get()
             if len(analyses) == 0:
                 return True
 
