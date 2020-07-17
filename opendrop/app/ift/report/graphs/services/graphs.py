@@ -28,14 +28,11 @@
 
 
 import math
-from typing import Sequence, Tuple
+from typing import Iterable, Sequence, Tuple
 
 from gi.repository import GObject
-from injector import inject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-
-from . import IFTReportService
 
 
 class IFTReportGraphsService(GObject.Object):
@@ -47,13 +44,13 @@ class IFTReportGraphsService(GObject.Object):
 
             event_connections = [
                 self.analysis.bn_interfacial_tension.on_changed.connect(
-                    owner._hdl_tracked_analysis_data_changed
+                    owner._tracked_analysis_data_changed
                 ),
                 self.analysis.bn_volume.on_changed.connect(
-                    owner._hdl_tracked_analysis_data_changed
+                    owner._tracked_analysis_data_changed
                 ),
                 self.analysis.bn_surface_area.on_changed.connect(
-                    owner._hdl_tracked_analysis_data_changed
+                    owner._tracked_analysis_data_changed
                 ),
             ]
 
@@ -63,21 +60,21 @@ class IFTReportGraphsService(GObject.Object):
             for f in self._cleanup_tasks:
                 f()
 
-    @inject
-    def __init__(self, report: IFTReportService) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._report = report
+        self._analyses = ()
         self._watchers = []
 
         self._ift = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
         self._volume = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
         self._surface_area = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
 
-        self._report.bn_analyses.on_changed.connect(self._hdl_analyses_changed)
-        self._hdl_analyses_changed()
+    def set_analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+        self._analyses = tuple(analyses)
+        self._analyses_changed()
 
-    def _hdl_analyses_changed(self) -> None:
-        analyses = self._report.bn_analyses.get()
+    def _analyses_changed(self) -> None:
+        analyses = self._analyses
         watching = [watcher.analysis for watcher in self._watchers]
 
         to_watch = set(analyses) - set(watching)
@@ -86,19 +83,19 @@ class IFTReportGraphsService(GObject.Object):
 
         to_unwatch = set(watching) - set(analyses)
         for analysis in to_unwatch:
-            for watcher in self._watchers:
+            for watcher in tuple(self._watchers):
                 if watcher.analysis == analysis:
                     self._watchers.remove(watcher)
                     watcher.destroy()
 
-        self._hdl_tracked_analysis_data_changed()
+        self._tracked_analysis_data_changed()
 
-    def _hdl_tracked_analysis_data_changed(self) -> None:
+    def _tracked_analysis_data_changed(self) -> None:
         ift_data = []
         vol_data = []
         sur_data = []
 
-        analyses = self._report.bn_analyses.get()
+        analyses = self._analyses
 
         for analysis in analyses:
             timestamp = analysis.bn_image_timestamp.get()

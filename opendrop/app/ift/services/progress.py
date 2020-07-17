@@ -1,20 +1,16 @@
 from enum import Enum
-import math
+from typing import Iterable
 
 from gi.repository import GObject
-from injector import inject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
 
-from . import IFTReportService
 
-
-class IFTReportProgressService(GObject.Object):
+class IFTAnalysisProgressService(GObject.Object):
     class Status(Enum):
-        NO_ANALYSES = 0
-        FITTING = 1
-        FINISHED = 2
-        CANCELLED = 3
+        ANALYSING = 0
+        FINISHED  = 1
+        CANCELLED = 2
 
     class _AnalysisWatcher:
         def __init__(self, analysis: IFTDropAnalysis, owner: 'IFTReportProgressService') -> None:
@@ -43,16 +39,19 @@ class IFTReportProgressService(GObject.Object):
             for f in self._cleanup_tasks:
                 f()
 
-    @inject
-    def __init__(self, report: IFTReportService) -> None:
-        self._report = report
+    def __init__(self) -> None:
+        self._analyses = ()
         self._watchers = []
+        super().__init__()
 
-        self._report.bn_analyses.on_changed.connect(self._hdl_analyses_changed)
-        self._hdl_analyses_changed()
+    def _set_analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+        self._analyses = tuple(analyses)
+        self._update_watchers()
 
-    def _hdl_analyses_changed(self) -> None:
-        analyses = self._report.bn_analyses.get()
+    analyses = GObject.Property(setter=_set_analyses, flags=GObject.ParamFlags.WRITABLE)
+
+    def _update_watchers(self) -> None:
+        analyses = self._analyses
         watching = [watcher.analysis for watcher in self._watchers]
 
         to_watch = set(analyses) - set(watching)
@@ -61,17 +60,19 @@ class IFTReportProgressService(GObject.Object):
 
         to_unwatch = set(watching) - set(analyses)
         for analysis in to_unwatch:
-            for w in watching:
+            for w in tuple(self._watchers):
                 if w.analysis == analysis:
                     self._watchers.remove(w)
                     w.destroy()
 
+        self.notify('status')
+        self.notify('fraction')
+        self.notify('time-start')
+        self.notify('est-complete')
+
     @GObject.Property
     def status(self) -> Status:
-        analyses = self._report.bn_analyses.get()
-
-        if len(analyses) == 0:
-            return self.Status.NO_ANALYSES
+        analyses = self._analyses
 
         is_cancelled = any(
             analysis.bn_is_cancelled.get()
@@ -87,13 +88,12 @@ class IFTReportProgressService(GObject.Object):
         if is_finished:
             return self.Status.FINISHED
 
-        return self.Status.FITTING
+        return self.Status.ANALYSING
 
     @GObject.Property(type=float)
     def time_start(self) -> float:
-        analyses = self._report.bn_analyses.get()
-        if len(analyses) == 0:
-            return math.nan
+        analyses = self._analyses
+        if not analyses: return 0.0
 
         time_start = min(
             analysis.bn_time_start.get()
@@ -104,9 +104,8 @@ class IFTReportProgressService(GObject.Object):
 
     @GObject.Property(type=float)
     def est_complete(self) -> float:
-        analyses = self._report.bn_analyses.get()
-        if len(analyses) == 0:
-            return math.nan
+        analyses = self._analyses
+        if not analyses: return 0.0
 
         time_est_complete = max(
             analysis.bn_time_est_complete.get()
@@ -117,9 +116,8 @@ class IFTReportProgressService(GObject.Object):
 
     @GObject.Property(type=float)
     def fraction(self) -> float:
-        analyses = self._report.bn_analyses.get()
-        if len(analyses) == 0:
-            return math.nan
+        analyses = self._analyses
+        if not analyses: return 1.0
 
         num_completed = len([
             analysis
@@ -132,9 +130,8 @@ class IFTReportProgressService(GObject.Object):
         return completed_fraction
 
     def calculate_time_elapsed(self) -> float:
-        analyses = self._report.bn_analyses.get()
-        if len(analyses) == 0:
-            return math.nan
+        analyses = self._analyses
+        if not analyses: return 0.0
 
         time_elapsed = max(
             analysis.calculate_time_elapsed()
@@ -144,9 +141,8 @@ class IFTReportProgressService(GObject.Object):
         return time_elapsed
 
     def calculate_time_remaining(self) -> float:
-        analyses = self._report.bn_analyses.get()
-        if len(analyses) == 0:
-            return math.nan
+        analyses = self._analyses
+        if not analyses: return 0.0
 
         time_remaining = max(
             analysis.calculate_time_remaining()

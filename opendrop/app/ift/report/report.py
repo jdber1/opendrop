@@ -27,11 +27,12 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from gi.repository import Gtk
-from injector import inject
+from typing import Iterable, Sequence
 
-from opendrop.app.ift.services.report import IFTReportService
-from opendrop.appfw import Presenter, TemplateChild, ComponentFactory, component
+from gi.repository import Gtk, GObject
+
+from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
 @component(
@@ -43,20 +44,28 @@ class IFTReportPresenter(Presenter):
     stack_switcher = TemplateChild('stack_switcher')  # type: TemplateChild[Gtk.StackSwitcher]
     overview = TemplateChild('overview')
 
-    @inject
-    def __init__(self, cf: ComponentFactory, report: IFTReportService) -> None:
-        self.cf = cf
-        self.report = report
+    _analyses = ()
+
+    view_ready = False
 
     def after_view_init(self) -> None:
-        conn = self.report.bn_analyses.on_changed.connect(self.hdl_report_analyses_changed)
-        self.host.connect('destroy', lambda *_: conn.disconnect())
+        self.view_ready = True
+        self.update_graphs_visibility()
 
-        self.hdl_report_analyses_changed()
+    @install
+    @GObject.Property
+    def analyses(self) -> Sequence[IFTDropAnalysis]:
+        return self._analyses
 
-    def hdl_report_analyses_changed(self) -> None:
-        analyses = self.report.bn_analyses.get()
-        if len(analyses) <= 1:
+    @analyses.setter
+    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+        self._analyses = tuple(analyses)
+        self.update_graphs_visibility()
+
+    def update_graphs_visibility(self) -> None:
+        if not self.view_ready: return
+
+        if len(self._analyses) <= 1:
             self.hide_graphs()
         else:
             self.show_graphs()

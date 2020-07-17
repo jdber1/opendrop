@@ -27,43 +27,34 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional, Sequence
-from injector import inject
+from typing import Optional, Sequence, Iterable
 
 from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.app.ift.services.report import IFTReportService
-from opendrop.appfw import Presenter, component
+from opendrop.appfw import Presenter, component, install
 
 
 @component(
     template_path='./overview.ui',
 )
 class IFTReportOverviewPresenter(Presenter[Gtk.Paned]):
+    _analyses = ()
     _selection = None
-    _event_connections = ()
 
-    @inject
-    def __init__(self, report_service: IFTReportService) -> None:
-        self.report_service = report_service
+    @install
+    @GObject.Property
+    def analyses(self) -> Sequence[IFTDropAnalysis]:
+        return self._analyses
 
-        self._event_connections = [
-            self.report_service.bn_analyses.on_changed.connect(lambda: self.notify('analyses'), weak_ref=False)
-        ]
+    @analyses.setter
+    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+        self._analyses = tuple(analyses)
 
     @GObject.Property
     def selection(self) -> Optional[IFTDropAnalysis]:
         return self._selection
 
     @selection.setter
-    def selection(self, value: Optional[IFTDropAnalysis]) -> None:
-        self._selection = value
-
-    @GObject.Property
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
-        return self.report_service.bn_analyses.get()
-
-    def destroy(self, *_) -> None:
-        for conn in self._event_connections:
-            conn.disconnect()
+    def selection(self, selection: Optional[IFTDropAnalysis]) -> None:
+        self._selection = selection

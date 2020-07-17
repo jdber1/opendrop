@@ -28,12 +28,11 @@
 
 
 from typing import Optional
-from injector import inject
 
 from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import Presenter, TemplateChild, ComponentFactory, component, install
+from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
 @component(

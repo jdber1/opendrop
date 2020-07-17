@@ -27,6 +27,7 @@
                   <object class="IFTReportOverview" id="overview">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="analyses" bind-source="@" bind-property="analyses" bind-flags="sync-create"/>
                   </object>
                   <packing>
                     <property name="name">Individual Fit</property>
@@ -38,6 +39,7 @@
                   <object class="IFTReportGraphs">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="analyses" bind-source="@" bind-property="analyses" bind-flags="sync-create"/>
                   </object>
                   <packing>
                     <property name="name">Graphs</property>

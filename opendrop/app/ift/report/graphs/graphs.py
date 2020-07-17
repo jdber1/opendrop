@@ -27,16 +27,18 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Sequence, Tuple
-from injector import inject
+from typing import Iterable, Sequence, Tuple
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
+from injector import inject
 from matplotlib import ticker
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from matplotlib.figure import Figure
 
-from opendrop.app.ift.services.report.graphs import IFTReportGraphsService
-from opendrop.appfw import Presenter, TemplateChild, component
+from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.appfw import Presenter, TemplateChild, component, install
+
+from .services.graphs import IFTReportGraphsService
 
 
 @component(
@@ -45,6 +47,8 @@ from opendrop.appfw import Presenter, TemplateChild, component
 class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
     no_data_label = TemplateChild('no_data_label')
     figure_container = TemplateChild('figure_container')  # type: TemplateChild[Gtk.Container]
+
+    _analyses = ()
 
     @inject
     def __init__(self, graphs_service: IFTReportGraphsService) -> None:
@@ -85,6 +89,16 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.graphs_service.connect('notify::surface-area', self.hdl_model_data_changed)
 
         self.hdl_model_data_changed()
+
+    @install
+    @GObject.Property
+    def analyses(self) -> Sequence[IFTDropAnalysis]:
+        return self._analyses
+
+    @analyses.setter
+    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+        self._analyses = tuple(analyses)
+        self.graphs_service.set_analyses(analyses)
 
     def hdl_model_data_changed(self, *args) -> None:
         ift_data = self.graphs_service.ift
