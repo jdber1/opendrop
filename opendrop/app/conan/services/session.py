@@ -28,27 +28,30 @@
 
 
 import asyncio
-from typing import Sequence, Callable, Any
+from typing import Sequence
 
+from injector import singleton
 import numpy as np
 
-from opendrop.app.common.image_acquisition import ImageAcquisitionModel, AcquirerType
+from opendrop.app.common.image_acquisition import AcquirerType, ImageAcquisitionModel
+from opendrop.app.conan.analysis import (
+    ConanAnalysis,
+    ContactAngleCalculator,
+    ContactAngleCalculatorParams,
+    FeatureExtractor,
+    FeatureExtractorParams,
+)
+from opendrop.app.conan.analysis_saver import ConanAnalysisSaverOptions
+from opendrop.app.conan.analysis_saver.save_functions import save_drops
+from opendrop.app.conan.image_processing import ConanImageProcessingModel
+from opendrop.app.conan.results import ConanResultsModel
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
-from .analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculator, ContactAngleCalculatorParams, \
-    ConanAnalysis
-from .analysis_saver import ConanAnalysisSaverOptions
-from .analysis_saver.save_functions import save_drops
-from .image_processing import ConanImageProcessingModel
-from .results import ConanResultsModel
 
 
+@singleton
 class ConanSession:
-    def __init__(self, do_exit: Callable[[], Any], *, loop: asyncio.AbstractEventLoop) -> None:
-        self._loop = loop
-
-        self._do_exit = do_exit
-
+    def __init__(self) -> None:
         self._feature_extractor_params = FeatureExtractorParams()
         self._conancalc_params = ContactAngleCalculatorParams()
 
@@ -70,7 +73,7 @@ class ConanSession:
             do_cancel_analyses=self.cancel_analyses,
             do_save_analyses=self.save_analyses,
             create_save_options=self._create_save_options,
-            check_if_safe_to_discard=self.check_if_safe_to_discard_analyses,
+            check_if_safe_to_discard=self.safe_to_discard,
         )
 
     def start_analyses(self) -> None:
@@ -112,7 +115,7 @@ class ConanSession:
     def _create_save_options(self) -> ConanAnalysisSaverOptions:
         return ConanAnalysisSaverOptions()
 
-    def check_if_safe_to_discard_analyses(self) -> bool:
+    def safe_to_discard(self) -> bool:
         if self._analyses_saved:
             return True
         else:
@@ -134,7 +137,7 @@ class ConanSession:
         return FeatureExtractor(
             image=image,
             params=self._feature_extractor_params,
-            loop=self._loop,
+            loop=asyncio.get_event_loop(),
         )
 
     def calculate_contact_angle(self, extracted_features: FeatureExtractor) -> ContactAngleCalculator:
@@ -143,7 +146,6 @@ class ConanSession:
             params=self._conancalc_params,
         )
 
-    def exit(self) -> None:
+    def quit(self) -> None:
         self.clear_analyses()
         self.image_acquisition.destroy()
-        self._do_exit()

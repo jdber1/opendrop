@@ -37,8 +37,6 @@ from injector import inject
 from opendrop.appfw import ComponentFactory
 from opendrop.vendor import aioglib
 
-from .conan import ConanSession, conan_root_cs
-
 
 class OpendropApplication(Gtk.Application):
     application_id = 'jdber1.opendrop'
@@ -57,73 +55,8 @@ class OpendropApplication(Gtk.Application):
         self._loop = aioglib.GLibEventLoop(GLib.MainContext.default())
         self._cf = cf
 
-    def do_activate(self) -> None:
         self._state = OpendropApplication._State.NONE
-
-        self._current_component = None
         self._current_window = None
-
-        self._goto_main_menu()
-
-    def _hdl_menu_ift(self, *_) -> None:
-        self._goto_ift()
-
-    def _hdl_menu_conan(self, *_) -> None:
-        self._goto_conan()
-
-    def _goto_main_menu(self) -> None:
-        if self._state is OpendropApplication._State.MAIN_MENU:
-            return
-
-        self._clear_current_component()
-
-        self._current_window = cast(Gtk.Window, self._cf.create('MainMenu'))
-        self._current_window.show()
-
-        self._current_window.connect('ift', self._hdl_menu_ift),
-        self._current_window.connect('conan', self._hdl_menu_conan),
-
-        self.add_window(self._current_window)
-
-    def _goto_ift(self) -> None:
-        if self._state is OpendropApplication._State.IFT:
-            return
-
-        self._clear_current_component()
-
-        self._current_window = cast(Gtk.Window, self._cf.create('IFTExperiment'))
-        self._current_window.show()
-
-        self._current_window.connect('destroy', lambda *args: self._goto_main_menu())
-
-        self.add_window(self._current_window)
-
-    def _goto_conan(self) -> None:
-        if self._state is OpendropApplication._State.CONAN:
-            return
-
-        self._clear_current_component()
-        self._current_component = conan_root_cs.factory(
-            session=self._new_conan_session()
-        ).create()
-
-        self.add_window(self._current_component.view_rep)
-        self._current_component.view_rep.show()
-
-    def _clear_current_component(self) -> None:
-        if self._current_component is not None:
-            self._current_component.destroy()
-
-        if self._current_window is not None:
-            self._current_window.destroy()
-
-    def _new_conan_session(self) -> ConanSession:
-        session = ConanSession(
-            do_exit=self._goto_main_menu,
-            loop=self._loop,
-        )
-
-        return session
 
     def do_startup(self) -> None:
         # Chain up to parent implementation.
@@ -132,8 +65,56 @@ class OpendropApplication(Gtk.Application):
         asyncio.set_event_loop(self._loop)
         self._loop.set_is_running(True)
 
+    def do_activate(self) -> None:
+        self._goto_main_menu()
+
     def do_shutdown(self) -> None:
         self._loop.set_is_running(False)
 
         # Chain up to parent implementation.
         Gio.Application.do_shutdown.invoke(Gtk.Application, self)
+
+    def _goto_main_menu(self, *_) -> None:
+        if self._state is OpendropApplication._State.MAIN_MENU:
+            return
+
+        self._clear_current_window()
+
+        self._current_window = cast(Gtk.Window, self._cf.create('MainMenu'))
+        self._current_window.show()
+
+        self._current_window.connect('ift', self._goto_ift)
+        self._current_window.connect('conan', self._goto_conan)
+
+        self.add_window(self._current_window)
+
+    def _goto_ift(self, *_) -> None:
+        if self._state is OpendropApplication._State.IFT:
+            return
+
+        self._clear_current_window()
+
+        self._current_window = cast(Gtk.Window, self._cf.create('IFTExperiment'))
+        self._current_window.show()
+
+        self._current_window.connect('destroy', self._goto_main_menu)
+
+        self.add_window(self._current_window)
+
+    def _goto_conan(self, *_) -> None:
+        if self._state is OpendropApplication._State.CONAN:
+            return
+
+        self._clear_current_window()
+
+        self._current_window = cast(Gtk.Window, self._cf.create('ConanExperiment'))
+        self._current_window.show()
+
+        self._current_window.connect('destroy', self._goto_main_menu)
+
+        self.add_window(self._current_window)
+
+    def _clear_current_window(self) -> None:
+        if self._current_window is None: return
+        self._current_window.destroy()
+        self._current_window = None
