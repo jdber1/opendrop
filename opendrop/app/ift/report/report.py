@@ -41,6 +41,7 @@ class IFTReportPresenter(Presenter):
     frame = TemplateChild('frame')  # type: TemplateChild[Gtk.Frame]
     stack = TemplateChild('stack')  # type: TemplateChild[Gtk.Stack]
     stack_switcher = TemplateChild('stack_switcher')  # type: TemplateChild[Gtk.StackSwitcher]
+    overview = TemplateChild('overview')
 
     @inject
     def __init__(self, cf: ComponentFactory, report: IFTReportService) -> None:
@@ -48,14 +49,6 @@ class IFTReportPresenter(Presenter):
         self.report = report
 
     def after_view_init(self) -> None:
-        self.overview = self.cf.create('IFTReportOverview', visible=True)
-        self.stack.add_titled(self.overview, name='Individual Fit', title='Individual Fit')
-
-        graphs = self.cf.create('IFTReportGraphs', visible=True)
-        self.stack.add_titled(graphs, name='Graphs', title='Graphs')
-
-        self.stack.props.visible_child = self.overview
-
         conn = self.report.bn_analyses.on_changed.connect(self.hdl_report_analyses_changed)
         self.host.connect('destroy', lambda *_: conn.disconnect())
 

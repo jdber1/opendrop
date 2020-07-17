@@ -27,14 +27,14 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional
+from typing import Optional, Sequence
 from injector import inject
 
 from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
 from opendrop.app.ift.services.report import IFTReportService
-from opendrop.appfw import Presenter, ComponentFactory, component
+from opendrop.appfw import Presenter, component
 
 
 @component(
@@ -45,25 +45,12 @@ class IFTReportOverviewPresenter(Presenter[Gtk.Paned]):
     _event_connections = ()
 
     @inject
-    def __init__(self, cf: ComponentFactory, report_service: IFTReportService) -> None:
-        self.cf = cf
+    def __init__(self, report_service: IFTReportService) -> None:
         self.report_service = report_service
 
-    def after_view_init(self) -> None:
-        detail = self.cf.create('IFTReportOverviewDetail', visible=True)
-        self.host.pack1(detail, resize=True, shrink=False)
-
-        self.master = self.cf.create('IFTReportOverviewMaster', visible=True)
-        self.host.pack2(self.master, resize=True, shrink=False)
-
-        self.bind_property('selection', self.master, 'selection', GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
-        self.bind_property('selection', detail, 'analysis', GObject.BindingFlags.SYNC_CREATE)
-
         self._event_connections = [
-            self.report_service.bn_analyses.on_changed.connect(self.hdl_report_service_analyses_changed)
+            self.report_service.bn_analyses.on_changed.connect(lambda: self.notify('analyses'), weak_ref=False)
         ]
-
-        self.hdl_report_service_analyses_changed()
 
     @GObject.Property
     def selection(self) -> Optional[IFTDropAnalysis]:
@@ -73,8 +60,9 @@ class IFTReportOverviewPresenter(Presenter[Gtk.Paned]):
     def selection(self, value: Optional[IFTDropAnalysis]) -> None:
         self._selection = value
 
-    def hdl_report_service_analyses_changed(self) -> None:
-        self.master.props.analyses = self.report_service.bn_analyses.get()
+    @GObject.Property
+    def analyses(self) -> Sequence[IFTDropAnalysis]:
+        return self.report_service.bn_analyses.get()
 
     def destroy(self, *_) -> None:
         for conn in self._event_connections:

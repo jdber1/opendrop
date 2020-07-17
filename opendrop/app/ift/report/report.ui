@@ -24,7 +24,26 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <placeholder/>
+                  <object class="IFTReportOverview" id="overview">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="name">Individual Fit</property>
+                    <property name="title" translatable="yes">Individual Fit</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="IFTReportGraphs">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="name">Graphs</property>
+                    <property name="title" translatable="yes">Graphs</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
             </child>

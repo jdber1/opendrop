@@ -42,37 +42,14 @@ from opendrop.appfw import Presenter, TemplateChild, ComponentFactory, component
 class IFTReportOverviewDetailPresenter(Presenter[Gtk.Stack]):
     no_data_label = TemplateChild('no_data_label')
     content = TemplateChild('content')
-    notebook = TemplateChild('notebook')
 
     _analysis = None
     event_connections = ()
 
     view_ready = False
 
-    @inject
-    def __init__(self, cf: ComponentFactory) -> None:
-        self.cf = cf
-
     def after_view_init(self) -> None:
-        parameters = self.cf.create('IFTReportOverviewParameters', visible=True)
-        self.content.attach(parameters, 0, 0, 1, 1)
-
-        image = self.cf.create('IFTReportOverviewImage', visible=True)
-        self.notebook.append_page(image, Gtk.Label('Drop profile'))
-
-        residuals = self.cf.create('IFTReportOverviewResiduals', visible=True)
-        self.notebook.append_page(residuals, Gtk.Label('Fit residuals'))
-
-        log_view = self.cf.create('IFTReportOverviewLogView', visible=True)
-        self.notebook.append_page(log_view, Gtk.Label('Log'))
-
-        self.bind_property('analysis', parameters, 'analysis', GObject.BindingFlags.SYNC_CREATE)
-        self.bind_property('analysis', image, 'analysis', GObject.BindingFlags.SYNC_CREATE)
-        self.bind_property('analysis', residuals, 'analysis', GObject.BindingFlags.SYNC_CREATE)
-        self.bind_property('analysis', log_view, 'analysis', GObject.BindingFlags.SYNC_CREATE)
-
         self.view_ready = True
-
         # Invoke setter.
         self.analysis = self.analysis
 

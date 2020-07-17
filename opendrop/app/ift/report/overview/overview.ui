@@ -8,10 +8,27 @@
     <property name="orientation">vertical</property>
     <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
-      <placeholder/>
+      <object class="IFTReportOverviewDetail">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+	<property name="analysis" bind-source="@" bind-property="selection" bind-flags="sync-create"/>
+      </object>
+      <packing>
+        <property name="resize">True</property>
+        <property name="shrink">False</property>
+      </packing>
     </child>
     <child>
-      <placeholder/>
+      <object class="IFTReportOverviewMaster">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+	<property name="analyses" bind-source="@" bind-property="analyses" bind-flags="sync-create"/>
+	<property name="selection" bind-source="@" bind-property="selection" bind-flags="sync-create|bidirectional"/>
+      </object>
+      <packing>
+        <property name="resize">True</property>
+        <property name="shrink">False</property>
+      </packing>
     </child>
   </template>
 </interface>
