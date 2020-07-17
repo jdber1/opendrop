@@ -52,7 +52,10 @@ def register_component(
 
     install_signals = {}
     for name, signal in presenter_class.__install_signals__.items():
-        raise NotImplementedError
+        args = signal.get_signal_args()
+        if args[0] & GObject.SignalFlags.ACTION:
+            raise ValueError("Installing action signals not supported")
+        install_signals[name] = args
 
     install_methods = {}
     for name, func in presenter_class.__install_methods__.items():
@@ -142,6 +145,13 @@ def _component_init(self, **properties) -> None:
         presenter.connect(
             'notify::{}'.format(prop_name),
             lambda *_, prop_name=prop_name: self.notify(prop_name)
+        )
+
+    # Forward installed signal emissions.
+    for signal_name in presenter_class.__install_signals__.keys():
+        presenter.connect_after(
+            signal_name,
+            lambda _, *args, signal_name=signal_name: self.emit(signal_name, *args)
         )
 
     presenter.host = self

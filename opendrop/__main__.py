@@ -29,17 +29,12 @@
 
 import sys
 from opendrop.app import OpendropApplication
-from opendrop.app.services.app import OpendropService
 from opendrop.appfw import Injector
 
 
 def main(*argv) -> int:
-    injector = Injector(
-        lambda binder: binder.bind(OpendropService, to=OpendropService()),
-    )
-
+    injector = Injector()
     app = injector.create_object(OpendropApplication)
-
     return app.run(argv)
 
 

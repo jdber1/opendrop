@@ -38,7 +38,6 @@ from opendrop.appfw import ComponentFactory
 from opendrop.vendor import aioglib
 
 from .conan import ConanSession, conan_root_cs
-from .services.app import OpendropService
 
 
 class OpendropApplication(Gtk.Application):
@@ -52,20 +51,11 @@ class OpendropApplication(Gtk.Application):
         CONAN = 3
 
     @inject
-    def __init__(self, cf: ComponentFactory, service: OpendropService, **properties) -> None:
+    def __init__(self, cf: ComponentFactory, **properties) -> None:
         super().__init__(**properties)
 
         self._loop = aioglib.GLibEventLoop(GLib.MainContext.default())
-
         self._cf = cf
-        self._service = service
-
-        self._service_handler_ids = [
-            service.main_menu.connect(lambda o: self._goto_main_menu()),
-            service.ift.connect(lambda o: self._goto_ift()),
-            service.conan.connect(lambda o: self._goto_conan()),
-            service.quit.connect(lambda o: self.quit()),
-        ]
 
     def do_activate(self) -> None:
         self._state = OpendropApplication._State.NONE
@@ -75,6 +65,12 @@ class OpendropApplication(Gtk.Application):
 
         self._goto_main_menu()
 
+    def _hdl_menu_ift(self, *_) -> None:
+        self._goto_ift()
+
+    def _hdl_menu_conan(self, *_) -> None:
+        self._goto_conan()
+
     def _goto_main_menu(self) -> None:
         if self._state is OpendropApplication._State.MAIN_MENU:
             return
@@ -83,6 +79,9 @@ class OpendropApplication(Gtk.Application):
 
         self._current_window = cast(Gtk.Window, self._cf.create('MainMenu'))
         self._current_window.show()
+
+        self._current_window.connect('ift', self._hdl_menu_ift),
+        self._current_window.connect('conan', self._hdl_menu_conan),
 
         self.add_window(self._current_window)
 
@@ -135,9 +134,6 @@ class OpendropApplication(Gtk.Application):
 
     def do_shutdown(self) -> None:
         self._loop.set_is_running(False)
-
-        for handler_id in self._service_handler_ids:
-            self._service.disconnect(handler_id)
 
         # Chain up to parent implementation.
         Gio.Application.do_shutdown.invoke(Gtk.Application, self)
