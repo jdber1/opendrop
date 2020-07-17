@@ -27,48 +27,43 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional, Sequence
+from typing import Optional
+from injector import inject
 
 from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
 from opendrop.app.ift.services.report import IFTReportService
-from opendrop.appfw import Inject, Injector, componentclass
-
-from .detail import IFTReportOverviewDetail
-from .master import IFTReportOverviewMaster
+from opendrop.appfw import Presenter, ComponentFactory, component
 
 
-@componentclass(
+@component(
     template_path='./overview.ui',
 )
-class IFTReportOverview(Gtk.Paned):
-    __gtype_name__ = 'IFTReportOverview'
-
+class IFTReportOverviewPresenter(Presenter[Gtk.Paned]):
     _selection = None
-
-    _injector = Inject(Injector)
-    _report_service = Inject(IFTReportService)
-
     _event_connections = ()
 
-    def after_template_init(self) -> None:
-        detail = self._injector.create_object(IFTReportOverviewDetail)
-        detail.show()
-        self.pack1(detail, resize=True, shrink=False)
+    @inject
+    def __init__(self, cf: ComponentFactory, report_service: IFTReportService) -> None:
+        self.cf = cf
+        self.report_service = report_service
 
-        self._master = self._injector.create_object(IFTReportOverviewMaster)
-        self._master.show()
-        self.pack2(self._master, resize=True, shrink=False)
+    def after_view_init(self) -> None:
+        detail = self.cf.create('IFTReportOverviewDetail', visible=True)
+        self.host.pack1(detail, resize=True, shrink=False)
 
-        self.bind_property('selection', self._master, 'selection', GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        self.master = self.cf.create('IFTReportOverviewMaster', visible=True)
+        self.host.pack2(self.master, resize=True, shrink=False)
+
+        self.bind_property('selection', self.master, 'selection', GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
         self.bind_property('selection', detail, 'analysis', GObject.BindingFlags.SYNC_CREATE)
 
         self._event_connections = [
-            self._report_service.bn_analyses.on_changed.connect(self._hdl_report_service_analyses_changed)
+            self.report_service.bn_analyses.on_changed.connect(self.hdl_report_service_analyses_changed)
         ]
 
-        self._hdl_report_service_analyses_changed()
+        self.hdl_report_service_analyses_changed()
 
     @GObject.Property
     def selection(self) -> Optional[IFTDropAnalysis]:
@@ -78,11 +73,9 @@ class IFTReportOverview(Gtk.Paned):
     def selection(self, value: Optional[IFTDropAnalysis]) -> None:
         self._selection = value
 
-    def _hdl_report_service_analyses_changed(self) -> None:
-        self._master.analyses = self._report_service.bn_analyses.get()
+    def hdl_report_service_analyses_changed(self) -> None:
+        self.master.props.analyses = self.report_service.bn_analyses.get()
 
-    def do_destroy(self) -> None:
+    def destroy(self, *_) -> None:
         for conn in self._event_connections:
             conn.disconnect()
-
-        Gtk.Paned.do_destroy.invoke(Gtk.Paned, self)

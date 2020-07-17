@@ -1,3 +1,4 @@
-from ._injector import *
-from ._template import templatewidget, TemplateChild
-from ._component import componentclass
+from ._component import component
+from ._injector_override import ComponentFactory, Injector
+from ._presenter import Presenter, install
+from ._template import TemplateChild

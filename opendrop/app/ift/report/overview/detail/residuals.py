@@ -29,52 +29,56 @@
 
 from typing import Optional
 
-from gi.repository import GObject
-from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import componentclass
+from opendrop.appfw import Presenter, component, install
 
 
-@componentclass()
-class IFTReportOverviewResiduals(FigureCanvas):
-    __gtype_name__ = 'IFTReportOverviewResiduals'
-
+@component(
+    template_path='./residuals.ui',
+)
+class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
     _analysis = None
-    _event_connections = ()
+    event_connections = ()
 
-    def __init__(self) -> None:
+    def after_view_init(self) -> None:
+        from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg
         from matplotlib.figure import Figure
 
         figure = Figure(tight_layout=True)
-        super().__init__(figure)
+        self.canvas = FigureCanvasGTK3Agg(figure)
+        self.canvas.show()
+        self.host.add(self.canvas)
 
-        self._axes = figure.add_subplot(1, 1, 1)
+        self.canvas.connect('map', self.hdl_canvas_map)
+
+        self.axes = figure.add_subplot(1, 1, 1)
 
         # Set tick labels font size
-        for item in (*self._axes.get_xticklabels(), *self._axes.get_yticklabels()):
+        for item in (*self.axes.get_xticklabels(), *self.axes.get_yticklabels()):
             item.set_fontsize(8)
 
-    def do_map(self) -> None:
-        FigureCanvas.do_map.invoke(FigureCanvas, self)
-        self.draw()
+    def hdl_canvas_map(self, *_) -> None:
+        self.canvas.draw()
 
+    @install
     @GObject.Property
     def analysis(self) -> Optional[IFTDropAnalysis]:
         return self._analysis
 
     @analysis.setter
     def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
-        for conn in self._event_connections:
+        for conn in self.event_connections:
             conn.disconnect()
-        self._event_connections = ()
-        
+        self.event_connections = ()
+
         self._analysis = value
 
         if self._analysis is None:
             return
 
-        self._event_connections = (
+        self.event_connections = (
             self._analysis.bn_residuals.on_changed.connect(self._hdl_analysis_residuals_changed),
         )
 
@@ -85,19 +89,18 @@ class IFTReportOverviewResiduals(FigureCanvas):
 
         residuals = self._analysis.bn_residuals.get()
 
-        axes = self._axes
+        axes = self.axes
         axes.clear()
 
         if residuals is None or len(residuals) == 0:
             axes.set_axis_off()
-            self.draw()
+            self.canvas.draw()
             return
 
         axes.set_axis_on()
         axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-        self.draw()
+        self.canvas.draw()
 
-    def do_destroy(self) -> None:
-        for conn in self._event_connections:
+    def destroy(self, *_) -> None:
+        for conn in self.event_connections:
             conn.disconnect()
-        FigureCanvas.do_destroy.invoke(FigureCanvas, self)

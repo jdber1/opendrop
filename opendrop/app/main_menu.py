@@ -1,16 +1,17 @@
 from gi.repository import Gtk
 
-from opendrop.appfw import Inject, componentclass
+from injector import inject
+from opendrop.appfw import component, Presenter
 from opendrop.app.services.app import OpendropService
 
 
-@componentclass(
+@component(
     template_path='./main_menu.ui',
 )
-class MainMenu(Gtk.Window):
-    __gtype_name__ = 'MainMenu'
-
-    app_service = Inject(OpendropService)
+class MainMenuPresenter(Presenter[Gtk.Window]):
+    @inject
+    def __init__(self, app_service: OpendropService) -> None:
+        self.app_service = app_service
 
     def hdl_ift_btn_clicked(self, button: Gtk.Button) -> None:
         self.app_service.goto_ift()

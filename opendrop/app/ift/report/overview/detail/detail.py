@@ -28,69 +28,64 @@
 
 
 from typing import Optional
+from injector import inject
 
 from gi.repository import GObject, Gtk
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import Inject, Injector, TemplateChild, componentclass
-
-from .image import IFTReportOverviewImage
-from .log_view import IFTReportOverviewLogView
-from .parameters import IFTReportOverviewParameters
-from .residuals import IFTReportOverviewResiduals
+from opendrop.appfw import Presenter, TemplateChild, ComponentFactory, component, install
 
 
-@componentclass(
+@component(
     template_path='./detail.ui',
 )
-class IFTReportOverviewDetail(Gtk.Stack):
-    __gtype_name__ = 'IFTReportOverviewDetail'
-
-    _no_data_label = TemplateChild('no_data_label')
-    _content = TemplateChild('content')
-    _notebook = TemplateChild('notebook')
-
-    _injector = Inject(Injector)
+class IFTReportOverviewDetailPresenter(Presenter[Gtk.Stack]):
+    no_data_label = TemplateChild('no_data_label')
+    content = TemplateChild('content')
+    notebook = TemplateChild('notebook')
 
     _analysis = None
-    _event_connections = ()
-    _template_ready = False
+    event_connections = ()
 
-    def after_template_init(self) -> None:
-        parameters = self._injector.create_object(IFTReportOverviewParameters)
-        self._content.attach(parameters, 0, 0, 1, 1)
+    view_ready = False
 
-        image = self._injector.create_object(IFTReportOverviewImage)
-        image.show()
-        self._notebook.append_page(image, Gtk.Label('Drop profile'))
+    @inject
+    def __init__(self, cf: ComponentFactory) -> None:
+        self.cf = cf
 
-        residuals = self._injector.create_object(IFTReportOverviewResiduals)
-        residuals.show()
-        self._notebook.append_page(residuals, Gtk.Label('Fit residuals'))
+    def after_view_init(self) -> None:
+        parameters = self.cf.create('IFTReportOverviewParameters', visible=True)
+        self.content.attach(parameters, 0, 0, 1, 1)
 
-        log_view = self._injector.create_object(IFTReportOverviewLogView)
-        log_view.show()
-        self._notebook.append_page(log_view, Gtk.Label('Log'))
+        image = self.cf.create('IFTReportOverviewImage', visible=True)
+        self.notebook.append_page(image, Gtk.Label('Drop profile'))
+
+        residuals = self.cf.create('IFTReportOverviewResiduals', visible=True)
+        self.notebook.append_page(residuals, Gtk.Label('Fit residuals'))
+
+        log_view = self.cf.create('IFTReportOverviewLogView', visible=True)
+        self.notebook.append_page(log_view, Gtk.Label('Log'))
 
         self.bind_property('analysis', parameters, 'analysis', GObject.BindingFlags.SYNC_CREATE)
         self.bind_property('analysis', image, 'analysis', GObject.BindingFlags.SYNC_CREATE)
         self.bind_property('analysis', residuals, 'analysis', GObject.BindingFlags.SYNC_CREATE)
         self.bind_property('analysis', log_view, 'analysis', GObject.BindingFlags.SYNC_CREATE)
 
-        self._template_ready = True
+        self.view_ready = True
 
         # Invoke setter.
         self.analysis = self.analysis
 
+    @install
     @GObject.Property
     def analysis(self) -> Optional[IFTDropAnalysis]:
         return self._analysis
 
     @analysis.setter
     def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
-        for conn in self._event_connections:
+        for conn in self.event_connections:
             conn.disconnect()
-        self._event_connections = ()
+        self.event_connections = ()
 
         self._analysis = value
 
@@ -98,28 +93,27 @@ class IFTReportOverviewDetail(Gtk.Stack):
             self.show_waiting_placeholder()
             return
 
-        self._event_connections = (
-            self._analysis.bn_image.on_changed.connect(self._hdl_analysis_image_changed),
+        self.event_connections = (
+            self._analysis.bn_image.on_changed.connect(self.hdl_analysis_image_changed),
         )
 
-        self._hdl_analysis_image_changed()
+        self.hdl_analysis_image_changed()
 
-    def _hdl_analysis_image_changed(self) -> None:
+    def hdl_analysis_image_changed(self) -> None:
         if self._analysis is None or self._analysis.bn_image.get() is None:
             self.show_waiting_placeholder()
         else:
             self.hide_waiting_placeholder()
 
     def show_waiting_placeholder(self) -> None:
-        if not self._template_ready:
+        if not self.view_ready:
             return
-        self.set_visible_child(self._no_data_label)
+        self.host.set_visible_child(self.no_data_label)
 
     def hide_waiting_placeholder(self) -> None:
-        if not self._template_ready:
+        if not self.view_ready:
             return
-        self.set_visible_child(self._content)
+        self.host.set_visible_child(self.content)
 
-    def do_destroy(self) -> None:
+    def destroy(self, *_) -> None:
         self.analysis = None
-        Gtk.Stack.do_destroy.invoke(Gtk.Stack, self)

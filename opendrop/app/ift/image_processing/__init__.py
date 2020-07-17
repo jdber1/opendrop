@@ -1,1 +1,1 @@
-from .image_processing import IFTImageProcessing
+from . import image_processing

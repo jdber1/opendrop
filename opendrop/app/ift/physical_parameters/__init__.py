@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .physical_parameters import IFTPhysicalParametersForm
+from . import physical_parameters

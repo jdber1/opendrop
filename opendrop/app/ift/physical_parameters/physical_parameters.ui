@@ -3,7 +3,6 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <template class="IFTPhysicalParametersForm" parent="GtkGrid">
-    <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="margin_left">20</property>
     <property name="margin_right">20</property>
@@ -11,6 +10,7 @@
     <property name="margin_bottom">20</property>
     <property name="row_spacing">10</property>
     <property name="column_spacing">10</property>
+    <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
@@ -66,7 +66,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="IFTPhysicalParametersForm" bind-property="inner-density" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="inner-density" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -80,7 +80,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="IFTPhysicalParametersForm" bind-property="outer-density" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="outer-density" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -94,7 +94,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="IFTPhysicalParametersForm" bind-property="needle-width" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="needle-width" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -108,7 +108,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="IFTPhysicalParametersForm" bind-property="gravity" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="gravity" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>

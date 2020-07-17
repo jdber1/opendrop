@@ -28,16 +28,17 @@
 
 
 import asyncio
-from gi.repository import Gtk, GLib, Gio
 from enum import Enum
+from typing import cast
 
+from gi.repository import GLib, Gio, Gtk
+from injector import inject
+
+from opendrop.appfw import ComponentFactory
 from opendrop.vendor import aioglib
 
-from opendrop.appfw import Injector, Binder, Module, InstanceProvider
+from .conan import ConanSession, conan_root_cs
 from .services.app import OpendropService
-from .main_menu import MainMenu
-from .ift import IFTExperiment
-from .conan import conan_root_cs, ConanSession
 
 
 class OpendropApplication(Gtk.Application):
@@ -50,18 +51,23 @@ class OpendropApplication(Gtk.Application):
         IFT = 2
         CONAN = 3
 
-    def __init__(self, **properties) -> None:
+    @inject
+    def __init__(self, cf: ComponentFactory, service: OpendropService, **properties) -> None:
         super().__init__(**properties)
+
         self._loop = aioglib.GLibEventLoop(GLib.MainContext.default())
 
-    def do_activate(self) -> None:
-        self._root_injector = Injector(
-            modules=[
-                _InstallOpendropService(app=self),
-            ],
-            auto_bind=True,
-        )
+        self._cf = cf
+        self._service = service
 
+        self._service_handler_ids = [
+            service.main_menu.connect(lambda o: self._goto_main_menu()),
+            service.ift.connect(lambda o: self._goto_ift()),
+            service.conan.connect(lambda o: self._goto_conan()),
+            service.quit.connect(lambda o: self.quit()),
+        ]
+
+    def do_activate(self) -> None:
         self._state = OpendropApplication._State.NONE
 
         self._current_component = None
@@ -75,7 +81,7 @@ class OpendropApplication(Gtk.Application):
 
         self._clear_current_component()
 
-        self._current_window = self._root_injector.create_object(MainMenu)
+        self._current_window = cast(Gtk.Window, self._cf.create('MainMenu'))
         self._current_window.show()
 
         self.add_window(self._current_window)
@@ -86,7 +92,7 @@ class OpendropApplication(Gtk.Application):
 
         self._clear_current_component()
 
-        self._current_window = self._root_injector.create_object(IFTExperiment)
+        self._current_window = cast(Gtk.Window, self._cf.create('IFTExperiment'))
         self._current_window.show()
 
         self._current_window.connect('destroy', lambda *args: self._goto_main_menu())
@@ -130,21 +136,8 @@ class OpendropApplication(Gtk.Application):
     def do_shutdown(self) -> None:
         self._loop.set_is_running(False)
 
+        for handler_id in self._service_handler_ids:
+            self._service.disconnect(handler_id)
+
         # Chain up to parent implementation.
         Gio.Application.do_shutdown.invoke(Gtk.Application, self)
-
-
-class _InstallOpendropService(Module):
-    def __init__(self, app: OpendropApplication) -> None:
-        self._app = app
-
-    def configure(self, binder: Binder) -> None:
-        app = self._app
-        app_service = OpendropService(
-            do_main_menu=app._goto_main_menu,
-            do_ift=app._goto_ift,
-            do_conan=app._goto_conan,
-            do_quit=app.quit,
-        )
-
-        binder.bind(OpendropService, to=InstanceProvider(app_service))

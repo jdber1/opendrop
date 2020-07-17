@@ -26,7 +26,7 @@
         <property name="enable_grid_lines">both</property>
         <child internal-child="selection">
           <object class="GtkTreeSelection" id="tree_selection">
-            <signal name="changed" handler="_hdl_tree_selection_changed" swapped="no"/>
+            <signal name="changed" handler="hdl_tree_selection_changed" swapped="no"/>
           </object>
         </child>
       </object>

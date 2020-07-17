@@ -28,9 +28,10 @@
 
 
 from typing import Optional
-from gi.repository import Gtk, GObject
+from gi.repository import GObject
+from injector import inject
 
-from opendrop.appfw import componentclass, Inject
+from opendrop.appfw import component, Presenter
 
 # The FloatEntry widget is referenced in the component template, import it now to make sure it's registered
 # with the GLib type system.
@@ -39,21 +40,24 @@ from opendrop.widgets.float_entry import FloatEntry
 from .services.physical_parameters import PhysicalParametersFormModel
 
 
-@componentclass(
+@component(
     template_path='./physical_parameters.ui',
 )
-class IFTPhysicalParametersForm(Gtk.Grid):
-    __gtype_name__ = 'IFTPhysicalParametersForm'
+class IFTPhysicalParametersFormPresenter(Presenter):
+    @inject
+    def __init__(self, form: PhysicalParametersFormModel) -> None:
+        self._form = form
 
-    _form = Inject(PhysicalParametersFormModel)
+        self._event_connections = [
+            self._form.bn_inner_density.on_changed.connect(lambda: self.notify('inner-density'), weak_ref=False),
+            self._form.bn_outer_density.on_changed.connect(lambda: self.notify('outer-density'), weak_ref=False),
+            self._form.bn_needle_width.on_changed.connect(lambda: self.notify('needle-width'), weak_ref=False),
+            self._form.bn_gravity.on_changed.connect(lambda: self.notify('gravity'), weak_ref=False),
+        ]
 
-    def __init__(self, **properties) -> None:
-        super().__init__(**properties)
-
-        self._form.bn_inner_density.on_changed.connect(lambda: self.notify('inner-density'), weak_ref=False)
-        self._form.bn_outer_density.on_changed.connect(lambda: self.notify('outer-density'), weak_ref=False)
-        self._form.bn_needle_width.on_changed.connect(lambda: self.notify('needle-width'), weak_ref=False)
-        self._form.bn_gravity.on_changed.connect(lambda: self.notify('gravity'), weak_ref=False)
+    def destroy(self, *args) -> None:
+        for conn in self._event_connections:
+            conn.disconnect()
 
     @GObject.Property
     def inner_density(self) -> Optional[float]:

@@ -28,22 +28,20 @@
 
 
 import asyncio
-from typing import Any, Callable, Sequence
+from typing import Sequence
 
+from injector import Binder, Module, inject, singleton
 import numpy as np
 
 from opendrop.app.common.image_acquisition import AcquirerType, ImageAcquisitionModel
-from opendrop.app.ift.analysis import (
-    IFTDropAnalysis,
-    YoungLaplaceFitter,
-)
+from opendrop.app.ift.analysis import IFTDropAnalysis, YoungLaplaceFitter
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
-from opendrop.appfw import Module, Binder, singleton, inject
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
-from .quantities import PhysicalPropertiesCalculatorParams, PhysicalPropertiesCalculator
+
 from .features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
+from .quantities import PhysicalPropertiesCalculator, PhysicalPropertiesCalculatorParams
 from .report import IFTReportModule, IFTReportService
 
 
@@ -58,7 +56,6 @@ class IFTSessionModule(Module):
         binder.bind(IFTSession, to=IFTSession, scope=singleton)
 
 
-@singleton
 class IFTSession:
     @inject
     def __init__(

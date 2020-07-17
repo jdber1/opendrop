@@ -30,21 +30,20 @@
 import math
 from typing import Optional
 
-from gi.repository import Gtk, GObject
+from gi.repository import GObject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import componentclass
+from opendrop.appfw import Presenter, component, install
 
 
-@componentclass(
+@component(
     template_path='./parameters.ui',
 )
-class IFTReportOverviewParameters(Gtk.Grid):
-    __gtype_name__ = 'IFTReportOverviewParameters'
-
+class IFTReportOverviewParametersPresenter(Presenter):
     _analysis = None
     _event_connections = ()
 
+    @install
     @GObject.Property
     def analysis(self) -> Optional[IFTDropAnalysis]:
         return self._analysis
@@ -120,7 +119,6 @@ class IFTReportOverviewParameters(Gtk.Grid):
         text = '{:#.2g}°'.format(math.degrees(value))
         return text
 
-    def do_destroy(self) -> None:
+    def destroy(self, *_) -> None:
         # Unbind analysis.
         self.analysis = None
-        Gtk.Grid.do_destroy.invoke(Gtk.Grid, self)

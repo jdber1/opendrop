@@ -27,8 +27,9 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from injector import inject, singleton
+
 from opendrop.app.ift.services.quantities import PhysicalPropertiesCalculatorParams
-from opendrop.appfw import inject, singleton
 
 
 @singleton

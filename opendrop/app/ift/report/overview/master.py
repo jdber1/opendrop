@@ -32,23 +32,21 @@ from typing import Optional, Sequence
 from gi.repository import Gtk, Pango, GObject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import componentclass, TemplateChild
+from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
-@componentclass(
+@component(
     template_path='./master.ui',
 )
-class IFTReportOverviewMaster(Gtk.ScrolledWindow):
-    __gtype_name__ = 'IFTReportOverviewMaster'
-
-    _tree_view = TemplateChild('tree_view')
-    _tree_model = TemplateChild('tree_model')
-    _tree_selection = TemplateChild('tree_selection')
+class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
+    tree_view = TemplateChild('tree_view')  # type: TemplateChild[Gtk.TreeView]
+    tree_model = TemplateChild('tree_model')  # type: TemplateChild[Gtk.ListStore]
+    tree_selection = TemplateChild('tree_selection')  # type: TemplateChild[Gtk.TreeSelection]
 
     _initial_selection = None
     _analyses = ()
 
-    _template_ready = False
+    view_ready = False
 
     class _RowPresenter:
         TIMESTAMP_COL = 0
@@ -104,23 +102,23 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
             for conn in self._event_connections:
                 conn.disconnect()
 
-    def after_template_init(self) -> None:
-        self._row_presenters = []
-        self._ignore_tree_selection_changes = False
+    def after_view_init(self) -> None:
+        self.row_presenters = []
+        self.ignore_tree_selection_changes = False
 
-        self._tree_view.append_column(Gtk.TreeViewColumn(
+        self.tree_view.append_column(Gtk.TreeViewColumn(
             title='Timestamp (s)',
             cell_renderer=Gtk.CellRendererText(),
             text=0
         ))
 
-        self._tree_view.append_column(Gtk.TreeViewColumn(
+        self.tree_view.append_column(Gtk.TreeViewColumn(
             title='Status',
             cell_renderer=Gtk.CellRendererText(),
             text=1
         ))
 
-        self._tree_view.append_column(Gtk.TreeViewColumn(
+        self.tree_view.append_column(Gtk.TreeViewColumn(
             title='Log',
             cell_renderer=Gtk.CellRendererText(
                 font='Monospace',
@@ -129,26 +127,27 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
             text=2
         ))
 
-        self._hdl_analyses_changed()
+        self.hdl_analyses_changed()
         self.selection = self._initial_selection
 
-        self._template_ready = True
+        self.view_ready = True
 
+    @install
     @GObject.Property
     def selection(self) -> Optional[IFTDropAnalysis]:
-        if not self._template_ready:
+        if not self.view_ready:
             return self._initial_selection
 
-        _, tree_iter = self._tree_selection.get_selected()
+        _, tree_iter = self.tree_selection.get_selected()
         if tree_iter is None:
             return None
 
         row_ref = Gtk.TreeRowReference(
-            model=self._tree_model,
-            path=self._tree_model.get_path(tree_iter)
+            model=self.tree_model,
+            path=self.tree_model.get_path(tree_iter)
         )
 
-        for p in self._row_presenters:
+        for p in self.row_presenters:
             if p.row_ref.get_path() == row_ref.get_path():
                 return p.analysis
         else:
@@ -156,30 +155,29 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
 
     @selection.setter
     def selection(self, analysis: Optional[IFTDropAnalysis]) -> None:
-        if type(analysis) is not IFTDropAnalysis and analysis is not None:
-            breakpoint()
-        if not self._template_ready:
+        if not self.view_ready:
             self._initial_selection = analysis
 
         if self.selection == analysis:
             return
 
-        self._ignore_tree_selection_changes = True
+        self.ignore_tree_selection_changes = True
         try:
             if analysis is not None:
-                for p in self._row_presenters:
+                for p in self.row_presenters:
                     if p.analysis == analysis:
                         row_presenter = p
                         break
                 else:
                     raise ValueError
 
-                self._tree_selection.select_path(row_presenter.row_ref.get_path())
+                self.tree_selection.select_path(row_presenter.row_ref.get_path())
             else:
-                self._tree_selection.unselect_all()
+                self.tree_selection.unselect_all()
         finally:
-            self._ignore_tree_selection_changes = False
+            self.ignore_tree_selection_changes = False
 
+    @install
     @GObject.Property
     def analyses(self) -> Sequence[IFTDropAnalysis]:
         return self._analyses
@@ -187,11 +185,11 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
     @analyses.setter
     def analyses(self, value: Sequence[IFTDropAnalysis]) -> None:
         self._analyses = tuple(value)
-        if self._template_ready:
-            self._hdl_analyses_changed()
+        if self.view_ready:
+            self.hdl_analyses_changed()
 
-    def _hdl_analyses_changed(self) -> None:
-        current = [p.analysis for p in self._row_presenters]
+    def hdl_analyses_changed(self) -> None:
+        current = [p.analysis for p in self.row_presenters]
         new = self.analyses
 
         # Add new analyses in the same order as they appear in 'value'.
@@ -200,23 +198,23 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
             for analysis in new if analysis not in current
         ]
         for a in to_show:
-            self._add_analysis(a)
+            self.add_analysis(a)
 
         to_remove = set(current) - set(new)
         for a in to_remove:
-            self._remove_analysis(a)
+            self.remove_analysis(a)
 
-    def _add_analysis(self, analysis: IFTDropAnalysis) -> None:
-        row_ref = self._new_row()
+    def add_analysis(self, analysis: IFTDropAnalysis) -> None:
+        row_ref = self.new_row()
 
         row_presenter = self._RowPresenter(row_ref, analysis)
-        self._row_presenters.append(row_presenter)
+        self.row_presenters.append(row_presenter)
 
         if self.selection is None:
             self.selection = analysis
 
-    def _remove_analysis(self, analysis: IFTDropAnalysis) -> None:
-        for p in self._row_presenters:
+    def remove_analysis(self, analysis: IFTDropAnalysis) -> None:
+        for p in self.row_presenters:
             if p.analysis == analysis:
                 row_presenter = p
                 break
@@ -225,38 +223,38 @@ class IFTReportOverviewMaster(Gtk.ScrolledWindow):
 
         if self.selection == analysis:
             next_selection = None
-            if len(self._row_presenters) > 1:
-                row_presenter_index = self._row_presenters.index(row_presenter)
-                if row_presenter_index + 1 < len(self._row_presenters):
-                    next_selection = self._row_presenters[row_presenter_index + 1].analysis
+            if len(self.row_presenters) > 1:
+                row_presenter_index = self.row_presenters.index(row_presenter)
+                if row_presenter_index + 1 < len(self.row_presenters):
+                    next_selection = self.row_presenters[row_presenter_index + 1].analysis
                 else:
-                    next_selection = self._row_presenters[row_presenter_index - 1].analysis
+                    next_selection = self.row_presenters[row_presenter_index - 1].analysis
             self.selection = next_selection
 
-        self._row_presenters.remove(row_presenter)
+        self.row_presenters.remove(row_presenter)
         row_presenter.destroy()
 
-        self._remove_row(row_presenter.row_ref)
+        self.remove_row(row_presenter.row_ref)
 
-    def _new_row(self) -> Gtk.TreeRowReference:
-        tree_iter = self._tree_model.append((None, None, None))
+    def new_row(self) -> Gtk.TreeRowReference:
+        tree_iter = self.tree_model.append((None, None, None))
         row_ref = Gtk.TreeRowReference(
-            model=self._tree_model,
-            path=self._tree_model.get_path(tree_iter)
+            model=self.tree_model,
+            path=self.tree_model.get_path(tree_iter)
         )
 
-        self.queue_resize()
-        self._tree_view.queue_resize()
-        self._tree_view.queue_allocate()
-        self._tree_view.queue_allocate()
+        self.host.queue_resize()
+        self.tree_view.queue_resize()
+        self.tree_view.queue_allocate()
+        self.tree_view.queue_allocate()
 
         return row_ref
 
-    def _remove_row(self, row_ref: Gtk.TreeRowReference) -> None:
-        tree_iter = self._tree_model.get_iter(row_ref.get_path())
-        self._tree_model.remove(tree_iter)
+    def remove_row(self, row_ref: Gtk.TreeRowReference) -> None:
+        tree_iter = self.tree_model.get_iter(row_ref.get_path())
+        self.tree_model.remove(tree_iter)
 
-    def _hdl_tree_selection_changed(self, tree_selection: Gtk.TreeSelection) -> None:
-        if self._ignore_tree_selection_changes:
+    def hdl_tree_selection_changed(self, tree_selection: Gtk.TreeSelection) -> None:
+        if self.ignore_tree_selection_changes:
             return
         self.notify('selection')

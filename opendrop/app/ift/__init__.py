@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .ift_experiment import IFTExperiment
+from . import ift_experiment, image_processing, physical_parameters, report

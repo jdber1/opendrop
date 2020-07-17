@@ -27,18 +27,18 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Callable, Optional
+from typing import Optional
 
-import numpy as np
-
+from injector import inject, singleton
 from opendrop.app.common.image_acquisition import ImageAcquisitionModel
 from opendrop.app.common.image_processing.plugins.define_region import (
     DefineRegionPluginModel,
 )
-from opendrop.app.ift.services.features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
-from opendrop.appfw import inject, singleton
+from opendrop.app.ift.services.features import (
+    FeatureExtractorParams,
+    FeatureExtractorService,
+)
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
-from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Rect2
 
 from .plugins import ToolID

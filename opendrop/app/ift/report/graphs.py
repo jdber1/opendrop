@@ -28,6 +28,7 @@
 
 
 from typing import Sequence, Tuple
+from injector import inject
 
 from gi.repository import Gtk
 from matplotlib import ticker
@@ -35,125 +36,125 @@ from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCan
 from matplotlib.figure import Figure
 
 from opendrop.app.ift.services.report.graphs import IFTReportGraphsService
-from opendrop.appfw import Inject, TemplateChild, componentclass
+from opendrop.appfw import Presenter, TemplateChild, component
 
 
-@componentclass(
+@component(
     template_path='./graphs.ui',
 )
-class IFTReportGraphs(Gtk.Stack):
-    __gtype_name__ = 'IFTReportGraphs'
+class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
+    no_data_label = TemplateChild('no_data_label')
+    figure_container = TemplateChild('figure_container')  # type: TemplateChild[Gtk.Container]
 
-    _no_data_label = TemplateChild('no_data_label')
-    _figure_container = TemplateChild('figure_container')
+    @inject
+    def __init__(self, graphs_service: IFTReportGraphsService) -> None:
+        self.graphs_service = graphs_service
 
-    _graphs_service = Inject(IFTReportGraphsService)
-
-    def after_template_init(self) -> None:
+    def after_view_init(self) -> None:
         figure = Figure(tight_layout=True)
 
-        self._figure_canvas = FigureCanvas(figure)
-        self._figure_canvas.props.hexpand = True
-        self._figure_canvas.props.vexpand = True
-        self._figure_canvas.props.visible = True
-        self._figure_container.add(self._figure_canvas)
+        self.figure_canvas = FigureCanvas(figure)
+        self.figure_canvas.props.hexpand = True
+        self.figure_canvas.props.vexpand = True
+        self.figure_canvas.props.visible = True
+        self.figure_container.add(self.figure_canvas)
 
-        self._ift_axes = figure.add_subplot(3, 1, 1)
-        self._ift_axes.set_ylabel('IFT (mN/m)')
-        volume_axes = figure.add_subplot(3, 1, 2, sharex=self._ift_axes)
+        self.ift_axes = figure.add_subplot(3, 1, 1)
+        self.ift_axes.set_ylabel('IFT (mN/m)')
+        volume_axes = figure.add_subplot(3, 1, 2, sharex=self.ift_axes)
         volume_axes.xaxis.set_ticks_position('both')
         volume_axes.set_ylabel('Vol. (mm³)')
-        surface_area_axes = figure.add_subplot(3, 1, 3, sharex=self._ift_axes)
+        surface_area_axes = figure.add_subplot(3, 1, 3, sharex=self.ift_axes)
         surface_area_axes.xaxis.set_ticks_position('both')
         surface_area_axes.set_ylabel('Sur. (mm²)')
 
         # Format the labels to scale to the right units.
-        self._ift_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e3)))
+        self.ift_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e3)))
         volume_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e9)))
         surface_area_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e6)))
 
-        for lbl in (*self._ift_axes.get_xticklabels(), *volume_axes.get_xticklabels()):
+        for lbl in (*self.ift_axes.get_xticklabels(), *volume_axes.get_xticklabels()):
             lbl.set_visible(False)
 
-        self._ift_line = self._ift_axes.plot([], marker='o', color='red')[0]
-        self._volume_line = volume_axes.plot([], marker='o', color='blue')[0]
-        self._surface_area_line = surface_area_axes.plot([], marker='o', color='green')[0]
+        self.ift_line = self.ift_axes.plot([], marker='o', color='red')[0]
+        self.volume_line = volume_axes.plot([], marker='o', color='blue')[0]
+        self.surface_area_line = surface_area_axes.plot([], marker='o', color='green')[0]
 
-        self._graphs_service.connect('notify::ift', self._hdl_model_data_changed)
-        self._graphs_service.connect('notify::volume', self._hdl_model_data_changed)
-        self._graphs_service.connect('notify::surface-area', self._hdl_model_data_changed)
+        self.graphs_service.connect('notify::ift', self.hdl_model_data_changed)
+        self.graphs_service.connect('notify::volume', self.hdl_model_data_changed)
+        self.graphs_service.connect('notify::surface-area', self.hdl_model_data_changed)
 
-        self._hdl_model_data_changed()
+        self.hdl_model_data_changed()
 
-    def _hdl_model_data_changed(self, *args) -> None:
-        ift_data = self._graphs_service.ift
-        volume_data = self._graphs_service.volume
-        surface_area_data = self._graphs_service.surface_area
+    def hdl_model_data_changed(self, *args) -> None:
+        ift_data = self.graphs_service.ift
+        volume_data = self.graphs_service.volume
+        surface_area_data = self.graphs_service.surface_area
 
         if (
                 len(ift_data[0]) <= 1 and
                 len(volume_data[0]) <= 1 and
                 len(surface_area_data[0]) <= 1
         ):
-            self._show_waiting_placeholder()
+            self.show_waiting_placeholder()
             return
 
-        self._hide_waiting_placeholder()
+        self.hide_waiting_placeholder()
 
-        self._set_ift_data(ift_data)
-        self._set_volume_data(volume_data)
-        self._set_surface_area_data(surface_area_data)
+        self.set_ift_data(ift_data)
+        self.set_volume_data(volume_data)
+        self.set_surface_area_data(surface_area_data)
 
-    def _show_waiting_placeholder(self) -> None:
-        self.set_visible_child(self._no_data_label)
+    def show_waiting_placeholder(self) -> None:
+        self.host.set_visible_child(self.no_data_label)
 
-    def _hide_waiting_placeholder(self) -> None:
-        self.set_visible_child(self._figure_container)
+    def hide_waiting_placeholder(self) -> None:
+        self.host.set_visible_child(self.figure_container)
 
-    def _set_ift_data(self, data: Sequence[Tuple[float, float]]) -> None:
+    def set_ift_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
-        self._ift_line.set_data(data)
+        self.ift_line.set_data(data)
 
-        self._update_xlim()
+        self.update_xlim()
 
-        self._ift_axes.relim()
-        self._ift_axes.margins(y=0.1)
+        self.ift_axes.relim()
+        self.ift_axes.margins(y=0.1)
 
-        self._figure_canvas.draw()
+        self.figure_canvas.draw()
 
-    def _set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
+    def set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
-        self._volume_line.set_data(data)
+        self.volume_line.set_data(data)
 
-        self._update_xlim()
+        self.update_xlim()
 
-        self._volume_line.axes.relim()
-        self._volume_line.axes.margins(y=0.1)
+        self.volume_line.axes.relim()
+        self.volume_line.axes.margins(y=0.1)
 
-        self._figure_canvas.draw()
+        self.figure_canvas.draw()
 
-    def _set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
+    def set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
 
-        self._surface_area_line.set_data(data)
+        self.surface_area_line.set_data(data)
 
-        self._update_xlim()
+        self.update_xlim()
 
-        self._surface_area_line.axes.relim()
-        self._surface_area_line.axes.margins(y=0.1)
+        self.surface_area_line.axes.relim()
+        self.surface_area_line.axes.margins(y=0.1)
 
-        self._figure_canvas.draw()
+        self.figure_canvas.draw()
 
-    def _update_xlim(self) -> None:
+    def update_xlim(self) -> None:
         all_xdata = (
-            *self._ift_line.get_xdata(),
-            *self._volume_line.get_xdata(),
-            *self._surface_area_line.get_xdata(),
+            *self.ift_line.get_xdata(),
+            *self.volume_line.get_xdata(),
+            *self.surface_area_line.get_xdata(),
         )
 
         if len(all_xdata) <= 1:
@@ -165,4 +166,4 @@ class IFTReportGraphs(Gtk.Stack):
         if xmin == xmax:
             return
 
-        self._ift_axes.set_xlim(xmin, xmax)
+        self.ift_axes.set_xlim(xmin, xmax)

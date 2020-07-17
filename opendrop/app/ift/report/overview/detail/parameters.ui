@@ -8,6 +8,7 @@
     <property name="can_focus">False</property>
     <property name="hexpand">False</property>
     <property name="row_spacing">10</property>
+    <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
       <object class="GtkGrid">
         <property name="visible">True</property>
@@ -113,7 +114,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="ift" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="ift" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -125,7 +126,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="volume" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="volume" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -137,7 +138,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="surface-area" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="surface-area" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -149,7 +150,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="worthington" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="worthington" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -161,7 +162,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="bond-number" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="bond-number" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -173,7 +174,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="apex-coordinates" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="apex-coordinates" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>
@@ -185,7 +186,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes" bind-source="IFTReportOverviewParameters" bind-property="image-angle" bind-flags="sync-create"/>
+            <property name="label" translatable="yes" bind-source="@" bind-property="image-angle" bind-flags="sync-create"/>
             <property name="xalign">0</property>
           </object>
           <packing>

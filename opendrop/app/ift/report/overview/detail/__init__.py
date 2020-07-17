@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .detail import IFTReportOverviewDetail
+from . import detail, image, log_view, parameters, residuals

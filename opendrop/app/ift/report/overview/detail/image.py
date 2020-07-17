@@ -32,48 +32,54 @@ from typing import Optional
 import cv2
 import numpy as np
 
-from gi.repository import GObject
+from gi.repository import Gtk, GObject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
-from opendrop.appfw import componentclass
+from opendrop.appfw import Presenter, component, install
 
 
-@componentclass()
-class IFTReportOverviewImage(FigureCanvas):
-    __gtype_name__ = 'IFTReportOverviewImage'
-
+@component(
+    template_path='./image.ui',
+)
+class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
     _analysis = None
     _event_connections = ()
 
-    def __init__(self) -> None:
+    def after_view_init(self) -> None:
         from matplotlib.figure import Figure
         from matplotlib.image import AxesImage
+        from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg
 
         figure = Figure(tight_layout=True)
-        super().__init__(figure)
+
+        self.canvas = FigureCanvasGTK3Agg(figure)
+        self.canvas.show()
+
+        self.host.add(self.canvas)
+
+        self.canvas.connect('map', self.hdl_canvas_map)
 
         # Axes
-        self._axes = figure.add_subplot(1, 1, 1)
-        self._axes.set_aspect('equal', 'box')
-        self._axes.xaxis.tick_top()
-        for item in (*self._axes.get_xticklabels(), *self._axes.get_yticklabels()):
+        self.axes = figure.add_subplot(1, 1, 1)
+        self.axes.set_aspect('equal', 'box')
+        self.axes.xaxis.tick_top()
+        for item in (*self.axes.get_xticklabels(), *self.axes.get_yticklabels()):
             item.set_fontsize(8)
 
-        self._axes_bg_image = AxesImage(ax=self._axes)
+        self.axes_image = AxesImage(ax=self.axes)
 
         # Placeholder transparent 1x1 image (rgba format)
-        self._axes_bg_image.set_data(np.zeros((1, 1, 4)))
-        self._axes_bg_image.set_extent((0, 1, 0, 1))
-        self._axes.add_image(self._axes_bg_image)
+        self.axes_image.set_data(np.zeros((1, 1, 4)))
+        self.axes_image.set_extent((0, 1, 0, 1))
+        self.axes.add_image(self.axes_image)
 
-        self._profile_extract_line = self._axes.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
-        self._profile_fit_line = self._axes.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
+        self.profile_extract_line = self.axes.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
+        self.profile_fit_line = self.axes.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
 
-    def do_map(self) -> None:
-        FigureCanvas.do_map.invoke(FigureCanvas, self)
-        self.draw()
+    def hdl_canvas_map(self, *_) -> None:
+        self.canvas.draw()
 
+    @install
     @GObject.Property
     def analysis(self) -> Optional[IFTDropAnalysis]:
         return self._analysis
@@ -90,25 +96,25 @@ class IFTReportOverviewImage(FigureCanvas):
             return
 
         self._event_connections = (
-            self._analysis.bn_image.on_changed.connect(self._hdl_analysis_image_changed),
-            self._analysis.bn_drop_profile_extract.on_changed.connect(self._hdl_analysis_drop_profile_fit_extract_changed),
-            self._analysis.bn_drop_profile_fit.on_changed.connect(self._hdl_analysis_drop_profile_fit_changed),
+            self._analysis.bn_image.on_changed.connect(self.hdl_analysis_image_changed),
+            self._analysis.bn_drop_profile_extract.on_changed.connect(self.hdl_analysis_drop_profile_fit_extract_changed),
+            self._analysis.bn_drop_profile_fit.on_changed.connect(self.hdl_analysis_drop_profile_fit_changed),
         )
 
-        self._hdl_analysis_image_changed()
-        self._hdl_analysis_drop_profile_fit_extract_changed()
-        self._hdl_analysis_drop_profile_fit_changed()
+        self.hdl_analysis_image_changed()
+        self.hdl_analysis_drop_profile_fit_extract_changed()
+        self.hdl_analysis_drop_profile_fit_changed()
 
-    def _hdl_analysis_image_changed(self) -> None:
+    def hdl_analysis_image_changed(self) -> None:
         if self._analysis is None: return
 
         image = self._analysis.bn_image.get()
 
         if image is None:
-            self._axes.set_axis_off()
-            self._axes_bg_image.set_data(np.zeros((1, 1, 4)))
-            self._axes_bg_image.set_extent((0, 1, 0, 1))
-            self.draw()
+            self.axes.set_axis_off()
+            self.axes_image.set_data(np.zeros((1, 1, 4)))
+            self.axes_image.set_extent((0, 1, 0, 1))
+            self.canvas.draw()
             return
 
         drop_region = self._analysis.bn_drop_region.get()
@@ -116,24 +122,24 @@ class IFTReportOverviewImage(FigureCanvas):
 
         image = image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
 
-        self._axes.set_axis_on()
+        self.axes.set_axis_on()
 
         # Use a scaled down image so it draws faster.
         thumb_size = (min(400, image.shape[1]), min(400, image.shape[0]))
         image_thumb = cv2.resize(image, dsize=thumb_size)
-        self._axes_bg_image.set_data(image_thumb)
+        self.axes_image.set_data(image_thumb)
 
-        self._axes_bg_image.set_extent((0, image.shape[1], image.shape[0], 0))
-        self.draw()
+        self.axes_image.set_extent((0, image.shape[1], image.shape[0], 0))
+        self.canvas.draw()
 
-    def _hdl_analysis_drop_profile_fit_extract_changed(self) -> None:
+    def hdl_analysis_drop_profile_fit_extract_changed(self) -> None:
         if self._analysis is None: return
 
         profile = self._analysis.bn_drop_profile_extract.get()
 
         if profile is None:
-            self._profile_fit_line.set_visible(False)
-            self.draw()
+            self.profile_fit_line.set_visible(False)
+            self.canvas.draw()
             return
 
         drop_region = self._analysis.bn_drop_region.get()
@@ -141,18 +147,18 @@ class IFTReportOverviewImage(FigureCanvas):
 
         profile = profile - drop_region.position
 
-        self._profile_fit_line.set_data(profile.T)
-        self._profile_fit_line.set_visible(True)
-        self.draw()
+        self.profile_fit_line.set_data(profile.T)
+        self.profile_fit_line.set_visible(True)
+        self.canvas.draw()
 
-    def _hdl_analysis_drop_profile_fit_changed(self) -> None:
+    def hdl_analysis_drop_profile_fit_changed(self) -> None:
         if self._analysis is None: return
 
         profile = self._analysis.bn_drop_profile_fit.get()
 
         if profile is None:
-            self._profile_extract_line.set_visible(False)
-            self.draw()
+            self.profile_extract_line.set_visible(False)
+            self.canvas.draw()
             return
 
         drop_region = self._analysis.bn_drop_region.get()
@@ -160,10 +166,9 @@ class IFTReportOverviewImage(FigureCanvas):
 
         profile = profile - drop_region.position
 
-        self._profile_extract_line.set_data(profile.T)
-        self._profile_extract_line.set_visible(True)
-        self.draw()
+        self.profile_extract_line.set_data(profile.T)
+        self.profile_extract_line.set_visible(True)
+        self.canvas.draw()
 
-    def do_destroy(self) -> None:
+    def destroy(self, *_) -> None:
         self.analysis = None
-        FigureCanvas.do_destroy.invoke(FigureCanvas, self)

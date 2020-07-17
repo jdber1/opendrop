@@ -28,6 +28,7 @@
 
 
 from gi.repository import Gtk
+from injector import inject
 
 from opendrop.app.common.image_processing.image_processor import image_processor_cs
 from .services.image_processing import IFTImageProcessingModel
@@ -37,7 +38,7 @@ from .services.plugins.edge_detection import edge_detection_plugin_cs
 from .services.plugins.needle_region import ift_needle_region_plugin_cs
 from .services.plugins.preview import ift_preview_plugin_cs
 
-from opendrop.appfw import componentclass, Inject
+from opendrop.appfw import component, Presenter
 
 
 class DrawPriority:
@@ -45,13 +46,15 @@ class DrawPriority:
     OVERLAY = 1
 
 
-@componentclass()
-class IFTImageProcessing(Gtk.Grid):
-    _service = Inject(IFTImageProcessingModel)
+@component(
+    template_path='./image_processing.ui',
+)
+class IFTImageProcessingPresenter(Presenter[Gtk.Grid]):
+    @inject
+    def __init__(self, service: IFTImageProcessingModel) -> None:
+        self._service = service
 
-    def __init__(self, **properties) -> None:
-        super().__init__(**properties)
-
+    def after_view_init(self) -> None:
         self._image_processor_component = image_processor_cs.factory(
             active_tool=self._service.bn_active_tool,
             tool_ids=[
@@ -78,8 +81,8 @@ class IFTImageProcessing(Gtk.Grid):
             ]
         ).create()
         self._image_processor_component.view_rep.show()
-        self.add(self._image_processor_component.view_rep)
 
-    def do_destroy(self) -> None:
+        self.host.add(self._image_processor_component.view_rep)
+
+    def destroy(self, *_) -> None:
         self._image_processor_component.destroy()
-        Gtk.Grid.do_destroy.invoke(Gtk.Grid, self)

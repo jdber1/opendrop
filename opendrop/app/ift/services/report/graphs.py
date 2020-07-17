@@ -28,13 +28,14 @@
 
 
 import math
-from typing import Tuple, Sequence
+from typing import Sequence, Tuple
 
 from gi.repository import GObject
+from injector import inject
+
+from opendrop.app.ift.analysis import IFTDropAnalysis
 
 from . import IFTReportService
-from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import inject
 
 
 class IFTReportGraphsService(GObject.Object):

@@ -2,9 +2,9 @@ from enum import Enum
 import math
 
 from gi.repository import GObject
+from injector import inject
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import inject
 
 from . import IFTReportService
 

@@ -27,7 +27,7 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from opendrop.appfw import Binder, Module, singleton
+from injector import Binder, Module, singleton
 
 from .report import IFTReportService
 from .graphs import IFTReportGraphsService

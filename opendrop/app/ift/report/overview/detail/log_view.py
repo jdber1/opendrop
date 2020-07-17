@@ -31,53 +31,51 @@ from gi.repository import Gtk, GObject
 from typing import Optional
 
 from opendrop.app.ift.analysis import IFTDropAnalysis
-from opendrop.appfw import componentclass, TemplateChild
+from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
-@componentclass(
+@component(
     template_path='./log_view.ui',
 )
-class IFTReportOverviewLogView(Gtk.ScrolledWindow):
-    __gtype_name__ = 'IFTReportOverviewLogView'
-
-    _event_connections = ()
-    _text_buffer = TemplateChild('text_buffer')
+class IFTReportOverviewLogView(Presenter[Gtk.ScrolledWindow]):
+    event_connections = ()
+    text_buffer = TemplateChild('text_buffer')  # type: TemplateChild[Gtk.TextBuffer]
 
     _analysis = None
-    _template_ready = False
+    view_ready = False
 
-    def after_template_init(self) -> None:
-        self._template_ready = True
+    def after_view_init(self) -> None:
+        self.view_ready = True
         # Update log.
-        self._hdl_analysis_log_changed()
+        self.hdl_analysis_log_changed()
 
+    @install
     @GObject.Property
     def analysis(self) -> Optional[IFTDropAnalysis]:
         return self._analysis
 
     @analysis.setter
     def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
-        for conn in self._event_connections:
+        for conn in self.event_connections:
             conn.disconnect()
-        self._event_connections = ()
+        self.event_connections = ()
 
         self._analysis = value
 
         if self._analysis is None:
             return
 
-        self._event_connections = (
-            self._analysis.bn_log.on_changed.connect(self._hdl_analysis_log_changed),
+        self.event_connections = (
+            self._analysis.bn_log.on_changed.connect(self.hdl_analysis_log_changed),
         )
 
-        self._hdl_analysis_log_changed()
+        self.hdl_analysis_log_changed()
 
-    def _hdl_analysis_log_changed(self) -> None:
-        if not self._template_ready: return
+    def hdl_analysis_log_changed(self) -> None:
+        if not self.view_ready: return
         if self._analysis is None: return
         text = self._analysis.bn_log.get()
-        self._text_buffer.set_text(text)
+        self.text_buffer.set_text(text)
 
-    def do_destroy(self) -> None:
-        self._analysis = None
-        Gtk.ScrolledWindow.do_destroy.invoke(Gtk.ScrolledWindow, self)
+    def destroy(self, *_) -> None:
+        self.analysis = None
