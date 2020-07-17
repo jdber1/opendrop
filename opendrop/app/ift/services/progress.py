@@ -6,7 +6,7 @@ from gi.repository import GObject
 from opendrop.app.ift.analysis import IFTDropAnalysis
 
 
-class IFTAnalysisProgressService(GObject.Object):
+class IFTAnalysisProgressHelper(GObject.Object):
     class Status(Enum):
         ANALYSING = 0
         FINISHED  = 1

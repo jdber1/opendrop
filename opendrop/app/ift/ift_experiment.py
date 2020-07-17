@@ -39,7 +39,7 @@ from opendrop.utility.bindable import VariableBindable
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
 from .analysis_saver import ift_save_dialog_cs
-from .services.progress import IFTAnalysisProgressService
+from .services.progress import IFTAnalysisProgressHelper
 from .services.session import IFTSession, IFTSessionModule
 
 
@@ -54,18 +54,20 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
     action2 = TemplateChild('action2')  # type: TemplateChild[Gtk.Container]
     action3 = TemplateChild('action3')  # type: TemplateChild[Gtk.Container]
 
+    report_page = TemplateChild('report_page')
+
     @inject
     def __init__(
             self,
             cf: ComponentFactory,
             session: IFTSession,
-            progress_service: IFTAnalysisProgressService
+            progress_helper: IFTAnalysisProgressHelper
     ) -> None:
         self.cf = cf
         self.session = session
-        self.progress_service = progress_service
+        self.progress_helper = progress_helper
 
-        session.bind_property('analyses', self.progress_service, 'analyses', GObject.BindingFlags.SYNC_CREATE)
+        session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
         self.analyses_event_connections = ()
 
@@ -94,71 +96,25 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.results_footer_component.view_rep.show()
         self.action3.add(self.results_footer_component.view_rep)
 
-        # Image acquisition.
-        self._image_acquisition_page = self.cf.create('ImageAcquisition', visible=True)
+        self.session.bind_property('analyses', self.report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
-        # Physical parameters.
-        self._physical_parameters_page = self.cf.create('IFTPhysicalParametersForm')
-        self._physical_parameters_page.show()
-
-        # Image processing.
-        self._ift_image_processing_page = self.cf.create('IFTImageProcessing')
-        self._ift_image_processing_page.show()
-
-        # Report.
-        self._report_page = self.cf.create('IFTReport')
-        self._report_page.show()
-
-        self.session.bind_property('analyses', self._report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
-
-        # Add pages to Assistant.
-        self.host.append_page(self._image_acquisition_page)
-        self.host.child_set(
-            self._image_acquisition_page,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Image acquisition',
-        )
-
-        self.host.append_page(self._physical_parameters_page)
-        self.host.child_set(self._physical_parameters_page,
-            title='Physical parameters',
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            complete=True,
-        )
-
-        self.host.append_page(self._ift_image_processing_page)
-        self.host.child_set(
-            self._ift_image_processing_page,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Image processing',
-        )
-
-        self.host.append_page(self._report_page)
-        self.host.child_set(
-            self._report_page,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Results',
-        )
-
-        self.host.set_current_page(0)
-
-        self.progress_service.connect('notify::status', self.progress_status_changed)
-        self.progress_service.connect('notify::fraction', self.progress_fraction_changed)
-        self.progress_service.connect('notify::time-start', self.progress_time_start_changed)
-        self.progress_service.connect('notify::est-complete', self.progress_est_complete_changed)
+        self.progress_helper.connect('notify::status', self.progress_status_changed)
+        self.progress_helper.connect('notify::fraction', self.progress_fraction_changed)
+        self.progress_helper.connect('notify::time-start', self.progress_time_start_changed)
+        self.progress_helper.connect('notify::est-complete', self.progress_est_complete_changed)
 
     def progress_status_changed(self, *_) -> None:
-        status = self.progress_service.status
+        status = self.progress_helper.status
 
-        if status is IFTAnalysisProgressService.Status.ANALYSING:
+        if status is IFTAnalysisProgressHelper.Status.ANALYSING:
             self._results_footer_status.set(ResultsFooterStatus.IN_PROGRESS)
-        elif status is IFTAnalysisProgressService.Status.FINISHED:
+        elif status is IFTAnalysisProgressHelper.Status.FINISHED:
             self._results_footer_status.set(ResultsFooterStatus.FINISHED)
-        elif status is IFTAnalysisProgressService.Status.CANCELLED:
+        elif status is IFTAnalysisProgressHelper.Status.CANCELLED:
             self._results_footer_status.set(ResultsFooterStatus.CANCELLED)
 
     def progress_fraction_changed(self, *_) -> None:
-        fraction = self.progress_service.fraction
+        fraction = self.progress_helper.fraction
         self._results_footer_progress.set(fraction)
 
     def progress_time_start_changed(self, *_) -> None:
@@ -168,8 +124,8 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.update_times()
 
     def update_times(self) -> None:
-        time_start = self.progress_service.time_start
-        est_complete = self.progress_service.est_complete
+        time_start = self.progress_helper.time_start
+        est_complete = self.progress_helper.est_complete
 
         now = time.time()
         elapsed = now - time_start
@@ -226,18 +182,18 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
             del self.cancel_dialog
             dialog.destroy()
 
-            self.progress_service.disconnect(status_handler_id)
+            self.progress_helper.disconnect(status_handler_id)
 
             if response == Gtk.ResponseType.YES:
                 self.session.cancel_analyses()
 
         def hdl_progress_status(*_) -> None:
-            if (self.progress_service.status is IFTAnalysisProgressService.Status.FINISHED or
-                    self.progress_service.status is IFTAnalysisProgressService.Status.CANCELLED):
+            if (self.progress_helper.status is IFTAnalysisProgressHelper.Status.FINISHED or
+                    self.progress_helper.status is IFTAnalysisProgressHelper.Status.CANCELLED):
                 self.cancel_dialog.close()
 
         # Close dialog if analysis finishes or cancels before user responds.
-        status_handler_id = self.progress_service.connect('notify::status', hdl_progress_status)
+        status_handler_id = self.progress_helper.connect('notify::status', hdl_progress_status)
 
         self.cancel_dialog.connect('response', hdl_response)
 
