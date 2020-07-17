@@ -30,10 +30,10 @@
 import asyncio
 from typing import Sequence
 
-from injector import singleton
+from injector import Binder, Module, inject, singleton
 import numpy as np
 
-from opendrop.app.common.image_acquisition import AcquirerType, ImageAcquisitionModel
+from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService
 from opendrop.app.conan.analysis import (
     ConanAnalysis,
     ContactAngleCalculator,
@@ -49,16 +49,23 @@ from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 
 
-@singleton
+class ConanSessionModule(Module):
+    def configure(self, binder: Binder):
+        binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
+
+        binder.bind(ConanSession, to=ConanSession, scope=singleton)
+
+
 class ConanSession:
-    def __init__(self) -> None:
+    @inject
+    def __init__(self, image_acquisition: ImageAcquisitionService) -> None:
         self._feature_extractor_params = FeatureExtractorParams()
         self._conancalc_params = ContactAngleCalculatorParams()
 
         self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[ConanAnalysis]]
         self._analyses_saved = False
 
-        self.image_acquisition = ImageAcquisitionModel()
+        self.image_acquisition = image_acquisition
         self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
 
         self.image_processing = ConanImageProcessingModel(

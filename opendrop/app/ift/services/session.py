@@ -34,7 +34,7 @@ from gi.repository import GObject
 from injector import Binder, Module, inject, singleton
 import numpy as np
 
-from opendrop.app.common.image_acquisition import AcquirerType, ImageAcquisitionModel
+from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService
 from opendrop.app.ift.analysis import IFTDropAnalysis, YoungLaplaceFitter
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
@@ -46,7 +46,7 @@ from .quantities import PhysicalPropertiesCalculator, PhysicalPropertiesCalculat
 
 class IFTSessionModule(Module):
     def configure(self, binder: Binder):
-        binder.bind(ImageAcquisitionModel, to=ImageAcquisitionModel, scope=singleton)
+        binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
         binder.bind(PhysicalPropertiesCalculatorParams, to=PhysicalPropertiesCalculatorParams, scope=singleton)
         binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
         binder.bind(FeatureExtractorService, to=FeatureExtractorService, scope=singleton)
@@ -58,7 +58,7 @@ class IFTSession(GObject.Object):
     @inject
     def __init__(
             self,
-            image_acquisition: ImageAcquisitionModel,
+            image_acquisition: ImageAcquisitionService,
             physprops_calculator_params: PhysicalPropertiesCalculatorParams,
             feature_extractor_params: FeatureExtractorParams,
     ) -> None:

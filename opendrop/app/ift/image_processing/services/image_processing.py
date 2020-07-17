@@ -30,7 +30,7 @@
 from typing import Optional
 
 from injector import inject, singleton
-from opendrop.app.common.image_acquisition import ImageAcquisitionModel
+from opendrop.app.common.services.acquisition import ImageAcquisitionService
 from opendrop.app.common.image_processing.plugins.define_region import (
     DefineRegionPluginModel,
 )
@@ -51,7 +51,7 @@ class IFTImageProcessingModel:
     @inject
     def __init__(
             self, *,
-            image_acquisition: ImageAcquisitionModel,
+            image_acquisition: ImageAcquisitionService,
             feature_extractor_params: FeatureExtractorParams,
             feature_extractor_service: FeatureExtractorService,
     ) -> None:

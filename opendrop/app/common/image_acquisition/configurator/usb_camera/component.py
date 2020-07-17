@@ -31,7 +31,7 @@ from typing import Optional, Callable, Any
 
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.app.common.image_acquirer import USBCameraAcquirer
+from opendrop.app.common.services.acquisition import USBCameraAcquirer
 from opendrop.mvp import ComponentSymbol, Presenter, View
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable

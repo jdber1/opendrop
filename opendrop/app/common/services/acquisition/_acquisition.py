@@ -30,11 +30,11 @@
 from enum import Enum
 from typing import Optional, Tuple, Sequence
 
-from opendrop.app.common.image_acquirer import ImageAcquirer, InputImage, LocalStorageAcquirer, USBCameraAcquirer
+from ._acquirer import ImageAcquirer, InputImage, LocalStorageAcquirer, USBCameraAcquirer
 from opendrop.utility.bindable import AccessorBindable
 
 
-class ImageAcquisitionModel:
+class ImageAcquisitionService:
     def __init__(self) -> None:
         self._acquirer = None  # type: Optional[ImageAcquirer]
 

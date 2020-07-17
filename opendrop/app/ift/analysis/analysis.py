@@ -36,7 +36,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from opendrop.app.common.image_acquirer import InputImage
+from opendrop.app.common.services.acquisition import InputImage
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2

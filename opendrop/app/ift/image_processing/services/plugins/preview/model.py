@@ -31,8 +31,7 @@ from typing import Optional, Callable, Hashable, Tuple
 
 import numpy as np
 
-from opendrop.app.common.image_acquirer import ImageSequenceAcquirer, CameraAcquirer
-from opendrop.app.common.image_acquisition import ImageAcquisitionModel
+from opendrop.app.common.services.acquisition import ImageAcquisitionService, ImageSequenceAcquirer, CameraAcquirer
 from opendrop.app.common.image_processing.plugins.preview.model import (
     AcquirerController,
     ImageSequenceAcquirerController,
@@ -45,7 +44,7 @@ from opendrop.utility.bindable.typing import Bindable
 class IFTPreviewPluginModel:
     def __init__(
             self, *,
-            image_acquisition: ImageAcquisitionModel,
+            image_acquisition: ImageAcquisitionService,
             feature_extractor_params: FeatureExtractorParams,
             do_extract_features: Callable[[Bindable[np.ndarray]], FeatureExtractor]
     ) -> None:

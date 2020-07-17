@@ -34,8 +34,6 @@ from injector import inject
 
 from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
 from opendrop.app.common.footer.results import ResultsFooterStatus, results_footer_cs
-from opendrop.app.common.image_acquisition import image_acquisition_cs
-from opendrop.app.common.wizard import WizardPageControls
 from opendrop.appfw import ComponentFactory, Presenter, TemplateChild, component
 from opendrop.utility.bindable import VariableBindable
 from opendrop.widgets.yes_no_dialog import YesNoDialog
@@ -97,12 +95,7 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.action3.add(self.results_footer_component.view_rep)
 
         # Image acquisition.
-        self.image_acquisition_component = image_acquisition_cs.factory(
-            model=self.session.image_acquisition,
-            footer_area=Gtk.Grid(),  # ignore footer area for now
-            page_controls=WizardPageControls(do_next_page=lambda: None, do_prev_page=lambda: None),
-        ).create()
-        self.image_acquisition_component.view_rep.show()
+        self._image_acquisition_page = self.cf.create('ImageAcquisition', visible=True)
 
         # Physical parameters.
         self._physical_parameters_page = self.cf.create('IFTPhysicalParametersForm')
@@ -119,9 +112,9 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.session.bind_property('analyses', self._report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
         # Add pages to Assistant.
-        self.host.append_page(self.image_acquisition_component.view_rep)
+        self.host.append_page(self._image_acquisition_page)
         self.host.child_set(
-            self.image_acquisition_component.view_rep,
+            self._image_acquisition_page,
             page_type=Gtk.AssistantPageType.CUSTOM,
             title='Image acquisition',
         )
@@ -299,7 +292,6 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         return True
 
     def destroy(self, *_) -> None:
-        self.image_acquisition_component.destroy()
         self.lin_footer_component.destroy()
         self.results_footer_component.destroy()
 

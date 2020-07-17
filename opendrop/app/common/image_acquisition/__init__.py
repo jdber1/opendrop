@@ -27,5 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import image_acquisition_cs
-from .model import ImageAcquisitionModel, AcquirerType
+from . import image_acquisition

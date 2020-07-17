@@ -33,7 +33,7 @@ from typing import Optional, Hashable, Iterable, MutableSequence
 
 import numpy as np
 
-from opendrop.app.common.image_acquirer import ImageSequenceAcquirer, CameraAcquirer
+from opendrop.app.common.services.acquisition import ImageSequenceAcquirer, CameraAcquirer
 from opendrop.utility.bindable import AccessorBindable
 from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.misc import clamp

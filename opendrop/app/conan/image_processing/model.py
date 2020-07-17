@@ -31,7 +31,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from opendrop.app.common.image_acquisition import ImageAcquisitionModel
+from opendrop.app.common.services.acquisition import ImageAcquisitionService
 from opendrop.app.common.image_processing.plugins.define_line import DefineLinePluginModel
 from opendrop.app.common.image_processing.plugins.define_region import DefineRegionPluginModel
 from opendrop.app.conan.analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculatorParams
@@ -46,7 +46,7 @@ from .plugins.preview import ConanPreviewPluginModel
 class ConanImageProcessingModel:
     def __init__(
             self, *,
-            image_acquisition: ImageAcquisitionModel,
+            image_acquisition: ImageAcquisitionService,
             feature_extractor_params: FeatureExtractorParams,
             conancalc_params: ContactAngleCalculatorParams,
             do_extract_features: Callable[[Bindable[np.ndarray], FeatureExtractorParams], FeatureExtractor]
