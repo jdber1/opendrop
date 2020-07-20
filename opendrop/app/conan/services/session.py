@@ -43,7 +43,6 @@ from opendrop.app.conan.analysis import (
 )
 from opendrop.app.conan.analysis_saver import ConanAnalysisSaverOptions
 from opendrop.app.conan.analysis_saver.save_functions import save_drops
-from opendrop.app.conan.image_processing import ConanImageProcessingModel
 from opendrop.app.conan.results import ConanResultsModel
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
@@ -52,28 +51,28 @@ from opendrop.utility.bindable.typing import Bindable
 class ConanSessionModule(Module):
     def configure(self, binder: Binder):
         binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
+        binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
+        binder.bind(ContactAngleCalculatorParams, to=ContactAngleCalculatorParams, scope=singleton)
 
         binder.bind(ConanSession, to=ConanSession, scope=singleton)
 
 
 class ConanSession:
     @inject
-    def __init__(self, image_acquisition: ImageAcquisitionService) -> None:
-        self._feature_extractor_params = FeatureExtractorParams()
-        self._conancalc_params = ContactAngleCalculatorParams()
+    def __init__(
+            self,
+            image_acquisition: ImageAcquisitionService,
+            feature_extractor_params: FeatureExtractorParams,
+            conancalc_params: ContactAngleCalculatorParams,
+    ) -> None:
+        self._feature_extractor_params = feature_extractor_params
+        self._conancalc_params = conancalc_params
 
         self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[ConanAnalysis]]
         self._analyses_saved = False
 
         self.image_acquisition = image_acquisition
         self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
-
-        self.image_processing = ConanImageProcessingModel(
-            image_acquisition=self.image_acquisition,
-            feature_extractor_params=self._feature_extractor_params,
-            conancalc_params=self._conancalc_params,
-            do_extract_features=self.extract_features,
-        )
 
         self.results = ConanResultsModel(
             in_analyses=self._bn_analyses,

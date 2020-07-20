@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from . import conan_experiment
+from . import conan_experiment, image_processing

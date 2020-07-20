@@ -35,7 +35,6 @@ from opendrop.app.common.wizard import WizardPageControls
 from opendrop.appfw import ComponentFactory, Presenter, TemplateChild, component
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
-from .image_processing import conan_image_processing_cs
 from .results import conan_results_cs
 from .services.session import ConanSession, ConanSessionModule
 
@@ -65,16 +64,7 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
         self.action0.add(self.lin_footer_component.view_rep)
 
         image_acquisition_page = self.cf.create('ImageAcquisition', visible=True)
-
-        self.image_processing_component = conan_image_processing_cs.factory(
-            model=self.session.image_processing,
-            footer_area=Gtk.Grid(),  # ignore footer area for now
-            page_controls=WizardPageControls(
-                do_next_page=lambda: None,
-                do_prev_page=lambda: None,
-            ),
-        ).create()
-        self.image_processing_component.view_rep.show()
+        image_processing_page = self.cf.create('ConanImageProcessing', visible=True)
 
         self.results_component = conan_results_cs.factory(
             model=self.session.results,
@@ -93,9 +83,9 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
             title='Image acquisition',
         )
 
-        self.host.append_page(self.image_processing_component.view_rep)
+        self.host.append_page(image_processing_page)
         self.host.child_set(
-            self.image_processing_component.view_rep,
+            image_processing_page,
             page_type=Gtk.AssistantPageType.CUSTOM,
             title='Image processing',
         )
@@ -171,5 +161,4 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
         return True
 
     def destroy(self, *_) -> None:
-        self.image_processing_component.destroy()
         self.results_component.destroy()

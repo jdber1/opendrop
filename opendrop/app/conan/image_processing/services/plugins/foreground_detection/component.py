@@ -32,7 +32,7 @@ import itertools
 from gi.repository import Gtk, GObject
 
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
-from opendrop.app.conan.image_processing.plugins import ToolID
+from opendrop.app.conan.image_processing.services.plugins import ToolID
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.float_entry import FloatEntry
