@@ -5,7 +5,7 @@
 
 |
 
-**OpenDrop** is a fully-featured pendant drop tensiometry software, allowing acquisition, analysis and fitting of pendant drop profiles to obtain surface and interfacial tension. OpenDrop now includes functionality for the measurement of contact angles.
+**OpenDrop** is a fully-featured pendant drop tensiometry software, allowing acquisition, analysis and fitting of pendant drop profiles to obtain surface and interfacial tension. OpenDrop also includes functionality for measuring sessile drop contact angles.
 
 It runs on **Python 3.5+**, and uses **GTK+ 3** for the user interface, and **OpenCV** for image analysis.
 
