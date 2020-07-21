@@ -58,6 +58,7 @@ class AnalysisFooterPresenter(Presenter):
         self.notify('save-enabled')
         self.notify('stop-visible')
         self.notify('previous-visible')
+        self.notify('time-count')
 
     @GObject.Property(type=str, flags=GObject.ParamFlags.READABLE)
     def progress_text(self) -> str:
@@ -79,6 +80,10 @@ class AnalysisFooterPresenter(Presenter):
     @GObject.Property(type=bool, default=False, flags=GObject.ParamFlags.READABLE)
     def previous_visible(self) -> bool:
         return self._status is not AnalysisFooterStatus.IN_PROGRESS
+
+    @GObject.Property(type=bool, default=True, flags=GObject.ParamFlags.READABLE)
+    def time_count(self) -> bool:
+        return self._status is AnalysisFooterStatus.IN_PROGRESS
 
     @install
     @GObject.Property(type=float)

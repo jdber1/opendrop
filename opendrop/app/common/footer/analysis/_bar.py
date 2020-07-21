@@ -30,7 +30,7 @@
 import math
 import time
 
-from gi.repository import GObject
+from gi.repository import GObject, GLib
 from opendrop.appfw import Presenter, component, install
 
 
@@ -43,10 +43,13 @@ class AnalysisFooterProgressBarPresenter(Presenter):
 
     _time_start = None
     _time_complete = None
+    _count = True
 
     _elapsed_text = ''
     _center_text = ''
     _remaining_text = ''
+
+    _mapped = False
 
     @install
     @GObject.Property(type=float)
@@ -67,6 +70,17 @@ class AnalysisFooterProgressBarPresenter(Presenter):
     def text(self, text: str) -> None:
         self._text = text
         self.update_center_text()
+
+    @install
+    @GObject.Property(type=bool, default=False)
+    def count(self) -> bool:
+        return self._count
+
+    @count.setter
+    def count(self, enabled: bool) -> None:
+        self._count = enabled
+        self.update_time_remaining()
+        self.update_times_loop()
 
     @install
     @GObject.Property
@@ -101,7 +115,6 @@ class AnalysisFooterProgressBarPresenter(Presenter):
     def update_time_elapsed(self) -> None:
         time_start = self._time_start
         text = ''
-
         if time_start is not None:
             time_elapsed = time.time() - time_start
             if time_elapsed >= 0:
@@ -113,7 +126,6 @@ class AnalysisFooterProgressBarPresenter(Presenter):
     def update_time_remaining(self) -> None:
         time_complete = self._time_complete
         text = ''
-
         if time_complete is not None:
             time_remaining = time_complete - time.time()
             if time_remaining > 0:
@@ -133,6 +145,27 @@ class AnalysisFooterProgressBarPresenter(Presenter):
     @GObject.Property(type=str, flags=GObject.ParamFlags.READABLE)
     def remaining_text(self) -> str:
         return self._remaining_text
+
+    def map(self, *_) -> None:
+        self._mapped = True
+        self.update_times_loop()
+
+    def unmap(self, *_) -> None:
+        self._mapped = False
+
+    def update_times_loop(self) -> None:
+        if hasattr(self, 'update_times_id'): return
+        self.update_times_id = GLib.timeout_add_seconds(1, self.update_times_callback)
+
+    def update_times_callback(self) -> bool:
+        if not self._mapped or not self._count:
+            del self.update_times_id
+            return False
+
+        self.update_time_elapsed()
+        self.update_time_remaining()
+
+        return True
 
 
 # Helper function

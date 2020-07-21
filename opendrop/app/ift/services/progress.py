@@ -20,7 +20,7 @@ class IFTAnalysisProgressHelper(GObject.Object):
 
             event_connections = [
                 self.analysis.bn_status.on_changed.connect(
-                    lambda: owner.notify('status'), weak_ref=False,
+                    lambda: (owner.notify('status'), owner.notify('est-complete')), weak_ref=False,
                 ),
                 self.analysis.bn_is_done.on_changed.connect(
                     lambda: owner.notify('fraction'), weak_ref=False,
@@ -106,6 +106,8 @@ class IFTAnalysisProgressHelper(GObject.Object):
     def est_complete(self) -> Optional[float]:
         analyses = self._analyses
         if not analyses: return None
+
+        if self.status is not self.Status.ANALYSING: return None
 
         time_est_complete = max(
             analysis.bn_time_est_complete.get()

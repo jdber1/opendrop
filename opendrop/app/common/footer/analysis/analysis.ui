@@ -16,6 +16,7 @@
             <property name="text" bind-source="@" bind-property="progress-text" bind-flags="sync-create"/>
             <property name="time-start" bind-source="@" bind-property="time-start" bind-flags="sync-create"/>
             <property name="time-complete" bind-source="@" bind-property="time-complete" bind-flags="sync-create"/>
+            <property name="count" bind-source="@" bind-property="time-count" bind-flags="sync-create"/>
           </object>
           <packing>
             <property name="expand">True</property>
