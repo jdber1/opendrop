@@ -27,4 +27,58 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import linear_navigator_footer_cs
+from gi.repository import GObject
+
+from opendrop.appfw import Presenter, component, install
+
+
+@component(
+    template_path='./linear.ui',
+)
+class LinearFooterPresenter(Presenter):
+    _next_label = 'Next'
+    _previous_label = 'Back'
+
+    @install
+    @GObject.Property(type=str)
+    def next_label(self) -> str:
+        return self._next_label
+
+    @next_label.setter
+    def next_label(self, text: str) -> None:
+        self._next_label = text
+        self.notify('next-visible')
+
+    @install
+    @GObject.Property(type=str)
+    def previous_label(self) -> str:
+        return self._previous_label
+    
+    @previous_label.setter
+    def previous_label(self, text: str) -> None:
+        self._previous_label = text
+        self.notify('previous-visible')
+
+    @install
+    @GObject.Signal
+    def next(self) -> None:
+        pass
+
+    @install
+    @GObject.Signal
+    def previous(self) -> None:
+        pass
+    
+    @GObject.Property(type=bool, default=True, flags=GObject.ParamFlags.READABLE)
+    def next_visible(self) -> bool:
+        return self._next_label != ''
+
+    @GObject.Property(type=bool, default=True, flags=GObject.ParamFlags.READABLE)
+    def previous_visible(self) -> bool:
+        return self._previous_label != ''
+    
+    def next_clicked(self, *_) -> None:
+        self.emit('next')
+
+    def previous_clicked(self, *_) -> None:
+        self.emit('previous')

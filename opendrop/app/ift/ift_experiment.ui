@@ -18,10 +18,45 @@
         <child>
           <object class="GtkStack" id="action_area">
             <property name="visible">True</property>
-            <child><object class="GtkGrid" id="action0"><property name="visible">True</property></object><packing><property name="name">0</property></packing></child>
-            <child><object class="GtkGrid" id="action1"><property name="visible">True</property></object><packing><property name="name">1</property></packing></child>
-            <child><object class="GtkGrid" id="action2"><property name="visible">True</property></object><packing><property name="name">2</property></packing></child>
-            <child><object class="GtkGrid" id="action3"><property name="visible">True</property></object><packing><property name="name">3</property></packing></child>
+            <child>
+              <object class="LinearFooter">
+                <property name="visible">True</property>
+                <property name="previous-label"></property>
+                <signal name="next" handler="next_page"/>
+              </object>
+              <packing>
+                <property name="name">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="LinearFooter">
+                <property name="visible">True</property>
+                <signal name="next" handler="next_page"/>
+                <signal name="previous" handler="previous_page"/>
+              </object>
+              <packing>
+                <property name="name">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="LinearFooter">
+                <property name="visible">True</property>
+                <property name="next-label">Analyse</property>
+                <signal name="next" handler="next_page"/>
+                <signal name="previous" handler="previous_page"/>
+              </object>
+              <packing>
+                <property name="name">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkGrid" id="action3">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="name">3</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -70,7 +105,7 @@
       </object>
       <packing>
         <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Results</property>
+        <property name="title" translatable="yes">Analysis</property>
         <property name="has_padding">False</property>
       </packing>
     </child>

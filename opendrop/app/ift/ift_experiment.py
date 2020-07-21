@@ -30,7 +30,6 @@
 from gi.repository import GObject, Gtk
 from injector import inject
 
-from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
 from opendrop.app.common.footer.results import ResultsFooterStatus, results_footer_cs
 from opendrop.appfw import ComponentFactory, Presenter, TemplateChild, component
 from opendrop.utility.bindable import VariableBindable
@@ -47,9 +46,6 @@ from .services.session import IFTSession, IFTSessionModule
 )
 class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
     action_area = TemplateChild('action_area')  # type: TemplateChild[Gtk.Stack]
-    action0 = TemplateChild('action0')  # type: TemplateChild[Gtk.Container]
-    action1 = TemplateChild('action1')  # type: TemplateChild[Gtk.Container]
-    action2 = TemplateChild('action2')  # type: TemplateChild[Gtk.Container]
     action3 = TemplateChild('action3')  # type: TemplateChild[Gtk.Container]
 
     report_page = TemplateChild('report_page')
@@ -68,14 +64,6 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
     def after_view_init(self) -> None:
-        # Footer
-        self.lin_footer_component = linear_navigator_footer_cs.factory(
-            do_back=self.previous_page,
-            do_next=self.next_page,
-        ).create()
-        self.lin_footer_component.view_rep.show()
-        self.action0.add(self.lin_footer_component.view_rep)
-
         self._results_footer_status = VariableBindable(ResultsFooterStatus.IN_PROGRESS)
         self._results_footer_progress = VariableBindable(0.0)
         self._results_footer_time_elapsed = VariableBindable(0.0)
@@ -126,12 +114,9 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
     def prepare(self, *_) -> None:
         # Update footer to show current page's action widgets.
         cur_page = self.host.get_current_page()
-        if cur_page in (0, 1, 2):
-            self.action_area.set_visible_child_name('0')
-        else:
-            self.action_area.set_visible_child_name(str(cur_page))
+        self.action_area.set_visible_child_name(str(cur_page))
 
-    def next_page(self) -> None:
+    def next_page(self, *_) -> None:
         cur_page = self.host.get_current_page()
         if cur_page in (0, 1):
             self.host.next_page()
@@ -142,7 +127,7 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
             # Ignore, on last page.
             return
 
-    def previous_page(self) -> None:
+    def previous_page(self, *_) -> None:
         cur_page = self.host.get_current_page()
         if cur_page == 0:
             # Ignore, on first page.
@@ -237,5 +222,4 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         return True
 
     def destroy(self, *_) -> None:
-        self.lin_footer_component.destroy()
         self.results_footer_component.destroy()
