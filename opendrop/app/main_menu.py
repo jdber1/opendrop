@@ -1,4 +1,4 @@
-from gi.repository import Gtk, GObject
+from gi.repository import GObject
 
 from opendrop.appfw import Presenter, component, install
 
@@ -6,11 +6,16 @@ from opendrop.appfw import Presenter, component, install
 @component(
     template_path='./main_menu.ui',
 )
-class MainMenuPresenter(Presenter[Gtk.Window]):
-    def hdl_ift_btn_clicked(self, button: Gtk.Button) -> None:
+class MainMenuPresenter(Presenter):
+    @GObject.Property(type=str)
+    def version_text(self) -> str:
+        from opendrop import __version__ as version
+        return 'Version: {}'.format(version)
+
+    def ift_btn_clicked(self, *_) -> None:
         self.ift.emit()
 
-    def hdl_conan_btn_clicked(self, button: Gtk.Button) -> None:
+    def conan_btn_clicked(self, *_) -> None:
         self.conan.emit()
 
     @install

@@ -43,6 +43,7 @@ try:
 except ImportError:
     import importlib_resources
 
+from opendrop.metadata import *
 from opendrop.vendor import aioglib
 
 
