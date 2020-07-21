@@ -27,15 +27,17 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from gi.repository import Gtk
+from gi.repository import GObject, Gtk
 from injector import inject
 
 from opendrop.app.common.footer.linearnav import linear_navigator_footer_cs
-from opendrop.app.common.wizard import WizardPageControls
+from opendrop.app.common.footer.results import results_footer_cs, ResultsFooterStatus
+from opendrop.utility.bindable import VariableBindable
 from opendrop.appfw import ComponentFactory, Presenter, TemplateChild, component
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
-from .results import conan_results_cs
+from .analysis_saver import conan_save_dialog_cs
+from .services.progress import ConanAnalysisProgressHelper
 from .services.session import ConanSession, ConanSessionModule
 
 
@@ -49,13 +51,22 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     action1 = TemplateChild('action1')  # type: TemplateChild[Gtk.Container]
     action2 = TemplateChild('action2')  # type: TemplateChild[Gtk.Container]
 
+    report_page = TemplateChild('report_page')
+
     @inject
-    def __init__(self, cf: ComponentFactory, session: ConanSession) -> None:
+    def __init__(
+            self,
+            cf: ComponentFactory,
+            session: ConanSession,
+            progress_helper: ConanAnalysisProgressHelper
+    ) -> None:
         self.cf = cf
         self.session = session
+        self.progress_helper = progress_helper
+
+        session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
     def after_view_init(self) -> None:
-        # Footer
         self.lin_footer_component = linear_navigator_footer_cs.factory(
             do_back=self.previous_page,
             do_next=self.next_page,
@@ -63,41 +74,52 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
         self.lin_footer_component.view_rep.show()
         self.action0.add(self.lin_footer_component.view_rep)
 
-        image_acquisition_page = self.cf.create('ImageAcquisition', visible=True)
-        image_processing_page = self.cf.create('ConanImageProcessing', visible=True)
-
-        self.results_component = conan_results_cs.factory(
-            model=self.session.results,
-            footer_area=self.action2,
-            page_controls=WizardPageControls(
-                do_next_page=self.next_page,
-                do_prev_page=self.previous_page,
-            ),
+        self._results_footer_status = VariableBindable(ResultsFooterStatus.IN_PROGRESS)
+        self._results_footer_progress = VariableBindable(0.0)
+        self._results_footer_time_elapsed = VariableBindable(0.0)
+        self._results_footer_time_remaining = VariableBindable(0.0)
+        self.results_footer_component = results_footer_cs.factory(
+            in_status=self._results_footer_status,
+            in_progress=self._results_footer_progress,
+            in_time_elapsed=self._results_footer_time_elapsed,
+            in_time_remaining=self._results_footer_time_remaining,
+            do_back=self.previous_page,
+            do_cancel=self.cancel_analyses,
+            do_save=self.save_analyses,
         ).create()
-        self.results_component.view_rep.show()
+        self.results_footer_component.view_rep.show()
+        self.action2.add(self.results_footer_component.view_rep)
 
-        self.host.append_page(image_acquisition_page)
-        self.host.child_set(
-            image_acquisition_page,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Image acquisition',
-        )
+        self.session.bind_property('analyses', self.report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
-        self.host.append_page(image_processing_page)
-        self.host.child_set(
-            image_processing_page,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Image processing',
-        )
+        self.progress_helper.connect('notify::status', self.progress_status_changed)
+        self.progress_helper.connect('notify::fraction', self.progress_fraction_changed)
+        self.progress_helper.connect('notify::time-start', self.progress_time_start_changed)
+        self.progress_helper.connect('notify::est-complete', self.progress_est_complete_changed)
 
-        self.host.append_page(self.results_component.view_rep)
-        self.host.child_set(
-            self.results_component.view_rep,
-            page_type=Gtk.AssistantPageType.CUSTOM,
-            title='Results',
-        )
+    def progress_status_changed(self, *_) -> None:
+        status = self.progress_helper.status
 
-        self.host.set_current_page(0)
+        if status is ConanAnalysisProgressHelper.Status.ANALYSING:
+            self._results_footer_status.set(ResultsFooterStatus.IN_PROGRESS)
+        elif status is ConanAnalysisProgressHelper.Status.FINISHED:
+            self._results_footer_status.set(ResultsFooterStatus.FINISHED)
+        elif status is ConanAnalysisProgressHelper.Status.CANCELLED:
+            self._results_footer_status.set(ResultsFooterStatus.CANCELLED)
+
+    def progress_fraction_changed(self, *_) -> None:
+        fraction = self.progress_helper.fraction
+        self._results_footer_progress.set(fraction)
+
+    def progress_time_start_changed(self, *_) -> None:
+        self.update_times()
+
+    def progress_est_complete_changed(self, *_) -> None:
+        self.update_times()
+
+    def update_times(self) -> None:
+        self._results_footer_time_remaining.set(self.progress_helper.calculate_time_remaining())
+        self._results_footer_time_elapsed.set(self.progress_helper.calculate_time_elapsed())
 
     def prepare(self, *_) -> None:
         cur_page = self.host.get_current_page()
@@ -134,6 +156,57 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     def clear_analyses(self) -> None:
         self.session.clear_analyses()
 
+    def cancel_analyses(self) -> None:
+        if hasattr(self, 'cancel_dialog'): return
+
+        self.cancel_dialog = YesNoDialog(
+            parent=self.host,
+            message_format='Confirm cancel analysis?',
+        )
+
+        def hdl_response(dialog: Gtk.Widget, response: Gtk.ResponseType) -> None:
+            del self.cancel_dialog
+            dialog.destroy()
+
+            self.progress_helper.disconnect(status_handler_id)
+
+            if response == Gtk.ResponseType.YES:
+                self.session.cancel_analyses()
+
+        def hdl_progress_status(*_) -> None:
+            if (self.progress_helper.status is ConanAnalysisProgressHelper.Status.FINISHED or
+                    self.progress_helper.status is ConanAnalysisProgressHelper.Status.CANCELLED):
+                self.cancel_dialog.close()
+
+        # Close dialog if analysis finishes or cancels before user responds.
+        status_handler_id = self.progress_helper.connect('notify::status', hdl_progress_status)
+
+        self.cancel_dialog.connect('response', hdl_response)
+
+        self.cancel_dialog.show()
+
+    def save_analyses(self) -> None:
+        if hasattr(self, 'save_dialog_component'): return
+
+        save_options = self.session.create_save_options()
+
+        def hdl_ok() -> None:
+            self.save_dialog_component.destroy()
+            del self.save_dialog_component
+            self.session.save_analyses(save_options)
+
+        def hdl_cancel() -> None:
+            self.save_dialog_component.destroy()
+            del self.save_dialog_component
+
+        self.save_dialog_component = conan_save_dialog_cs.factory(
+            parent_window=self.host,
+            model=save_options,
+            do_ok=hdl_ok,
+            do_cancel=hdl_cancel,
+        ).create()
+        self.save_dialog_component.view_rep.show()
+
     def close(self, discard_unsaved: bool = False) -> None:
         if hasattr(self, 'confirm_discard_dialog'): return
 
@@ -146,7 +219,7 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
                 parent=self.host,
             )
 
-            def hdl_response(self, dialog: Gtk.Dialog, response: Gtk.ResponseType) -> None:
+            def hdl_response(dialog: Gtk.Dialog, response: Gtk.ResponseType) -> None:
                 del self.confirm_discard_dialog
                 dialog.destroy()
 
@@ -161,4 +234,5 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
         return True
 
     def destroy(self, *_) -> None:
-        self.results_component.destroy()
+        self.lin_footer_component.destroy()
+        self.results_footer_component.destroy()

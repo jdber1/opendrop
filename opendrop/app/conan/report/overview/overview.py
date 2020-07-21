@@ -27,5 +27,34 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import graphs_cs
-from .model import GraphsModel
+from typing import Optional, Iterable, Sequence
+
+from gi.repository import GObject
+
+from opendrop.app.conan.analysis import ConanAnalysis
+from opendrop.appfw import Presenter, component, install
+
+
+@component(
+    template_path='./overview.ui',
+)
+class ConanReportOverviewPresenter(Presenter):
+    _analyses = ()
+    _selection = None
+
+    @install
+    @GObject.Property
+    def analyses(self) -> Sequence[ConanAnalysis]:
+        return self._analyses
+
+    @analyses.setter
+    def analyses(self, analyses: Iterable[ConanAnalysis]) -> None:
+        self._analyses = tuple(analyses)
+
+    @GObject.Property
+    def selection(self) -> Optional[ConanAnalysis]:
+        return self._selection
+
+    @selection.setter
+    def selection(self, selection: Optional[ConanAnalysis]) -> None:
+        self._selection = selection

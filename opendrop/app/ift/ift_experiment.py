@@ -27,8 +27,6 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import time
-
 from gi.repository import GObject, Gtk
 from injector import inject
 
@@ -68,8 +66,6 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.progress_helper = progress_helper
 
         session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
-
-        self.analyses_event_connections = ()
 
     def after_view_init(self) -> None:
         # Footer
@@ -124,15 +120,8 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         self.update_times()
 
     def update_times(self) -> None:
-        time_start = self.progress_helper.time_start
-        est_complete = self.progress_helper.est_complete
-
-        now = time.time()
-        elapsed = now - time_start
-        remaining = est_complete - now
-
-        self._results_footer_time_remaining.set(remaining)
-        self._results_footer_time_elapsed.set(elapsed)
+        self._results_footer_time_remaining.set(self.progress_helper.calculate_time_remaining())
+        self._results_footer_time_elapsed.set(self.progress_helper.calculate_time_elapsed())
 
     def prepare(self, *_) -> None:
         # Update footer to show current page's action widgets.
@@ -204,12 +193,12 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
 
         save_options = self.session.create_save_options()
 
-        def hdl_ok(self) -> None:
+        def hdl_ok() -> None:
             self.save_dialog_component.destroy()
             del self.save_dialog_component
             self.session.save_analyses(save_options)
 
-        def hdl_cancel(self) -> None:
+        def hdl_cancel() -> None:
             self.save_dialog_component.destroy()
             del self.save_dialog_component
 
@@ -233,7 +222,7 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
                 parent=self.host,
             )
 
-            def hdl_response(self, dialog: Gtk.Dialog, response: Gtk.ResponseType) -> None:
+            def hdl_response(dialog: Gtk.Dialog, response: Gtk.ResponseType) -> None:
                 del self.confirm_discard_dialog
                 dialog.destroy()
 
@@ -250,6 +239,3 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
     def destroy(self, *_) -> None:
         self.lin_footer_component.destroy()
         self.results_footer_component.destroy()
-
-        for conn in self.analyses_event_connections:
-            conn.disconnect()

@@ -8,11 +8,13 @@
       <column type="gchararray"/>
       <!-- column-name status -->
       <column type="gchararray"/>
-      <!-- column-name log -->
+      <!-- column-name left_angle -->
+      <column type="gchararray"/>
+      <!-- column-name right_angle -->
       <column type="gchararray"/>
     </columns>
   </object>
-  <template class="IFTReportOverviewMaster" parent="GtkScrolledWindow">
+  <template class="ConanReportOverviewMaster" parent="GtkScrolledWindow">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
     <property name="hexpand">True</property>

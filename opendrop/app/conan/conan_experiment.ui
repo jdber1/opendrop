@@ -29,5 +29,38 @@
         </child>
       </object>
     </child>
+    <child>
+      <object class="ImageAcquisition">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="page_type">custom</property>
+        <property name="title" translatable="yes">Image acquisition</property>
+        <property name="has_padding">False</property>
+      </packing>
+    </child>
+    <child>
+      <object class="ConanImageProcessing">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="page_type">custom</property>
+        <property name="title" translatable="yes">Image processing</property>
+        <property name="has_padding">False</property>
+      </packing>
+    </child>
+    <child>
+      <object class="ConanReport" id="report_page">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="page_type">custom</property>
+        <property name="title" translatable="yes">Results</property>
+        <property name="has_padding">False</property>
+      </packing>
+    </child>
   </template>
 </interface>

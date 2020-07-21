@@ -27,18 +27,19 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import math
 from typing import Optional, Sequence
 
-from gi.repository import Gtk, Pango, GObject
+from gi.repository import Gtk, GObject
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.conan.analysis import ConanAnalysis
 from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
 @component(
     template_path='./master.ui',
 )
-class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
+class ConanReportOverviewMasterPresenter(Presenter):
     tree_view = TemplateChild('tree_view')  # type: TemplateChild[Gtk.TreeView]
     tree_model = TemplateChild('tree_model')  # type: TemplateChild[Gtk.ListStore]
     tree_selection = TemplateChild('tree_selection')  # type: TemplateChild[Gtk.TreeSelection]
@@ -51,11 +52,12 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
     class _RowPresenter:
         TIMESTAMP_COL = 0
         STATUS_COL = 1
-        LOG_TEXT_COL = 2
+        LEFT_ANGLE_COL = 2
+        RIGHT_ANGLE_COL = 3
 
-        def __init__(self, row_ref: Gtk.TreeRowReference, analysis: IFTDropAnalysis) -> None:
-            self.analysis = analysis
+        def __init__(self, row_ref: Gtk.TreeRowReference, analysis: ConanAnalysis) -> None:
             self.row_ref = row_ref
+            self.analysis = analysis
 
             self._event_connections = [
                 analysis.bn_image_timestamp.on_changed.connect(
@@ -64,14 +66,18 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
                 analysis.bn_status.on_changed.connect(
                     self._update_status_text
                 ),
-                analysis.bn_log.on_changed.connect(
-                    self._update_log_text
+                analysis.bn_left_angle.on_changed.connect(
+                    self._update_left_angle
+                ),
+                analysis.bn_right_angle.on_changed.connect(
+                    self._update_right_angle
                 ),
             ]
 
             self._update_timestamp()
             self._update_status_text()
-            self._update_log_text()
+            self._update_left_angle()
+            self._update_right_angle()
 
         def _update_timestamp(self) -> None:
             timestamp = self.analysis.bn_image_timestamp.get()
@@ -83,12 +89,21 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
             text = status.display_name
             self._tree_model.set_value(self._tree_iter, column=self.STATUS_COL, value=text)
 
-        def _update_log_text(self) -> None:
-            log_history = self.analysis.bn_log.get()
-            log_lines = log_history.splitlines()
+        def _update_left_angle(self) -> None:
+            left_angle = self.analysis.bn_left_angle.get()
+            if left_angle is not None and math.isfinite(left_angle):
+                text = format(math.degrees(left_angle), '.1f')
+            else:
+                text = ''
+            self._tree_model.set_value(self._tree_iter, column=self.LEFT_ANGLE_COL, value=text)
 
-            text = log_lines[-1] if log_lines else ''
-            self._tree_model.set_value(self._tree_iter, column=self.LOG_TEXT_COL, value=text)
+        def _update_right_angle(self) -> None:
+            right_angle = self.analysis.bn_right_angle.get()
+            if right_angle is not None and math.isfinite(right_angle):
+                text = format(math.degrees(right_angle), '.1f')
+            else:
+                text = ''
+            self._tree_model.set_value(self._tree_iter, column=self.RIGHT_ANGLE_COL, value=text)
 
         @property
         def _tree_iter(self) -> Gtk.TreeIter:
@@ -109,31 +124,34 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
         self.tree_view.append_column(Gtk.TreeViewColumn(
             title='Timestamp (s)',
             cell_renderer=Gtk.CellRendererText(),
-            text=0
+            text=0,
         ))
 
         self.tree_view.append_column(Gtk.TreeViewColumn(
             title='Status',
             cell_renderer=Gtk.CellRendererText(),
-            text=1
+            text=1,
         ))
 
         self.tree_view.append_column(Gtk.TreeViewColumn(
-            title='Log',
-            cell_renderer=Gtk.CellRendererText(
-                font='Monospace',
-                ellipsize=Pango.EllipsizeMode.END
-            ),
-            text=2
+            title='Left (degrees)',
+            cell_renderer=Gtk.CellRendererText(),
+            text=2,
+        ))
+
+        self.tree_view.append_column(Gtk.TreeViewColumn(
+            title='Right (degrees)',
+            cell_renderer=Gtk.CellRendererText(),
+            text=3,
         ))
 
         self.view_ready = True
         self.analyses_changed()
-        self.selection = self._initial_selection
+        self.selection = self.selection
 
     @install
     @GObject.Property
-    def selection(self) -> Optional[IFTDropAnalysis]:
+    def selection(self) -> Optional[ConanAnalysis]:
         if not self.view_ready:
             return self._initial_selection
 
@@ -153,18 +171,18 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
             raise RuntimeError
 
     @selection.setter
-    def selection(self, analysis: Optional[IFTDropAnalysis]) -> None:
+    def selection(self, selection: Optional[ConanAnalysis]) -> None:
         if not self.view_ready:
-            self._initial_selection = analysis
+            self._initial_selection = selection
 
-        if self.selection == analysis:
+        if self.selection == selection:
             return
 
         self.ignore_tree_selection_changes = True
         try:
-            if analysis is not None:
+            if selection is not None:
                 for p in self.row_presenters:
-                    if p.analysis == analysis:
+                    if p.analysis == selection:
                         row_presenter = p
                         break
                 else:
@@ -178,11 +196,11 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
 
     @install
     @GObject.Property
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
+    def analyses(self) -> Sequence[ConanAnalysis]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, value: Sequence[IFTDropAnalysis]) -> None:
+    def analyses(self, value: Sequence[ConanAnalysis]) -> None:
         self._analyses = tuple(value)
         if self.view_ready:
             self.analyses_changed()
@@ -202,7 +220,7 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
         for a in to_remove:
             self.remove_analysis(a)
 
-    def add_analysis(self, analysis: IFTDropAnalysis) -> None:
+    def add_analysis(self, analysis: ConanAnalysis) -> None:
         row_ref = self.new_row()
 
         row_presenter = self._RowPresenter(row_ref, analysis)
@@ -211,7 +229,7 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
         if self.selection is None:
             self.selection = analysis
 
-    def remove_analysis(self, analysis: IFTDropAnalysis) -> None:
+    def remove_analysis(self, analysis: ConanAnalysis) -> None:
         for p in self.row_presenters:
             if p.analysis == analysis:
                 row_presenter = p
@@ -235,7 +253,7 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
         self.remove_row(row_presenter.row_ref)
 
     def new_row(self) -> Gtk.TreeRowReference:
-        tree_iter = self.tree_model.append((None, None, None))
+        tree_iter = self.tree_model.append((None, None, None, None))
         row_ref = Gtk.TreeRowReference(
             model=self.tree_model,
             path=self.tree_model.get_path(tree_iter)
@@ -252,6 +270,5 @@ class IFTReportOverviewMasterPresenter(Presenter[Gtk.ScrolledWindow]):
         self.tree_model.remove(tree_iter)
 
     def tree_selection_changed(self, tree_selection: Gtk.TreeSelection) -> None:
-        if self.ignore_tree_selection_changes:
-            return
+        if self.ignore_tree_selection_changes: return
         self.notify('selection')

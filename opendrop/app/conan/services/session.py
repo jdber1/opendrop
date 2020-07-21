@@ -30,10 +30,14 @@
 import asyncio
 from typing import Sequence
 
+from gi.repository import GObject
 from injector import Binder, Module, inject, singleton
 import numpy as np
 
-from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService
+from opendrop.app.common.services.acquisition import (
+    AcquirerType,
+    ImageAcquisitionService,
+)
 from opendrop.app.conan.analysis import (
     ConanAnalysis,
     ContactAngleCalculator,
@@ -43,7 +47,6 @@ from opendrop.app.conan.analysis import (
 )
 from opendrop.app.conan.analysis_saver import ConanAnalysisSaverOptions
 from opendrop.app.conan.analysis_saver.save_functions import save_drops
-from opendrop.app.conan.results import ConanResultsModel
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
 
@@ -57,7 +60,7 @@ class ConanSessionModule(Module):
         binder.bind(ConanSession, to=ConanSession, scope=singleton)
 
 
-class ConanSession:
+class ConanSession(GObject.Object):
     @inject
     def __init__(
             self,
@@ -65,79 +68,77 @@ class ConanSession:
             feature_extractor_params: FeatureExtractorParams,
             conancalc_params: ContactAngleCalculatorParams,
     ) -> None:
-        self._feature_extractor_params = feature_extractor_params
-        self._conancalc_params = conancalc_params
-
-        self._bn_analyses = VariableBindable(tuple())  # type: Bindable[Sequence[ConanAnalysis]]
+        self._analyses = ()  # type: Sequence[ConanAnalysis]
         self._analyses_saved = False
 
         self.image_acquisition = image_acquisition
         self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
+        self._feature_extractor_params = feature_extractor_params
+        self._conancalc_params = conancalc_params
 
-        self.results = ConanResultsModel(
-            in_analyses=self._bn_analyses,
-            do_cancel_analyses=self.cancel_analyses,
-            do_save_analyses=self.save_analyses,
-            create_save_options=self._create_save_options,
-            check_if_safe_to_discard=self.safe_to_discard,
-        )
+        super().__init__()
 
-    def start_analyses(self) -> None:
-        assert len(self._bn_analyses.get()) == 0
+    @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
+    def analyses(self) -> Sequence[ConanAnalysis]:
+        return self._analyses
 
-        new_analyses = []
-
-        input_images = self.image_acquisition.acquire_images()
-        for input_image in input_images:
-            new_analysis = ConanAnalysis(
-                input_image=input_image,
-                do_extract_features=self.extract_features,
-                do_calculate_conan=self.calculate_contact_angle,
-            )
-
-            new_analyses.append(new_analysis)
-
-        self._bn_analyses.set(new_analyses)
-        self._analyses_saved = False
-
-    def cancel_analyses(self) -> None:
-        analyses = self._bn_analyses.get()
-
-        for analysis in analyses:
-            analysis.cancel()
-
-    def clear_analyses(self) -> None:
-        self.cancel_analyses()
-        self._bn_analyses.set(tuple())
-
-    def save_analyses(self, options: ConanAnalysisSaverOptions) -> None:
-        analyses = self._bn_analyses.get()
-        if len(analyses) == 0:
-            return
-
-        save_drops(analyses, options)
-        self._analyses_saved = True
-
-    def _create_save_options(self) -> ConanAnalysisSaverOptions:
-        return ConanAnalysisSaverOptions()
+    @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
+    def analyses_saved(self) -> bool:
+        return self._analyses_saved
 
     def safe_to_discard(self) -> bool:
         if self._analyses_saved:
             return True
-        else:
-            analyses = self._bn_analyses.get()
-            if len(analyses) == 0:
-                return True
 
-            all_images_replicated = all(
-                analysis.is_image_replicated
-                for analysis in analyses
-            )
-
-            if not all_images_replicated:
-                return False
-
+        if not self._analyses:
             return True
+
+        all_images_replicated = all(
+            analysis.is_image_replicated
+            for analysis in self._analyses
+        )
+        if all_images_replicated:
+            return True
+
+        return False
+
+    def start_analyses(self) -> None:
+        assert not self._analyses
+
+        new_analyses = []
+
+        input_images = self.image_acquisition.acquire_images()
+
+        self._analyses = tuple(
+            ConanAnalysis(
+                input_image=im,
+                do_extract_features=self.extract_features,
+                do_calculate_conan=self.calculate_contact_angle,
+            ) for im in input_images
+        )
+        self._analyses_saved = False
+        self.notify('analyses')
+        self.notify('analyses_saved')
+
+    def cancel_analyses(self) -> None:
+        for analysis in self._analyses:
+            analysis.cancel()
+
+    def clear_analyses(self) -> None:
+        self.cancel_analyses()
+        self._analyses = ()
+        self._analyses_saved = True
+        self.notify('analyses')
+        self.notify('analyses_saved')
+
+    def save_analyses(self, options: ConanAnalysisSaverOptions) -> None:
+        if not self._analyses: return
+        save_drops(self._analyses, options)
+        self._analyses_saved = True
+        self.notify('analyses_saved')
+
+    def create_save_options(self) -> ConanAnalysisSaverOptions:
+        return ConanAnalysisSaverOptions()
 
     def extract_features(self, image: Bindable[np.ndarray]) -> FeatureExtractor:
         return FeatureExtractor(
