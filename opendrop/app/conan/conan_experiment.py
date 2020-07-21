@@ -30,9 +30,8 @@
 from gi.repository import GObject, Gtk
 from injector import inject
 
-from opendrop.app.common.footer.results import results_footer_cs, ResultsFooterStatus
-from opendrop.utility.bindable import VariableBindable
-from opendrop.appfw import ComponentFactory, Presenter, TemplateChild, component
+from opendrop.app.common.footer.analysis import AnalysisFooterStatus
+from opendrop.appfw import Presenter, TemplateChild, component
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
 from .analysis_saver import conan_save_dialog_cs
@@ -46,70 +45,39 @@ from .services.session import ConanSession, ConanSessionModule
 )
 class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     action_area = TemplateChild('action_area')  # type: TemplateChild[Gtk.Stack]
-    action2 = TemplateChild('action2')  # type: TemplateChild[Gtk.Container]
 
+    analysis_footer = TemplateChild('analysis_footer')
     report_page = TemplateChild('report_page')
 
     @inject
-    def __init__(
-            self,
-            cf: ComponentFactory,
-            session: ConanSession,
-            progress_helper: ConanAnalysisProgressHelper
-    ) -> None:
-        self.cf = cf
+    def __init__(self, session: ConanSession, progress_helper: ConanAnalysisProgressHelper) -> None:
         self.session = session
         self.progress_helper = progress_helper
 
         session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
     def after_view_init(self) -> None:
-        self._results_footer_status = VariableBindable(ResultsFooterStatus.IN_PROGRESS)
-        self._results_footer_progress = VariableBindable(0.0)
-        self._results_footer_time_elapsed = VariableBindable(0.0)
-        self._results_footer_time_remaining = VariableBindable(0.0)
-        self.results_footer_component = results_footer_cs.factory(
-            in_status=self._results_footer_status,
-            in_progress=self._results_footer_progress,
-            in_time_elapsed=self._results_footer_time_elapsed,
-            in_time_remaining=self._results_footer_time_remaining,
-            do_back=self.previous_page,
-            do_cancel=self.cancel_analyses,
-            do_save=self.save_analyses,
-        ).create()
-        self.results_footer_component.view_rep.show()
-        self.action2.add(self.results_footer_component.view_rep)
-
         self.session.bind_property('analyses', self.report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
 
-        self.progress_helper.connect('notify::status', self.progress_status_changed)
-        self.progress_helper.connect('notify::fraction', self.progress_fraction_changed)
-        self.progress_helper.connect('notify::time-start', self.progress_time_start_changed)
-        self.progress_helper.connect('notify::est-complete', self.progress_est_complete_changed)
+        self.progress_helper.bind_property(
+            'status', self.analysis_footer, 'status', GObject.BindingFlags.SYNC_CREATE,
+            lambda binding, x: {
+                ConanAnalysisProgressHelper.Status.ANALYSING: AnalysisFooterStatus.IN_PROGRESS,
+                ConanAnalysisProgressHelper.Status.FINISHED: AnalysisFooterStatus.FINISHED,
+                ConanAnalysisProgressHelper.Status.CANCELLED: AnalysisFooterStatus.CANCELLED,
+            }[x],
+            None,
+        )
 
-    def progress_status_changed(self, *_) -> None:
-        status = self.progress_helper.status
-
-        if status is ConanAnalysisProgressHelper.Status.ANALYSING:
-            self._results_footer_status.set(ResultsFooterStatus.IN_PROGRESS)
-        elif status is ConanAnalysisProgressHelper.Status.FINISHED:
-            self._results_footer_status.set(ResultsFooterStatus.FINISHED)
-        elif status is ConanAnalysisProgressHelper.Status.CANCELLED:
-            self._results_footer_status.set(ResultsFooterStatus.CANCELLED)
-
-    def progress_fraction_changed(self, *_) -> None:
-        fraction = self.progress_helper.fraction
-        self._results_footer_progress.set(fraction)
-
-    def progress_time_start_changed(self, *_) -> None:
-        self.update_times()
-
-    def progress_est_complete_changed(self, *_) -> None:
-        self.update_times()
-
-    def update_times(self) -> None:
-        self._results_footer_time_remaining.set(self.progress_helper.calculate_time_remaining())
-        self._results_footer_time_elapsed.set(self.progress_helper.calculate_time_elapsed())
+        self.progress_helper.bind_property(
+            'fraction', self.analysis_footer, 'progress', GObject.BindingFlags.SYNC_CREATE
+        )
+        self.progress_helper.bind_property(
+            'time-start', self.analysis_footer, 'time-start', GObject.BindingFlags.SYNC_CREATE
+        )
+        self.progress_helper.bind_property(
+            'est-complete', self.analysis_footer, 'time-complete', GObject.BindingFlags.SYNC_CREATE
+        )
 
     def prepare(self, *_) -> None:
         cur_page = self.host.get_current_page()
@@ -143,7 +111,7 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     def clear_analyses(self) -> None:
         self.session.clear_analyses()
 
-    def cancel_analyses(self) -> None:
+    def cancel_analyses(self, *_) -> None:
         if hasattr(self, 'cancel_dialog'): return
 
         self.cancel_dialog = YesNoDialog(
@@ -172,7 +140,7 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
 
         self.cancel_dialog.show()
 
-    def save_analyses(self) -> None:
+    def save_analyses(self, *_) -> None:
         if hasattr(self, 'save_dialog_component'): return
 
         save_options = self.session.create_save_options()
@@ -219,6 +187,3 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     def delete_event(self, *_) -> bool:
         self.close()
         return True
-
-    def destroy(self, *_) -> None:
-        self.results_footer_component.destroy()

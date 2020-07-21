@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from . import linear
+from . import linear, analysis

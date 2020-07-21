@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Optional
 
 from gi.repository import GObject
 
@@ -93,10 +93,10 @@ class ConanAnalysisProgressHelper(GObject.Object):
 
         return self.Status.ANALYSING
 
-    @GObject.Property(type=float)
-    def time_start(self) -> float:
+    @GObject.Property
+    def time_start(self) -> Optional[float]:
         analyses = self._analyses
-        if not analyses: return 0.0
+        if not analyses: return None
 
         time_start = min(
             analysis.bn_time_start.get()
@@ -105,10 +105,10 @@ class ConanAnalysisProgressHelper(GObject.Object):
 
         return time_start
 
-    @GObject.Property(type=float)
-    def est_complete(self) -> float:
+    @GObject.Property
+    def est_complete(self) -> Optional[float]:
         analyses = self._analyses
-        if not analyses: return 0.0
+        if not analyses: return None
 
         time_est_complete = max(
             analysis.bn_time_est_complete.get()
@@ -131,25 +131,3 @@ class ConanAnalysisProgressHelper(GObject.Object):
         completed_fraction = num_completed/len(analyses)
 
         return completed_fraction
-
-    def calculate_time_elapsed(self) -> float:
-        analyses = self._analyses
-        if not analyses: return 0.0
-
-        time_elapsed = max(
-            analysis.calculate_time_elapsed()
-            for analysis in analyses
-        )
-
-        return time_elapsed
-
-    def calculate_time_remaining(self) -> float:
-        analyses = self._analyses
-        if not analyses: return 0.0
-
-        time_remaining = max(
-            analysis.calculate_time_remaining()
-            for analysis in analyses
-        )
-
-        return time_remaining

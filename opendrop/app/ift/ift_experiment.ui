@@ -10,7 +10,6 @@
     <property name="window_position">center</property>
     <property name="use_header_bar">0</property>
     <signal name="delete-event" handler="delete_event" swapped="no"/>
-    <signal name="destroy" handler="destroy" swapped="no"/>
     <signal name="prepare" handler="prepare" swapped="no"/>
     <child internal-child="action_area">
       <object class="GtkBox">
@@ -50,8 +49,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid" id="action3">
+              <object class="AnalysisFooter" id="analysis_footer">
                 <property name="visible">True</property>
+                <signal name="save" handler="save_analyses"/>
+                <signal name="stop" handler="cancel_analyses"/>
+                <signal name="previous" handler="previous_page"/>
               </object>
               <packing>
                 <property name="name">3</property>
