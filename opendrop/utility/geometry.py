@@ -149,8 +149,8 @@ class Vector2(_PlainVector2[NumberT_co]):
             return cls._from_iterable(**kwargs)
         else:
             raise TypeError(
-                    'No {} constructor found for arguments {} and keyword arguments {}'
-                    .format(cls.__name__, args, kwargs)
+                    'No {} constructor found with {} positional arguments and {} keyword arguments'
+                    .format(cls.__name__, len(args), tuple(kwargs.keys()))
             )
 
     @classmethod
@@ -375,8 +375,8 @@ class Rect2(_PlainRect2[NumberT_co]):
             return cls._from_position_and_size(**kwargs)
         else:
             raise TypeError(
-                    'No {} constructor found for arguments {} and keyword arguments {}'
-                    .format(cls.__name__, args, kwargs)
+                    'No {} constructor found with {} positional arguments and {} keyword arguments'
+                    .format(cls.__name__, len(args), tuple(kwargs.keys()))
             )
 
     @classmethod
