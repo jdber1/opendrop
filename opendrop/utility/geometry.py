@@ -320,26 +320,26 @@ class Vector2(_PlainVector2[NumberT_co]):
 class _PlainRect2(Tuple[T_co, T_co, T_co, T_co]):
     def __getitem__(self, index: Literal[0, 1, 2, 3]) -> T_co:
         return super().__getitem__(index)
-    
+
     @property
     def x0(self) -> T_co:
         return self[0]
-    
+
     @property
     def y0(self) -> T_co:
         return self[1]
-    
+
     @property
     def x1(self) -> T_co:
         return self[2]
-    
+
     @property
     def y1(self) -> T_co:
         return self[3]
 
     def __len__(self) -> Literal[4]:
         return 4
- 
+
 
 class Rect2(_PlainRect2[NumberT_co]):
     @overload
@@ -351,8 +351,10 @@ class Rect2(_PlainRect2[NumberT_co]):
     @overload
     def __new__(cls, *, x: NumberT_co, y: NumberT_co, w: NumberT_co, h: NumberT_co) -> 'Rect2[NumberT_co]': ...
     @overload
+    def __new__(cls, *, x: NumberT_co, y: NumberT_co, width: NumberT_co, height: NumberT_co) -> 'Rect2[NumberT_co]': ...
+    @overload
     def __new__(cls, *, position: Iterable[NumberT_co], size: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
-     
+
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
             return cls._from_iterable(*args)
@@ -362,8 +364,11 @@ class Rect2(_PlainRect2[NumberT_co]):
             return cls._from_pt0pt1(*args)
         elif 'x0' in kwargs:
             return cls._from_x0y0x1y1(**kwargs)
-        elif 'x' in kwargs:
+        elif 'x' in kwargs and 'w' in kwargs:
             return cls._from_xywh(**kwargs)
+        elif 'x' in kwargs and 'width' in kwargs:
+            args = (kwargs['x'], kwargs['y'], kwargs['width'], kwargs['height'])
+            return cls._from_xywh(*args)
         elif 'pt0' in kwargs:
             return cls._from_pt0pt1(**kwargs)
         elif 'position' in kwargs:
@@ -378,7 +383,7 @@ class Rect2(_PlainRect2[NumberT_co]):
     def _from_x0y0x1y1(cls, x0: NumberT_co, y0: NumberT_co, x1: NumberT_co, y1: NumberT_co) -> 'Rect2[NumberT_co]':
         if x0 > x1:
             x0, x1 = x1, x0
- 
+
         if y0 > y1:
             y0, y1 = y1, y0
 
@@ -406,7 +411,7 @@ class Rect2(_PlainRect2[NumberT_co]):
     def _from_iterable(cls, iterable: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
         x0, y0, x1, y1 = iterable
         return cls._from_x0y0x1y1(x0, y0, x1, y1)
- 
+
     @property
     def pt0(self) -> Vector2[NumberT_co]:
         return Vector2(self.x0, self.y0)
@@ -432,6 +437,14 @@ class Rect2(_PlainRect2[NumberT_co]):
         return self.y1 - self.y0
 
     @property
+    def width(self) -> NumberT_co:
+        return self.w
+
+    @property
+    def height(self) -> NumberT_co:
+        return self.h
+
+    @property
     def position(self) -> Vector2[NumberT_co]:
         return Vector2(self.x, self.y)
 
@@ -448,19 +461,19 @@ class Rect2(_PlainRect2[NumberT_co]):
     def __repr__(self) -> str:
         return '{class_name}(x0={x0}, y0={y0}, x1={x1}, y1={y1})' \
                .format(class_name=type(self).__name__, x0=self.x0, y0=self.y0, x1=self.x1, y1=self.y1)
- 
+
     @overload
     def contains(self: _PlainRect2[Comparable[NumberU]], point: Iterable[NumberU], include_boundary: bool = True) -> bool: ...
     @overload
     def contains(self, point: Iterable[Comparable[NumberT_co]], include_boundary: bool = True) -> bool: ...
-    
+
     def contains(self, point, include_boundary=True):
         point_vec = Vector2(point)
         if include_boundary:
             return self.x0 <= point_vec.x <= self.x1 and self.y0 <= point_vec.y <= self.y1
         else:
             return self.x0 < point_vec.x < self.x1 and self.y0 < point_vec.y < self.y1
- 
+
     @overload
     def intersects(self: _PlainRect2[Comparable[NumberU]], other: Iterable[NumberU]) -> bool: ...
     @overload
@@ -471,8 +484,8 @@ class Rect2(_PlainRect2[NumberT_co]):
         intersect or if they are only 'touching' (i.e. share edges)."""
         other = Rect2(other)
         return self.x1 > other.x0 and self.x0 < other.x1 and self.y1 > other.y0 and self.y0 < other.y1
- 
- 
+
+
 class Line2:
     def __init__(self, pt0: Iterable[float], pt1: Iterable[float]) -> None:
         pt0_vec = Vector2(pt0)
@@ -516,7 +529,7 @@ class Line2:
             return Vector2(self.solve(y=y), y)
         else:
             raise TypeError
-        
+
     @overload
     def solve(self, *, x: float) -> float: ...
     @overload
