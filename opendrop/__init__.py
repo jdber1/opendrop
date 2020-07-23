@@ -43,6 +43,14 @@ try:
 except ImportError:
     import importlib_resources
 
+try:
+    from typing import Protocol, Literal
+except ImportError:
+    import typing
+    from typing_extensions import Protocol, Literal
+    typing.Protocol = Protocol
+    typing.Literal = Literal
+
 from opendrop.metadata import *
 from opendrop.vendor import aioglib
 

@@ -31,7 +31,7 @@ import math
 import operator
 from typing import Any, Callable, Iterable, Tuple, TypeVar, overload
 
-from typing_extensions import Literal, Protocol
+from typing import Literal, Protocol
 
 
 T_co = TypeVar('T_co', covariant=True)
