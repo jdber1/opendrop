@@ -58,6 +58,10 @@ class PresenterMeta(GObjectMeta, type(Generic)):
 
 
 class Presenter(GObject.Object, Generic[WidgetT_co], metaclass=PresenterMeta):
+    def __init__(self) -> None:
+        # Manually initialise GObject.Object later.
+        pass
+
     @property
     def host(self) -> WidgetT_co:
         return self.__host
