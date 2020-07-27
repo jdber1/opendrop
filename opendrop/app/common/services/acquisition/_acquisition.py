@@ -108,9 +108,9 @@ class ImageAcquisitionService:
 
 
 class AcquirerType(Enum):
-    LOCAL_STORAGE = ('Local filesystem',)
+    LOCAL_STORAGE = ('Filesystem',)
 
-    USB_CAMERA = ('USB Camera',)
+    USB_CAMERA = ('OpenCV',)
 
     def __init__(self, display_name: str) -> None:
         self.display_name = display_name
