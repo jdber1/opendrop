@@ -29,50 +29,61 @@
 
 from typing import Optional
 
-from gi.repository import GObject
+from gi.repository import GObject, GLib
 
 from opendrop.widgets.validated_entry import ValidatedEntry
 
 
 class IntegerEntry(ValidatedEntry):
-    _lower = None  # type: Optional[int]
-    _upper = None  # type: Optional[int]
-    _default = None  # type: Optional[int]
+    __gtype_name__ = 'IntegerEntry'
 
-    @GObject.Property
-    def lower(self) -> Optional[int]:
+    _lower = GLib.MININT
+    _upper = GLib.MAXINT
+    _default = 0
+    _default_set = False
+
+    @GObject.Property(type=int)
+    def lower(self) -> int:
         return self._lower
 
     @lower.setter
-    def lower(self, value: Optional[int]) -> None:
+    def lower(self, value: int) -> None:
         self._lower = value
 
-    @GObject.Property
-    def upper(self) -> Optional[int]:
+    @GObject.Property(type=int)
+    def upper(self) -> int:
         return self._upper
 
     @upper.setter
-    def upper(self, value: Optional[int]) -> None:
+    def upper(self, value: int) -> None:
         self._upper = value
 
-    @GObject.Property
-    def default(self) -> Optional[int]:
+    @GObject.Property(type=int)
+    def default(self) -> int:
         return self._default
 
     @default.setter
-    def default(self, value: Optional[int]) -> None:
+    def default(self, value: int) -> None:
         self._default = value
+        self.default_set = True
+
+    @GObject.Property(type=bool, default=False)
+    def default_set(self) -> bool:
+        return self._default_set
+
+    @default_set.setter
+    def default_set(self, value: bool) -> None:
+        self._default_set = value
 
     def restrict(self, value: Optional[int]) -> Optional[int]:
-        value = self.default if value is None else value
+        if value is None and self._default_set:
+            value = self._default
+
         if value is None:
             return None
 
-        if self.lower is not None:
-            value = max(value, self.lower)
-
-        if self.upper is not None:
-            value = min(value, self.upper)
+        value = max(value, self.lower)
+        value = min(value, self.upper)
 
         return value
 

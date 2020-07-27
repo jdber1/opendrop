@@ -39,9 +39,9 @@ class FloatEntry(ValidatedEntry, Gtk.Buildable):
     __gtype_name__ = "FloatEntry"
 
     # TODO: Remove this code duplication with IntegerEntry
-    _lower = -math.inf  # type: float
-    _upper = math.inf  # type: float
-    _default = 0  # type: float
+    _lower = -math.inf
+    _upper = math.inf
+    _default = 0
     _default_set = False
 
     @GObject.Property(type=float)
@@ -84,11 +84,8 @@ class FloatEntry(ValidatedEntry, Gtk.Buildable):
         if value is None:
             return None
 
-        if self.lower is not None:
-            value = max(value, self.lower)
-
-        if self.upper is not None:
-            value = min(value, self.upper)
+        value = max(value, self.lower)
+        value = min(value, self.upper)
 
         return value
 
