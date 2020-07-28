@@ -63,12 +63,12 @@ from genicam.gentl import EventToken, Port, PIXELFORMAT_NAMESPACE_IDS
 from genicam.gentl import Buffer as Buffer_
 
 # Local application/library specific imports
-from harvesters._private.core.port import ConcretePort
-from harvesters._private.core.statistics import Statistics
-from harvesters.util.logging import get_logger
-from harvesters.util.pfnc import dict_by_names, dict_by_ints
-from harvesters.util.pfnc import Dictionary, _PixelFormat
-from harvesters.util.pfnc import component_2d_formats
+from ._private.core.port import ConcretePort
+from ._private.core.statistics import Statistics
+from .util.logging import get_logger
+from .util.pfnc import dict_by_names, dict_by_ints
+from .util.pfnc import Dictionary, _PixelFormat
+from .util.pfnc import component_2d_formats
 
 
 _is_logging_buffer_manipulation = True if 'HARVESTERS_LOG_BUFFER_MANIPULATION' in os.environ else False
@@ -346,7 +346,7 @@ class DeviceInfo:
         ]
         results = []
         for _property in properties:
-            if _property is '':
+            if _property == '':
                 result = None
             else:
                 try:
@@ -3062,7 +3062,7 @@ class Harvester:
 
         #
         if profile:
-            from harvesters._private.core.helper.profiler import Profiler
+            from ._private.core.helper.profiler import Profiler
             self._profiler = Profiler()
         else:
             self._profiler = None

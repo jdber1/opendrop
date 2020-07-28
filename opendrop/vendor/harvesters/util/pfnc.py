@@ -26,7 +26,7 @@ from typing import Optional
 import numpy
 
 # Local application/library specific imports
-from harvesters.util._pfnc import symbolics as _symbolics
+from ._pfnc import symbolics as _symbolics
 
 #
 symbolics = _symbolics
