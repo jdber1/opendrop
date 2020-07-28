@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from . import image_acquisition
+from . import image_acquisition, configurator

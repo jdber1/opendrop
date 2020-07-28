@@ -27,13 +27,13 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from gi.repository import Gtk
+from typing import Optional
+
+from gi.repository import Gtk, GObject
 from injector import inject
 
-from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService
+from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService, ImageAcquirer
 from opendrop.appfw import Presenter, TemplateChild, component
-
-from .configurator import configurator_cs
 
 
 @component(
@@ -41,7 +41,6 @@ from .configurator import configurator_cs
 )
 class ImageAcquisitionPresenter(Presenter):
     combo_box = TemplateChild('combo_box')  # type: TemplateChild[Gtk.ComboBoxText]
-    configure_area = TemplateChild('configure_area')  # type: TemplateChild[Gtk.Container]
 
     @inject
     def __init__(self, acquisition_service: ImageAcquisitionService) -> None:
@@ -50,12 +49,6 @@ class ImageAcquisitionPresenter(Presenter):
 
     def after_view_init(self) -> None:
         self.populate_combobox()
-
-        self.configurator_component = configurator_cs.factory(
-            in_acquirer=self.acquisition_service.bn_acquirer
-        ).create()
-        self.configurator_component.view_rep.show()
-        self.configure_area.add(self.configurator_component.view_rep)
 
         self.event_connections = (
             self.acquisition_service.bn_acquirer.on_changed.connect(self.acquisition_service_acquirer_changed),
@@ -79,6 +72,12 @@ class ImageAcquisitionPresenter(Presenter):
         else:
             self.combo_box.props.active_id = None
 
+        self.notify('acquirer')
+
+    @GObject.Property(flags=GObject.ParamFlags.READABLE|GObject.ParamFlags.EXPLICIT_NOTIFY)
+    def acquirer(self) -> Optional[ImageAcquirer]:
+        return self.acquisition_service.bn_acquirer.get()
+
     def populate_combobox(self) -> None:
         for typ in AcquirerType:
             self.combo_box.append(id=typ.name, text=typ.display_name)
@@ -86,5 +85,3 @@ class ImageAcquisitionPresenter(Presenter):
     def destroy(self, *_) -> None:
         for conn in self.event_connections:
             conn.disconnect()
-
-        self.configurator_component.destroy()

@@ -51,9 +51,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkGrid" id="configure_area">
+          <object class="ImageAcquisitionConfigurator">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="acquirer" bind-source="@" bind-property="acquirer" bind-flags="sync-create"/>
           </object>
           <packing>
             <property name="left_attach">0</property>

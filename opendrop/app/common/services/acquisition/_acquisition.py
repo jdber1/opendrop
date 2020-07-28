@@ -30,7 +30,7 @@
 from enum import Enum
 from typing import Optional, Tuple, Sequence
 
-from ._acquirer import ImageAcquirer, InputImage, LocalStorageAcquirer, USBCameraAcquirer
+from ._acquirer import ImageAcquirer, InputImage, LocalStorageAcquirer, USBCameraAcquirer, GenicamAcquirer
 from opendrop.utility.bindable import AccessorBindable
 
 
@@ -51,6 +51,8 @@ class ImageAcquisitionService:
             return AcquirerType.LOCAL_STORAGE
         elif isinstance(acquirer, USBCameraAcquirer):
             return AcquirerType.USB_CAMERA
+        elif isinstance(acquirer, GenicamAcquirer):
+            return AcquirerType.GENICAM
         else:
             raise ValueError(
                 "Unknown acquirer '{}'"
@@ -69,6 +71,8 @@ class ImageAcquisitionService:
             new_acquirer = LocalStorageAcquirer()
         elif acquirer_type is AcquirerType.USB_CAMERA:
             new_acquirer = USBCameraAcquirer()
+        elif acquirer_type is AcquirerType.GENICAM:
+            new_acquirer = GenicamAcquirer()
         else:
             raise ValueError(
                 "Unknown acquirer type '{}'"
@@ -109,8 +113,8 @@ class ImageAcquisitionService:
 
 class AcquirerType(Enum):
     LOCAL_STORAGE = ('Filesystem',)
-
     USB_CAMERA = ('OpenCV',)
+    GENICAM = ('GenICam',)
 
     def __init__(self, display_name: str) -> None:
         self.display_name = display_name
