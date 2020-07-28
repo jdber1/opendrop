@@ -18,7 +18,18 @@ env = Environment(
 )
 
 
+AddOption(
+    '--build-dir',
+    dest='build_dir',
+    default='./build',
+    metavar='DIR',
+    help='Set DIR as the build directory.',
+)
+
+env['BUILDDIR'] = GetOption('build_dir')
+
 env.Tool('pydist')
+
 
 package_files = SConscript('opendrop/SConscript', exports='env')
 wheel = env.WheelPackage('$BUILDDIR', package_files, packages={'opendrop': './opendrop'})

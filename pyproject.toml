@@ -1,2 +1,4 @@
 [build-system]
-requires = ["enscons", "setuptools_scm"]
+requires = ["scons", "setuptools_scm"]
+backend-path = ["build_backend"]
+build-backend = "buildapi"
