@@ -132,8 +132,18 @@ def _component_init(self, **properties) -> None:
 
     # Create presenter.
     presenter = injector.create_object(presenter_class)
-    # Automatically initialise GObject.
-    GObject.Object.__init__(presenter)
+
+    presenter_construct_only_properties = {}
+    for name, value in tuple(properties.items()):
+        pspec = presenter.find_property(name)
+        if pspec is None: continue
+
+        if pspec.flags & GObject.ParamFlags.CONSTRUCT_ONLY:
+            presenter_construct_only_properties[name] = value
+            del properties[name]
+
+    # Initialise GObject.
+    GObject.Object.__init__(presenter, **presenter_construct_only_properties)
 
     self._presenter = presenter
 
@@ -215,6 +225,10 @@ def _component_get_property(self, pspec: GObject.ParamSpec) -> Any:
 
 
 def _component_set_property(self, pspec: GObject.ParamSpec, value: Any) -> None:
+    if pspec.flags & GObject.ParamFlags.CONSTRUCT_ONLY:
+        # Property is already set.
+        return
+
     if pspec.name in self._presenter.__install_props__.keys():
         self._presenter.set_property(pspec.name, value)
     else:
