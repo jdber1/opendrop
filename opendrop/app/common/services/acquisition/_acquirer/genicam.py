@@ -35,7 +35,7 @@ import cv2
 
 import genicam.gentl
 import numpy as np
-import harvesters.core
+import opendrop.vendor.harvesters.core as harvesters
 
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.bindable.typing import ReadBindable
@@ -47,7 +47,7 @@ class GenicamAcquirer(CameraAcquirer):
     def __init__(self):
         super().__init__()
 
-        self._harvester = harvesters.core.Harvester()
+        self._harvester = harvesters.Harvester()
 
         for cti_path in os.environ.get('GENICAM_GENTL64_PATH', '').split(';'):
             for cti_file in map(str, Path(cti_path).glob('*.cti')):
@@ -118,7 +118,7 @@ class GenicamAcquirer(CameraAcquirer):
 
 
 class GenicamCamera(Camera):
-    def __init__(self, hacquirer: harvesters.core.ImageAcquirer) -> None:
+    def __init__(self, hacquirer: harvesters.ImageAcquirer) -> None:
         self._hacquirer = hacquirer
         self.bn_alive = VariableBindable(False)
 
