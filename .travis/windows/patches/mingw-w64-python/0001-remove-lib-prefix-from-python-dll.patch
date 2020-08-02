@@ -1,0 +1,40 @@
+diff --git a/mingw-w64-python/0300-MINGW-configure-for-shared-build.patch b/mingw-w64-python/0300-MINGW-configure-for-shared-build.patch
+index 1b81791f8..747b48e97 100644
+--- a/mingw-w64-python/0300-MINGW-configure-for-shared-build.patch
++++ b/mingw-w64-python/0300-MINGW-configure-for-shared-build.patch
+@@ -8,7 +8,7 @@ diff -Naur Python-3.8.0-orig/configure.ac Python-3.8.0/configure.ac
+ +  case $host in
+ +    *-*-mingw*)
+ +        LDLIBRARY='libpython$(LDVERSION).dll.a'
+-+        DLLLIBRARY='libpython$(LDVERSION).dll'
+++        DLLLIBRARY=m4_format(python%s.dll, m4_bpatsubst(PYTHON_VERSION, \.,))
+ +        BLDLIBRARY='-L. -lpython$(LDVERSION)'
+ +        ;;
+ +  esac
+diff --git a/mingw-w64-python/0830-ctypes-python-dll.patch b/mingw-w64-python/0830-ctypes-python-dll.patch
+index ec7985102..06c35ed97 100644
+--- a/mingw-w64-python/0830-ctypes-python-dll.patch
++++ b/mingw-w64-python/0830-ctypes-python-dll.patch
+@@ -1,14 +1,10 @@
+-diff -Naur Python-3.8.0-orig/Lib/ctypes/__init__.py Python-3.8.0/Lib/ctypes/__init__.py
+---- Python-3.8.0-orig/Lib/ctypes/__init__.py	2019-10-14 16:34:47.000000000 +0300
+-+++ Python-3.8.0/Lib/ctypes/__init__.py	2019-10-22 10:03:49.931840600 +0300
+-@@ -449,7 +449,9 @@
+- cdll = LibraryLoader(CDLL)
+- pydll = LibraryLoader(PyDLL)
++--- Python-3.8.5-orig/Lib/ctypes/__init__.py	2020-08-02 16:01:35.318084900 +1000
+++++ Python-3.8.5/Lib/ctypes/__init__.py	2020-08-02 16:03:59.731855600 +1000
++@@ -455,7 +455,5 @@
+  
+--if _os.name == "nt":
+-+if _os.name == "nt" and _sys.version.find('GCC') >= 0:
+-+    pythonapi = PyDLL("libpython%d.%d%s.dll" % (_sys.version_info[:2] + (_sys.abiflags,)), None)
+-+elif _os.name == "nt":
++ if _os.name == "nt":
+      pythonapi = PyDLL("python dll", None, _sys.dllhandle)
+- elif _sys.platform == "cygwin":
+-     pythonapi = PyDLL("libpython%d.%d.dll" % _sys.version_info[:2])
++-elif _sys.platform == "cygwin":
++-    pythonapi = PyDLL("libpython%d.%d.dll" % _sys.version_info[:2])
++ else:
++     pythonapi = PyDLL(None)
