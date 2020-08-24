@@ -153,18 +153,18 @@ class GenicamCamera(Camera):
                 image = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
             elif data_format == 'Mono10':
                 image = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
-                image = (image/1024*255).astype(np.uint8)
+                image = (image/1023*255).astype(np.uint8)
             elif data_format == 'Mono12':
                 image = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
-                image = (image/4096*255).astype(np.uint8)
+                image = (image/4095*255).astype(np.uint8)
             elif data_format == 'RGB8':
                 image = data.reshape(height, width, 3).copy()
             elif data_format == 'RGB10':
                 image = data.reshape(height, width, 3)
-                image = (image/1024*255).astype(np.uint8)
+                image = (image/1023*255).astype(np.uint8)
             elif data_format == 'RGB12':
                 image = data.reshape(height, width, 3)
-                image = (image/4096*255).astype(np.uint8)
+                image = (image/4095*255).astype(np.uint8)
             elif data_format == 'BGR8':
                 image = cv2.cvtColor(
                     data.reshape(height, width, 3),
@@ -175,13 +175,13 @@ class GenicamCamera(Camera):
                     data.reshape(height, width, 3),
                     code=cv2.COLOR_BGR2RGB,
                 )
-                image = (image/1024*255).astype(np.uint8)
+                image = (image/1023*255).astype(np.uint8)
             elif data_format == 'BGR12':
                 image = cv2.cvtColor(
                     data.reshape(height, width, 3),
                     code=cv2.COLOR_BGR2RGB,
                 )
-                image = (image/4096*255).astype(np.uint8)
+                image = (image/4095*255).astype(np.uint8)
             elif data_format in {'BayerGR8', 'BayerRG8', 'BayerBG8', 'BayerGB8'}:
                 image = cv2.cvtColor(
                     data,
@@ -202,7 +202,7 @@ class GenicamCamera(Camera):
                           'BayerGB10': cv2.COLOR_BayerGR2RGB,
                     }[data_format]
                 )
-                image = (image/1024*255).astype(np.uint8)
+                image = (image/1023*255).astype(np.uint8)
             elif data_format in {'BayerGR12', 'BayerRG12', 'BayerBG12', 'BayerGB12'}:
                 image = cv2.cvtColor(
                     data,
@@ -213,7 +213,7 @@ class GenicamCamera(Camera):
                           'BayerGB12': cv2.COLOR_BayerGR2RGB,
                     }[data_format]
                 )
-                image = (image/4096*255).astype(np.uint8)
+                image = (image/4095*255).astype(np.uint8)
             else:
                 raise CameraCaptureError('Unsupported pixel format {}'.format(data_format))
 
