@@ -85,8 +85,8 @@ class ImageAcquisitionConfiguratorGenicamPresenter(Presenter):
             camera_desc = '<None>'
         else:
             for info in self.acquirer.enumerate_cameras():
-                if info.id_ == camera_id:
-                    camera_desc = info.user_defined_name
+                if info.camera_id == camera_id:
+                    camera_desc = info.name
                     break
             else:
                 camera_desc = '<Unknown>'
@@ -115,14 +115,14 @@ class ImageAcquisitionConfiguratorGenicamPresenter(Presenter):
         )
 
         self.acquirer.update()
-        cameras = {info.id_: info for info in self.acquirer.enumerate_cameras()}
+        cameras = {info.camera_id: info for info in self.acquirer.enumerate_cameras()}
 
         for info in cameras.values():
             self.choose_camera_dialog.append(
-                camera_id=info.id_,
+                camera_id=info.camera_id,
                 vendor=info.vendor,
                 model=info.model,
-                name=info.user_defined_name,
+                name=info.name,
                 tl_type=info.tl_type,
                 version=info.version,
             )

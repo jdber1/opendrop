@@ -29,7 +29,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Tuple, Optional
+from typing import Tuple, Optional, NamedTuple, Sequence
 
 import cv2
 
@@ -42,6 +42,15 @@ from opendrop.utility.bindable.typing import ReadBindable
 from opendrop.utility.events import EventConnection
 from .camera import CameraAcquirer, Camera, CameraCaptureError
 
+
+GenicamCameraInfo = NamedTuple('GenicamCameraInfo', [
+    ("camera_id", str),
+    ("vendor", str),
+    ("model", str),
+    ("name", str),
+    ("tl_type", str),
+    ("version", str),
+])
 
 class GenicamAcquirer(CameraAcquirer):
     def __init__(self):
@@ -64,8 +73,36 @@ class GenicamAcquirer(CameraAcquirer):
     def update(self) -> None:
         self._harvester.update()
 
-    def enumerate_cameras(self) -> Any:
-        return self._harvester.device_info_list
+    def enumerate_cameras(self) -> Sequence[GenicamCameraInfo]:
+        raw = self._harvester.device_info_list
+        out = []
+
+        for raw_info in raw:
+            camera_id = raw_info.id_
+            vendor = raw_info.vendor
+            model = raw_info.model
+            tl_type = raw_info.tl_type
+
+            try:
+                name = raw_info.user_defined_name
+            except genicam.gentl.NotImplementedException:
+                name = '{} {} ({})'.format(vendor, model, id)
+
+            try:
+                version = raw_info.version
+            except genicam.gentl.NotImplementedException:
+                version = 'n/a'
+
+            out.append(GenicamCameraInfo(
+                camera_id=camera_id,
+                vendor=vendor,
+                model=model,
+                name=name,
+                tl_type=tl_type,
+                version=version,
+            ))
+
+        return out
 
     def open_camera(self, id_: str) -> None:
         try:
