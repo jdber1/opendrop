@@ -49,7 +49,7 @@ class GenicamAcquirer(CameraAcquirer):
 
         self._harvester = harvesters.Harvester()
 
-        for cti_path in os.environ.get('GENICAM_GENTL64_PATH', '').split(';'):
+        for cti_path in os.environ.get('GENICAM_GENTL64_PATH', '').split(os.pathsep):
             for cti_file in map(str, Path(cti_path).glob('*.cti')):
                 self._harvester.add_file(cti_file)
 
