@@ -6,8 +6,8 @@ Getting Started
 Windows
 ******************************
 
-Download the Windows executable here:
-https://github.com/jdber1/opendrop/releases/tag/v3.1.6dev0
+Download the Windows executables from the releases page:
+https://github.com/jdber1/opendrop/releases/
 
 ******************************
 Installing as a Python package
@@ -31,7 +31,7 @@ Ubuntu 16.04+/Debian 9+
 
    Run ``pip uninstall opendrop`` to uninstall.
 
-#. An ``opendrop`` script is installed into your PATH and the app can be launched by entering ``opendrop`` in the command line.
+#. Run ``python -m opendrop`` to launch the app.
 
 
 macOS
@@ -62,7 +62,7 @@ macOS
 
    Run ``pip uninstall opendrop`` to uninstall.
 
-5. An ``opendrop`` script is installed into your PATH and the app can be launched by entering ``opendrop`` in the command line.
+5. Run ``python -m opendrop`` to launch the app.
 
 
 
