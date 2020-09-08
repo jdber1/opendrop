@@ -27,7 +27,7 @@ def get_tag(x, name: str) -> Any:
             return None
 
 
-class PresenterMeta(GObjectMeta, type(Generic)):
+class PresenterMeta(GObjectMeta):
     def __new__(cls, name: str, bases: Sequence, namespace: Mapping[str, Any], **kwargs) -> 'PresenterMeta':
         install_methods = {}
         install_props = {}
@@ -55,6 +55,13 @@ class PresenterMeta(GObjectMeta, type(Generic)):
         }
 
         return GObjectMeta.__new__(cls, name, bases, namespace, **kwargs)
+
+
+# XXX: Compatibility for Python <3.7 to use Generic with GObject.
+import sys
+if sys.version_info < (3, 7):
+    PresenterMeta.__getitem__ = lambda self, *_: self
+    Generic = type('Generic', (), {'__getitem__': lambda *_: object})()
 
 
 class Presenter(GObject.Object, Generic[WidgetT_co], metaclass=PresenterMeta):
