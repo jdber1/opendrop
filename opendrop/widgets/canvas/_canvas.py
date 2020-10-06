@@ -6,7 +6,7 @@ from gi.repository import GObject, Gdk, Gtk
 
 from opendrop.utility.geometry import Rect2
 
-from ._affine import AffineTransformArtist
+from ._affine import AffineFrameArtist
 from ._artist import Artist, ArtistContainer
 
 
@@ -34,7 +34,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     _vscroll_policy = Gtk.ScrollablePolicy.MINIMUM
 
     def __init__(self, **properties) -> None:
-        self._artist = AffineTransformArtist()
+        self._artist = AffineFrameArtist()
         self._artist.set_invalidate_handler(self._artist_invalidated)
 
         self._adjustments = {

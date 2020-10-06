@@ -7,10 +7,10 @@ from gi.repository import Gdk, GObject
 from ._artist import Artist, ArtistContainer, ArtistInvalidateHandler
 
 
-__all__ = ('AffineTransformArtist',)
+__all__ = ('AffineFrameArtist',)
 
 
-class AffineTransformArtist(Artist, ArtistContainer):
+class AffineFrameArtist(Artist, ArtistContainer):
     _transform = cairo.Matrix()
     _last_draw_transform = None  # type: Optional[cairo.Matrix]
 
