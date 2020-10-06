@@ -75,7 +75,7 @@ def wheel_package_builder_wrapper(
         '_WHEEL_TAG': '{}-{}-{}'.format(python_tag, abi_tag, platform_tag),
     })
 
-    wheel_filename = format_wheel_package_filename(**env)
+    wheel_filename = format_wheel_package_filename(**env.Dictionary())
 
     target = env.arg2nodes(target, node_factory=env.Dir)
     target = target[0].File(wheel_filename)
@@ -151,8 +151,8 @@ def wheel_package_build(target, source, env):
     if not all(isinstance(s, WheelEntry) for s in source):
         raise ValueError("Sources of WheelPackage must be WheelEntry nodes")
 
-    pkg_metadata = PackageMetadata(**env)
-    wheel_metadata = WheelMetadata(**env)
+    pkg_metadata = PackageMetadata(**env.Dictionary())
+    wheel_metadata = WheelMetadata(**env.Dictionary())
 
     dist_info_prefix = Path('{0[Name]}-{0[Version]}.dist-info'.format(pkg_metadata))
     data_prefix = Path('{0[Name]}-{0[Version]}.data'.format(pkg_metadata))
