@@ -26,7 +26,7 @@ Example images are located in the example_images subfolder. Instructions on how 
 *********
 Support
 *********
-For any questions, issues, or feedback feel free to open an issue here: https://github.com/jdber1/opendrop/issues
+For any questions, issues, problems, or feedback feel free to open an issue here: https://github.com/jdber1/opendrop/issues
 
 We can also be contacted by email `here <mailto:opendrop.dev@gmail.com>`_
 
