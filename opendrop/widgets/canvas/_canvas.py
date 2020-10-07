@@ -4,8 +4,6 @@ from typing import Optional, MutableMapping, Tuple
 import cairo
 from gi.repository import GObject, Gdk, Gtk
 
-from opendrop.utility.geometry import Rect2
-
 from ._affine import AffineFrameArtist
 from ._artist import Artist, ArtistContainer
 
@@ -18,23 +16,23 @@ class CanvasAlign(Enum):
     CENTER = 2
 
 
-# add surface? here, CANVAS, BIN, VIEWPORT
+# surface type: CANVAS, CHILD, VIEWPORT
 # ::zoom signal
 
-# TODO: handle when content_area is not at origin
-
 class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
-    _scale_request = 1
+    _MIN_SCALE = 0.01
+    _MAX_SCALE = 100
+
+    _viewport_position = (0, 0)
+
+    _content_size = (0, 0)
     _scale = 1
-    _viewport_origin = (0, 0)
-    _content_area = Rect2(0, 0, 0, 0)
-
     _align = CanvasAlign.FIT
-
-    _ignore_adjustment_changes = False
 
     _hscroll_policy = Gtk.ScrollablePolicy.MINIMUM
     _vscroll_policy = Gtk.ScrollablePolicy.MINIMUM
+
+    _ignore_adjustment_changes = False
 
     def __init__(self, **properties) -> None:
         self._artist = AffineFrameArtist()
@@ -65,8 +63,12 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
             orientation: Gtk.Orientation,
             adjustment: Optional[Gtk.Adjustment] = None
     ) -> None:
-        if adjustment and self._get_adjustment(orientation) == adjustment:
-            return
+        if adjustment is not None:
+            try:
+                if self._get_adjustment(orientation) == adjustment:
+                    return
+            except AttributeError:
+                pass
 
         self._disconnect_adjustment(orientation)
 
@@ -85,22 +87,22 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     def _configure_adjustment(self, orientation: Gtk.Orientation) -> None:
         if orientation is Gtk.Orientation.HORIZONTAL:
-            viewport_origin = self._viewport_origin[0]
             viewport_size = self.get_allocation().width
-            content_size = self._content_area.width
+            viewport_position = self._viewport_position[0]
+            content_size = self._content_size[0]
         else:
-            viewport_origin = self._viewport_origin[1]
             viewport_size = self.get_allocation().height
-            content_size = self._content_area.height
+            viewport_position = self._viewport_position[1]
+            content_size = self._content_size[1]
 
         adjustment = self._get_adjustment(orientation)
 
-        page_size = int(min(viewport_size, content_size * self._scale))
         lower = 0
-        upper = int(content_size * self._scale)
+        upper = int(self._scale * content_size)
+        page_size = min(viewport_size, upper - lower)
 
         adjustment.configure(
-            viewport_origin,
+            viewport_position,
             lower,
             upper,
             page_size * 0.1,  # step_increment
@@ -126,36 +128,31 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     def _adjustment_value_changed(self, adjustment: Gtk.Adjustment) -> None:
         if self._ignore_adjustment_changes: return
 
-        self._viewport_origin = (
-            self.hadjustment.props.value,
-            self.vadjustment.props.value,
-        )
+        self._viewport_position = (self.hadjustment.props.value, self.vadjustment.props.value)
         self.queue_allocate()
 
-    def set_content_area(self, x: int, y: int, width: int, height: int) -> None:
-        self._content_area = Rect2(x=x, y=y, w=width, h=height)
+    def set_content_size(self, width: int, height: int) -> None:
+        self._content_size = (width, height)
         self.queue_resize()
 
     def get_scale(self) -> float:
         return self._scale
 
-    def get_scale_request(self) -> float:
-        return self._scale_request
+    def zoom(self, scale: float, focus_x: Optional[float] = None, focus_y: Optional[float] = None) -> None:
+        scale = max(min(scale, self._MAX_SCALE), self._MIN_SCALE)
+        if focus_x is None:
+            focus_x = self.get_allocation().width/2
+        if focus_y is None:
+            focus_y = self.get_allocation().height/2
 
-    def zoom(self, scale: float, focus: Optional[Tuple[float, float]] = None) -> None:
-        if focus is None:
-            focus = self.get_allocation().width/2, self.get_allocation().height/2
+        factor = scale/self._scale
 
-        scale = max(min(scale, 100), 0.01)
-
-        factor = scale/self._scale_request
-
-        self._viewport_origin = (
-            (self._viewport_origin[0] + focus[0]) * factor - focus[0],
-            (self._viewport_origin[1] + focus[1]) * factor - focus[1]
+        self._viewport_position = (
+            (self._viewport_position[0] + focus_x) * factor - focus_x,
+            (self._viewport_position[1] + focus_y) * factor - focus_y
         )
+        self._scale = scale
 
-        self._scale_request = scale
         self.queue_resize()
 
     @GObject.Property
@@ -168,7 +165,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         self.queue_allocate()
 
     def get_preferred_width(self) -> Tuple[int, int]:
-        content_width = self._content_area.width
+        content_width = self._content_size[0]
         scale = self._scale
         return int(scale * content_width), int(scale * content_width)
 
@@ -176,7 +173,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         return self.get_preferred_height()
 
     def get_preferred_height(self) -> Tuple[int, int]:
-        content_height = self._content_area.height
+        content_height = self._content_size[1]
         scale = self._scale
         return int(scale * content_height), int(scale * content_height)
 
@@ -198,7 +195,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     def _update_transform(self) -> None:
         align = self._align
 
-        if self._content_area.width == 0 or self._content_area.height == 0:
+        if self._content_size[0] == 0 or self._content_size[1] == 0:
             align = CanvasAlign.CENTER
 
         if align is CanvasAlign.FIT:
@@ -210,32 +207,32 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     def _update_transform_fit(self) -> None:
         allocation = self.get_allocation()
-        content_area = self._content_area
+        content_area = self._content_size
 
-        scale_request = self._scale_request
+        scale = self._scale
 
-        xx = scale_request
-        yy = scale_request
+        xx = scale
+        yy = scale
 
-        gap_x = max(0, allocation.width - xx*content_area.width)
-        gap_y = max(0, allocation.height - yy*content_area.height)
+        gap_x = max(0, allocation.width - xx*content_area[0])
+        gap_y = max(0, allocation.height - yy*content_area[1])
 
-        gap_zoom = 1 + min(gap_x / (xx*content_area.width), gap_y / (yy*content_area.height))
+        gap_zoom = 1 + min(gap_x / (xx*content_area[0]), gap_y / (yy*content_area[1]))
         xx *= gap_zoom
         yy *= gap_zoom
 
-        gap_x = allocation.width - xx*content_area.width
-        gap_y = allocation.height - yy*content_area.height
+        gap_x = allocation.width - xx*content_area[0]
+        gap_y = allocation.height - yy*content_area[1]
 
         if gap_x >= 0:
             x0 = gap_x/2
         else:
-            x0 = max(min(-self._viewport_origin[0], 0), gap_x)
+            x0 = max(min(-self._viewport_position[0], 0), gap_x)
 
         if gap_y >= 0:
             y0 = gap_y/2
         else:
-            y0 = max(min(-self._viewport_origin[1], 0), gap_y)
+            y0 = max(min(-self._viewport_position[1], 0), gap_y)
 
         self._artist.transform_xx = xx
         self._artist.transform_yy = yy
@@ -243,29 +240,29 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         self._artist.transform_y0 = y0
 
         self._scale = xx
-        self._viewport_origin = (-x0, -y0)
+        self._viewport_position = (-x0, -y0)
 
     def _update_transform_center(self) -> None:
         allocation = self.get_allocation()
-        content_area = self._content_area
+        content_area = self._content_size
 
-        scale_request = self._scale_request
+        scale = self._scale
 
-        xx = scale_request
-        yy = scale_request
+        xx = scale
+        yy = scale
 
-        gap_x = allocation.width - scale_request*content_area.width
-        gap_y = allocation.height - scale_request*content_area.height
+        gap_x = allocation.width - xx*content_area[0]
+        gap_y = allocation.height - yy*content_area[1]
 
         if gap_x >= 0:
             x0 = gap_x/2
         else:
-            x0 = max(min(-self._viewport_origin[0], 0), gap_x)
+            x0 = max(min(-self._viewport_position[0], 0), gap_x)
 
         if gap_y >= 0:
             y0 = gap_y/2
         else:
-            y0 = max(min(-self._viewport_origin[1], 0), gap_y)
+            y0 = max(min(-self._viewport_position[1], 0), gap_y)
 
         self._artist.transform_xx = xx
         self._artist.transform_yy = yy
@@ -273,7 +270,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         self._artist.transform_y0 = y0
 
         self._scale = xx
-        self._viewport_origin = (-x0, -y0)
+        self._viewport_position = (-x0, -y0)
 
     def add_artist(self, artist: Artist, **properties) -> None:
         self._artist.add_artist(artist, **properties)
@@ -283,7 +280,9 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     def do_map(self) -> None:
         Gtk.DrawingArea.do_map.invoke(Gtk.DrawingArea, self)
-        self._artist.map(self.get_window())
+        window = self.get_window()
+        assert window is not None
+        self._artist.map(window)
 
     def do_unmap(self) -> None:
         self._artist.unmap()
