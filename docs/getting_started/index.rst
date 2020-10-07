@@ -31,7 +31,7 @@ Ubuntu 16.04+/Debian 9+
 
    Run ``pip uninstall opendrop`` to uninstall.
 
-#. Run ``python -m opendrop`` to launch the app.
+#. Run ``python3 -m opendrop`` to launch the app.
 
 
 macOS
@@ -62,7 +62,7 @@ macOS
 
    Run ``pip uninstall opendrop`` to uninstall.
 
-5. Run ``python -m opendrop`` to launch the app.
+5. Run ``python3 -m opendrop`` to launch the app.
 
 
 
