@@ -71,15 +71,15 @@ The experimental apparatus required for measurements of interfacial tension and 
 Here we present the latest version of OpenDrop. The new version, Barracuda, is able to measure interfacial tension and also contact angle in a variety of configurations with field-leading accuracy and reproducibility. The performance of OpenDrop compared to currently available commercial instrumentation is shown in \autoref{fig:ift} and \autoref{fig:ca}.
 The contact angle measurement capability is new for this release, but has been used successfully in previous studies [@Prathapan2017]. OpenDrop has been written in Python because it is open-source, free, runs on multiple operating systems (including Linux, Mac OSX and Windows), and is easily integrable with a large number of mature, 3rd party open source libraries. In particular, OpenDrop utilises the sophisticated image processing capabilities of the OpenCV library in order to extract drop profiles from experimental images for input into the requisite numerical algorithm. Further, the ease of readability and modular nature of Python encourages and supports collaboration, and gives OpenDrop significant pedagogic value. Python can also be easily integrated with other languages, of particular importance to pendant drop tensiometry and contact angle measurements where integration of code needed to control cameras and associated software is a critical requirement. The previous version is in use in many research groups around the world, and is also used in teaching laboratories including Monash University. 
 
-![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf)
-![Comparison of contact angles calculated from experimental images in the literature against values calculated with commercial instrumentation.The images are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf)
-
-
-
 The availability of the software allows the interested user to
 effectively implement, explore and further develop the techniques for
 both research and teaching at a small fraction of the cost of
 commercial options. 
+
+![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf)
+![Comparison of contact angles calculated from experimental images in the literature against values calculated with commercial instrumentation.The images are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf)
+
+
 
 <!-- Consequently, OpenDrop will make significant impact
 in both research and education by providing inexpensive access to
