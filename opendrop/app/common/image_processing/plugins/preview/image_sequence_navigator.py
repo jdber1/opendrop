@@ -84,7 +84,7 @@ class ImageSequenceNavigatorView(View['ImageSequenceNavigatorPresenter', Gtk.Wid
         self._idx_inp.props.upper = num_images
 
     def hide(self) -> None:
-        self._widget.foreach(Gtk.Widget.hide)
+        self._widget.hide()
 
     def show(self) -> None:
         self._widget.show()
