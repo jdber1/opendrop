@@ -27,6 +27,10 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import asyncio
+from concurrent.futures.process import ProcessPoolExecutor
+
+from injector import inject
 from opendrop.utility.geometry import Rect2
 from typing import Optional
 
@@ -118,12 +122,16 @@ class PendantEdgeDetectionParams:
 
 
 class PendantEdgeDetectionService:
-    def detect(self, image: np.ndarray, params: PendantEdgeDetectionParams) -> 'PendantEdgeDetection':
+    def __init__(self) -> None:
+        self._executor = ProcessPoolExecutor(max_workers=1)
+
+    @staticmethod
+    def detect(image: np.ndarray, params: PendantEdgeDetectionParams) -> 'PendantEdgeDetection':
         edge_map = apply_edge_detection(image, canny_min=params.canny_min, canny_max=params.canny_max)
 
         drop_region = params.drop_region
         if drop_region is not None:
-            cropped = image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
+            cropped = edge_map[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
             drop_edge = extract_drop_profile(cropped)
             drop_edge += drop_region.position
         else:
@@ -131,7 +139,7 @@ class PendantEdgeDetectionService:
 
         needle_region = params.needle_region
         if needle_region is not None:
-            cropped = image[needle_region.y0:needle_region.y1, needle_region.x0:needle_region.x1]
+            cropped = edge_map[needle_region.y0:needle_region.y1, needle_region.x0:needle_region.x1]
             needle_edges = extract_needle_profile(cropped)
             needle_edges = tuple(s + needle_region.position for s in needle_edges)
         else:
@@ -143,6 +151,14 @@ class PendantEdgeDetectionService:
             needle_left_edge=needle_edges[0],
             needle_right_edge=needle_edges[1],
         )
+
+    def async_detect(self, image: np.ndarray, params: PendantEdgeDetectionParams) -> asyncio.Future:
+        cfut = self._executor.submit(self.detect, image, params)
+        fut = asyncio.wrap_future(cfut, loop=asyncio.get_event_loop())
+        return fut
+
+    def destroy(self) -> None:
+        self._executor.shutdown()
 
 
 class PendantEdgeDetection:
