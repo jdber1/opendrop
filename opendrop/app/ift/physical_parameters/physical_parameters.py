@@ -27,6 +27,7 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
 from typing import Optional
 from gi.repository import GObject
 from injector import inject
@@ -37,63 +38,63 @@ from opendrop.appfw import component, Presenter
 # with the GLib type system.
 from opendrop.widgets.float_entry import FloatEntry
 
-from .services.physical_parameters import PhysicalParametersFormModel
-
 
 @component(
     template_path='./physical_parameters.ui',
 )
 class IFTPhysicalParametersFormPresenter(Presenter):
     @inject
-    def __init__(self, form: PhysicalParametersFormModel) -> None:
+    def __init__(self, form: PendantPhysicalParamsFactory) -> None:
         self._form = form
 
-        self._event_connections = [
-            self._form.bn_inner_density.on_changed.connect(lambda: self.notify('inner-density'), weak_ref=False),
-            self._form.bn_outer_density.on_changed.connect(lambda: self.notify('outer-density'), weak_ref=False),
-            self._form.bn_needle_width.on_changed.connect(lambda: self.notify('needle-width'), weak_ref=False),
-            self._form.bn_gravity.on_changed.connect(lambda: self.notify('gravity'), weak_ref=False),
+        self._form_callback_ids = [
+            self._form.connect('notify::drop-density', lambda *_: self.notify('inner-density')),
+            self._form.connect('notify::continuous-density', lambda *_: self.notify('outer-density')),
+            self._form.connect('notify::needle-diameter', lambda *_: self.notify('needle-width')),
+            self._form.connect('notify::gravity', lambda *_: self.notify('gravity')),
         ]
 
-    def destroy(self, *args) -> None:
-        for conn in self._event_connections:
-            conn.disconnect()
+    def destroy(self, *_) -> None:
+        for callback_id in self._form_callback_ids:
+            self._form.disconnect(callback_id)
 
     @GObject.Property
     def inner_density(self) -> Optional[float]:
-        return self._form.bn_inner_density.get()
+        return self._form.drop_density
 
     @inner_density.setter
-    def inner_density(self, value: Optional[float]) -> None:
-        self._form.bn_inner_density.set(value)
+    def inner_density(self, density: Optional[float]) -> None:
+        self._form.drop_density = density
 
     @GObject.Property
     def outer_density(self) -> Optional[float]:
-        return self._form.bn_outer_density.get()
+        return self._form.continuous_density
 
     @outer_density.setter
-    def outer_density(self, value: Optional[float]) -> None:
-        self._form.bn_outer_density.set(value)
+    def outer_density(self, density: Optional[float]) -> None:
+        self._form.continuous_density = density
 
     @GObject.Property
     def gravity(self) -> Optional[float]:
-        return self._form.bn_gravity.get()
+        return self._form.gravity
 
     @gravity.setter
-    def gravity(self, value: Optional[float]) -> None:
-        self._form.bn_gravity.set(value)
+    def gravity(self, gravity: Optional[float]) -> None:
+        self._form.gravity = gravity
 
     @GObject.Property
     def needle_width(self) -> Optional[float]:
-        needle_width_m = self._form.bn_needle_width.get()
+        needle_width_m = self._form.needle_diameter
         if needle_width_m is None:
             return None
 
         return needle_width_m*1000
 
     @needle_width.setter
-    def needle_width(self, value: Optional[float]) -> None:
-        if value is None:
-            self._form.bn_needle_width.set(None)
+    def needle_width(self, diameter_mm: Optional[float]) -> None:
+        if diameter_mm is None:
+            diameter_m = None
         else:
-            self._form.bn_needle_width.set(value/1000)
+            diameter_m = diameter_mm/1000
+
+        self._form.needle_diameter = diameter_m

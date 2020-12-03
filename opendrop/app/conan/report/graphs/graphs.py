@@ -33,7 +33,7 @@ from typing import Sequence, Iterable
 from gi.repository import Gtk, GObject
 from injector import inject
 from matplotlib import ticker
-from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from matplotlib.figure import Figure
 
 from opendrop.app.conan.analysis import ConanAnalysis

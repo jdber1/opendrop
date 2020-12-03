@@ -106,10 +106,20 @@ class YoungLaplaceFit:
     def _initial_guess(self) -> None:
         """Initialises parameters to a first best guess.
         """
-        apex_x, apex_y, apex_radius = best_guess.fit_circle(self._src_profile)
 
-        bond_number = best_guess.bond_number(self._src_profile, apex_x, apex_y, apex_radius)
-        rotation = 0.0
+        if (self._src_profile[0, 1] + self._src_profile[-1, 1])/2 < np.mean(self._src_profile[:, 1]):
+            flipped = self._src_profile.copy()
+            flipped[:, 1] *= -1
+            flipped = flipped[::-1]
+            apex_x, apex_y, apex_radius = best_guess.fit_circle(flipped)
+            bond_number = best_guess.bond_number(flipped, apex_x, apex_y, apex_radius)
+            apex_y *= -1
+            rotation = math.pi
+            self._src_profile = self._src_profile[::-1]
+        else:
+            apex_x, apex_y, apex_radius = best_guess.fit_circle(self._src_profile)
+            bond_number = best_guess.bond_number(self._src_profile, apex_x, apex_y, apex_radius)
+            rotation = 0.0
 
         self._params = self._Params(apex_x, apex_y, apex_radius, bond_number, rotation)
 
@@ -346,19 +356,16 @@ class YoungLaplaceFit:
         return self._surface_area
 
     @overload
-    def __call__(self, t: float) -> Tuple[float, float]:
+    def __call__(self, s: float) -> Tuple[float, float]:
         ...
     @overload
-    def __call__(self, t: Iterable[float]) -> np.ndarray:
+    def __call__(self, s: Iterable[float]) -> np.ndarray:
         ...
-    def __call__(self, t):
+    def __call__(self, s):
         try:
-            iter(t)
+            iter(s)
         except TypeError:
-            return self.__call__([t])[0]
-
-        t = np.array(t)
-        s = (t - 0.5) * 2 * self._profile_size
+            return self.__call__([s])[0]
 
         r, z, *_ = self._profile(s).T
         x, y = self._xy_from_rz(r, z)
@@ -370,14 +377,7 @@ class YoungLaplaceFit:
 
     @property
     def residuals(self) -> Optional[np.ndarray]:
-        if len(self._residuals) == 0:
-            return None
-
-        normalized = self._residuals
-        normalized[:, 0] -= min(normalized[:, 0])
-        normalized[:, 0] /= max(normalized[:, 0])
-
-        return normalized
+        return self._residuals
 
     @property
     def is_done(self) -> bool:

@@ -31,7 +31,7 @@ from typing import Optional, Sequence, Iterable
 
 from gi.repository import GObject, Gtk
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, component, install
 
 
@@ -44,17 +44,17 @@ class IFTReportOverviewPresenter(Presenter[Gtk.Paned]):
 
     @install
     @GObject.Property
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
+    def analyses(self) -> Sequence[PendantAnalysisJob]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+    def analyses(self, analyses: Iterable[PendantAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
 
     @GObject.Property
-    def selection(self) -> Optional[IFTDropAnalysis]:
+    def selection(self) -> Optional[PendantAnalysisJob]:
         return self._selection
 
     @selection.setter
-    def selection(self, selection: Optional[IFTDropAnalysis]) -> None:
+    def selection(self, selection: Optional[PendantAnalysisJob]) -> None:
         self._selection = selection

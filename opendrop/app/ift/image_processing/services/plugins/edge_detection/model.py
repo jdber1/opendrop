@@ -27,12 +27,13 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from opendrop.app.ift.services.features import FeatureExtractorParams
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
+from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory
 
 
 class EdgeDetectionPluginModel:
-    def __init__(self, feature_extractor_params: FeatureExtractorParams) -> None:
-        self._feature_extractor_params = feature_extractor_params
+    def __init__(self, edge_det_params: PendantEdgeDetectionParamsFactory) -> None:
+        self._feature_extractor_params = edge_det_params
 
-        self.bn_canny_min = feature_extractor_params.bn_canny_min
-        self.bn_canny_max = feature_extractor_params.bn_canny_max
+        self.bn_canny_min = GObjectPropertyBindable(edge_det_params, 'canny-min')
+        self.bn_canny_max = GObjectPropertyBindable(edge_det_params, 'canny-max')

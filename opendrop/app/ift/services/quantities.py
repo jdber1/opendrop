@@ -30,102 +30,166 @@
 import math
 from typing import Optional
 
-from opendrop.app.ift.analysis.young_laplace_fit import YoungLaplaceFitter
-from opendrop.processing.ift import calculate_ift, calculate_worthington
-from opendrop.utility.bindable import VariableBindable
-from opendrop.utility.bindable.typing import Bindable
+from gi.repository import GObject
+from injector import inject
 
-from .features import FeatureExtractor
+from opendrop.processing.ift import calculate_ift, calculate_volsur, calculate_worthington
 
 
-class PhysicalPropertiesCalculatorParams:
-    def __init__(self) -> None:
-        self.bn_inner_density = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_outer_density = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_needle_width = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
-        self.bn_gravity = VariableBindable(math.nan)  # type: Bindable[Optional[float]]
+class PendantPhysicalParams:
+    """Variables are in SI units."""
 
-
-class PhysicalPropertiesCalculator:
     def __init__(
             self,
-            features: FeatureExtractor,
-            young_laplace_fit: YoungLaplaceFitter,
-            params: PhysicalPropertiesCalculatorParams,
+            drop_density: float,
+            continuous_density: float,
+            needle_diameter: float,
+            gravity: float
     ) -> None:
-        self._extracted_features = features
-        self._young_laplace_fit = young_laplace_fit
+        self.drop_density = drop_density
+        self.continuous_density = continuous_density
+        self.needle_diameter = needle_diameter
+        self.gravity = gravity
 
-        self.params = params
 
-        self.bn_interfacial_tension = VariableBindable(math.nan)
-        self.bn_volume = VariableBindable(math.nan)
-        self.bn_surface_area = VariableBindable(math.nan)
-        self.bn_apex_radius = VariableBindable(math.nan)
-        self.bn_worthington = VariableBindable(math.nan)
+class PendantDerivedProperties:
+    """Variables are in SI units."""
 
-        features.bn_needle_width_px.on_changed.connect(self._recalculate)
+    def __init__(
+            self,
+            interfacial_tension: float,
+            volume: float,
+            surface_area: float,
+            worthington: float,
+    ) -> None:
+        self.interfacial_tension = interfacial_tension
+        self.volume = volume
+        self.surface_area = surface_area
+        self.worthington = worthington
 
-        # Assume that bond number changes at the same time as other attributes
-        young_laplace_fit.bn_bond_number.on_changed.connect(self._recalculate)
 
-        params.bn_inner_density.on_changed.connect(self._recalculate)
-        params.bn_outer_density.on_changed.connect(self._recalculate)
-        params.bn_needle_width.on_changed.connect(self._recalculate)
-        params.bn_gravity.on_changed.connect(self._recalculate)
+class PendantPhysicalParamsFactory(GObject.GObject):
+    _drop_density: float = math.nan
+    _continuous_density: float = math.nan
+    _needle_diameter: float = math.nan
+    _gravity: float = math.nan
 
-        self._recalculate()
-
-    def _recalculate(self) -> None:
-        m_per_px = self._get_m_per_px()
-
-        inner_density = self.params.bn_inner_density.get()
-        outer_density = self.params.bn_outer_density.get()
-        needle_width_m = self.params.bn_needle_width.get()
-        gravity = self.params.bn_gravity.get()
-
-        if inner_density is None or outer_density is None or needle_width_m is None or gravity is None:
-            return
-
-        bond_number = self._young_laplace_fit.bn_bond_number.get()
-        apex_radius_px = self._young_laplace_fit.bn_apex_radius.get()
-
-        apex_radius_m = m_per_px * apex_radius_px
-
-        interfacial_tension = calculate_ift(
-            inner_density=inner_density,
-            outer_density=outer_density,
-            bond_number=bond_number,
-            apex_radius=apex_radius_m,
-            gravity=gravity
+    def create(self) -> PendantPhysicalParams:
+        return PendantPhysicalParams(
+            drop_density=self._drop_density,
+            continuous_density=self._continuous_density,
+            needle_diameter=self._needle_diameter,
+            gravity=self._gravity,
         )
 
-        volume_px3 = self._young_laplace_fit.bn_volume.get()
-        volume_m3 = m_per_px**3 * volume_px3
+    @GObject.Signal
+    def changed(self) -> None:
+        """Emitted when parameters are changed."""
 
-        surface_area_px2 = self._young_laplace_fit.bn_surface_area.get()
-        surface_area_m2 = m_per_px**2 * surface_area_px2
+    @GObject.Property
+    def drop_density(self) -> float:
+        return self._drop_density
 
-        worthington = calculate_worthington(
-            inner_density=inner_density,
-            outer_density=outer_density,
-            gravity=gravity,
-            ift=interfacial_tension,
-            volume=volume_m3,
-            needle_width=needle_width_m,
+    @drop_density.setter
+    def drop_density(self, density: float) -> None:
+        self._drop_density = density
+        self.changed.emit()
+
+    @GObject.Property
+    def continuous_density(self) -> float:
+        return self._continuous_density
+
+    @continuous_density.setter
+    def continuous_density(self, density: float) -> None:
+        self._continuous_density = density
+        self.changed.emit()
+
+    @GObject.Property
+    def needle_diameter(self) -> float:
+        return self._needle_diameter
+
+    @needle_diameter.setter
+    def needle_diameter(self, diameter: float) -> None:
+        self._needle_diameter = diameter
+        self.changed.emit()
+    
+    @GObject.Property
+    def gravity(self) -> float:
+        return self._gravity
+
+    @gravity.setter
+    def gravity(self, gravity: float) -> None:
+        self._gravity = gravity
+        self.changed.emit()
+
+
+def pendant_derive_properties(
+        bond: float,
+        arc_length: float,
+        radius: float,
+        params: PendantPhysicalParams
+) -> PendantDerivedProperties:
+    drop_density = params.drop_density
+    continuous_density = params.continuous_density
+    needle_diameter = params.needle_diameter
+    gravity = params.gravity
+
+    if not math.isfinite(drop_density) \
+            or not math.isfinite(continuous_density) \
+            or not math.isfinite(needle_diameter) \
+            or not math.isfinite(gravity):
+        return PendantDerivedProperties(
+            interfacial_tension=math.nan,
+            volume=math.nan,
+            surface_area=math.nan,
+            worthington=math.nan,
         )
 
-        self.bn_interfacial_tension.set(interfacial_tension)
-        self.bn_volume.set(volume_m3)
-        self.bn_surface_area.set(surface_area_m2)
-        self.bn_apex_radius.set(apex_radius_m)
-        self.bn_worthington.set(worthington)
+    interfacial_tension = calculate_ift(
+        inner_density=drop_density,
+        outer_density=continuous_density,
+        bond_number=bond,
+        apex_radius=radius,
+        gravity=gravity,
+    )
 
-    def _get_m_per_px(self) -> float:
-        needle_width_px = self._extracted_features.bn_needle_width_px.get()
-        needle_width_m = self.params.bn_needle_width.get()
+    volume, surface_area = calculate_volsur(bond, arc_length)
+    volume *= radius**3
+    surface_area *= radius**2
 
-        if needle_width_px is None or needle_width_m is None:
-            return math.nan
+    worthington = calculate_worthington(
+        inner_density=drop_density,
+        outer_density=continuous_density,
+        gravity=gravity,
+        ift=interfacial_tension,
+        volume=volume,
+        needle_width=needle_diameter,
+    )
 
-        return needle_width_m/needle_width_px
+    return PendantDerivedProperties(
+        interfacial_tension=interfacial_tension,
+        volume=volume,
+        surface_area=surface_area,
+        worthington=worthington,
+    )
+
+
+class PendantDerivedPropertiesService:
+    @inject
+    def __init__(self, default_params_factory: PendantPhysicalParamsFactory) -> None:
+        self._default_params_factory = default_params_factory
+
+    def derive(
+            self,
+            bond: float,
+            arc_length: float,
+            radius: float,
+            params: Optional[PendantPhysicalParams] = None
+    ) -> PendantDerivedProperties:
+        """
+        Parameters `bond` and `arc_length` are dimensionless. Parameter `radius` is in metres.
+        """
+        if params is None:
+            params = self._default_params_factory.create()
+        
+        return pendant_derive_properties(bond, arc_length, radius, params)

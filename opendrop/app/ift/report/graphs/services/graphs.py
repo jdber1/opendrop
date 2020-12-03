@@ -32,12 +32,12 @@ from typing import Iterable, Sequence, Tuple
 
 from gi.repository import GObject
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 
 
 class IFTReportGraphsService(GObject.Object):
     class _AnalysisWatcher:
-        def __init__(self, analysis: IFTDropAnalysis, owner: 'IFTReportGraphsService') -> None:
+        def __init__(self, analysis: PendantAnalysisJob, owner: 'IFTReportGraphsService') -> None:
             self.analysis = analysis
             self._owner = owner
             self._cleanup_tasks = []
@@ -69,7 +69,7 @@ class IFTReportGraphsService(GObject.Object):
         self._volume = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
         self._surface_area = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
 
-    def set_analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+    def set_analyses(self, analyses: Iterable[PendantAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
         self._analyses_changed()
 

@@ -27,7 +27,9 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional, Callable, Hashable, Tuple
+import asyncio
+import operator
+from typing import Optional, Hashable, Tuple
 
 import numpy as np
 
@@ -36,7 +38,7 @@ from opendrop.app.common.image_processing.plugins.preview.model import (
     AcquirerController,
     ImageSequenceAcquirerController,
     CameraAcquirerController)
-from opendrop.app.ift.services.features import FeatureExtractorParams, FeatureExtractor
+from opendrop.app.ift.services.edges import PendantEdgeDetection, PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.bindable.typing import Bindable
 
@@ -45,12 +47,12 @@ class IFTPreviewPluginModel:
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionService,
-            feature_extractor_params: FeatureExtractorParams,
-            do_extract_features: Callable[[Bindable[np.ndarray]], FeatureExtractor]
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
     ) -> None:
         self._image_acquisition = image_acquisition
-        self._feature_extractor_params = feature_extractor_params
-        self._do_extract_features = do_extract_features
+        self._edge_det_params = edge_det_params
+        self._edge_det_service = edge_det_service
 
         self._watchers = 0
 
@@ -60,7 +62,7 @@ class IFTPreviewPluginModel:
             getter=lambda: self._acquirer_controller
         )
 
-        self.bn_source_image = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_source_image = VariableBindable(None, check_equals=operator.is_)  # type: Bindable[Optional[np.ndarray]]
         self.bn_edge_detection = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_drop_profile = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_needle_profile = VariableBindable(None)  # type: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
@@ -88,7 +90,8 @@ class IFTPreviewPluginModel:
         if isinstance(new_acquirer, ImageSequenceAcquirer):
             new_acquirer_controller = IFTImageSequenceAcquirerController(
                 acquirer=new_acquirer,
-                do_extract_features=self._do_extract_features,
+                edge_det_params=self._edge_det_params,
+                edge_det_service=self._edge_det_service,
                 source_image_out=self.bn_source_image,
                 edge_detection_out=self.bn_edge_detection,
                 drop_profile_out=self.bn_drop_profile,
@@ -97,7 +100,8 @@ class IFTPreviewPluginModel:
         elif isinstance(new_acquirer, CameraAcquirer):
             new_acquirer_controller = IFTCameraAcquirerController(
                 acquirer=new_acquirer,
-                do_extract_features=self._do_extract_features,
+                edge_det_params=self._edge_det_params,
+                edge_det_service=self._edge_det_service,
                 source_image_out=self.bn_source_image,
                 edge_detection_out=self.bn_edge_detection,
                 drop_profile_out=self.bn_drop_profile,
@@ -128,140 +132,156 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
     def __init__(
             self, *,
             acquirer: ImageSequenceAcquirer,
-            do_extract_features: Callable[[Bindable[np.ndarray]], FeatureExtractor],
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
             source_image_out: Bindable[Optional[np.ndarray]],
             edge_detection_out: Bindable[Optional[np.ndarray]],
             drop_profile_out: Bindable[Optional[np.ndarray]],
             needle_profile_out: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
     ) -> None:
-        self._do_extract_features = do_extract_features
-
+        self._edge_det_params = edge_det_params
+        self._edge_det_service = edge_det_service
         self._edge_detection_out = edge_detection_out
         self._drop_profile_out = drop_profile_out
         self._needle_profile_out = needle_profile_out
 
-        self._extracted_features = {}
+        self.__destroyed = False
 
-        self._showing_extracted_feature = None  # type: Optional[FeatureExtractor]
-        self._sef_cleanup_tasks = []
+        self._extracted_features = {}
+        self._images = {}
+        self._current_image = None
+        self._current_preview = None
 
         super().__init__(
             acquirer=acquirer,
             source_image_out=source_image_out,
         )
 
+        self._edge_det_params_changed_id = edge_det_params.connect('changed', self._edge_det_params_changed)
+
+    def _edge_det_params_changed(self, *_) -> None:
+        for fut in self._extracted_features.values():
+            fut.cancel()
+
+        self._extracted_features = {}
+        self._queue_update_preview()
+
     def _on_image_registered(self, image_id: Hashable, image: np.ndarray) -> None:
-        extracted_feature = self._do_extract_features(VariableBindable(image))
-        self._extracted_features[image_id] = extracted_feature
+        self._images[image_id] = image
 
     def _on_image_deregistered(self, image_id: Hashable) -> None:
+        del self._images[image_id]
         del self._extracted_features[image_id]
 
     def _on_image_changed(self, image_id: Hashable) -> None:
-        extracted_feature = self._extracted_features[image_id]
-        self._set_showing_extracted_feature(extracted_feature)
+        self._current_image = image_id
+        self._queue_update_preview()
 
-    def _set_showing_extracted_feature(self, extracted_feature: Optional[FeatureExtractor]) -> None:
-        self._unbind_showing_extracted_feature()
+    def _queue_update_preview(self, *_) -> None:
+        if self.__destroyed: return
 
-        self._showing_extracted_feature = extracted_feature
+        image_id = self._current_image
+        image = self._images[self._current_image]
 
-        if extracted_feature is None:
-            self._edge_detection_out.set(None)
+        if image_id not in self._extracted_features:
+            fut = self._edge_det_service.detect(image, self._edge_det_params.create())
+            self._extracted_features[image_id] = fut
+            fut.add_done_callback(self._queue_update_preview)
+
+        fut = self._extracted_features[image_id]
+        if not fut.done() and self._current_preview is self._current_image:
             return
 
-        self._bind_showing_extracted_feature()
+        if not fut.done():
+            extracted_features = None
+        else:
+            extracted_features = fut.result()
 
-    def _bind_showing_extracted_feature(self) -> None:
-        extracted_feature = self._showing_extracted_feature
+        self._update_preview(extracted_features)
 
-        data_bindings = [
-            extracted_feature.bn_edge_detection.bind_to(
-                self._edge_detection_out
-            ),
-            extracted_feature.bn_drop_profile_px.bind_to(
-                self._drop_profile_out
-            ),
-            extracted_feature.bn_needle_profile_px.bind_to(
-                self._needle_profile_out
-            ),
-        ]
+    def _update_preview(self, extracted_feature: Optional[PendantEdgeDetection]) -> None:
+        if extracted_feature is None:
+            self._edge_detection_out.set(None)
+            self._drop_profile_out.set(None)
+            self._needle_profile_out.set(None)
+            return
 
-        self._sef_cleanup_tasks.extend([
-            db.unbind
-            for db in data_bindings
-        ])
+        self._edge_detection_out.set(extracted_feature.edge_map)
+        self._drop_profile_out.set(extracted_feature.drop_edge)
+        self._needle_profile_out.set((extracted_feature.needle_left_edge, extracted_feature.needle_right_edge))
 
-    def _unbind_showing_extracted_feature(self) -> None:
-        for task in self._sef_cleanup_tasks:
-            task()
-        self._sef_cleanup_tasks.clear()
+        self._current_preview = self._current_image
 
     def destroy(self) -> None:
+        self.__destroyed = True
+        self._edge_det_params.disconnect(self._edge_det_params_changed_id)
         super().destroy()
-        self._set_showing_extracted_feature(None)
-        self._extracted_features.clear()
 
 
 class IFTCameraAcquirerController(CameraAcquirerController):
     def __init__(
             self, *,
             acquirer: CameraAcquirer,
-            do_extract_features: Callable[[Bindable[np.ndarray]], FeatureExtractor],
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
             source_image_out: Bindable[Optional[np.ndarray]],
             edge_detection_out: Bindable[Optional[np.ndarray]],
             drop_profile_out: Bindable[Optional[np.ndarray]],
             needle_profile_out: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
     ) -> None:
-        self._do_extract_features = do_extract_features
-
+        self._edge_det_params = edge_det_params
+        self._edge_det_service = edge_det_service
         self._edge_detection_out = edge_detection_out
         self._drop_profile_out = drop_profile_out
         self._needle_profile_out = needle_profile_out
 
-        self._extracted_feature = None  # type: Optional[FeatureExtractor]
-        self._ef_cleanup_tasks = []
+        self.__destroyed = False
+
+        self._extracted_feature_fut = None
 
         super().__init__(
             acquirer=acquirer,
             source_image_out=source_image_out,
         )
 
-    def _on_camera_changed(self) -> None:
-        self._unbind_extracted_feature()
+        self._source_image_out_changed_conn = source_image_out.on_changed.connect(self._source_image_out_changed)
 
-        new_extracted_feature = self._do_extract_features(self._source_image_out)
-        self._extracted_feature = new_extracted_feature
+    def _source_image_out_changed(self) -> None:
+        self._queue_update_preview()
 
-        self._bind_extracted_feature()
+    def _queue_update_preview(self) -> None:
+        if self.__destroyed: return
 
-    def _bind_extracted_feature(self) -> None:
-        extracted_feature = self._extracted_feature
+        image = self._source_image_out.get()
+        if image is None:
+            return
 
-        data_bindings = [
-            extracted_feature.bn_edge_detection.bind_to(
-                self._edge_detection_out
-            ),
-            extracted_feature.bn_drop_profile_px.bind_to(
-                self._drop_profile_out
-            ),
-            extracted_feature.bn_needle_profile_px.bind_to(
-                self._needle_profile_out
-            ),
-        ]
+        old = self._extracted_feature_fut
+        if old is not None and not old.done():
+            return
 
-        self._ef_cleanup_tasks.extend([
-            db.unbind
-            for db in data_bindings
-        ])
+        fut = self._edge_det_service.detect(image, self._edge_det_params.create())
+        self._extracted_feature_fut = fut
+        fut.add_done_callback(self._update_preview)
 
-    def _unbind_extracted_feature(self) -> None:
-        for task in self._ef_cleanup_tasks:
-            task()
-        self._ef_cleanup_tasks.clear()
+    def _update_preview(self, fut: asyncio.Future) -> None:
+        if fut.cancelled():
+            return
+
+        extracted_feature = fut.result()
+        if extracted_feature is None:
+            self._edge_detection_out.set(None)
+            self._drop_profile_out.set(None)
+            self._needle_profile_out.set(None)
+            return
+
+        self._edge_detection_out.set(extracted_feature.edge_map)
+        self._drop_profile_out.set(extracted_feature.drop_edge)
+        self._needle_profile_out.set((extracted_feature.needle_left_edge, extracted_feature.needle_right_edge))
 
     def destroy(self) -> None:
+        self.__destroyed = True
+        if self._extracted_feature_fut is not None:
+            self._extracted_feature_fut.cancel()
+        self._source_image_out_changed_conn.disconnect()
         super().destroy()
-
-        self._unbind_extracted_feature()
-        self._extracted_feature = None

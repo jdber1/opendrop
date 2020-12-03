@@ -32,10 +32,10 @@ from typing import Iterable, Sequence, Tuple
 from gi.repository import Gtk, GObject
 from injector import inject
 from matplotlib import ticker
-from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from matplotlib.figure import Figure
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, TemplateChild, component, install
 
 from .services.graphs import IFTReportGraphsService
@@ -56,12 +56,15 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
 
     def after_view_init(self) -> None:
         figure = Figure(tight_layout=True)
+        self.figure = figure
 
         self.figure_canvas = FigureCanvas(figure)
         self.figure_canvas.props.hexpand = True
         self.figure_canvas.props.vexpand = True
         self.figure_canvas.props.visible = True
         self.figure_container.add(self.figure_canvas)
+
+        self.figure_canvas.connect('map', self.hdl_canvas_map)
 
         self.ift_axes = figure.add_subplot(3, 1, 1)
         self.ift_axes.set_ylabel('IFT (mN/m)')
@@ -90,13 +93,16 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
 
         self.hdl_model_data_changed()
 
+    def hdl_canvas_map(self, *_) -> None:
+        self.figure_canvas.draw_idle()
+
     @install
     @GObject.Property
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
+    def analyses(self) -> Sequence[PendantAnalysisJob]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+    def analyses(self, analyses: Iterable[PendantAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
         self.graphs_service.set_analyses(analyses)
 
@@ -136,7 +142,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.ift_axes.relim()
         self.ift_axes.margins(y=0.1)
 
-        self.figure_canvas.draw()
+        self.figure_canvas.draw_idle()
 
     def set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -149,7 +155,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.volume_line.axes.relim()
         self.volume_line.axes.margins(y=0.1)
 
-        self.figure_canvas.draw()
+        self.figure_canvas.draw_idle()
 
     def set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -162,7 +168,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.surface_area_line.axes.relim()
         self.surface_area_line.axes.margins(y=0.1)
 
-        self.figure_canvas.draw()
+        self.figure_canvas.draw_idle()
 
     def update_xlim(self) -> None:
         all_xdata = (

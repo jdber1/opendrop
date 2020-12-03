@@ -31,7 +31,7 @@ from typing import Iterable, Sequence
 
 from gi.repository import Gtk, GObject
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
@@ -39,7 +39,7 @@ from opendrop.appfw import Presenter, TemplateChild, component, install
     template_path='./report.ui',
 )
 class IFTReportPresenter(Presenter):
-    frame = TemplateChild('frame')  # type: TemplateChild[Gtk.Frame]
+    #  frame = TemplateChild('frame')  # type: TemplateChild[Gtk.Frame]
     stack = TemplateChild('stack')  # type: TemplateChild[Gtk.Stack]
     stack_switcher = TemplateChild('stack_switcher')  # type: TemplateChild[Gtk.StackSwitcher]
     overview = TemplateChild('overview')
@@ -54,11 +54,11 @@ class IFTReportPresenter(Presenter):
 
     @install
     @GObject.Property
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
+    def analyses(self) -> Sequence[PendantAnalysisJob]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+    def analyses(self, analyses: Iterable[PendantAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
         self.update_graphs_visibility()
 
@@ -72,9 +72,9 @@ class IFTReportPresenter(Presenter):
 
     def show_graphs(self) -> None:
         self.stack_switcher.show()
-        self.frame.set_shadow_type(Gtk.ShadowType.IN)
+        #  self.frame.set_shadow_type(Gtk.ShadowType.IN)
 
     def hide_graphs(self) -> None:
         self.stack_switcher.hide()
         self.stack.set_visible_child(self.overview)
-        self.frame.set_shadow_type(Gtk.ShadowType.NONE)
+        #  self.frame.set_shadow_type(Gtk.ShadowType.NONE)

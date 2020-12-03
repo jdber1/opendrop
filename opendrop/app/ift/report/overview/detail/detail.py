@@ -31,7 +31,7 @@ from typing import Optional
 
 from gi.repository import GObject, Gtk
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, TemplateChild, component, install
 
 
@@ -54,11 +54,11 @@ class IFTReportOverviewDetailPresenter(Presenter[Gtk.Stack]):
 
     @install
     @GObject.Property
-    def analysis(self) -> Optional[IFTDropAnalysis]:
+    def analysis(self) -> Optional[PendantAnalysisJob]:
         return self._analysis
 
     @analysis.setter
-    def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
+    def analysis(self, value: Optional[PendantAnalysisJob]) -> None:
         for conn in self.event_connections:
             conn.disconnect()
         self.event_connections = ()

@@ -29,25 +29,54 @@
 
 import asyncio
 import math
+from opendrop.processing.ift.young_laplace.equation import YoungLaplaceSolution
+from opendrop.processing.ift.needle_width import calculate_width_from_needle_profile
 import time
 from asyncio import Future
 from enum import Enum
-from typing import Callable, Optional
+from typing import Optional
+from injector import inject
 
 import numpy as np
 
+from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService
 from opendrop.app.common.services.acquisition import InputImage
+from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
+from opendrop.app.ift.services.quantities import PendantDerivedPropertiesService, PendantPhysicalParamsFactory
+
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
-from opendrop.utility.bindable.typing import Bindable
 from opendrop.utility.geometry import Vector2
-from .young_laplace_fit import YoungLaplaceFitter
-from opendrop.app.ift.services.features import FeatureExtractor
-from opendrop.app.ift.services.quantities import PhysicalPropertiesCalculator
 
 
-# Classes
+class PendantAnalysisService:
+    @inject
+    def __init__(
+            self,
+            *,
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
+            ylfit_service: YoungLaplaceFitService,
+            phys_params: PendantPhysicalParamsFactory,
+            derived_service: PendantDerivedPropertiesService,
+    ) -> None:
+        self._edge_det_params = edge_det_params
+        self._edge_det_service = edge_det_service
+        self._ylfit_service = ylfit_service
+        self._phys_params = phys_params
+        self._derived_service = derived_service
 
-class IFTDropAnalysis:
+    def analyse(self, image: InputImage) -> 'PendantAnalysisJob':
+        return PendantAnalysisJob(
+            image,
+            edge_det_params=self._edge_det_params,
+            edge_det_service=self._edge_det_service,
+            ylfit_service=self._ylfit_service,
+            phys_params=self._phys_params,
+            derived_service=self._derived_service
+        )
+
+
+class PendantAnalysisJob:
     class Status(Enum):
         WAITING_FOR_IMAGE = ('Waiting for image', False)
         FITTING = ('Fitting', False)
@@ -64,19 +93,26 @@ class IFTDropAnalysis:
     def __init__(
             self,
             input_image: InputImage,
-            do_extract_features: Callable[[Bindable[np.ndarray]], FeatureExtractor],
-            do_young_laplace_fit: Callable[[FeatureExtractor], YoungLaplaceFitter],
-            do_calculate_physprops: Callable[[FeatureExtractor, YoungLaplaceFitter], PhysicalPropertiesCalculator]
+            *,
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
+            ylfit_service: YoungLaplaceFitService,
+            phys_params: PendantPhysicalParamsFactory,
+            derived_service: PendantDerivedPropertiesService,
     ) -> None:
         self._loop = asyncio.get_event_loop()
+
+        self._edge_det_params = edge_det_params
+        self._phys_params = phys_params
+
+        self._edge_det_service = edge_det_service
+        self._ylfit_service = ylfit_service
+        self._derived_service = derived_service
 
         self._time_start = time.time()
         self._time_end = math.nan
 
         self._input_image = input_image
-        self._do_extract_features = do_extract_features
-        self._do_young_laplace_fit = do_young_laplace_fit
-        self._do_calculate_physprops = do_calculate_physprops
 
         self._status = self.Status.WAITING_FOR_IMAGE
         self.bn_status = AccessorBindable(
@@ -87,10 +123,6 @@ class IFTDropAnalysis:
         self._image = None  # type: Optional[np.ndarray]
         # The time (in Unix time) that the image was captured.
         self._image_timestamp = math.nan  # type: float
-
-        self._extracted_features = None  # type: Optional[FeatureExtractor]
-        self._physical_properties = None  # type: Optional[PhysicalPropertiesCalculator]
-        self._young_laplace_fit = None  # type: Optional[YoungLaplaceFitter]
 
         self.bn_image = AccessorBindable(self._get_image)
         self.bn_image_timestamp = AccessorBindable(self._get_image_timestamp)
@@ -117,9 +149,6 @@ class IFTDropAnalysis:
         self.bn_needle_profile_extract = VariableBindable(None)
         self.bn_needle_width_px = VariableBindable(math.nan)
 
-        # Log
-        self.bn_log = VariableBindable('')
-
         self.bn_is_done = AccessorBindable(getter=self._get_is_done)
         self.bn_is_cancelled = AccessorBindable(getter=self._get_is_cancelled)
         self.bn_progress = AccessorBindable(self._get_progress)
@@ -130,6 +159,9 @@ class IFTDropAnalysis:
         self.bn_status.on_changed.connect(self.bn_progress.poke)
 
         self._loop.create_task(self._input_image.read()).add_done_callback(self._hdl_input_image_read)
+
+        self._extracted_features = None
+        self._young_laplace_fit = None
 
     def _hdl_input_image_read(self, read_task: Future) -> None:
         if read_task.cancelled():
@@ -151,92 +183,68 @@ class IFTDropAnalysis:
         # Set given image to be readonly to prevent introducing some accidental bugs.
         self._image.flags.writeable = False
 
-        extracted_features = self._do_extract_features(VariableBindable(self._image))
-        young_laplace_fit = self._do_young_laplace_fit(extracted_features)
-        physical_properties = self._do_calculate_physprops(extracted_features, young_laplace_fit)
+        edge_det_params = self._edge_det_params.create()
+        self.bn_drop_region.set(edge_det_params.drop_region)
+        self.bn_needle_region.set(edge_det_params.needle_region)
 
-        self._extracted_features = extracted_features
-        self._young_laplace_fit = young_laplace_fit
-        self._physical_properties = physical_properties
-
-        self._bind_fit()
+        self._extracted_features = self._edge_det_service.detect(image, edge_det_params)
+        self._extracted_features.add_done_callback(self._edge_det_done)
 
         self.bn_image.poke()
         self.bn_image_timestamp.poke()
 
-        young_laplace_fit.bn_is_busy.on_changed.connect(
-            self._hdl_young_laplace_fit_is_busy_changed
-        )
-
         self.bn_status.set(self.Status.FITTING)
 
-    def _bind_fit(self) -> None:
-        # Bind extracted features attributes
-        self._extracted_features.bn_drop_profile_px.bind_to(
-            self.bn_drop_profile_extract
-        )
-        self._extracted_features.bn_needle_profile_px.bind_to(
-            self.bn_needle_profile_extract
-        )
-        self._extracted_features.bn_needle_width_px.bind_to(
-            self.bn_needle_width_px
-        )
-        self._extracted_features.params.bn_drop_region_px.bind_to(
-            self.bn_drop_region
-        )
-        self._extracted_features.params.bn_needle_region_px.bind_to(
-            self.bn_needle_region
-        )
-
-        # Bind Young-Laplace fit attributes
-        self._young_laplace_fit.bn_bond_number.bind_to(
-            self.bn_bond_number
-        )
-        self._young_laplace_fit.bn_apex_pos.bind_to(
-            self.bn_apex_coords_px
-        )
-        self._young_laplace_fit.bn_apex_radius.bind_to(
-            self.bn_apex_radius_px
-        )
-        self._young_laplace_fit.bn_rotation.bind_to(
-            self.bn_rotation
-        )
-        self._young_laplace_fit.bn_profile_fit.bind_to(
-            self.bn_drop_profile_fit
-        )
-        self._young_laplace_fit.bn_residuals.bind_to(
-            self.bn_residuals
-        )
-        self._young_laplace_fit.bn_log.bind_to(
-            self.bn_log
-        )
-
-        # Bind physical properties attributes
-        self._physical_properties.bn_interfacial_tension.bind_to(
-            self.bn_interfacial_tension
-        )
-        self._physical_properties.bn_volume.bind_to(
-            self.bn_volume
-        )
-        self._physical_properties.bn_surface_area.bind_to(
-            self.bn_surface_area
-        )
-        self._physical_properties.bn_apex_radius.bind_to(
-            self.bn_apex_radius
-        )
-        self._physical_properties.bn_worthington.bind_to(
-            self.bn_worthington
-        )
-
-    def _hdl_young_laplace_fit_is_busy_changed(self) -> None:
-        if self.bn_status.get() is self.Status.CANCELLED:
+    def _edge_det_done(self, fut: asyncio.Future) -> None:
+        if fut.cancelled():
+            self.cancel()
             return
 
-        young_laplace_fit = self._young_laplace_fit
+        try:
+            features = fut.result()
+        except Exception as e:
+            raise e
 
-        # If bond number is a sensible value, then assume young_laplace_fit has completed.
-        if not math.isnan(young_laplace_fit.bn_bond_number.get()):
-            self.bn_status.set(self.Status.FINISHED)
+        self.bn_drop_profile_extract.set(features.drop_edge)
+        self.bn_needle_profile_extract.set((features.needle_left_edge, features.needle_right_edge))
+        self.bn_needle_width_px.set(calculate_width_from_needle_profile((features.needle_left_edge, features.needle_right_edge)))
+
+        self._young_laplace_fit = self._ylfit_service.fit(features.drop_edge)
+        self._young_laplace_fit.add_done_callback(self._young_laplace_fit_done)
+    
+    def _young_laplace_fit_done(self, fut: asyncio.Future) -> None:
+        if fut.cancelled():
+            self.cancel()
+            return
+
+        try:
+            ylfit = fut.result()
+        except Exception as e:
+            raise e
+
+        phys_params = self._phys_params.create()
+        pixel_size = phys_params.needle_diameter/self.bn_needle_width_px.get()
+
+        derived = self._derived_service.derive(ylfit.bond, ylfit.arc_length, ylfit.radius * pixel_size)
+
+        self.bn_bond_number.set(ylfit.bond)
+        self.bn_apex_coords_px.set(ylfit.apex)
+        self.bn_apex_radius_px.set(ylfit.radius)
+        self.bn_rotation.set(ylfit.rotation)
+
+        self.bn_drop_profile_fit.set(None)
+        self.bn_residuals.set(ylfit.residuals)
+        self.bn_drop_profile_fit.set(ylfit.fitted_profile)
+
+        self.bn_interfacial_tension.set(derived.interfacial_tension)
+        self.bn_volume.set(derived.volume)
+        self.bn_surface_area.set(derived.surface_area)
+
+        self.bn_apex_radius.set(ylfit.radius * pixel_size)
+
+        self.bn_worthington.set(derived.worthington)
+
+        self.bn_status.set(self.Status.FINISHED)
 
     def cancel(self) -> None:
         if self.bn_status.get().is_terminal:
@@ -246,8 +254,11 @@ class IFTDropAnalysis:
         if self.bn_status.get() is self.Status.WAITING_FOR_IMAGE:
             self._input_image.cancel()
 
+        if self._extracted_features is not None:
+            self._extracted_features.cancel()
+
         if self._young_laplace_fit is not None:
-            self._young_laplace_fit.stop()
+            self._young_laplace_fit.cancel()
 
         self.bn_status.set(self.Status.CANCELLED)
 

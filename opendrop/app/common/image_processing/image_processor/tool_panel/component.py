@@ -42,7 +42,7 @@ tool_panel_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
 class ToolPanelView(View['ToolPanelPresenter', Gtk.Widget]):
     STYLE = '''
     .tool-panel {
-         background-color: gainsboro;
+         /* background-color: gainsboro; */
          padding: 5px;
     }
     '''
@@ -80,9 +80,9 @@ class ToolPanelView(View['ToolPanelPresenter', Gtk.Widget]):
         self._widget.get_style_context().add_class('tool-panel')
         self._widget.show()
 
-        tools_lbl = Gtk.Label('Tools:', margin=5)
-        tools_lbl.show()
-        self._widget.attach(tools_lbl, 0, 0, 1, 1)
+        #  tools_lbl = Gtk.Label('Tools:', margin=5)
+        #  tools_lbl.show()
+        #  self._widget.attach(tools_lbl, 0, 0, 1, 1)
 
         self._tools_box = Gtk.Box(
             orientation=Gtk.Orientation.HORIZONTAL,

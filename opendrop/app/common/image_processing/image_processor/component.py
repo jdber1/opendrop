@@ -48,11 +48,11 @@ class ImageProcessorView(View['ImageProcessorPresenter', Gtk.Widget]):
 
         self._render = Render(hexpand=True, vexpand=True)
         self._render.show()
-        self._widget.attach(self._render, 0, 0, 1, 1)
+        self._widget.attach(self._render, 0, 0, 2, 1)
 
-        extras_area = Gtk.Grid(hexpand=True, vexpand=False, margin=5)
+        extras_area = Gtk.Grid(hexpand=True, halign=Gtk.Align.END, vexpand=False, margin=5)
         extras_area.show()
-        self._widget.attach(extras_area, 0, 1, 1, 1)
+        self._widget.attach(extras_area, 1, 1, 1, 1)
 
         self._tool_item_refs = OrderedDict(
             (tool_id, ToolItemRef())
@@ -79,7 +79,7 @@ class ImageProcessorView(View['ImageProcessorPresenter', Gtk.Widget]):
             )
 
         self._tool_panel_area.show()
-        self._widget.attach(self._tool_panel_area, 0, 2, 1, 1)
+        self._widget.attach(self._tool_panel_area, 0, 1, 1, 1)
 
         self._widget.show()
 

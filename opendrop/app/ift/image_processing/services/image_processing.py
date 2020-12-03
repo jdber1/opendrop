@@ -34,11 +34,12 @@ from opendrop.app.common.services.acquisition import ImageAcquisitionService
 from opendrop.app.common.image_processing.plugins.define_region import (
     DefineRegionPluginModel,
 )
-from opendrop.app.ift.services.features import (
-    FeatureExtractorParams,
-    FeatureExtractorService,
+from opendrop.app.ift.services.edges import (
+    PendantEdgeDetectionParamsFactory,
+    PendantEdgeDetectionService,
 )
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.utility.geometry import Rect2
 
 from .plugins import ToolID
@@ -52,12 +53,10 @@ class IFTImageProcessingModel:
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionService,
-            feature_extractor_params: FeatureExtractorParams,
-            feature_extractor_service: FeatureExtractorService,
+            edge_det_params: PendantEdgeDetectionParamsFactory,
+            edge_det_service: PendantEdgeDetectionService,
     ) -> None:
         self._image_acquisition = image_acquisition
-        self._feature_extractor_params = feature_extractor_params
-        self._feature_extractor_service = feature_extractor_service
 
         self.bn_active_tool = VariableBindable(ToolID.DROP_REGION)
 
@@ -66,23 +65,23 @@ class IFTImageProcessingModel:
         )
 
         self.drop_region_plugin = DefineRegionPluginModel(
-            in_region=self._feature_extractor_params.bn_drop_region_px,
+            in_region=GObjectPropertyBindable(edge_det_params, 'drop-region'),
             in_clip=region_clip,
         )
 
         self.needle_region_plugin = DefineRegionPluginModel(
-            in_region=self._feature_extractor_params.bn_needle_region_px,
+            in_region=GObjectPropertyBindable(edge_det_params, 'needle-region'),
             in_clip=region_clip,
         )
 
         self.edge_detection_plugin = EdgeDetectionPluginModel(
-            feature_extractor_params=feature_extractor_params,
+            edge_det_params=edge_det_params,
         )
 
         self.preview_plugin = IFTPreviewPluginModel(
             image_acquisition=image_acquisition,
-            feature_extractor_params=feature_extractor_params,
-            do_extract_features=lambda x: self._feature_extractor_service.extract_features(x, feature_extractor_params),
+            edge_det_params=edge_det_params,
+            edge_det_service=edge_det_service,
         )
 
     def _get_region_clip(self) -> Optional[Rect2[int]]:

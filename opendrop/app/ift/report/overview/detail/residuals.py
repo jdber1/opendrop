@@ -31,7 +31,7 @@ from typing import Optional
 
 from gi.repository import GObject, Gtk
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, component, install
 
 
@@ -43,11 +43,11 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
     event_connections = ()
 
     def after_view_init(self) -> None:
-        from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg
+        from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo
         from matplotlib.figure import Figure
 
         figure = Figure(tight_layout=True)
-        self.canvas = FigureCanvasGTK3Agg(figure)
+        self.canvas = FigureCanvasGTK3Cairo(figure)
         self.canvas.show()
         self.host.add(self.canvas)
 
@@ -60,15 +60,15 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
             item.set_fontsize(8)
 
     def hdl_canvas_map(self, *_) -> None:
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     @install
     @GObject.Property
-    def analysis(self) -> Optional[IFTDropAnalysis]:
+    def analysis(self) -> Optional[PendantAnalysisJob]:
         return self._analysis
 
     @analysis.setter
-    def analysis(self, value: Optional[IFTDropAnalysis]) -> None:
+    def analysis(self, value: Optional[PendantAnalysisJob]) -> None:
         for conn in self.event_connections:
             conn.disconnect()
         self.event_connections = ()
@@ -94,12 +94,12 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
 
         if residuals is None or len(residuals) == 0:
             axes.set_axis_off()
-            self.canvas.draw()
+            self.canvas.draw_idle()
             return
 
         axes.set_axis_on()
         axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def destroy(self, *_) -> None:
         for conn in self.event_connections:

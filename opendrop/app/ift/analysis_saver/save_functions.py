@@ -38,12 +38,12 @@ import cv2
 import numpy as np
 
 from opendrop.app.common.analysis_saver.misc import simple_grapher
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.utility.misc import clear_directory_contents
 from .model import IFTAnalysisSaverOptions
 
 
-def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOptions) -> None:
+def save_drops(drops: Iterable[PendantAnalysisJob], options: IFTAnalysisSaverOptions) -> None:
     drops = list(drops)
 
     full_dir = options.save_root_dir
@@ -97,7 +97,7 @@ def save_drops(drops: Iterable[IFTDropAnalysis], options: IFTAnalysisSaverOption
         _save_timeline_data(drops, out_file)
 
 
-def _save_individual(drop: IFTDropAnalysis, drop_dir_name: str, options: IFTAnalysisSaverOptions) -> None:
+def _save_individual(drop: PendantAnalysisJob, drop_dir_name: str, options: IFTAnalysisSaverOptions) -> None:
     full_dir = options.save_root_dir/drop_dir_name
     full_dir.mkdir(parents=True)
 
@@ -128,7 +128,7 @@ def _save_individual(drop: IFTDropAnalysis, drop_dir_name: str, options: IFTAnal
                 dpi=dpi)
 
 
-def _save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
+def _save_drop_image(drop: PendantAnalysisJob, out_file_path: Path) -> None:
     if drop.is_image_replicated:
         # A copy of the image already exists somewhere, we don't need to save it again.
         return
@@ -140,7 +140,7 @@ def _save_drop_image(drop: IFTDropAnalysis, out_file_path: Path) -> None:
     cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
-def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> None:
+def _save_drop_image_annotated(drop: PendantAnalysisJob, out_file_path: Path) -> None:
     image = drop.bn_image.get()
     if image is None:
         return
@@ -206,7 +206,7 @@ def _save_drop_image_annotated(drop: IFTDropAnalysis, out_file_path: Path) -> No
     cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
-def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_params(drop: PendantAnalysisJob, out_file) -> None:
     root = configparser.ConfigParser(allow_no_value=True)
     root.read_dict(OrderedDict((
         ('Physical', OrderedDict((
@@ -234,7 +234,7 @@ def _save_drop_params(drop: IFTDropAnalysis, out_file) -> None:
     root.write(out_file)
 
 
-def _save_drop_contour(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_contour(drop: PendantAnalysisJob, out_file) -> None:
     drop_profile_extract = drop.bn_drop_profile_extract.get()
     if drop_profile_extract is None:
         return
@@ -242,7 +242,7 @@ def _save_drop_contour(drop: IFTDropAnalysis, out_file) -> None:
     np.savetxt(out_file, drop_profile_extract, fmt='%.1f,%.1f')
 
 
-def _save_drop_contour_fit(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_contour_fit(drop: PendantAnalysisJob, out_file) -> None:
     drop_contour_fit = drop.bn_drop_profile_fit.get()
     if drop_contour_fit is None:
         return
@@ -250,7 +250,7 @@ def _save_drop_contour_fit(drop: IFTDropAnalysis, out_file) -> None:
     np.savetxt(out_file, drop_contour_fit, fmt='%.1f,%.1f')
 
 
-def _save_drop_contour_fit_residuals(drop: IFTDropAnalysis, out_file) -> None:
+def _save_drop_contour_fit_residuals(drop: PendantAnalysisJob, out_file) -> None:
     residuals = drop.bn_residuals.get()
     if residuals is None:
         return
@@ -258,7 +258,7 @@ def _save_drop_contour_fit_residuals(drop: IFTDropAnalysis, out_file) -> None:
     np.savetxt(out_file, residuals, fmt='%g,%g')
 
 
-def _save_drop_contour_fit_residuals_figure(drop: IFTDropAnalysis, out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_drop_contour_fit_residuals_figure(drop: PendantAnalysisJob, out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     residuals = drop.bn_residuals.get()
     if residuals is None:
         return
@@ -277,7 +277,7 @@ def _save_drop_contour_fit_residuals_figure(drop: IFTDropAnalysis, out_file, fig
     fig.savefig(out_file)
 
 
-def _save_ift_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_ift_figure(drops: Sequence[PendantAnalysisJob], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [
         drop
         for drop in drops
@@ -307,7 +307,7 @@ def _save_ift_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple
     fig.savefig(out_file)
 
 
-def _save_volume_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_volume_figure(drops: Sequence[PendantAnalysisJob], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [
         drop
         for drop in drops
@@ -337,7 +337,7 @@ def _save_volume_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tu
     fig.savefig(out_file)
 
 
-def _save_surface_area_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+def _save_surface_area_figure(drops: Sequence[PendantAnalysisJob], out_file, fig_size: Tuple[float, float], dpi: int) -> None:
     drops = [
         drop
         for drop in drops
@@ -368,7 +368,7 @@ def _save_surface_area_figure(drops: Sequence[IFTDropAnalysis], out_file, fig_si
     fig.savefig(out_file)
 
 
-def _save_timeline_data(drops: Sequence[IFTDropAnalysis], out_file) -> None:
+def _save_timeline_data(drops: Sequence[PendantAnalysisJob], out_file) -> None:
     writer = csv.writer(out_file)
     writer.writerow([
         'Time (s)',

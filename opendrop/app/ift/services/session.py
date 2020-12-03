@@ -27,29 +27,33 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import asyncio
 from typing import Sequence
 
 from gi.repository import GObject
 from injector import Binder, Module, inject, singleton
-import numpy as np
 
 from opendrop.app.common.services.acquisition import AcquirerType, ImageAcquisitionService
-from opendrop.app.ift.analysis import IFTDropAnalysis, YoungLaplaceFitter
 from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
-from opendrop.utility.bindable.typing import Bindable
 
-from .features import FeatureExtractor, FeatureExtractorParams, FeatureExtractorService
-from .quantities import PhysicalPropertiesCalculator, PhysicalPropertiesCalculatorParams
+from .analysis import PendantAnalysisService, PendantAnalysisJob
+from .edges import PendantEdgeDetectionService, PendantEdgeDetectionParamsFactory
+from .quantities import PendantDerivedPropertiesService, PendantPhysicalParamsFactory
+from .younglaplace import YoungLaplaceFitService
 
 
 class IFTSessionModule(Module):
     def configure(self, binder: Binder):
         binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
-        binder.bind(PhysicalPropertiesCalculatorParams, to=PhysicalPropertiesCalculatorParams, scope=singleton)
-        binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
-        binder.bind(FeatureExtractorService, to=FeatureExtractorService, scope=singleton)
+
+        binder.bind(PendantEdgeDetectionParamsFactory, scope=singleton)
+        binder.bind(PendantPhysicalParamsFactory, scope=singleton)
+
+        binder.bind(PendantEdgeDetectionService, scope=singleton)
+        binder.bind(YoungLaplaceFitService, scope=singleton)
+        binder.bind(PendantDerivedPropertiesService, scope=singleton)
+
+        binder.bind(PendantAnalysisService, scope=singleton)
 
         binder.bind(IFTSession, to=IFTSession, scope=singleton)
 
@@ -59,23 +63,26 @@ class IFTSession(GObject.Object):
     def __init__(
             self,
             image_acquisition: ImageAcquisitionService,
-            physprops_calculator_params: PhysicalPropertiesCalculatorParams,
-            feature_extractor_params: FeatureExtractorParams,
+            edge_det_service: PendantEdgeDetectionService,
+            ylfit_service: YoungLaplaceFitService,
+            analysis_service: PendantAnalysisService,
     ) -> None:
-        self._loop = asyncio.get_event_loop()
-
         self._analyses = ()
         self._analyses_saved = False
 
-        self.image_acquisition = image_acquisition
-        self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
-        self._physprops_calculator_params = physprops_calculator_params
-        self._feature_extractor_params = feature_extractor_params
+        self._image_acquisition = image_acquisition
+
+        self._edge_det_service = edge_det_service
+        self._ylfit_service = ylfit_service
+
+        self._analysis_service = analysis_service
 
         super().__init__()
 
+        self._image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
+
     @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
-    def analyses(self) -> Sequence[IFTDropAnalysis]:
+    def analyses(self) -> Sequence[PendantAnalysisJob]:
         return self._analyses
 
     @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
@@ -101,15 +108,10 @@ class IFTSession(GObject.Object):
     def start_analyses(self) -> None:
         assert not self._analyses
 
-        input_images = self.image_acquisition.acquire_images()
+        input_images = self._image_acquisition.acquire_images()
 
         self._analyses = tuple(
-            IFTDropAnalysis(
-                input_image=im,
-                do_extract_features=self.extract_features,
-                do_young_laplace_fit=self.young_laplace_fit,
-                do_calculate_physprops=self.calculate_physprops,
-            ) for im in input_images
+            self._analysis_service.analyse(im) for im in input_images
         )
         self._analyses_saved = False
         self.notify('analyses')
@@ -135,30 +137,6 @@ class IFTSession(GObject.Object):
     def create_save_options(self) -> IFTAnalysisSaverOptions:
         return IFTAnalysisSaverOptions()
 
-    def extract_features(self, image: Bindable[np.ndarray]) -> FeatureExtractor:
-        return FeatureExtractor(
-            image=image,
-            params=self._feature_extractor_params,
-            loop=self._loop,
-        )
-
-    def young_laplace_fit(self, extracted_features: FeatureExtractor) -> YoungLaplaceFitter:
-        return YoungLaplaceFitter(
-            features=extracted_features,
-            loop=self._loop
-        )
-
-    def calculate_physprops(
-            self,
-            extracted_features: FeatureExtractor,
-            young_laplace_fit: YoungLaplaceFitter
-    ) -> PhysicalPropertiesCalculator:
-        return PhysicalPropertiesCalculator(
-            features=extracted_features,
-            young_laplace_fit=young_laplace_fit,
-            params=self._physprops_calculator_params,
-        )
-
     def quit(self) -> None:
         self.clear_analyses()
-        self.image_acquisition.destroy()
+        self._image_acquisition.destroy()

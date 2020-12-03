@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 
 from gi.repository import GObject
 
-from opendrop.app.ift.analysis import IFTDropAnalysis
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 
 
 class IFTAnalysisProgressHelper(GObject.Object):
@@ -13,7 +13,7 @@ class IFTAnalysisProgressHelper(GObject.Object):
         CANCELLED = 2
 
     class _AnalysisWatcher:
-        def __init__(self, analysis: IFTDropAnalysis, owner: 'IFTReportProgressService') -> None:
+        def __init__(self, analysis: PendantAnalysisJob, owner: 'IFTReportProgressService') -> None:
             self.analysis = analysis
             self.owner = owner
             self._cleanup_tasks = []
@@ -44,7 +44,7 @@ class IFTAnalysisProgressHelper(GObject.Object):
         self._watchers = []
         super().__init__()
 
-    def _set_analyses(self, analyses: Iterable[IFTDropAnalysis]) -> None:
+    def _set_analyses(self, analyses: Iterable[PendantAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
         self._update_watchers()
 

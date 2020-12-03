@@ -45,6 +45,33 @@ from opendrop.processing.ift import (
 )
 
 
+def pendant_edge_detect(image: np.ndarray, params: 'PendantEdgeDetectionParams') -> 'PendantEdgeDetection':
+    edge_map = apply_edge_detection(image, canny_min=params.canny_min, canny_max=params.canny_max)
+
+    drop_region = params.drop_region
+    if drop_region is not None:
+        cropped = edge_map[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
+        drop_edge = extract_drop_profile(cropped)
+        drop_edge += drop_region.position
+    else:
+        drop_edge = np.empty((0, 2))
+
+    needle_region = params.needle_region
+    if needle_region is not None:
+        cropped = edge_map[needle_region.y0:needle_region.y1, needle_region.x0:needle_region.x1]
+        needle_edges = extract_needle_profile(cropped)
+        needle_edges = tuple(s + needle_region.position for s in needle_edges)
+    else:
+        needle_edges = np.empty((0, 2)), np.empty((0, 2))
+
+    return PendantEdgeDetection(
+        edge_map=edge_map,
+        drop_edge=drop_edge,
+        needle_left_edge=needle_edges[0],
+        needle_right_edge=needle_edges[1],
+    )
+
+
 class PendantEdgeDetectionParamsFactory(GObject.Object):
     _canny_min: int = 30
     _canny_max: int = 60
@@ -122,38 +149,16 @@ class PendantEdgeDetectionParams:
 
 
 class PendantEdgeDetectionService:
-    def __init__(self) -> None:
-        self._executor = ProcessPoolExecutor(max_workers=1)
+    @inject
+    def __init__(self, default_params_factory: PendantEdgeDetectionParamsFactory) -> None:
+        self._executor = ProcessPoolExecutor()
+        self._default_params_factory = default_params_factory
 
-    @staticmethod
-    def detect(image: np.ndarray, params: PendantEdgeDetectionParams) -> 'PendantEdgeDetection':
-        edge_map = apply_edge_detection(image, canny_min=params.canny_min, canny_max=params.canny_max)
+    def detect(self, image: np.ndarray, params: Optional[PendantEdgeDetectionParams] = None) -> asyncio.Future:
+        if params is None:
+            params = self._default_params_factory.create()
 
-        drop_region = params.drop_region
-        if drop_region is not None:
-            cropped = edge_map[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
-            drop_edge = extract_drop_profile(cropped)
-            drop_edge += drop_region.position
-        else:
-            drop_edge = np.empty((0, 2))
-
-        needle_region = params.needle_region
-        if needle_region is not None:
-            cropped = edge_map[needle_region.y0:needle_region.y1, needle_region.x0:needle_region.x1]
-            needle_edges = extract_needle_profile(cropped)
-            needle_edges = tuple(s + needle_region.position for s in needle_edges)
-        else:
-            needle_edges = np.empty((0, 2)), np.empty((0, 2))
-
-        return PendantEdgeDetection(
-            edge_map=edge_map,
-            drop_edge=drop_edge,
-            needle_left_edge=needle_edges[0],
-            needle_right_edge=needle_edges[1],
-        )
-
-    def async_detect(self, image: np.ndarray, params: PendantEdgeDetectionParams) -> asyncio.Future:
-        cfut = self._executor.submit(self.detect, image, params)
+        cfut = self._executor.submit(pendant_edge_detect, image, params)
         fut = asyncio.wrap_future(cfut, loop=asyncio.get_event_loop())
         return fut
 
