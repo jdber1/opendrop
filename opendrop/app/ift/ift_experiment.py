@@ -86,9 +86,9 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
 
     def next_page(self, *_) -> None:
         cur_page = self.host.get_current_page()
-        if cur_page in (0, 1):
+        if cur_page == 0:
             self.host.next_page()
-        elif cur_page == 2:
+        elif cur_page == 1:
             self.start_analyses()
             self.host.next_page()
         else:
@@ -100,9 +100,9 @@ class IFTExperimentPresenter(Presenter[Gtk.Assistant]):
         if cur_page == 0:
             # Ignore, on first page.
             return
-        elif cur_page in (1, 2):
+        elif cur_page == 1:
             self.host.previous_page()
-        elif cur_page == 3:
+        elif cur_page == 2:
             self.clear_analyses()
             self.host.previous_page()
 

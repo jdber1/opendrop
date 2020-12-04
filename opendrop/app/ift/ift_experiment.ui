@@ -1,40 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.38.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <template class="IFTExperiment" parent="GtkAssistant">
-    <property name="width_request">800</property>
-    <property name="height_request">600</property>
-    <property name="can_focus">False</property>
+    <property name="width-request">800</property>
+    <property name="height-request">600</property>
+    <property name="can-focus">False</property>
     <property name="title">Interfacial Tension</property>
-    <property name="window_position">center</property>
-    <property name="use_header_bar">0</property>
+    <property name="window-position">center</property>
     <signal name="delete-event" handler="delete_event" swapped="no"/>
     <signal name="prepare" handler="prepare" swapped="no"/>
+    <child>
+      <object class="ImageAcquisition">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="page-type">custom</property>
+        <property name="title" translatable="yes">Image acquisition</property>
+        <property name="has-padding">False</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkGrid">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <child>
+          <object class="IFTPhysicalParametersForm">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="IFTImageProcessing">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="page-type">custom</property>
+        <property name="title" translatable="yes">Image processing</property>
+        <property name="has-padding">False</property>
+      </packing>
+    </child>
+    <child>
+      <object class="IFTReport" id="report_page">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="page-type">custom</property>
+        <property name="title" translatable="yes">Analysis</property>
+        <property name="has-padding">False</property>
+      </packing>
+    </child>
     <child internal-child="action_area">
       <object class="GtkBox">
         <property name="halign">fill</property>
+        <property name="can-focus">False</property>
         <child>
           <object class="GtkStack" id="action_area">
             <property name="visible">True</property>
+            <property name="can-focus">False</property>
             <child>
               <object class="LinearFooter">
                 <property name="visible">True</property>
-                <property name="previous-label"></property>
+                <property name="previous-label"/>
                 <signal name="next" handler="next_page"/>
               </object>
               <packing>
                 <property name="name">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="LinearFooter">
-                <property name="visible">True</property>
-                <signal name="next" handler="next_page"/>
-                <signal name="previous" handler="previous_page"/>
-              </object>
-              <packing>
-                <property name="name">1</property>
               </packing>
             </child>
             <child>
@@ -45,7 +99,8 @@
                 <signal name="previous" handler="previous_page"/>
               </object>
               <packing>
-                <property name="name">2</property>
+                <property name="name">1</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -56,7 +111,8 @@
                 <signal name="previous" handler="previous_page"/>
               </object>
               <packing>
-                <property name="name">3</property>
+                <property name="name">2</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -66,50 +122,6 @@
           </packing>
         </child>
       </object>
-    </child>
-    <child>
-      <object class="ImageAcquisition">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-      <packing>
-        <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Image acquisition</property>
-        <property name="has_padding">False</property>
-      </packing>
-    </child>
-    <child>
-      <object class="IFTPhysicalParametersForm">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-      <packing>
-        <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Physical parameters</property>
-        <property name="has_padding">False</property>
-      </packing>
-    </child>
-    <child>
-      <object class="IFTImageProcessing">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-      <packing>
-        <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Image processing</property>
-        <property name="has_padding">False</property>
-      </packing>
-    </child>
-    <child>
-      <object class="IFTReport" id="report_page">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-      <packing>
-        <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Analysis</property>
-        <property name="has_padding">False</property>
-      </packing>
     </child>
   </template>
 </interface>
