@@ -79,7 +79,7 @@ commercial options.
 ![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf){ width=60% }
 
 <!-- ![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf)-->
-![Comparison of contact angles calculated from experimental images in the literature against values calculated with commercial instrumentation.The images are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf){ width=60% }
+![Comparison of contact angles calculated in OpenDrop from experimental images in the literature against values calculated with commercial instrumentation.The images used are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf){ width=60% }
 
 
 <!-- Consequently, OpenDrop will make significant impact
