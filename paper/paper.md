@@ -76,9 +76,10 @@ effectively implement, explore and further develop the techniques for
 both research and teaching at a small fraction of the cost of
 commercial options. 
 
-![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf)
-![Comparison of contact angles calculated from experimental images in the literature against values calculated with commercial instrumentation.The images are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf)
+![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf){ width=20% }
 
+<!-- ![Comparison of the surface or interfacial tension of different systems calculated with OpenDrop against values reported in the literature.\label{fig:ift}](iftFigure.pdf)-->
+![Comparison of contact angles calculated from experimental images in the literature against values calculated with commercial instrumentation.The images are taken from [@Nie2017], [@Stacy2009] and [@Brown2016]. \label{fig:ca}](conAnFigure.pdf)
 
 
 <!-- Consequently, OpenDrop will make significant impact
