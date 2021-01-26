@@ -47,6 +47,8 @@ def simple_grapher(label_x: str, label_y: str, data_x: Sequence[float], data_y: 
                    xlim: Union[str, Tuple[float, float]] = 'tight',
                    grid: bool = True,
                    dpi: int = 300):
+    # TODO: Handle when data_x/data_y is an empty sequence.
+
     fig_size_in = INCHES_PER_CM * fig_size[0], INCHES_PER_CM * fig_size[1]
     fig = Figure(figsize=fig_size_in, dpi=dpi)
 
