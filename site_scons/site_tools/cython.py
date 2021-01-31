@@ -127,20 +127,23 @@ def find_pdx_in_dir(modulename, env, directory):
                     deps.append(package)
             else:
                 return []
+    
+    if len(parents) > 0:
+        next_path = path.Dir(parents[-1])
+        if next_path.exists():
+            package = env.FindFile('__init__.pxd', next_path)
+            if package is not None:
+                deps.append(package)
+            path = next_path
+        else:
+            module = env.FindFile(parents[-1] + '.pxd', next_path)
+            if module is not None:
+                deps.append(module)
+            return deps
 
-    next_path = path.Dir(parents[-1])
-    if next_path.exists():
-        package = env.FindFile('__init__.pxd', next_path)
-        if package is not None:
-            deps.append(package)
-        module = env.FindFile(base + '.pxd', next_path)
-        if module is not None:
-            deps.append(module)
-
-    if not deps:
-        module = env.FindFile(parents[-1] + '.pxd', path)
-        if module is not None:
-            deps.append(module)
+    module = env.FindFile(base + '.pxd', path)
+    if module is not None:
+        deps.append(module)
 
     return deps
 
