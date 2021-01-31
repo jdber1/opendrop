@@ -176,7 +176,15 @@ YoungLaplaceShape<realtype>::operator()(T s)
 
     check_domain(s);
 
-    T s_abs = abs(s);
+    T s_abs;
+
+    // XXX: Do not use boost::math::differentiation::abs since it sets derivative at s=0 to 0 which causes
+    // problems with closest().
+    if (s >= 0.0) {
+        s_abs = s;
+    } else {
+        s_abs = -s;
+    }
 
     // Be careful this doesn't cause an infinite loop when working with NaNs.
     while (std::get<1>(dense.domain()) < std::min(static_cast<realtype>(s_abs), MAX_ARCLENGTH)) {

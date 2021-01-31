@@ -126,6 +126,7 @@ BOOST_AUTO_TEST_CASE(test_young_laplace_closest)
     YoungLaplaceShape<double> shape(0.21);
 
     BOOST_TEST(shape.closest(0.73, 0.27) == 0.786139, tt::tolerance(1e-5));
+    BOOST_TEST(shape.closest(0.0, -1.0) == 0.0, tt::tolerance(1e-10));
 }
 
 
