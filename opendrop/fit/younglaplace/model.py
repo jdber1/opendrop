@@ -51,6 +51,11 @@ GRADIENT_TOL            = 1.e-6
 OBJECTIVE_TOL           = 1.e-4
 
 
+# Math constants.
+PI = math.pi
+NAN = math.nan
+
+
 class _StopReason(IntEnum):
     CONVERGENCE_IN_PARAMETERS = 1
     CONVERGENCE_IN_GRADIENT = 2
@@ -85,7 +90,7 @@ class YoungLaplaceFit:
     ) -> None:
 
         self._data = data
-        self._params = self._Params(math.nan, math.nan, math.nan, math.nan, math.nan)
+        self._params = self._Params(NAN, NAN, NAN, NAN, NAN)
 
         self._cancel_flag = False
         self._is_cancelled = False
@@ -103,7 +108,8 @@ class YoungLaplaceFit:
 
     def _fit(self) -> None:
         # Guess the initial parameters
-        self._update_params(young_laplace_guess(self._data))
+        params = _young_laplace_guess(*self._data.T)
+        self._update_params(params)
 
         # Optimise
         try:
@@ -214,17 +220,20 @@ class YoungLaplaceFit:
         return λ_next, λ_cutoff_next, ssr_next, stop_reason
 
     def _calculate_jacobian(self) -> Tuple[np.ndarray, np.ndarray]:
-        O, w = ((self.apex_x,), (self.apex_y,)), self.rotation
+        O = [[self.apex_x],
+             [self.apex_y]]
+        w = self.rotation
         W = np.array([[np.cos(w), -np.sin(w)],
                       [np.sin(w),  np.cos(w)]])
 
         data_rz = W @ (self._data.T - O)
 
         s = self._shape.closest(data_rz/self.apex_radius)
+
         r, z = rz = self.apex_radius * self._shape(s)
         dr_dBo, dz_dBo = self.apex_radius * self._shape.DBo(s)
         e_r, e_z = e_rz = data_rz - rz
-        e = np.linalg.norm(e_rz, axis=0)
+        e = np.hypot(e_r, e_z)
 
         de_dBo = -(e_r*dr_dBo + e_z*dz_dBo) / e             # derivative w.r.t. Bo (Bond number)
         de_dR = -(e_r*r + e_z*z) / (self.apex_radius * e)   # derivative w.r.t. R (apex radius)
@@ -241,7 +250,7 @@ class YoungLaplaceFit:
 
         self._params = params
 
-        # Generate new drop shape when parameters change.
+        # Create a new drop shape when parameters change.
         self._shape = YoungLaplaceShape(params.bond)
 
         # Invoke update callback.
@@ -274,14 +283,14 @@ class YoungLaplaceFit:
     @property
     def volume(self) -> float:
         if self._shape is None:
-            return math.nan
+            return NAN
 
         return self._shape.volume(self._shape_size) * self.apex_radius**3
 
     @property
     def surface_area(self) -> float:
         if self._shape is None:
-            return math.nan
+            return NAN
 
         return self._shape.surface_area(self._shape_size) * self.apex_radius**2
 
@@ -297,9 +306,11 @@ class YoungLaplaceFit:
         except TypeError:
             return self.__call__([s])[0]
 
-        O, w = ((self.apex_x,), (self.apex_y,)), self.rotation
-        W = np.array([[ np.cos(w),  np.sin(w)],
-                      [-np.sin(w),  np.cos(w)]])
+        O = [[self.apex_x],
+             [self.apex_y]]
+        w = self.rotation
+        W = np.array([[np.cos(w), -np.sin(w)],
+                      [np.sin(w),  np.cos(w)]])
 
         rz = self._shape(s)
         xy = O + W @ rz
@@ -318,97 +329,157 @@ class YoungLaplaceFit:
     def is_cancelled(self) -> bool:
         return self._is_cancelled
 
-    # Thread-safe method to cancel the fit. Does nothing if fit has already finished.
     def cancel(self) -> None:
+        """Thread-safe method to cancel the fit. Does nothing if fit has already finished."""
         self._cancel_flag = True
 
 
-def young_laplace_guess(data) -> None:
-    center = np.mean(data, axis=0)
-    radius = np.linalg.norm(data - center, axis=1).mean()
+def _young_laplace_guess(x: np.ndarray, y: np.ndarray) -> tuple:
+    r, z, radius, apex_x, apex_y, rotation = _guess_rz_from_xy(x, y)
+    bond = _bond_selected_plane(r, z, radius)
 
-    result = scipy.optimize.least_squares(
+    return (bond, radius, apex_x, apex_y, rotation)
+
+
+def _guess_rz_from_xy(x: np.ndarray, y: np.ndarray) -> tuple:
+    xc = x.mean()
+    yc = y.mean()
+    radius = np.hypot(x - xc, y - yc).mean()
+
+    # Fit a circle to the most circular part of the data.
+    ans = scipy.optimize.least_squares(
         _circle_residues,
-        (*center, radius),
+        (xc, yc, radius),
         _circle_jac,
-        args=(data,),
+        args=(x, y),
         loss='cauchy',  # Ignore outliers.
+        f_scale=radius/100,
         x_scale=(radius, radius, radius),
     )
+    xc, yc, radius = ans.x
+    resids = np.abs(ans.fun)
+    resids_50ptile = np.quantile(resids, 0.5)
 
-    center, radius = result.x[[0, 1]], result.x[2]
-    residues = np.abs(result.fun)
+    # The somewhat circular-ish part of the drop profile.
+    bowl_mask = resids < 10*resids_50ptile
+    bowl_x = x[bowl_mask]
+    bowl_y = y[bowl_mask]
 
-    median = np.quantile(residues, 0.5)
-    mask = residues < 10*median
-    
-    # Somewhat circular subarc of overall drop profile.
-    spherish = data[mask].astype(float)
+    # Don't need these variables anymore.
+    del resids, resids_50ptile
 
-    angles = np.arctan2(spherish[:, 0] - center[0], -(spherish[:, 1] - center[1]))
-    angles = np.unwrap(angles)
+    # Find the symmetry axis of bowl.
+    Ixx, Iyy, Ixy = _calculate_inertia(bowl_x, bowl_y)
 
-    # Estimate apex to be in the middle of the circular-ish subarc.
-    rotation = (angles[0] + angles[-1])/2
-    rotation_matrix = np.array([
-        [np.cos(rotation), -np.sin(rotation)],
-        [np.sin(rotation),  np.cos(rotation)],
-    ])
+    # Eigenvector calculation for a symmetric 2x2 matrix.
+    rotation = 0.5 * np.arctan2(2 * Ixy, Ixx - Iyy)
+    unit_r = np.array([ np.cos(rotation), np.sin(rotation)])
+    unit_z = np.array([-np.sin(rotation), np.cos(rotation)])
 
-    # Make a better estimate of the osculating circle at apex by fitting to a smaller subarc.
-    cap = spherish[np.abs(angles - rotation) < 0.3]
+    bowl_r = unit_r @ [bowl_x - xc, bowl_y - yc]
+    bowl_z = unit_z @ [bowl_x - xc, bowl_y - yc]
+    bowl_r_ix = np.argsort(bowl_r)
+    bowl_z_ix = np.argsort(bowl_z)
 
-    # Only try to improve the estimate if the small arc has more than 10 points.
-    if len(cap) >= 10:
-        result = scipy.optimize.least_squares(
+    # Calculate "asymmetry" along each axis. We define this to be the squared difference between the left and
+    # right points, integrated along the axis.
+    ma_kernel = np.ones(len(bowl_r)//10)/(len(bowl_r)//10)
+    asymm_r = (np.convolve((bowl_r - bowl_r.mean())[bowl_r_ix], ma_kernel, mode='valid')**2).sum()
+    asymm_z = (np.convolve((bowl_z - bowl_z.mean())[bowl_z_ix], ma_kernel, mode='valid')**2).sum()
+    if asymm_z > asymm_r:
+        # Swap axes so z is the symmetry axis.
+        rotation -= PI/2
+        unit_r, unit_z = -unit_z, unit_r
+        bowl_r, bowl_z = -bowl_z, bowl_r
+        bowl_r_ix, bowl_z_ix = bowl_z_ix[::-1], bowl_r_ix
+
+    # No longer useful variables (and potentially incorrect after axes swapping).
+    del asymm_r, asymm_z
+
+    bowl_z_hist, _ = np.histogram(bowl_z, bins=2 + len(bowl_z)//10)
+    if bowl_z_hist.argmax() > len(bowl_z_hist)/2:
+        # Rotate by 180 degrees since points are accumulating (where dz/ds ~ 0) at high z, i.e. drop apex is
+        # not on the bottom.
+        rotation += PI
+        unit_r *= -1
+        unit_z *= -1
+        bowl_r *= -1
+        bowl_z *= -1
+        bowl_r_ix = bowl_r_ix[::-1]
+        bowl_z_ix = bowl_z_ix[::-1]
+
+    bowl_z_ix_apex_arc_stop = np.searchsorted(np.abs(bowl_r), 0.3*radius, side='right', sorter=bowl_z_ix)
+    apex_arc_ix = bowl_z_ix[:bowl_z_ix_apex_arc_stop]
+    apex_arc_x = bowl_x[apex_arc_ix]
+    apex_arc_y = bowl_y[apex_arc_ix]
+
+    if len(apex_arc_ix) > 10:
+        # Fit another circle to a smaller arc around the apex. Points within 0.3 radians of the apex should
+        # have roughly constant curvature across typical Bond values.
+        ans = scipy.optimize.least_squares(
             _circle_residues,
-            (*center, radius),
+            (xc, yc, radius),
             _circle_jac,
-            args=(cap,),
+            args=(apex_arc_x, apex_arc_y),
+            method='lm',  # Use fast MINPACK implementation.
             x_scale=(radius, radius, radius),
         )
-        center, radius = result.x[[0, 1]], result.x[2]
+        xc, yc, radius = ans.x
 
-    apex = center + radius * rotation_matrix @ [0, -1]
+    apex_x, apex_y = [xc, yc] - radius * unit_z
+    r = unit_r @ [x - apex_x, y - apex_y]
+    z = unit_z @ [x - apex_x, y - apex_y]
 
-    # Estimate Bond number.
-    normal = (rotation_matrix.T @ (data - apex).T) / radius
-    z_sorted = normal[:, normal[1].argsort()]
+    # Restrict rotation to [-pi, pi].
+    rotation = (rotation + PI) % (2*PI) - PI
 
-    if np.searchsorted(z_sorted[1], 2.0) < z_sorted.shape[-1]:
-        lower = np.searchsorted(z_sorted[1], 1.95, side='right')
-        upper = np.searchsorted(z_sorted[1], 2.05, side='right')
-        radii = np.abs(z_sorted[0][lower:upper])
-        r = radii.mean()
-        # From experimental data.
+    return r, z, radius, apex_x, apex_y, rotation
+
+
+def _bond_selected_plane(r: np.ndarray, z: np.ndarray, radius: float) -> float:
+    """Estimate Bond number by method of selected plane."""
+    z_ix = np.argsort(z)
+    if np.searchsorted(z, 2.0*radius, sorter=z_ix) < len(z):
+        lower, upper = np.searchsorted(z, [1.95*radius, 2.05*radius], sorter=z_ix)
+        radii = np.abs(r[lower:upper+1])
+        r = radii.mean()/radius
         bond = 0.1756 * r**2 + 0.5234 * r**3 - 0.2563 * r**4
     else:
         bond = 0.15
 
-    # Restrict rotation to [-np.pi, np.pi]
-    rotation = (rotation + np.pi) % (2*np.pi) - np.pi
-
-    return (bond, radius, apex[0], apex[1], rotation)
+    return bond
 
 
-def _circle_residues(params, data):
-    center, radius = (params[0], params[1]), params[2]
-    offset = data - center
-    distances = np.linalg.norm(offset, axis=1)
+def _calculate_inertia(x: np.ndarray, y: np.ndarray) -> Tuple[float, float, float]:
+    x = x - x.mean()
+    y = y - y.mean()
+    
+    Ixx = (y**2).sum()
+    Iyy = (x**2).sum()
+    Ixy = -(x @ y)
+    
+    return Ixx, Iyy, Ixy
 
-    return distances - radius
+
+def _circle_residues(params, x, y):
+    xc, yc, radius = params
+    r = np.hypot(x - xc, y - yc)
+    return r - radius
 
 
-def _circle_jac(params, data):
-    center, radius = (params[0], params[1]), params[2]
-    offset = data - center
-    distances = np.linalg.norm(offset, axis=1)
+def _circle_jac(params, x, y):
+    jac = np.empty((len(x), 3))
 
-    out = np.empty((len(data), 3))
-    out[:, :2] = -offset/distances.reshape(-1, 1)
-    out[:, 2] = -1
+    xc, yc, radius = params
+    dist_x = x - xc
+    dist_y = y - yc
+    r = np.hypot(dist_x, dist_y)
 
-    return out
+    jac[:, 0] = -dist_x/r
+    jac[:, 1] = -dist_y/r
+    jac[:, 2] = -1
+
+    return jac
 
 
 def _convergence_in_parameters(scaled_delta: np.ndarray) -> int:
