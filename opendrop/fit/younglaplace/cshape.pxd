@@ -5,7 +5,7 @@ cdef extern from "<array>" namespace "std" nogil:
         double * data()
 
 
-cdef extern from "opendrop/younglaplace.hpp" namespace "opendrop::younglaplace":
+cdef extern from "opendrop/younglaplace.hpp" namespace "opendrop::younglaplace" nogil:
     cdef cppclass YoungLaplaceShape "opendrop::younglaplace::YoungLaplaceShape<double>":
         double bond
 
