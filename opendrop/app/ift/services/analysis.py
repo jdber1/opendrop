@@ -29,8 +29,6 @@
 
 import asyncio
 import math
-from opendrop.processing.ift.young_laplace.equation import YoungLaplaceSolution
-from opendrop.processing.ift.needle_width import calculate_width_from_needle_profile
 import time
 from asyncio import Future
 from enum import Enum
@@ -39,13 +37,17 @@ from injector import inject
 
 import numpy as np
 
-from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService
 from opendrop.app.common.services.acquisition import InputImage
 from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
-from opendrop.app.ift.services.quantities import PendantDerivedPropertiesService, PendantPhysicalParamsFactory
+from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
+from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
+from opendrop.processing.ift.needle_width import calculate_width_from_needle_profile
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.geometry import Vector2
+
+
+PI = math.pi
 
 
 class PendantAnalysisService:
@@ -57,13 +59,11 @@ class PendantAnalysisService:
             edge_det_service: PendantEdgeDetectionService,
             ylfit_service: YoungLaplaceFitService,
             phys_params: PendantPhysicalParamsFactory,
-            derived_service: PendantDerivedPropertiesService,
     ) -> None:
         self._edge_det_params = edge_det_params
         self._edge_det_service = edge_det_service
         self._ylfit_service = ylfit_service
         self._phys_params = phys_params
-        self._derived_service = derived_service
 
     def analyse(self, image: InputImage) -> 'PendantAnalysisJob':
         return PendantAnalysisJob(
@@ -72,7 +72,6 @@ class PendantAnalysisService:
             edge_det_service=self._edge_det_service,
             ylfit_service=self._ylfit_service,
             phys_params=self._phys_params,
-            derived_service=self._derived_service
         )
 
 
@@ -98,7 +97,6 @@ class PendantAnalysisJob:
             edge_det_service: PendantEdgeDetectionService,
             ylfit_service: YoungLaplaceFitService,
             phys_params: PendantPhysicalParamsFactory,
-            derived_service: PendantDerivedPropertiesService,
     ) -> None:
         self._loop = asyncio.get_event_loop()
 
@@ -107,7 +105,6 @@ class PendantAnalysisJob:
 
         self._edge_det_service = edge_det_service
         self._ylfit_service = ylfit_service
-        self._derived_service = derived_service
 
         self._time_start = time.time()
         self._time_end = math.nan
@@ -134,6 +131,7 @@ class PendantAnalysisJob:
         self.bn_rotation = VariableBindable(math.nan)
         self.bn_drop_profile_fit = VariableBindable(None)
         self.bn_residuals = VariableBindable(None)
+        self.bn_arclengths = VariableBindable(None)
 
         # Attributes from PhysicalPropertiesCalculator
         self.bn_interfacial_tension = VariableBindable(math.nan)
@@ -199,7 +197,6 @@ class PendantAnalysisJob:
         if fut.cancelled():
             self.cancel()
             return
-
         try:
             features = fut.result()
         except Exception as e:
@@ -209,40 +206,62 @@ class PendantAnalysisJob:
         self.bn_needle_profile_extract.set((features.needle_left_edge, features.needle_right_edge))
         self.bn_needle_width_px.set(calculate_width_from_needle_profile((features.needle_left_edge, features.needle_right_edge)))
 
-        self._young_laplace_fit = self._ylfit_service.fit(features.drop_edge)
+        self._young_laplace_fit = self._ylfit_service.fit(features.drop_edge.T)
         self._young_laplace_fit.add_done_callback(self._young_laplace_fit_done)
-    
+
     def _young_laplace_fit_done(self, fut: asyncio.Future) -> None:
+        fit_result: YoungLaplaceFitResult
+
         if fut.cancelled():
             self.cancel()
             return
-
         try:
-            ylfit = fut.result()
+            fit_result = fut.result()
         except Exception as e:
             raise e
 
         phys_params = self._phys_params.create()
-        pixel_size = phys_params.needle_diameter/self.bn_needle_width_px.get()
 
-        derived = self._derived_service.derive(ylfit.bond, ylfit.arc_length, ylfit.radius * pixel_size)
+        needle_diameter_px = self.bn_needle_width_px.get()
+        needle_diameter = phys_params.needle_diameter
+        px_size = needle_diameter/needle_diameter_px
 
-        self.bn_bond_number.set(ylfit.bond)
-        self.bn_apex_coords_px.set(ylfit.apex)
-        self.bn_apex_radius_px.set(ylfit.radius)
-        self.bn_rotation.set(ylfit.rotation)
+        bond = fit_result.bond
+        radius_px = fit_result.radius
+        apex_x = fit_result.apex_x
+        apex_y = fit_result.apex_y
+        rotation = fit_result.rotation
+        residuals = fit_result.residuals
+        closest = fit_result.closest
+        arclengths = fit_result.arclengths
+        surface_area_px = fit_result.surface_area
+        volume_px = fit_result.volume
 
-        self.bn_drop_profile_fit.set(None)
-        self.bn_residuals.set(ylfit.residuals)
-        self.bn_drop_profile_fit.set(ylfit.fitted_profile)
+        gravity = phys_params.gravity
+        drop_density = phys_params.drop_density
+        continuous_density = phys_params.continuous_density
 
-        self.bn_interfacial_tension.set(derived.interfacial_tension)
-        self.bn_volume.set(derived.volume)
-        self.bn_surface_area.set(derived.surface_area)
+        radius = radius_px * px_size
+        surface_area = surface_area_px * px_size**2
+        volume = volume_px * px_size**3
 
-        self.bn_apex_radius.set(ylfit.radius * pixel_size)
+        delta_density = abs(drop_density - continuous_density)
+        ift = delta_density * gravity * radius**2 / bond
+        worthington = (delta_density * gravity * volume) / (PI * ift * needle_diameter)
 
-        self.bn_worthington.set(derived.worthington)
+        self.bn_bond_number.set(bond)
+        self.bn_apex_coords_px.set(Vector2(apex_x, apex_y))
+        self.bn_apex_radius_px.set(radius_px)
+        self.bn_rotation.set(rotation)
+        self.bn_residuals.set(residuals)
+        self.bn_arclengths.set(arclengths)
+        self.bn_drop_profile_fit.set(closest.T)
+
+        self.bn_apex_radius.set(radius)
+        self.bn_surface_area.set(surface_area)
+        self.bn_volume.set(volume)
+        self.bn_interfacial_tension.set(ift)
+        self.bn_worthington.set(worthington)
 
         self.bn_status.set(self.Status.FINISHED)
 

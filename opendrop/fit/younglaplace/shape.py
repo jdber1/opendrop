@@ -1,6 +1,6 @@
-from functools import partial
+from functools import lru_cache, partial
 import typing
-from typing import Sequence, Tuple, Optional
+from typing import Sequence, Optional, Tuple
 
 import numpy as np
 import scipy.integrate, scipy.optimize
@@ -16,6 +16,7 @@ CLOSEST_TOL = 1.e-6
 
 # Very tiny float for managing singularities.
 INFITESIMAL = np.spacing(0.)
+PI = np.pi
 
 
 class YoungLaplaceShape:
@@ -95,6 +96,24 @@ class YoungLaplaceShape:
 
         return result
 
+    def volume(self, s: float) -> float:
+        return self._volsur(s)[0]
+
+    def surface_area(self, s: float) -> float:
+        return self._volsur(s)[1]
+
+    @lru_cache
+    def _volsur(self, s: float) -> Tuple[float, float]:
+        y0 = [0., 0., 1., 0., 0., 0.]
+
+        return scipy.integrate.odeint(
+            volsur_ode,
+            y0,
+            t=[0, s],
+            args=(self.bond,),
+            tfirst=True,
+        )[-1][-2:]
+
     def _step_until_s(self, s: float) -> None:
         if self._s[-1] >= s:
             return
@@ -162,36 +181,38 @@ class YoungLaplaceShape:
 
         return typing.cast(float, event)
 
-    def closest(self, y: Tuple[np.ndarray, np.ndarray]):
-        s = np.empty((len(y[1])))
+    def closest(self, data_r: np.ndarray, data_z: np.ndarray):
+        s = np.empty(len(data_r))
 
-        pos_z = y[1] > 0
-        neg_r = y[0] < 0
+        pos_z = data_z > 0
+        neg_r = data_r < 0
 
         s[~pos_z] = 0
-        s[pos_z] = self.z_inv(y[1][pos_z])
+        s[pos_z] = self.z_inv(data_z[pos_z])
         s[neg_r] *= -1
 
         np.nan_to_num(s, nan=self._z_inv_table[1][-1], copy=False)
 
         for _ in range(MAX_CLOSEST_ITERATIONS):
-            s_prev, s = s, self._closest_next(y, s)
+            s_prev, s = s, self._closest_next(data_r, data_z, s)
             if np.abs(s - s_prev).max() < CLOSEST_TOL:
                 break
 
         return s
 
-    def _closest_next(self, y: Tuple[Sequence[float], Sequence[float]], s: Sequence[float]):
+    def _closest_next(self, data_r: np.ndarray, data_z: np.ndarray, s: np.ndarray):
         predict = self._eval(s)
-        r, z = rz = predict[[0, 1]]
+        r, z = predict[[0, 1]]
         dr_ds, dz_ds = predict[[2,3]]
         d2r_ds2, d2z_ds2 = self._d2_ds2(s, r, z, dr_ds, dz_ds)
 
-        e_r, e_z = y - rz
+        e_r = data_r - r
+        e_z = data_z - z
 
         f = -2 * (e_r*dr_ds + e_z*dz_ds)
         fprime = -2 * (-1 + e_r*d2r_ds2 + e_z*d2z_ds2)
 
+        # Newton optimization except avoid maximas.
         s_next = s - f/np.abs(fprime)
 
         return s_next
@@ -241,3 +262,16 @@ def young_laplace_ode_DBo(s, r, z, dr_ds, dz_ds, dr_dBo, dz_dBo, d2r_dBods, d2z_
     d3z_dBods2 = d2r_dBods*dphi_ds + d2phi_dBods*dr_ds
 
     return d3r_dBods2, d3z_dBods2
+
+
+def volsur_ode(s, y, bond):
+    r, z, dr_ds, dz_ds, vol, sur = y
+
+    dphi_ds = 2 - bond*z - (dz_ds + INFITESIMAL)/(r + INFITESIMAL)
+
+    d2r_ds2 = -dz_ds * dphi_ds
+    d2z_ds2 = dr_ds * dphi_ds
+    dvol_ds = PI * r**2 * dz_ds
+    dsur_ds = 2 * PI * r
+
+    return [dr_ds, dz_ds, d2r_ds2, d2z_ds2, dvol_ds, dsur_ds]

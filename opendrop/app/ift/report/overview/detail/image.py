@@ -26,7 +26,6 @@
 # should have received a copy of the GNU General Public License along
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
-import cairo
 
 from injector import inject
 from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory

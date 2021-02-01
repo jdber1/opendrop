@@ -251,23 +251,25 @@ def _save_drop_contour_fit(drop: PendantAnalysisJob, out_file) -> None:
 
 
 def _save_drop_contour_fit_residuals(drop: PendantAnalysisJob, out_file) -> None:
+    arclengths = drop.bn_arclengths.get()
     residuals = drop.bn_residuals.get()
-    if residuals is None:
+    if arclengths is None or residuals is None:
         return
 
-    np.savetxt(out_file, residuals, fmt='%g,%g')
+    np.savetxt(out_file, np.array([arclengths, residuals]).T, fmt='%g,%g')
 
 
 def _save_drop_contour_fit_residuals_figure(drop: PendantAnalysisJob, out_file, fig_size: Tuple[float, float], dpi: int) -> None:
+    arclengths = drop.bn_arclengths.get()
     residuals = drop.bn_residuals.get()
-    if residuals is None:
+    if arclengths is None or residuals is None:
         return
 
     fig = simple_grapher(
-        label_x=r'Arclength parameter',
+        label_x=r'Arclength',
         label_y='Residual',
-        data_x=residuals[:, 0],
-        data_y=residuals[:, 1],
+        data_x=arclengths,
+        data_y=residuals,
         color='blue',
         marker='.',
         line_style='',

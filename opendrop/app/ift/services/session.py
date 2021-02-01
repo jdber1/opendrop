@@ -38,7 +38,7 @@ from opendrop.app.ift.analysis_saver.save_functions import save_drops
 
 from .analysis import PendantAnalysisService, PendantAnalysisJob
 from .edges import PendantEdgeDetectionService, PendantEdgeDetectionParamsFactory
-from .quantities import PendantDerivedPropertiesService, PendantPhysicalParamsFactory
+from .quantities import PendantPhysicalParamsFactory
 from .younglaplace import YoungLaplaceFitService
 
 
@@ -51,7 +51,6 @@ class IFTSessionModule(Module):
 
         binder.bind(PendantEdgeDetectionService, scope=singleton)
         binder.bind(YoungLaplaceFitService, scope=singleton)
-        binder.bind(PendantDerivedPropertiesService, scope=singleton)
 
         binder.bind(PendantAnalysisService, scope=singleton)
 

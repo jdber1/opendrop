@@ -79,6 +79,7 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
             return
 
         self.event_connections = (
+            self._analysis.bn_arclengths.on_changed.connect(self._hdl_analysis_residuals_changed),
             self._analysis.bn_residuals.on_changed.connect(self._hdl_analysis_residuals_changed),
         )
 
@@ -87,10 +88,16 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
     def _hdl_analysis_residuals_changed(self) -> None:
         if self._analysis is None: return
 
+        arclengths = self._analysis.bn_arclengths.get()
         residuals = self._analysis.bn_residuals.get()
 
         axes = self.axes
         axes.clear()
+
+        if arclengths is None or len(arclengths) == 0:
+            axes.set_axis_off()
+            self.canvas.draw_idle()
+            return
 
         if residuals is None or len(residuals) == 0:
             axes.set_axis_off()
@@ -98,7 +105,7 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
             return
 
         axes.set_axis_on()
-        axes.plot(residuals[:, 0], residuals[:, 1], color='#0080ff', marker='o', linestyle='')
+        axes.scatter(arclengths, residuals, color='#0080ff')
         self.canvas.draw_idle()
 
     def destroy(self, *_) -> None:
