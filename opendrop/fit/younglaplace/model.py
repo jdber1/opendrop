@@ -64,6 +64,7 @@ class YoungLaplaceModel:
         w      = params[YoungLaplaceParam.ROTATION]
 
         s = self._s
+
         residuals = self._residuals
         de_dBo = self._jac[:, YoungLaplaceParam.BOND]
         de_dR  = self._jac[:, YoungLaplaceParam.RADIUS]
@@ -76,7 +77,7 @@ class YoungLaplaceModel:
                       [np.sin(w),  np.cos(w)]])
 
         data_x, data_y = self.data
-        data_r, data_z = Q @ (data_x - X0, data_y - Y0)
+        data_r, data_z = Q.T @ (data_x - X0, data_y - Y0)
 
         s[:] = shape.closest(data_r/radius, data_z/radius)
         r, z = radius * shape(s)
@@ -88,11 +89,11 @@ class YoungLaplaceModel:
         # Set residues for points inside the drop as negative and outside as positive.
         e[np.signbit(e_r) != np.signbit(r)] *= -1
 
-        de_dBo[:] = -(e_r*dr_dBo + e_z*dz_dBo) / e    # derivative w.r.t. Bond number
-        de_dR[:] = -(e_r*r + e_z*z) / (radius * e)    # derivative w.r.t. radius
-        de_dX0[:], de_dY0[:] = -Q.T @ (e_r, e_z) / e  # derivative w.r.t. apex (x, y)-coordinates
-        de_dw[:] = (e_r*-z + e_z*r) / e               # derivative w.r.t. rotation
         residuals[:] = e
+        de_dBo[:] = -(e_r*dr_dBo + e_z*dz_dBo) / e   # derivative w.r.t. Bond number
+        de_dR[:] = -(e_r*r + e_z*z) / (radius * e)   # derivative w.r.t. radius
+        de_dX0[:], de_dY0[:] = -Q @ (e_r, e_z) / e   # derivative w.r.t. apex (x, y)-coordinates
+        de_dw[:] = (e_r*z - e_z*r) / e               # derivative w.r.t. rotation
 
         self._params[:] = params
 
@@ -140,7 +141,7 @@ class YoungLaplaceModel:
         s = self._s
 
         rz = radius * shape(s)
-        xy[:] = Q.T @ rz + [[X0], [Y0]]
+        xy[:] = Q @ rz + [[X0], [Y0]]
 
         return xy
 
