@@ -41,7 +41,8 @@ from opendrop.app.common.services.acquisition import InputImage
 from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
 from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
 from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
-from opendrop.processing.ift.needle_width import calculate_width_from_needle_profile
+
+from opendrop.fit.needle import needle_fit
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.geometry import Vector2
@@ -204,7 +205,9 @@ class PendantAnalysisJob:
 
         self.bn_drop_profile_extract.set(features.drop_edge)
         self.bn_needle_profile_extract.set((features.needle_left_edge, features.needle_right_edge))
-        self.bn_needle_width_px.set(calculate_width_from_needle_profile((features.needle_left_edge, features.needle_right_edge)))
+
+        needle_edge = np.concatenate((features.needle_left_edge, features.needle_right_edge))
+        self.bn_needle_width_px.set(2 * needle_fit(needle_edge.T).radius)
 
         self._young_laplace_fit = self._ylfit_service.fit(features.drop_edge.T)
         self._young_laplace_fit.add_done_callback(self._young_laplace_fit_done)
