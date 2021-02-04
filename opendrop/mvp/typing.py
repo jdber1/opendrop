@@ -30,9 +30,8 @@
 # Module that contains type information of certain classes to avoid circular imports.
 
 
-from typing import Optional, MutableMapping, TypeVar
+from typing import Optional, MutableMapping, TypeVar, Protocol
 
-from typing_extensions import Protocol
 
 ComponentViewRepType = TypeVar('ComponentViewRepType')
 
