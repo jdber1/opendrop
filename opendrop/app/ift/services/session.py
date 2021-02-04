@@ -117,8 +117,17 @@ class IFTSession(GObject.Object):
         self.notify('analyses_saved')
 
     def cancel_analyses(self) -> None:
+        keep_analyses = []
         for analysis in self._analyses:
-            analysis.cancel()
+            if analysis.bn_status.get() == PendantAnalysisJob.Status.WAITING_FOR_IMAGE:
+                # If job is still waiting for image, then delete it
+                analysis.cancel()
+            else:
+                analysis.cancel()
+                keep_analyses.append(analysis)
+
+        self._analyses = tuple(keep_analyses)
+        self.notify('analyses')
 
     def clear_analyses(self) -> None:
         self.cancel_analyses()
