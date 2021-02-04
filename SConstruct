@@ -7,6 +7,7 @@ env = Environment(
 
     PACKAGE_METADATA = {
         'Requires-Python': '>=3.5',
+        'Provides-Extra': 'genicam',
         'Requires-Dist': File('requirements.txt').get_text_contents().splitlines(),
         'Home-page': 'https://github.com/jdber1/opendrop',
         'Classifier': [

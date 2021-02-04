@@ -33,9 +33,17 @@ from typing import Tuple, Optional, NamedTuple, Sequence
 
 import cv2
 
-import genicam.gentl
 import numpy as np
-import opendrop.vendor.harvesters.core as harvesters
+
+try:
+    import genicam.gentl
+    import opendrop.vendor.harvesters.core as harvesters
+    GENICAM_ENABLED = True
+except ModuleNotFoundError:
+    from unittest.mock import Mock
+    genicam = Mock()
+    harvesters = Mock()
+    GENICAM_ENABLED = False
 
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.bindable.typing import ReadBindable
@@ -68,12 +76,15 @@ class GenicamAcquirer(CameraAcquirer):
         self._camera_alive_changed_conn = None  # type: Optional[EventConnection]
 
     def _get_camera_id(self) -> Optional[str]:
+        if not GENICAM_ENABLED: return
         return self._camera_id
 
     def update(self) -> None:
+        if not GENICAM_ENABLED: return
         self._harvester.update()
 
     def enumerate_cameras(self) -> Sequence[GenicamCameraInfo]:
+        if not GENICAM_ENABLED: return ()
         raw = self._harvester.device_info_list
         out = []
 
@@ -105,6 +116,9 @@ class GenicamAcquirer(CameraAcquirer):
         return out
 
     def open_camera(self, id_: str) -> None:
+        if not GENICAM_ENABLED:
+            raise RuntimeError("GenICam libraries not found")
+
         try:
             ia = self._harvester.create_image_acquirer(id_=id_)
         except ValueError:

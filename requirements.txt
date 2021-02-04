@@ -5,6 +5,6 @@ pycairo
 pygobject
 pytest
 injector
-genicam
+genicam; extra == 'genicam'
 importlib_resources; python_version<'3.7'
 typing_extensions; python_version<'3.8'
