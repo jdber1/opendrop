@@ -52,8 +52,8 @@ class USBCameraAcquirer(CameraAcquirer):
             new_camera = USBCamera(camera_index)
         except ValueError:
             raise ValueError(
-                "Failed to open camera with camera index: '{}'"
-                .format(camera_index)
+                "Failed to open {}"
+                .format(repr(camera_index))
             )
 
         self.remove_current_camera(_poke_current_camera_index=False)

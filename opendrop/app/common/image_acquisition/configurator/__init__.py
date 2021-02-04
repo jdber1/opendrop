@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from . import configurator, genicam
+from . import configurator, usb_camera, genicam

@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import usb_camera_cs
+from . import usb_camera, chooser

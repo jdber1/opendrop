@@ -41,7 +41,6 @@ from opendrop.app.common.services.acquisition import (
 from opendrop.appfw import ComponentFactory, Presenter, component, install
 
 from .local_storage import local_storage_cs
-from .usb_camera import usb_camera_cs
 
 
 @component(
@@ -102,12 +101,13 @@ class ImageAcquisitionConfiguratorPresenter(Presenter[Gtk.Bin]):
     def load_usb_camera_configurator(self) -> None:
         self.remove_configurator()
 
-        self.configurator_component = usb_camera_cs.factory(
-            acquirer=self._acquirer
-        ).create()
+        configurator = self.cf.create(
+            'ImageAcquisitionConfiguratorUSBCamera',
+            acquirer=self._acquirer,
+            visible=True,
+        )
 
-        self.configurator_component.view_rep.show()
-        self.host.add(self.configurator_component.view_rep)
+        self.host.add(configurator)
 
     def load_genicam_configurator(self) -> None:
         self.remove_configurator()

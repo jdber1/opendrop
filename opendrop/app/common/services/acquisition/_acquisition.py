@@ -113,7 +113,7 @@ class ImageAcquisitionService:
 
 class AcquirerType(Enum):
     LOCAL_STORAGE = ('Filesystem',)
-    USB_CAMERA = ('OpenCV',)
+    USB_CAMERA = ('cv2.VideoCapture',)
     GENICAM = ('GenICam',)
 
     def __init__(self, display_name: str) -> None:
