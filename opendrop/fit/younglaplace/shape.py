@@ -102,7 +102,7 @@ class YoungLaplaceShape:
     def surface_area(self, s: float) -> float:
         return self._volsur(s)[1]
 
-    @lru_cache
+    @lru_cache(maxsize=1)
     def _volsur(self, s: float) -> Tuple[float, float]:
         y0 = [0., 0., 1., 0., 0., 0.]
 
