@@ -20,7 +20,7 @@ Any other queries or help can be asked by creating a new issue as well.
 
 Code contributions are accepted via pull requests. Before making large changes however, please create a new issue so that we can discuss any proposed changes. Try to keep modifications focused and avoid correcting formatting changes in irrelevant code, this will make it easier to see what has actually changed.
 
-We currently aim to support Python versions 3.5 and above.
+We currently aim to support Python versions 3.6 and above.
 
 ### Preparing a development environment
 
