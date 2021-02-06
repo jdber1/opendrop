@@ -35,7 +35,7 @@ from opendrop.app.common.image_processing.image_processor import ImageProcessorP
 from opendrop.app.common.image_processing.plugins.preview import AcquirerController, ImageSequenceAcquirerController, \
     image_sequence_navigator_cs
 from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 from opendrop.utility.gmisc import pixbuf_from_array
 from opendrop.widgets.render.objects import PixbufFill, Polyline, MaskFill
 from .model import ConanPreviewPluginModel

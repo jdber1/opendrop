@@ -30,7 +30,7 @@
 from typing import Optional
 
 from opendrop.utility.bindable.typing import Bindable
-from opendrop.utility.geometry import Rect2, Vector2
+from opendrop.geometry import Rect2, Vector2
 from opendrop.utility.misc import clamp
 
 

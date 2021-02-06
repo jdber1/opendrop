@@ -38,7 +38,7 @@ from opendrop.app.common.image_processing.plugins.define_line import DefineLineP
 from opendrop.app.common.image_processing.plugins.define_region import DefineRegionPluginModel
 from opendrop.app.conan.analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculatorParams
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 from .plugins import ToolID
 from .plugins.foreground_detection import ForegroundDetectionPluginModel
 from .plugins.preview import ConanPreviewPluginModel

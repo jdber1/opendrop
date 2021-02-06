@@ -32,7 +32,7 @@ from typing import Optional, Tuple
 import cairo
 from gi.repository import GObject
 
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 from .. import abc
 
 

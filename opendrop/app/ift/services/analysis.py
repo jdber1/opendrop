@@ -45,7 +45,7 @@ from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, Young
 from opendrop.fit.needle import needle_fit
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
-from opendrop.utility.geometry import Vector2
+from opendrop.geometry import Vector2
 
 
 PI = math.pi

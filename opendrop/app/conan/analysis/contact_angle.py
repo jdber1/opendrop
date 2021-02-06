@@ -35,7 +35,7 @@ import numpy as np
 from opendrop.processing.conan import ContactAngle
 from opendrop.utility.bindable import VariableBindable
 from opendrop.utility.bindable.typing import Bindable
-from opendrop.utility.geometry import Line2, Vector2
+from opendrop.geometry import Line2, Vector2
 from .features import FeatureExtractor
 
 

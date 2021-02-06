@@ -39,7 +39,7 @@ import numpy as np
 from opendrop.app.common.services.acquisition import InputImage
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.typing import Bindable
-from opendrop.utility.geometry import Vector2
+from opendrop.geometry import Vector2
 from .contact_angle import ContactAngleCalculator
 from .features import FeatureExtractor
 

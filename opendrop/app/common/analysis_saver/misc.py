@@ -36,7 +36,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
-from opendrop.utility.geometry import Line2, Rect2, Vector2
+from opendrop.geometry import Line2, Rect2, Vector2
 
 INCHES_PER_CM = 0.393701
 

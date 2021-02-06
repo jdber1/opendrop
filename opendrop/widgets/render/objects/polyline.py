@@ -34,7 +34,7 @@ import cairo
 from gi.repository import GObject
 
 from opendrop.utility.cairomisc import cairo_saved
-from opendrop.utility.geometry import Vector2
+from opendrop.geometry import Vector2
 from .. import abc
 
 PolylineType = Sequence[Vector2[float]]

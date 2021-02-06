@@ -40,7 +40,7 @@ from opendrop.app.ift.services.edges import (
 )
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 
 from .plugins import ToolID
 from .plugins.edge_detection import EdgeDetectionPluginModel

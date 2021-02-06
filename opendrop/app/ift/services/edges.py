@@ -31,7 +31,7 @@ import asyncio
 from concurrent.futures.process import ProcessPoolExecutor
 
 from injector import inject
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 from typing import Optional
 
 from gi.repository import GObject

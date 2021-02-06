@@ -33,7 +33,7 @@ import cairo
 from gi.repository import Gtk, GObject, Gdk
 
 from opendrop.utility.cairomisc import cairo_saved
-from opendrop.utility.geometry import Vector2, Rect2
+from opendrop.geometry import Vector2, Rect2
 from . import protocol
 
 

@@ -32,7 +32,7 @@ from typing import Any, Tuple
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
-from opendrop.utility.geometry import Vector2, Rect2
+from opendrop.geometry import Vector2, Rect2
 from opendrop.widgets.render.objects import RectangleWithLabel, Rectangle
 from .model import DefineRegionPluginModel
 

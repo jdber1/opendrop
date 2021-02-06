@@ -33,7 +33,7 @@ from typing import Sequence, Tuple
 import cv2
 import numpy as np
 
-from opendrop.utility.geometry import Vector2
+from opendrop.geometry import Vector2
 
 
 # Classes

@@ -33,7 +33,7 @@ from typing import Optional
 from gi.repository import Gtk, GObject
 
 from opendrop.utility.gmisc import pixbuf_from_array
-from opendrop.utility.geometry import Rect2
+from opendrop.geometry import Rect2
 from opendrop.widgets.render import Render
 from opendrop.widgets.render.objects import PixbufFill, Line, Polyline, Angle
 from opendrop.appfw import Presenter, component, install

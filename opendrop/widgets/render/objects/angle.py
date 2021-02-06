@@ -33,7 +33,7 @@ from typing import Tuple, Optional
 import cairo
 from gi.repository import GObject
 
-from opendrop.utility.geometry import Vector2
+from opendrop.geometry import Vector2
 from opendrop.widgets.render import abc
 
 
