@@ -26,6 +26,7 @@ class Artist(GObject.Object):
         self._invalidate_handler(self, region)
 
     def invalidate(self) -> None:
+        if self._invalidate_handler is None: return
         self._invalidate_handler(self, None)
 
     def set_invalidate_handler(self, handler: 'Optional[ArtistInvalidateHandler]') -> None:
