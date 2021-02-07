@@ -8,7 +8,7 @@ from ._affine import AffineFrameArtist
 from ._artist import Artist, ArtistContainer
 
 
-__all__ = ('Canvas', 'CanvasAlign')
+__all__ = ('Canvas', 'CanvasAlign', 'CanvasAttachment')
 
 
 class CanvasAlign(Enum):
@@ -16,8 +16,11 @@ class CanvasAlign(Enum):
     CENTER = 2
 
 
-# surface type: CANVAS, CHILD, VIEWPORT
-# ::zoom signal
+class CanvasAttachment(Enum):
+    CANVAS = 1
+    FLOATING = 2
+    WIDGET = 3 
+
 
 class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     _MIN_SCALE = 0.01
@@ -35,8 +38,16 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     _ignore_adjustment_changes = False
 
     def __init__(self, **properties) -> None:
-        self._artist = AffineFrameArtist()
-        self._artist.set_invalidate_handler(self._artist_invalidated)
+        self._canvas_artist = AffineFrameArtist()
+        self._canvas_artist.set_invalidate_handler(self._artist_invalidated)
+
+        self._floating_artist = AffineFrameArtist()
+        self._floating_artist.set_invalidate_handler(self._artist_invalidated)
+
+        self._widget_artist = AffineFrameArtist()
+        self._widget_artist.set_invalidate_handler(self._artist_invalidated)
+
+        self._attachments = {}
 
         self._adjustments = {
             Gtk.Orientation.HORIZONTAL: None,
@@ -138,6 +149,18 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     def get_scale(self) -> float:
         return self._scale
 
+    def canvas_to_floating(self, x: float, y: float) -> Tuple[float, float]:
+        return x*self._scale, y*self._scale
+
+    def floating_to_canvas(self, x: float, y: float) -> Tuple[float, float]:
+        return x/self._scale, y/self._scale
+
+    def canvas_to_widget(self, x: float, y: float) -> Tuple[float, float]:
+        return x*self._scale - self._viewport_position[0], y*self._scale - self._viewport_position[1]
+
+    def widget_to_canvas(self, x: float, y: float) -> Tuple[float, float]:
+        return (x + self._viewport_position[0])/self._scale, (y + self._viewport_position[1])/self._scale
+
     def zoom(self, scale: float, focus_x: Optional[float] = None, focus_y: Optional[float] = None) -> None:
         scale = max(min(scale, self._MAX_SCALE), self._MIN_SCALE)
         if focus_x is None:
@@ -234,10 +257,13 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         else:
             y0 = max(min(-self._viewport_position[1], 0), gap_y)
 
-        self._artist.transform_xx = xx
-        self._artist.transform_yy = yy
-        self._artist.transform_x0 = x0
-        self._artist.transform_y0 = y0
+        self._canvas_artist.transform_xx = xx
+        self._canvas_artist.transform_yy = yy
+        self._canvas_artist.transform_x0 = x0
+        self._canvas_artist.transform_y0 = y0
+
+        self._floating_artist.transform_x0 = x0
+        self._floating_artist.transform_y0 = y0
 
         self._scale = xx
         self._viewport_position = (-x0, -y0)
@@ -264,32 +290,74 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         else:
             y0 = max(min(-self._viewport_position[1], 0), gap_y)
 
-        self._artist.transform_xx = xx
-        self._artist.transform_yy = yy
-        self._artist.transform_x0 = x0
-        self._artist.transform_y0 = y0
+        self._canvas_artist.transform_xx = xx
+        self._canvas_artist.transform_yy = yy
+        self._canvas_artist.transform_x0 = x0
+        self._canvas_artist.transform_y0 = y0
+
+        self._floating_artist.transform_x0 = x0
+        self._floating_artist.transform_y0 = y0
 
         self._scale = xx
         self._viewport_position = (-x0, -y0)
 
-    def add_artist(self, artist: Artist, **properties) -> None:
-        self._artist.add_artist(artist, **properties)
+    def add_artist(
+            self,
+            artist: Artist,
+            *,
+            attach: CanvasAttachment = CanvasAttachment.CANVAS,
+            **properties
+    ) -> None:
+        if artist in self._attachments:
+            raise ValueError("Artist is already attached to this canvas")
+        
+        if attach is CanvasAttachment.CANVAS:
+            self._attachments[artist] = attach
+            self._canvas_artist.add_artist(artist, **properties)
+        elif attach is CanvasAttachment.FLOATING:
+            self._attachments[artist] = attach
+            self._floating_artist.add_artist(artist, **properties)
+        elif attach is CanvasAttachment.WIDGET:
+            self._attachments[artist] = attach
+            self._widget_artist.add_artist(artist, **properties)
 
     def remove_artist(self, artist: Artist) -> None:
-        self._artist.remove_artist(artist)
+        if artist not in self._attachments:
+            raise ValueError("Artist is not attached to this canvas")
+
+        attach = self._attachments[artist]
+
+        if attach is CanvasAttachment.CANVAS:
+            self._canvas_artist.remove_artist(artist)
+        elif attach is CanvasAttachment.FLOATING:
+            self._floating_artist.remove_artist(artist)
+        elif attach is CanvasAttachment.WIDGET:
+            self._widget_artist.remove_artist(artist)
+
+        del self._attachments[artist]
 
     def do_map(self) -> None:
         Gtk.DrawingArea.do_map.invoke(Gtk.DrawingArea, self)
         window = self.get_window()
         assert window is not None
-        self._artist.map(window)
+        self._canvas_artist.map(window)
 
     def do_unmap(self) -> None:
-        self._artist.unmap()
+        self._canvas_artist.unmap()
         Gtk.DrawingArea.do_unmap.invoke(Gtk.DrawingArea, self)
 
     def do_draw(self, cr: cairo.Context) -> None:
-        self._artist.draw(cr)
+        cr.save()
+        self._canvas_artist.draw(cr)
+        cr.restore()
+
+        cr.save()
+        self._floating_artist.draw(cr)
+        cr.restore()
+
+        cr.save()
+        self._widget_artist.draw(cr)
+        cr.restore()
 
     def _artist_invalidated(self, artist: Artist, region: Optional[cairo.Region]) -> None:
         if region is not None:
