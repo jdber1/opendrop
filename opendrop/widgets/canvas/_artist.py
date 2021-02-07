@@ -19,15 +19,11 @@ class Artist(GObject.Object):
         """Draw. The cairo context can be modified."""
 
     def invalidate_area(self, x: int, y: int, width: int, height: int) -> None:
-        self.invalidate_region(cairo.Region(cairo.RectangleInt(x, y, width, height)))
+        self.invalidate(cairo.Region(cairo.RectangleInt(x, y, width, height)))
 
-    def invalidate_region(self, region: cairo.Region) -> None:
+    def invalidate(self, region: Optional[cairo.Region] = None) -> None:
         if self._invalidate_handler is None: return
         self._invalidate_handler(self, region)
-
-    def invalidate(self) -> None:
-        if self._invalidate_handler is None: return
-        self._invalidate_handler(self, None)
 
     def set_invalidate_handler(self, handler: 'Optional[ArtistInvalidateHandler]') -> None:
         self._invalidate_handler = handler

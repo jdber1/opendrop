@@ -50,7 +50,7 @@ class AffineFrameArtist(Artist, ArtistContainer):
             for rect in map(region.get_rectangle, range(region.num_rectangles()))
         ])
 
-        self.invalidate_region(region)
+        self.invalidate(region)
 
     def map(self, window: Gdk.Window) -> None:
         self._window = window
