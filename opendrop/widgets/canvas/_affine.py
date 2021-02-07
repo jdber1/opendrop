@@ -24,7 +24,11 @@ class AffineFrameArtist(Artist, ArtistContainer):
         )
         super().__init__(**properties)
 
-    def _artist_invalidated(self, artist: Artist, region: cairo.Region) -> None:
+    def _artist_invalidated(self, artist: Artist, region: Optional[cairo.Region]) -> None:
+        if region is None:
+            self.invalidate()
+            return
+
         if self._last_draw_transform is None:
             self.invalidate()
             return
