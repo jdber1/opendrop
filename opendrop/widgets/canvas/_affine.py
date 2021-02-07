@@ -11,12 +11,14 @@ __all__ = ('AffineFrameArtist',)
 
 
 class AffineFrameArtist(Artist, ArtistContainer):
-    _transform = cairo.Matrix()
+    _transform: cairo.Matrix
     _last_draw_transform = None  # type: Optional[cairo.Matrix]
 
     _window = None  # type: Optional[Gdk.Window]
 
     def __init__(self, **properties) -> None:
+        self._transform = cairo.Matrix()
+
         self._children = Children(
             invalidate_handler=self._artist_invalidated
         )
