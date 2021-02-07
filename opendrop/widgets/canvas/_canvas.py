@@ -30,6 +30,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     _content_size = (0, 0)
     _scale = 1
+    _scale_request = 1
     _align = CanvasAlign.FIT
 
     _hscroll_policy = Gtk.ScrollablePolicy.MINIMUM
@@ -62,6 +63,16 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         super().__init__(**properties)
 
         self._default_adjustments_if_none()
+
+        self.add_events(
+            Gdk.EventMask.POINTER_MOTION_MASK
+            | Gdk.EventMask.BUTTON_PRESS_MASK
+            | Gdk.EventMask.BUTTON_RELEASE_MASK
+            | Gdk.EventMask.FOCUS_CHANGE_MASK
+            | Gdk.EventMask.ENTER_NOTIFY_MASK
+            | Gdk.EventMask.LEAVE_NOTIFY_MASK
+            | Gdk.EventMask.KEY_PRESS_MASK
+        )
 
     def _get_adjustment(self, orientation: Gtk.Orientation) -> Gtk.Adjustment:
         adjustment = self._adjustments[orientation]
@@ -118,7 +129,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
             upper,
             page_size * 0.1,  # step_increment
             page_size * 0.9,  # page_increment
-            page_size,  # page_size
+            page_size,        # page_size
         )
 
     def _disconnect_adjustment(self, orientation: Gtk.Orientation) -> None:
@@ -168,14 +179,15 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         if focus_y is None:
             focus_y = self.get_allocation().height/2
 
-        factor = scale/self._scale
+        self._scale_request = scale
 
+        factor = scale/self._scale
         self._viewport_position = (
             (self._viewport_position[0] + focus_x) * factor - focus_x,
             (self._viewport_position[1] + focus_y) * factor - focus_y
         )
-        self._scale = scale
 
+        self._update_transform()
         self.queue_resize()
 
     @GObject.Property
@@ -189,7 +201,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     def get_preferred_width(self) -> Tuple[int, int]:
         content_width = self._content_size[0]
-        scale = self._scale
+        scale = self._scale_request
         return int(scale * content_width), int(scale * content_width)
 
     def get_preferred_height_for_width(self) -> Tuple[int, int]:
@@ -197,7 +209,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
     def get_preferred_height(self) -> Tuple[int, int]:
         content_height = self._content_size[1]
-        scale = self._scale
+        scale = self._scale_request
         return int(scale * content_height), int(scale * content_height)
 
     def get_preferred_width_for_height(self) -> Tuple[int, int]:
@@ -232,7 +244,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         allocation = self.get_allocation()
         content_area = self._content_size
 
-        scale = self._scale
+        scale = self._scale_request
 
         xx = scale
         yy = scale
@@ -272,7 +284,7 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         allocation = self.get_allocation()
         content_area = self._content_size
 
-        scale = self._scale
+        scale = self._scale_request
 
         xx = scale
         yy = scale
@@ -359,6 +371,15 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         self._widget_artist.draw(cr)
         cr.restore()
 
+    def do_button_press_event(self, event: Gdk.EventButton) -> None:
+        self.emit('cursor-down', self.widget_to_canvas(event.x, event.y))
+
+    def do_button_release_event(self, event: Gdk.EventButton) -> None:
+        self.emit('cursor-up', self.widget_to_canvas(event.x, event.y))
+
+    def do_motion_notify_event(self, event: Gdk.EventButton) -> None:
+        self.emit('cursor-motion', self.widget_to_canvas(event.x, event.y))
+
     def _artist_invalidated(self, artist: Artist, region: Optional[cairo.Region]) -> None:
         if region is not None:
             self.queue_draw_region(region)
@@ -396,3 +417,15 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
     @vscroll_policy.setter
     def vscroll_policy(self, policy: Gtk.ScrollablePolicy) -> None:
         self._vscroll_policy = policy
+
+    @GObject.Signal(arg_types=(object,))
+    def cursor_down(self, position: Tuple[float, float]) -> None:
+        pass
+
+    @GObject.Signal(arg_types=(object,))
+    def cursor_up(self, position: Tuple[float, float]) -> None:
+        pass
+
+    @GObject.Signal(arg_types=(object,))
+    def cursor_motion(self, position: Tuple[float, float]) -> None:
+        pass
