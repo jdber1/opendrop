@@ -66,7 +66,7 @@ class AffineFrameArtist(Artist, ArtistContainer):
     def draw(self, cr: cairo.Context) -> None:
         cr.transform(self._transform)
 
-        for artist in self._children.iter():
+        for artist in self._children.iter(z_ordered=True):
             cr.save()
             artist.draw(cr)
             cr.restore()
