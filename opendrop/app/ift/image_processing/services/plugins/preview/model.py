@@ -171,7 +171,8 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
 
     def _on_image_deregistered(self, image_id: Hashable) -> None:
         del self._images[image_id]
-        del self._extracted_features[image_id]
+        if image_id in self._extracted_features:
+            del self._extracted_features[image_id]
 
     def _on_image_changed(self, image_id: Hashable) -> None:
         self._current_image = image_id

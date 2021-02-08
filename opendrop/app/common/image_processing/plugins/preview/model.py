@@ -80,6 +80,7 @@ class ImageSequenceAcquirerController(AcquirerController):
         self._hdl_acquirer_images_changed()
 
     def _hdl_acquirer_images_changed(self) -> None:
+        self._showing_image_index = None
         self._update_image_registry()
         self._update_showing_image()
 
