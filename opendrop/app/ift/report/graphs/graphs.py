@@ -67,13 +67,13 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.figure_canvas.connect('map', self.hdl_canvas_map)
 
         self.ift_axes = figure.add_subplot(3, 1, 1)
-        self.ift_axes.set_ylabel('IFT (mN/m)')
+        self.ift_axes.set_ylabel('IFT [mN/m]')
         volume_axes = figure.add_subplot(3, 1, 2, sharex=self.ift_axes)
         volume_axes.xaxis.set_ticks_position('both')
-        volume_axes.set_ylabel('Vol. (mm³)')
+        volume_axes.set_ylabel('V [mm³]')
         surface_area_axes = figure.add_subplot(3, 1, 3, sharex=self.ift_axes)
         surface_area_axes.xaxis.set_ticks_position('both')
-        surface_area_axes.set_ylabel('Sur. (mm²)')
+        surface_area_axes.set_ylabel('SA [mm²]')
 
         # Format the labels to scale to the right units.
         self.ift_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e3)))
