@@ -65,6 +65,7 @@ class ConanPreviewPluginView(View['ConanPreviewPluginPresenter', None]):
         self._drop_edge_artist = PolylineArtist(
             stroke_color=(0.0, 0.5, 1.0),
             stroke_width=2,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._drop_edge_artist, z_index=z_index)
 

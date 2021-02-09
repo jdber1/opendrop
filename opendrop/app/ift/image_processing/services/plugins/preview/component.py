@@ -60,18 +60,21 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         self._drop_edge_artist = PolylineArtist(
             stroke_color=(0.0, 0.5, 1.0),
             stroke_width=2,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._drop_edge_artist, z_index=z_index)
 
         self._needle_left_edge = PolylineArtist(
             stroke_color=(0.0, 0.5, 1.0),
             stroke_width=2,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._needle_left_edge, z_index=z_index)
 
         self._needle_right_edge = PolylineArtist(
             stroke_color=(0.0, 0.5, 1.0),
             stroke_width=2,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._needle_right_edge, z_index=z_index)
 
