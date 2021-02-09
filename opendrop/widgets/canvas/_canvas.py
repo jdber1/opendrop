@@ -64,16 +64,6 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
 
         self._default_adjustments_if_none()
 
-        self.add_events(
-            Gdk.EventMask.POINTER_MOTION_MASK
-            | Gdk.EventMask.BUTTON_PRESS_MASK
-            | Gdk.EventMask.BUTTON_RELEASE_MASK
-            | Gdk.EventMask.FOCUS_CHANGE_MASK
-            | Gdk.EventMask.ENTER_NOTIFY_MASK
-            | Gdk.EventMask.LEAVE_NOTIFY_MASK
-            | Gdk.EventMask.KEY_PRESS_MASK
-        )
-
     def _get_adjustment(self, orientation: Gtk.Orientation) -> Gtk.Adjustment:
         adjustment = self._adjustments[orientation]
         if adjustment is None:
