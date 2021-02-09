@@ -80,18 +80,21 @@ class DefineLinePluginView(View['DefineLinePluginPresenter', None]):
 
         self._defined_artist = LineArtist(
             stroke_color=color,
-            stroke_width=2,
+            stroke_width=1,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._defined_artist, z_index=z_index)
 
         self._dragging_artist = LineArtist(
             stroke_color=color,
             stroke_width=1,
+            scale_strokes=True,
         )
         self._canvas.add_artist(self._dragging_artist, z_index=z_index)
 
         self._control_point_artist = CircleArtist(
             fill_color=color,
+            scale_radius=True,
         )
         self._canvas.add_artist(self._control_point_artist, z_index=z_index)
 
