@@ -371,8 +371,20 @@ class Canvas(Gtk.DrawingArea, Gtk.Scrollable, ArtistContainer):
         self._widget_artist.draw(cr)
         cr.restore()
 
+        if self.props.has_focus:
+            Gtk.render_focus(
+                self.get_style_context(),
+                cr,
+                x=0,
+                y=0,
+                width=self.get_allocated_width(),
+                height=self.get_allocated_height(),
+            )
+
     def do_button_press_event(self, event: Gdk.EventButton) -> None:
         self.emit('cursor-down', self.widget_to_canvas(event.x, event.y))
+        if self.props.can_focus:
+            self.grab_focus()
 
     def do_button_release_event(self, event: Gdk.EventButton) -> None:
         self.emit('cursor-up', self.widget_to_canvas(event.x, event.y))
