@@ -36,7 +36,7 @@ from opendrop.app.common.image_processing.image_processor import ImageProcessorP
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.geometry import Vector2, Line2
-from opendrop.widgets.render.objects import Line
+from opendrop.widgets.canvas import LineArtist, CircleArtist
 from .model import DefineLinePluginModel
 
 define_line_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
@@ -54,59 +54,68 @@ class DefineLinePluginView(View['DefineLinePluginPresenter', None]):
         self._view_context = view_context
         self._tool_ref = view_context.get_tool_item(tool_id)
 
-        view_context.render.connect(
-            'cursor-up-event',
-            lambda render, pos: self.presenter.cursor_up(pos),
+        view_context.canvas.connect(
+            'cursor-up',
+            lambda canvas, pos: self.presenter.cursor_up(pos),
         )
 
-        view_context.render.connect(
-            'cursor-down-event',
-            lambda render, pos: self.presenter.cursor_down(pos),
+        view_context.canvas.connect(
+            'cursor-down',
+            lambda canvas, pos: self.presenter.cursor_down(pos),
         )
 
-        view_context.render.connect(
-            'cursor-motion-event',
-            lambda render, pos: self.presenter.cursor_move(pos),
+        view_context.canvas.connect(
+            'cursor-motion',
+            lambda canvas, pos: self.presenter.cursor_move(pos),
         )
 
-        view_context.render.connect(
+        view_context.canvas.connect(
             'key-press-event',
-            self._hdl_render_key_press_event
+            self._hdl_canvas_key_press_event,
         )
 
         self.bn_tool_button_is_active = self._tool_ref.bn_is_active
 
-        self._render = view_context.render
+        self._canvas = view_context.canvas
 
-        self._defined_ro = Line(
+        self._defined_artist = LineArtist(
             stroke_color=color,
             stroke_width=2,
-            draw_control_points=False,
-            z_index=z_index,
         )
-        self._render.add_render_object(self._defined_ro)
+        self._canvas.add_artist(self._defined_artist, z_index=z_index)
 
-        self._dragging_ro = Line(
+        self._dragging_artist = LineArtist(
             stroke_color=color,
             stroke_width=1,
-            draw_control_points=True,
-            z_index=z_index,
         )
-        self._render.add_render_object(self._dragging_ro)
+        self._canvas.add_artist(self._dragging_artist, z_index=z_index)
 
-        self.bn_dragging = GObjectPropertyBindable(
-            g_obj=self._dragging_ro,
+        self._control_point_artist = CircleArtist(
+            fill_color=color,
+        )
+        self._canvas.add_artist(self._control_point_artist, z_index=z_index)
+
+        self.bn_defined = GObjectPropertyBindable(
+            g_obj=self._defined_artist,
             prop_name='line',
         )
 
-        self.bn_defined = GObjectPropertyBindable(
-            g_obj=self._defined_ro,
+        self.bn_dragging = GObjectPropertyBindable(
+            g_obj=self._dragging_artist,
             prop_name='line',
         )
 
         self.presenter.view_ready()
 
-    def _hdl_render_key_press_event(self, widget: Gtk.Widget, event: Gdk.EventKey) -> None:
+    def show_control_point(self, xc: float, yc: float) -> None:
+        self._control_point_artist.props.xc = xc
+        self._control_point_artist.props.yc = yc
+        self._control_point_artist.props.radius = 2.0
+
+    def hide_control_point(self) -> None:
+        self._control_point_artist.props.radius = 0.0
+
+    def _hdl_canvas_key_press_event(self, widget: Gtk.Widget, event: Gdk.EventKey) -> bool:
         self.presenter.key_press(
             keyboard.KeyEvent(
                 key=keyboard.Key.from_value(event.keyval),
@@ -114,9 +123,12 @@ class DefineLinePluginView(View['DefineLinePluginPresenter', None]):
             )
         )
 
+        # Stop event propagation.
+        return True
+
     def _do_destroy(self) -> None:
-        self._render.remove_render_object(self._defined_ro)
-        self._render.remove_render_object(self._dragging_ro)
+        self._canvas.remove_artist(self._defined_artist)
+        self._canvas.remove_artist(self._dragging_artist)
 
 
 @define_line_plugin_cs.presenter(options=['model'])
@@ -190,12 +202,15 @@ class DefineLinePluginPresenter(Presenter['DefineLinePluginView']):
     def _update_dragging_indicator(self, current_cursor_pos: Vector2[float]) -> None:
         if not self._model.is_defining:
             self.view.bn_dragging.set(None)
+            self.view.hide_control_point()
             return
 
         self.view.bn_dragging.set(Line2(
             pt0=self._model.begin_define_pos,
             pt1=current_cursor_pos,
         ))
+
+        self.view.show_control_point(*self._model.begin_define_pos)
 
     def _do_destroy(self) -> None:
         for db in self.__data_bindings:

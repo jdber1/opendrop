@@ -32,8 +32,8 @@ from typing import Any, Tuple
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
-from opendrop.geometry import Vector2, Rect2
-from opendrop.widgets.render.objects import RectangleWithLabel, Rectangle
+from opendrop.geometry import Rect2
+from opendrop.widgets.canvas import RectangleArtist
 from .model import DefineRegionPluginModel
 
 define_region_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
@@ -52,55 +52,54 @@ class DefineRegionPluginView(View['DefineRegionPluginPresenter', None]):
         self._view_context = view_context
         self._tool_ref = view_context.get_tool_item(tool_id)
 
-        view_context.render.connect(
-            'cursor-up-event',
-            lambda render, pos: self.presenter.cursor_up(pos),
+        view_context.canvas.connect(
+            'cursor-up',
+            lambda canvas, pos: self.presenter.cursor_up(pos),
         )
 
-        view_context.render.connect(
-            'cursor-down-event',
-            lambda render, pos: self.presenter.cursor_down(pos),
+        view_context.canvas.connect(
+            'cursor-down',
+            lambda canvas, pos: self.presenter.cursor_down(pos),
         )
 
-        view_context.render.connect(
-            'cursor-motion-event',
-            lambda render, pos: self.presenter.cursor_move(pos),
+        view_context.canvas.connect(
+            'cursor-motion',
+            lambda canvas, pos: self.presenter.cursor_move(pos),
         )
 
         self.bn_tool_button_is_active = self._tool_ref.bn_is_active
 
-        self._render = view_context.render
+        self._canvas = view_context.canvas
 
-        self._defined_ro = RectangleWithLabel(
-            border_color=color,
-            border_width=2,
-            label=label,
-            z_index=z_index,
+        self._defined_rect = RectangleArtist(
+            stroke_color=color,
+            stroke_width=1,
+            scale_strokes=True,
         )
-        self._render.add_render_object(self._defined_ro)
+        self._canvas.add_artist(self._defined_rect, z_index=z_index)
 
-        self._dragging_ro = Rectangle(
-            border_color=color,
-            border_width=1,
-            z_index=z_index,
+        self._dragging_rect = RectangleArtist(
+            stroke_color=color,
+            stroke_width=1,
+            scale_strokes=True,
         )
-        self._render.add_render_object(self._dragging_ro)
+        self._canvas.add_artist(self._dragging_rect, z_index=z_index)
 
-        self.bn_dragging = GObjectPropertyBindable(
-            g_obj=self._dragging_ro,
+        self.bn_defined = GObjectPropertyBindable(
+            g_obj=self._defined_rect,
             prop_name='extents',
         )
 
-        self.bn_defined = GObjectPropertyBindable(
-            g_obj=self._defined_ro,
+        self.bn_dragging = GObjectPropertyBindable(
+            g_obj=self._dragging_rect,
             prop_name='extents',
         )
 
         self.presenter.view_ready()
 
     def _do_destroy(self) -> None:
-        self._render.remove_render_object(self._defined_ro)
-        self._render.remove_render_object(self._dragging_ro)
+        self._canvas.remove_artist(self._defined_rect)
+        self._canvas.remove_artist(self._dragging_rect)
 
 
 @define_region_plugin_cs.presenter(options=['model'])
@@ -129,7 +128,7 @@ class DefineRegionPluginPresenter(Presenter['DefineRegionPluginView']):
         if self._model.is_defining and not self.view.bn_tool_button_is_active.get():
             self._model.discard_define()
 
-    def cursor_down(self, pos: Vector2[float]) -> None:
+    def cursor_down(self, pos: Tuple[float, float]) -> None:
         if not self.view.bn_tool_button_is_active.get():
             return
 
@@ -140,7 +139,7 @@ class DefineRegionPluginPresenter(Presenter['DefineRegionPluginView']):
 
         self._update_dragging_indicator(pos)
 
-    def cursor_up(self, pos: Vector2[float]) -> None:
+    def cursor_up(self, pos: Tuple[float, float]) -> None:
         if not self.view.bn_tool_button_is_active.get():
             return
 
@@ -151,10 +150,10 @@ class DefineRegionPluginPresenter(Presenter['DefineRegionPluginView']):
 
         self._update_dragging_indicator(pos)
 
-    def cursor_move(self, pos: Vector2[float]) -> None:
+    def cursor_move(self, pos: Tuple[float, float]) -> None:
         self._update_dragging_indicator(pos)
 
-    def _update_dragging_indicator(self, current_cursor_pos: Vector2[float]) -> None:
+    def _update_dragging_indicator(self, current_cursor_pos: Tuple[float, float]) -> None:
         if not self._model.is_defining:
             self.view.bn_dragging.set(None)
             return

@@ -30,12 +30,12 @@
 from collections import OrderedDict
 from typing import Any, Iterable, Callable
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 
 from opendrop.mvp import View, Presenter, ComponentSymbol
 from opendrop.mvp.typing import ComponentFactory
 from opendrop.utility.bindable.typing import Bindable
-from opendrop.widgets.render import Render
+from opendrop.widgets.canvas import Canvas, CanvasAlign
 from .tool_panel.component import tool_panel_cs, ToolItemRef
 
 image_processor_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Widget]
@@ -46,9 +46,18 @@ class ImageProcessorView(View['ImageProcessorPresenter', Gtk.Widget]):
     def _do_init(self, tool_ids: Iterable[Any], plugins: Iterable[ComponentFactory]) -> Gtk.Widget:
         self._widget = Gtk.Grid()
 
-        self._render = Render(hexpand=True, vexpand=True)
-        self._render.show()
-        self._widget.attach(self._render, 0, 0, 2, 1)
+        self._canvas = Canvas(align=CanvasAlign.FIT, can_focus=True, hexpand=True, vexpand=True)
+        self._canvas.add_events(
+            Gdk.EventMask.POINTER_MOTION_MASK
+            | Gdk.EventMask.BUTTON_PRESS_MASK
+            | Gdk.EventMask.BUTTON_RELEASE_MASK
+            | Gdk.EventMask.ENTER_NOTIFY_MASK
+            | Gdk.EventMask.LEAVE_NOTIFY_MASK
+            | Gdk.EventMask.KEY_PRESS_MASK
+        )
+
+        self._canvas.show()
+        self._widget.attach(self._canvas, 0, 0, 2, 1)
 
         extras_area = Gtk.Grid(hexpand=True, halign=Gtk.Align.END, vexpand=False, margin=5)
         extras_area.show()
@@ -71,7 +80,7 @@ class ImageProcessorView(View['ImageProcessorPresenter', Gtk.Widget]):
             self.new_component(
                 plugin.fork(
                     view_context=ImageProcessorPluginViewContext(
-                        render=self._render,
+                        canvas=self._canvas,
                         extras_area=extras_area,
                         do_get_tool_item=self._get_tool_item,
                     )
@@ -95,11 +104,11 @@ class ImageProcessorView(View['ImageProcessorPresenter', Gtk.Widget]):
 class ImageProcessorPluginViewContext:
     def __init__(
             self,
-            render: Render,
+            canvas: Canvas,
             extras_area: Gtk.Grid,
             do_get_tool_item: Callable[[Any], ToolItemRef]
     ) -> None:
-        self.render = render
+        self.canvas = canvas
         self.extras_area = extras_area
         self._do_get_tool_item = do_get_tool_item
 

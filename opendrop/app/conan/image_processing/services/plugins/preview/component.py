@@ -29,16 +29,21 @@
 
 from typing import Optional, Any
 
+import cairo
 import numpy as np
 
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
-from opendrop.app.common.image_processing.plugins.preview import AcquirerController, ImageSequenceAcquirerController, \
-    image_sequence_navigator_cs
+from opendrop.app.common.image_processing.plugins.preview import (
+    AcquirerController,
+    ImageSequenceAcquirerController,
+    image_sequence_navigator_cs,
+)
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.geometry import Rect2
-from opendrop.utility.gmisc import pixbuf_from_array
-from opendrop.widgets.render.objects import PixbufFill, Polyline, MaskFill
+from opendrop.widgets.canvas import ImageArtist, PolylineArtist
+
 from .model import ConanPreviewPluginModel
+
 
 conan_preview_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
 
@@ -47,49 +52,57 @@ conan_preview_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
 class ConanPreviewPluginView(View['ConanPreviewPluginPresenter', None]):
     def _do_init(self, view_context: ImageProcessorPluginViewContext, z_index: int) -> None:
         self._view_context = view_context
-        self._render = self._view_context.render
+        self._canvas = self._view_context.canvas
 
         self._image_sequence_navigator_cid = None  # type: Optional[Any]
 
-        self._background_ro = PixbufFill(
-            z_index=z_index,
-        )
-        self._render.add_render_object(self._background_ro)
+        self._bg_artist = ImageArtist()
+        self._canvas.add_artist(self._bg_artist, z_index=z_index)
 
-        self._foreground_detection_ro = MaskFill(
-            color=(0.5, 0.5, 1.0, 0.5),
-            z_index=z_index,
-        )
-        self._render.add_render_object(self._foreground_detection_ro)
+        self._fg_artist = ImageArtist()
+        self._canvas.add_artist(self._fg_artist, z_index=z_index)
 
-        self._drop_profile_ro = Polyline(
+        self._drop_edge_artist = PolylineArtist(
             stroke_color=(0.0, 0.5, 1.0),
             stroke_width=2,
-            z_index=z_index,
         )
-        self._render.add_render_object(self._drop_profile_ro)
+        self._canvas.add_artist(self._drop_edge_artist, z_index=z_index)
 
         self.presenter.view_ready()
 
     def set_background_image(self, image: Optional[np.ndarray]) -> None:
         if image is None:
-            self._background_ro.props.pixbuf = None
+            self._bg_artist.clear_data()
             return
 
-        self._background_ro.props.pixbuf = pixbuf_from_array(image)
+        width = image.shape[1]
+        height = image.shape[0]
+        self._bg_artist.extents = Rect2(0, 0, width, height)
+        self._bg_artist.set_rgbarray(image)
+        self._canvas.set_content_size(width, height)
 
-        self._render.props.canvas_size = image.shape[1::-1]
-        self._render.viewport_extents = Rect2(position=(0, 0), size=image.shape[1::-1])
+        # Set zoom to minimum, i.e. scale image so it always fits.
+        self._canvas.zoom(0)
 
     def set_foreground_detection(self, mask: Optional[np.ndarray]) -> None:
-        self._foreground_detection_ro.props.mask = mask
+        if mask is None:
+            self._fg_artist.clear_data()
+            return
+
+        data = np.full_like(mask, 0x80404080, dtype=np.uint32)
+        data *= mask//255
+
+        width = mask.shape[1]
+        height = mask.shape[0]
+        self._fg_artist.extents = Rect2(0, 0, width, height)
+        self._fg_artist.set_data(data, cairo.Format.ARGB32, width, height)
 
     def set_drop_profile(self, drop_profile: Optional[np.ndarray]) -> None:
         if drop_profile is None:
-            self._drop_profile_ro.props.polyline = None
+            self._drop_edge_artist.props.polyline = None
             return
 
-        self._drop_profile_ro.props.polyline = [drop_profile]
+        self._drop_edge_artist.props.polyline = drop_profile
 
     def show_image_sequence_navigator(self) -> None:
         if self._image_sequence_navigator_cid is not None:
@@ -116,9 +129,9 @@ class ConanPreviewPluginView(View['ConanPreviewPluginPresenter', None]):
         self._image_sequence_navigator_cid = None
 
     def _do_destroy(self) -> None:
-        self._render.remove_render_object(self._background_ro)
-        self._render.remove_render_object(self._foreground_detection_ro)
-        self._render.remove_render_object(self._drop_profile_ro)
+        self._canvas.remove_artist(self._bg_artist)
+        self._canvas.remove_artist(self._fg_artist)
+        self._canvas.remove_artist(self._drop_edge_artist)
 
 
 @conan_preview_plugin_cs.presenter(options=['model'])
