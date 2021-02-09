@@ -64,7 +64,7 @@
       </object>
       <packing>
         <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Image acquisition</property>
+        <property name="title" translatable="yes">Acquisition</property>
         <property name="has_padding">False</property>
       </packing>
     </child>
@@ -75,7 +75,7 @@
       </object>
       <packing>
         <property name="page_type">custom</property>
-        <property name="title" translatable="yes">Image processing</property>
+        <property name="title" translatable="yes">Preparation</property>
         <property name="has_padding">False</property>
       </packing>
     </child>
