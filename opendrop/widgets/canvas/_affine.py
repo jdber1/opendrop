@@ -142,7 +142,7 @@ class AffineFrameArtist(Artist, ArtistContainer):
 
 class Children:
     def __init__(self, invalidate_handler: ArtistInvalidateHandler) -> None:
-        self._children = set()
+        self._children = []
         self._relations = dict()
         self._invalidate_handler = invalidate_handler
 
@@ -151,7 +151,7 @@ class Children:
 
         artist.set_invalidate_handler(self._invalidate_handler)
 
-        self._children.add(artist)
+        self._children.append(artist)
         self._relations[artist] = ChildRelation(artist, **properties)
 
     def remove(self, artist: Artist) -> None:
