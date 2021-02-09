@@ -12,7 +12,7 @@ __all__ = ('YoungLaplaceFitResult', 'YoungLaplaceFitService')
 
 class YoungLaplaceFitService:
     def __init__(self) -> None:
-        self._executor = ProcessPoolExecutor()
+        self._executor = ProcessPoolExecutor(max_workers=1)
 
     def fit(self, data: Tuple[np.ndarray, np.ndarray]) -> asyncio.Future:
         cfut = self._executor.submit(young_laplace_fit, data)

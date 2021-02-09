@@ -325,6 +325,7 @@ class RowBinding:
 
         if status is PendantAnalysisJob.Status.FITTING and self._spinner_animation_timer is None:
             self._spinner_animation_timer = GLib.timeout_add(
+                priority=GLib.PRIORITY_LOW,
                 interval=750//12,
                 function=self._spinner_animation_step
             )

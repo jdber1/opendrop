@@ -151,7 +151,7 @@ class PendantEdgeDetectionParams:
 class PendantEdgeDetectionService:
     @inject
     def __init__(self, default_params_factory: PendantEdgeDetectionParamsFactory) -> None:
-        self._executor = ProcessPoolExecutor()
+        self._executor = ProcessPoolExecutor(max_workers=1)
         self._default_params_factory = default_params_factory
 
     def detect(self, image: np.ndarray, params: Optional[PendantEdgeDetectionParams] = None) -> asyncio.Future:
