@@ -18,12 +18,13 @@ OBJECTIVE_TOL = 1.e-8
 
 class NeedleFitResult(NamedTuple):
     rotation: float
+    rho: float
     radius: float
-    center_x: float
-    center_y: float
 
     objective: float
     residuals: np.ndarray
+
+    lmask: np.ndarray
 
 
 def needle_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False):
@@ -31,14 +32,11 @@ def needle_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False):
 
     def fun(params: Sequence[float], model: NeedleModel) -> np.ndarray:
         model.set_params(params)
-        return model.residuals
+        return model.residuals.copy()
 
     def jac(params: Sequence[float], model: NeedleModel) -> np.ndarray:
         model.set_params(params)
-        jac = model.jac.copy()
-        # Ignore CENTER_Y parameter because along with CENTER_X, Jacobian is degenerate.
-        jac[:, NeedleParam.CENTER_Y] = 0
-        return jac
+        return model.jac.copy()
 
     optimize_result = scipy.optimize.least_squares(
         fun,
@@ -46,7 +44,8 @@ def needle_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False):
         jac,
         args=(model,),
         x_scale='jac',
-        method='lm',
+        method='trf',
+        loss='cauchy',
         ftol=OBJECTIVE_TOL,
         xtol=DELTA_TOL,
         gtol=GRADIENT_TOL,
@@ -58,12 +57,13 @@ def needle_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False):
 
     result = NeedleFitResult(
         rotation=model.params[NeedleParam.ROTATION],
+        rho=model.params[NeedleParam.RHO],
         radius=model.params[NeedleParam.RADIUS],
-        center_x=model.params[NeedleParam.CENTER_X],
-        center_y=model.params[NeedleParam.CENTER_Y],
 
         objective=(model.residuals**2).sum()/model.dof,
         residuals=model.residuals,
+
+        lmask=model.lmask,
     )
 
     return result

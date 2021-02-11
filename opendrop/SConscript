@@ -13,6 +13,7 @@ from glob import glob
 
 modules = glob('**/*.py', recursive=True) + [
     SConscript('features/SConscript', exports='env'),
+    SConscript('fit/needle/SConscript', exports='env'),
     SConscript('fit/younglaplace/SConscript', exports='env'),
 ]
 

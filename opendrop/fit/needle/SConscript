@@ -1,0 +1,14 @@
+Import('env')
+
+
+env = \
+env.Clone(tools=['cython', 'numpy'],
+          SHLIBPREFIX='',
+          SHLIBSUFFIX='$PYTHON_EXT_SUFFIX')
+env.Append(CPPPATH=['$PYTHONINCLUDES', '$NUMPYINCLUDES'],
+           LIBS=['m'])
+env.VariantDir('.checkpoints', '.', duplicate=False)
+
+hough = env.SharedLibrary('hough', env.Cython('.checkpoints/hough.pyx'))
+
+Return('hough')
