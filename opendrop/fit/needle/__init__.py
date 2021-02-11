@@ -8,7 +8,7 @@ from .model import NeedleModel
 from .guess import needle_guess
 
 
-__all__ = ('needle_fit',)
+__all__ = ('NeedleFitResult', 'needle_fit',)
 
 
 DELTA_TOL     = 1.e-8

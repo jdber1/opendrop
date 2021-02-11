@@ -42,7 +42,7 @@ from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory, P
 from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
 from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
 
-from opendrop.fit.needle import needle_fit
+from opendrop.fit import needle_fit
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.geometry import Vector2

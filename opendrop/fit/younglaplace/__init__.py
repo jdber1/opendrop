@@ -8,7 +8,7 @@ from .model import YoungLaplaceModel
 from .guess import young_laplace_guess
 
 
-__all__ = ('young_laplace_fit',)
+__all__ = ('YoungLaplaceFitResult', 'young_laplace_fit',)
 
 
 DELTA_TOL     = 1.e-8
