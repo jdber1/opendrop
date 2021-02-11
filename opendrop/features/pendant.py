@@ -6,10 +6,10 @@ import numpy as np
 from opendrop.geometry import Line2, Rect2
 
 
-__all__ = ('detect_pendant_features',)
+__all__ = ('label_pendant_edges',)
 
 
-def detect_pendant_features(
+def label_pendant_edges(
         image,
         baseline: Line2,
         *,
