@@ -429,6 +429,14 @@ class Rect2(_PlainRect2[NumberT_co]):
         return self.y0
 
     @property
+    def xc(self) -> NumberT_co:
+        return (self.x0 + self.x1)/2
+
+    @property
+    def yc(self) -> NumberT_co:
+        return (self.y0 + self.y1)/2
+
+    @property
     def w(self) -> NumberT_co:
         return self.x1 - self.x0
 
@@ -447,6 +455,10 @@ class Rect2(_PlainRect2[NumberT_co]):
     @property
     def position(self) -> Vector2[NumberT_co]:
         return Vector2(self.x, self.y)
+
+    @property
+    def center(self) -> Vector2[NumberT_co]:
+        return Vector2(self.xc, self.yc)
 
     @property
     def size(self) -> Vector2[NumberT_co]:
