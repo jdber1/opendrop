@@ -35,7 +35,7 @@ def needle_guess(data: np.ndarray) -> Sequence[float]:
 
 def _guess_line_direction(data: np.ndarray) -> np.ndarray:
     x0 = data[:, 0]
-    dists = np.argsort(np.linalg.norm(data - x0.reshape(2, 1), axis=1))
+    dists = np.argsort(np.linalg.norm(data - x0.reshape(2, 1), axis=0))
     x1 = data[:, dists[-1]]
 
     return (x1 - x0)/np.linalg.norm(x1 - x0)
