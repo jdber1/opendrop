@@ -3,13 +3,6 @@ Getting Started
 ###############
 
 ******************************
-Windows
-******************************
-
-Download the Windows executables from the releases page:
-https://github.com/jdber1/opendrop/releases/
-
-******************************
 Installing as a Python package
 ******************************
 
@@ -23,7 +16,7 @@ Ubuntu 16.04+/Debian 9+
 
 #. Follow the `installation instructions here <https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-logo-ubuntu-debian-logo-debian>`_ for installing PyGObject and GTK.
 
-#. Use pip to install Opendrop from the repository by running::
+#. Use pip to install OpenDrop from the repo::
 
        pip install git+https://github.com/jdber1/opendrop.git
 
@@ -52,11 +45,11 @@ macOS
 
    - or if MacPorts was used, run::
 
-         sudo port install py35-gobject3 gtk3
+         sudo port install py36-gobject3 gtk3
 
-     (Instead of the ``py35-`` prefix, use ``py36-`` or ``py37-`` if Python 3.6/3.7 is the version installed.)
+     (Instead of the ``py36-`` prefix, use ``py37-`` or ``py38-`` if Python 3.7/3.8 is the version installed.)
 
-4. Use pip to install OpenDrop from the repository by running::
+4. Use pip to install OpenDrop from the repo::
 
        pip install git+https://github.com/jdber1/opendrop.git
 
@@ -64,6 +57,16 @@ macOS
 
 5. Run ``python3 -m opendrop`` to launch the app.
 
+
+******************************
+Windows
+******************************
+
+Installing OpenDrop as a Python package is possible on Windows using the likes of MSYS2 or Anaconda but the
+process is not very straight forward.
+
+Stand-alone binaries for Windows are provided for certain major releases and do not require the installation of
+additional software: https://github.com/jdber1/opendrop/releases/.
 
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
