@@ -16,7 +16,7 @@
 
 .. include:: ../README.rst
     :start-after: |
-    :end-before: ----
+    :end-before: *********
 
 For installation instructions, see ":doc:`getting_started/index`".
 
@@ -25,5 +25,5 @@ For installation instructions, see ":doc:`getting_started/index`".
 | **Git repo:**
 | https://github.com/jdber1/opendrop/
 
-| **For any questions, issues, or feedback:**
+| **Questions, issues, or feedback:**
 | https://github.com/jdber1/opendrop/issues
