@@ -35,7 +35,20 @@ from pathlib import Path
 from types import ModuleType
 from typing import Union, Type, List, Iterable, TypeVar
 
+import numpy as np
+
+
 T = TypeVar('T')
+
+
+def rotation_mat2d(theta: float) -> np.ndarray:
+    c = np.cos(theta)
+    s = np.sin(theta)
+
+    return np.array(
+        [[c, -s],
+         [s,  c]]
+    )
 
 
 def recursive_load(pkg: Union[ModuleType, str]) -> List[ModuleType]:
