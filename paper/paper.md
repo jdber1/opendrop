@@ -20,23 +20,21 @@ authors:
     affiliation: 3
   - name: Raymond R. Dagastine
     orcid: 0000-0002-2154-4846
-    affiliation: 4
+    affiliation: 1
   - name: Rico F. Tabor
     orcid: 0000-0003-2926-0095
     affiliation: 2
   - name: Joseph D. Berry
     orcid: 0000-0002-0961-7782
-    affiliation: 4
+    affiliation: 1
 affiliations:
- - name: School of Physics, University of Melbourne, Parkville 3010, Australia
+ - name: Department of Chemical Engineering, University of Melbourne, Parkville 3010, Australia
    index: 1
  - name: School of Chemistry, Monash University, Clayton 3800, Australia
    index: 2
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 3
- - name: Department of Chemical Engineering, University of Melbourne, Parkville 3010, Australia
-   index: 4
-date: 3 February 2020
+ date: 3 February 2020
 bibliography: paper.bib
 ---
 
