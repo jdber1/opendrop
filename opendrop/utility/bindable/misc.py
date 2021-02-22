@@ -10,4 +10,13 @@ def _general_purpose_equality_check(x: Any, y: Any) -> bool:
     elif isinstance(x, np.ndarray) or isinstance(y, np.ndarray):
         return np.array_equal(x, y)
     else:
-        return x == y
+        try:
+            if len(x) != len(y):
+                return False
+
+            return all(
+                _general_purpose_equality_check(xi, yi)
+                for xi, yi in zip(x, y)
+            )
+        except TypeError:
+            return x == y
