@@ -34,7 +34,7 @@ affiliations:
    index: 2
  - name: Computing and Information Systems, University of Melbourne, Parkville 3010, Australia
    index: 3
- date: 3 February 2020
+date: 3 February 2020
 bibliography: paper.bib
 ---
 
