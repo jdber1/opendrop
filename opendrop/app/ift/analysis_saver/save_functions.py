@@ -230,8 +230,8 @@ def _save_ift_figure(drops: Sequence[PendantAnalysisJob], out_file, fig_size: Tu
     )
 
     fig = simple_grapher(
-        'Time (s)',
-        'Interfacial tension (mN m⁻¹)',
+        'Time [s]',
+        'Interfacial tension [mN m⁻¹]',
         *zip(*data),
         marker='.',
         line_style='-',
@@ -260,8 +260,8 @@ def _save_volume_figure(drops: Sequence[PendantAnalysisJob], out_file, fig_size:
     )
 
     fig = simple_grapher(
-        'Time (s)',
-        'Volume (mm³)',
+        'Time [s]',
+        'Volume [mm³]',
         *zip(*data),
         marker='.',
         line_style='-',
@@ -290,8 +290,8 @@ def _save_surface_area_figure(drops: Sequence[PendantAnalysisJob], out_file, fig
     )
 
     fig = simple_grapher(
-        'Time (s)',
-        'Surface area (mm²)',
+        'Time [s]',
+        'Surface area [mm²]',
         *zip(*data),
         marker='.',
         line_style='-',
@@ -306,17 +306,17 @@ def _save_surface_area_figure(drops: Sequence[PendantAnalysisJob], out_file, fig
 def _save_timeline_data(drops: Sequence[PendantAnalysisJob], out_file) -> None:
     writer = csv.writer(out_file)
     writer.writerow([
-        'Time (s)',
-        'IFT (N/m)',
-        'Volume (m3)',
-        'Surface area (m2)',
-        'Apex radius (m)',
-        'Worthington',
-        'Bond number',
-        'Image angle (degrees)',
-        'Apex x-coordinate (px)',
-        'Apex y-coordinate (px)',
-        'Needle width (px)',
+        'Time [s]',
+        'IFT [N/m]',
+        'Volume [m3]',
+        'Surface [m2]',
+        'Radius [m]',
+        'Worth.',
+        'Bond',
+        'Rotation [deg.]',
+        'Apex x [px]',
+        'Apex y [px]',
+        'Needle width [px]',
     ])
 
     for drop in drops:
