@@ -1,9 +1,10 @@
-from typing import Sequence, Tuple, Union, Optional
 import math
+from typing import Sequence, Tuple, Union, Optional
 
-import cv2
 import cairo
+import cv2
 from gi.repository import GObject
+import numpy as np
 
 from opendrop.geometry import Rect2
 
@@ -71,7 +72,11 @@ class PolylineArtist(Artist):
         if len(polyline) <= 1:
             return
 
-        polyline = cv2.approxPolyDP(polyline, epsilon=1.0, closed=False).reshape(-1, 2)
+        polyline = cv2.approxPolyDP(
+            np.asarray(polyline, dtype=np.float32),
+            epsilon=1.0,
+            closed=False
+        ).reshape(-1, 2)
 
         points_it = iter(polyline)
         cr.move_to(*next(points_it))
