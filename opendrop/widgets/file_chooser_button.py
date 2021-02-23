@@ -33,37 +33,41 @@ from gi.repository import Gtk, GObject
 
 
 class FileChooserButton(Gtk.Button):
-    def __init__(self, label: str = 'Choose files', dialog_title: str = 'Select files',
-                 file_filter: Optional[Gtk.FileFilter] = None, select_multiple: bool = False, *args, **kwargs):
+    def __init__(
+            self,
+            label: str = 'Choose files',
+            dialog_title: str = 'Select files',
+            file_filter: Optional[Gtk.FileFilter] = None,
+            select_multiple: bool = False,
+            *args,
+            **kwargs
+    ):
         super().__init__(label=label, *args, **kwargs)
 
         self._no_files_label = label
-        self._file_paths = tuple()  # type: Tuple[str]
+        self._file_paths: Tuple[str] = tuple()
 
         self.dialog_title = dialog_title
         self.file_filter = file_filter
         self.select_multiple = select_multiple
 
-        self._active_dialog = None  # type: Optional[Gtk.FileChooserDialog]
+        self._active_dialog: Optional[Gtk.FileChooserNative] = None
 
     def do_clicked(self) -> None:
         if self._active_dialog is not None:
             return
 
-        self._active_dialog = Gtk.FileChooserDialog(
+        self._active_dialog = Gtk.FileChooserNative.new(
             title=self.dialog_title,
             parent=self.get_toplevel(),
-            modal=True,
             action=Gtk.FileChooserAction.OPEN,
-            select_multiple=self.select_multiple,
-            filter=self.file_filter,
-            buttons=(
-                'Cancel', Gtk.ResponseType.CANCEL,
-                'Open', Gtk.ResponseType.ACCEPT
-            ),
+            accept_label='Open',
+            cancel_label='Cancel',
         )
 
-        self._active_dialog.connect('destroy', lambda *_: setattr(self, '_active_dialog', None))
+        self._active_dialog.props.modal = True
+        self._active_dialog.props.select_multiple = True
+        self._active_dialog.props.filter = self.file_filter
 
         def hdl_file_chooser_dialog_response(dialog: Gtk.FileChooserDialog, response: Gtk.ResponseType):
             if response == Gtk.ResponseType.ACCEPT:
@@ -74,6 +78,7 @@ class FileChooserButton(Gtk.Button):
             #     Gtk.ResponseType.CLOSE
 
             dialog.destroy()
+            self._active_dialog = None
 
         self._active_dialog.connect('response', hdl_file_chooser_dialog_response)
         self._active_dialog.show()
