@@ -102,7 +102,6 @@ def _save_individual(drop: PendantAnalysisJob, drop_dir_name: str, options: IFTA
     full_dir.mkdir(parents=True)
 
     _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
-    _save_drop_image_annotated(drop, out_file_path=full_dir / 'image_annotated.png')
 
     with (full_dir/'params.ini').open('w') as out_file:
         _save_drop_params(drop, out_file=out_file)
@@ -136,72 +135,6 @@ def _save_drop_image(drop: PendantAnalysisJob, out_file_path: Path) -> None:
     image = drop.bn_image.get()
     if image is None:
         return
-
-    cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-
-
-def _save_drop_image_annotated(drop: PendantAnalysisJob, out_file_path: Path) -> None:
-    image = drop.bn_image.get()
-    if image is None:
-        return
-
-    # Draw on a copy
-    image = image.copy()
-
-    needle_profile_extract = drop.bn_needle_profile_extract.get()
-    if needle_profile_extract is not None:
-        # Draw extracted needle edges
-        image = cv2.polylines(
-            img=image,
-            pts=needle_profile_extract,
-            isClosed=False,
-            color=(0, 128, 255),
-            thickness=1,
-            lineType=cv2.LINE_AA)
-
-    drop_profile_extract = drop.bn_drop_profile_extract.get()
-    if drop_profile_extract is not None:
-        # Draw extracted drop profile
-        image = cv2.polylines(
-            img=image,
-            pts=[drop_profile_extract],
-            isClosed=False,
-            color=(0, 128, 255),
-            thickness=1,
-            lineType=cv2.LINE_AA)
-
-    # Draw fitted drop profile
-    drop_contour_fit = drop.bn_drop_profile_fit.get()
-    if drop_contour_fit is not None:
-        drop_contour_fit = drop_contour_fit.astype(int)
-        image = cv2.polylines(
-            img=image,
-            pts=[drop_contour_fit],
-            isClosed=False,
-            color=(255, 0, 128),
-            thickness=1,
-            lineType=cv2.LINE_AA)
-
-    needle_region = drop.bn_needle_region.get()
-    if needle_region is not None:
-        # Draw needle region
-        image = cv2.rectangle(
-            img=image,
-            pt1=tuple(needle_region.pt0),
-            pt2=tuple(needle_region.pt1),
-            color=(13, 26, 255),
-            thickness=1)
-
-    drop_region = drop.bn_drop_region.get()
-    if drop_region is not None:
-        # Draw drop region
-        image = cv2.rectangle(
-            img=image,
-            pt1=tuple(drop_region.pt0),
-            pt2=tuple(drop_region.pt1),
-            color=(255, 26, 13),
-            thickness=1,
-        )
 
     cv2.imwrite(str(out_file_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
