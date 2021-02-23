@@ -101,25 +101,25 @@ def _save_individual(drop: PendantAnalysisJob, drop_dir_name: str, options: IFTA
     full_dir = options.save_root_dir/drop_dir_name
     full_dir.mkdir(parents=True)
 
-    _save_drop_image(drop, out_file_path=full_dir / 'image_original.png')
+    _save_drop_image(drop, out_file_path=full_dir / 'image.png')
 
     with (full_dir/'params.ini').open('w') as out_file:
         _save_drop_params(drop, out_file=out_file)
 
-    with (full_dir/'profile_extracted.csv').open('wb') as out_file:
+    with (full_dir/'extracted.csv').open('wb') as out_file:
         _save_drop_contour(drop, out_file=out_file)
 
-    with (full_dir/'profile_fit.csv').open('wb') as out_file:
+    with (full_dir/'fit.csv').open('wb') as out_file:
         _save_drop_contour_fit(drop, out_file=out_file)
 
-    with (full_dir/'profile_fit_residuals.csv').open('wb') as out_file:
+    with (full_dir/'residuals.csv').open('wb') as out_file:
         _save_drop_contour_fit_residuals(drop, out_file=out_file)
 
     drop_residuals_figure_opts = options.drop_residuals_figure_opts
     if drop_residuals_figure_opts.bn_should_save.get():
         fig_size = drop_residuals_figure_opts.size
         dpi = drop_residuals_figure_opts.bn_dpi.get()
-        with (full_dir/'profile_fit_residuals_plot.png').open('wb') as out_file:
+        with (full_dir/'residuals_plot.png').open('wb') as out_file:
             _save_drop_contour_fit_residuals_figure(
                 drop=drop,
                 out_file=out_file,
