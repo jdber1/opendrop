@@ -78,6 +78,9 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
     arkode_mem = ERKStepCreate(arkrhs, RCONST(0.0), nv);
     if (arkode_mem == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
+    flag = ERKStepSetStopTime(arkode_mem, MAX_ARCLENGTH);
+    if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetStopTime() failed.");
+
     flag = ERKStepRootInit(arkode_mem, 1, arkroot);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepRootInit() failed.");
 
@@ -93,6 +96,9 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
 
     arkode_mem_DBo = ERKStepCreate(arkrhs_DBo, RCONST(0.0), nv_DBo);
     if (arkode_mem_DBo == NULL) throw std::runtime_error("ERKStepCreate() failed.");
+
+    flag = ERKStepSetStopTime(arkode_mem_DBo, MAX_ARCLENGTH);
+    if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetStopTime() failed.");
 
     flag = ERKStepSetUserData(arkode_mem_DBo, (void *) this);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetUserData() failed.");
@@ -457,7 +463,7 @@ YoungLaplaceShape<realtype>::step_DBo()
     dy_ds[0] = NV_Ith_S(nv_DBo, 2);
     dy_ds[1] = NV_Ith_S(nv_DBo, 3);
 
-    ode_DBo(this, bond, y, dy_ds, d2y_ds2);
+    ode_DBo(this, tcur, y, dy_ds, d2y_ds2);
 
     dense_DBo.push_back(tcur, y, dy_ds, d2y_ds2);
 }
@@ -490,6 +496,12 @@ template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
 arkrhs_DBo(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+    if (s > MAX_ARCLENGTH) {
+        // s outside of domain.
+        // Return a positive number to indicate a recoverable error.
+        return 1;
+    }
+
     auto self = static_cast<YoungLaplaceShape<realtype> *>(user_data);
 
     const detail::sunreal *y = NV_DATA_S(nv);
@@ -512,6 +524,12 @@ template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
 arkrhs_vol(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+    if (s > MAX_ARCLENGTH) {
+        // s outside of domain.
+        // Return a positive number to indicate a recoverable error.
+        return 1;
+    }
+
     auto self = static_cast<YoungLaplaceShape<realtype> *>(user_data);
 
     ode_vol(self, s, NV_DATA_S(nv), NV_DATA_S(nvdot));
@@ -525,6 +543,12 @@ template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
 arkrhs_surf(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+    if (s > MAX_ARCLENGTH) {
+        // s outside of domain.
+        // Return a positive number to indicate a recoverable error.
+        return 1;
+    }
+
     auto self = static_cast<YoungLaplaceShape<realtype> *>(user_data);
 
     ode_surf(self, s, NV_DATA_S(nv), NV_DATA_S(nvdot));
