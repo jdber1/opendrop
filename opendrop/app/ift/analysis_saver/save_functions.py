@@ -57,6 +57,9 @@ def save_drops(drops: Iterable[PendantAnalysisJob], options: IFTAnalysisSaverOpt
         drop_dir_name = dir_name + '{n:0>{padding}}'.format(n=(i+1), padding=padding)  # i+1 for 1-based indexing.
         _save_individual(drop, drop_dir_name, options)
 
+    with (full_dir/'timeline.csv').open('w', newline='') as out_file:
+        _save_timeline_data(drops, out_file)
+
     if len(drops) <= 1:
         return
 
@@ -92,9 +95,6 @@ def save_drops(drops: Iterable[PendantAnalysisJob], options: IFTAnalysisSaverOpt
                 out_file=out_file,
                 fig_size=fig_size,
                 dpi=dpi)
-
-    with (full_dir/'timeline.csv').open('w', newline='') as out_file:
-        _save_timeline_data(drops, out_file)
 
 
 def _save_individual(drop: PendantAnalysisJob, drop_dir_name: str, options: IFTAnalysisSaverOptions) -> None:
