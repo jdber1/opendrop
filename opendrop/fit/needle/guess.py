@@ -10,15 +10,9 @@ from .types import NeedleParam
 from .hough import hough
 
 
-_rng = np.random.default_rng()
-
-
 def needle_guess(data: np.ndarray) -> Sequence[float]:
     params = np.empty(len(NeedleParam))
     data = data.astype(float)
-
-    if data.shape[1] > 200:
-        data = _rng.choice(data, size=100, replace=False, axis=1)
 
     extents = Rect2(data.min(axis=1), data.max(axis=1))
     diagonal = int(math.ceil((extents.w**2 + extents.h**2)**0.5))
@@ -44,10 +38,10 @@ def needle_guess(data: np.ndarray) -> Sequence[float]:
     scores = scipy.ndimage.gaussian_filter(needles[:, 2], sigma=10, mode='wrap')
     needle_i = scores.argmax()
     
-    theta = (needle_i/len(needles)) * np.pi + np.pi/2
+    theta = -np.pi/2 + (needle_i/len(needles)) * np.pi
     rho, radius = needles[needle_i][:2]
 
-    rho_offset = np.cos(theta)*extents.xc - np.sin(theta)*extents.yc
+    rho_offset = np.cos(theta)*extents.xc + np.sin(theta)*extents.yc
     rho += rho_offset
 
     params[NeedleParam.ROTATION] = theta
