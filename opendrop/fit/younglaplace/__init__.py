@@ -14,6 +14,7 @@ __all__ = ('YoungLaplaceFitResult', 'young_laplace_fit',)
 DELTA_TOL     = 1.e-8
 GRADIENT_TOL  = 1.e-8
 OBJECTIVE_TOL = 1.e-8
+MAX_STEPS     = 10
 
 
 class YoungLaplaceFitResult(NamedTuple):
@@ -54,6 +55,7 @@ def young_laplace_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False
         xtol=DELTA_TOL,
         gtol=GRADIENT_TOL,
         verbose=2 if verbose else 0,
+        max_nfev=MAX_STEPS,
     )
 
     # Update model parameters to final result.
