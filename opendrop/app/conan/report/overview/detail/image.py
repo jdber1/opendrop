@@ -140,7 +140,7 @@ class ConanReportOverviewImagePresenter(Presenter[Gtk.Container]):
 
         image = analysis.bn_image.get()
         if image is not None:
-            self.bg_artist.set_rgbarray(image)
+            self.bg_artist.set_array(image)
             self.bg_artist.props.extents = Rect2(0, 0, image.shape[1], image.shape[0])
             self.canvas.set_content_size(image.shape[1], image.shape[0])
             self.canvas.zoom(0.0)

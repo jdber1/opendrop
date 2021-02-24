@@ -51,6 +51,7 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
     def after_view_init(self) -> None:
         from matplotlib.figure import Figure
         from matplotlib.image import AxesImage
+        from matplotlib.colors import Normalize
         from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo
 
         figure = Figure(tight_layout=True)
@@ -69,7 +70,7 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
         for item in (*self.axes.get_xticklabels(), *self.axes.get_yticklabels()):
             item.set_fontsize(8)
 
-        self.axes_image = AxesImage(ax=self.axes)
+        self.axes_image = AxesImage(ax=self.axes, cmap='gray', norm=Normalize(0, 255))
 
         # Placeholder transparent 1x1 image (rgba format)
         self.axes_image.set_data(np.zeros((1, 1, 4)))

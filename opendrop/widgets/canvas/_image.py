@@ -2,6 +2,7 @@ import sys
 from typing import Optional
 
 import cairo
+import cv2
 from gi.repository import GObject, Gdk
 import numpy as np
 
@@ -54,13 +55,31 @@ class ImageArtist(Artist):
             int(extents.h + 2)
         ))
 
-    def set_rgbarray(self, arr: np.ndarray) -> None:
-        data = np.pad(arr, pad_width=[(0, 0), (0, 0), (1, 0)], constant_values=0).view(np.uint32)
-        if sys.byteorder == 'little':
-            data.byteswap(inplace=True)
-        width = arr.shape[1]
-        height = arr.shape[0]
-        self.set_data(data, cairo.Format.RGB24, width, height)
+    def set_array(self, arr: np.ndarray) -> None:
+        """If arr is a 2D array, it is interpreted as a grayscale image. If arr is a 3D array, it is
+        interpreted as an RGB (if last axis has length 3) or RGBA (if last axis has length 4).
+        """
+        if len(arr.shape) == 2:
+            data = cv2.cvtColor(arr, cv2.COLOR_GRAY2BGRA).view(np.uint32)
+            if sys.byteorder == 'big':
+                data.byteswap(inplace=True)
+        elif len(arr.shape) == 3:
+            if arr.shape[2] == 3:
+                data = cv2.cvtColor(arr, cv2.COLOR_RGB2BGRA).view(np.uint32)
+                if sys.byteorder == 'big':
+                    data.byteswap(inplace=True)
+            elif arr.shape[2] == 4:
+                data = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGRA).view(np.uint32)
+                if sys.byteorder == 'big':
+                    data.byteswap(inplace=True)
+            else:
+                raise ValueError(f"Unrecognized array shape, got {arr.shape}")
+        else:
+            raise ValueError(f"Array must be two or three-dimensional, got shape {arr.shape}")
+
+        width = data.shape[1]
+        height = data.shape[0]
+        self.set_data(data, cairo.Format.ARGB32, width, height)
 
     def set_data(self, data: memoryview, fmt: cairo.Format, width: int, height: int):
         if self._surface is not None and \

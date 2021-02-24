@@ -77,7 +77,7 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         width = image.shape[1]
         height = image.shape[0]
         self._bg_artist.extents = Rect2(0, 0, width, height)
-        self._bg_artist.set_rgbarray(image)
+        self._bg_artist.set_array(image)
         self._canvas.set_content_size(width, height)
 
         # Set zoom to minimum, i.e. scale image so it always fits.

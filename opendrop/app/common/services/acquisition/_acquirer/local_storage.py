@@ -48,21 +48,16 @@ class LocalStorageAcquirer(ImageSequenceAcquirer):
         # Sort image paths in lexicographic order, and ignore paths to directories.
         image_paths = sorted([p for p in map(Path, image_paths) if not p.is_dir()])
 
-        images = []  # type: MutableSequence[np.ndarray]
+        images: MutableSequence[np.ndarray] = []
         for image_path in image_paths:
-            image = cv2.imread(str(image_path))
+            # Load in grayscale to save memory.
+            image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
             if image is None:
-                raise ValueError(
-                    "Failed to load image from path '{}'"
-                    .format(image_path)
-                )
+                raise ValueError(f"Failed to load image from '{image_path}'")
 
-            # OpenCV loads images in BGR mode, but the rest of the app works with images in RGB, so convert the read
-            # image appropriately.
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image.flags.writeable = False
 
             images.append(image)
 
         self.bn_images.set(images)
         self.bn_last_loaded_paths.set(tuple(image_paths))
-
