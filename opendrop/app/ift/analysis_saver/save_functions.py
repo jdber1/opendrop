@@ -142,25 +142,13 @@ def _save_drop_image(drop: PendantAnalysisJob, out_file_path: Path) -> None:
 def _save_drop_params(drop: PendantAnalysisJob, out_file) -> None:
     root = configparser.ConfigParser(allow_no_value=True)
     root.read_dict(OrderedDict((
-        ('Physical', OrderedDict((
-            ('; all quantities are in SI units', None),
-            ('timestamp', format(drop.bn_image_timestamp.get(), '.3g')),
-            ('interfacial_tension', format(drop.bn_interfacial_tension.get(), '.3g')),
-            ('volume', format(drop.bn_volume.get(), '.3g')),
-            ('surface_area', format(drop.bn_surface_area.get(), '.3g')),
-            ('apex_radius', format(drop.bn_apex_radius.get(), '.3g')),
-            ('worthington', format(drop.bn_worthington.get(), '.3g')),
-            ('bond_number', format(drop.bn_bond_number.get(), '.3g')),
-        ))),
-        ('Image', OrderedDict((
+        ('Feature', OrderedDict((
             ('; regions are defined by (left, top, right, bottom) tuples', None),
             ('drop_region', tuple(drop.bn_drop_region.get())),
             ('needle_region', tuple(drop.bn_needle_region.get())),
-            ('apex_coordinates', '({0.x:.1f}, {0.y:.1f})'.format(drop.bn_apex_coords_px.get())),
-            ('; needle width in pixels', None),
-            ('needle_width', format(drop.bn_needle_width_px.get(), '.3g')),
-            ('; angle is in degrees (positive is counter-clockwise)', None),
-            ('image_angle', format(math.degrees(drop.bn_rotation.get()), '.3g')),
+            ('; canny edge detection thresholds', None),
+            ('thresh1', drop.bn_canny_min.get()),
+            ('thresh2', drop.bn_canny_max.get()),
         ))),
     )))
 
