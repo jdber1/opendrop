@@ -34,9 +34,9 @@ from opendrop.app.common.services.acquisition import ImageAcquisitionService
 from opendrop.app.common.image_processing.plugins.define_region import (
     DefineRegionPluginModel,
 )
-from opendrop.app.ift.services.edges import (
-    PendantEdgeDetectionParamsFactory,
-    PendantEdgeDetectionService,
+from opendrop.app.ift.services.features import (
+    PendantFeaturesParamsFactory,
+    PendantFeaturesService,
 )
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
@@ -53,8 +53,8 @@ class IFTImageProcessingModel:
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionService,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
+            features_params_factory: PendantFeaturesParamsFactory,
+            features_service: PendantFeaturesService,
     ) -> None:
         self._image_acquisition = image_acquisition
 
@@ -65,23 +65,23 @@ class IFTImageProcessingModel:
         )
 
         self.drop_region_plugin = DefineRegionPluginModel(
-            in_region=GObjectPropertyBindable(edge_det_params, 'drop-region'),
+            in_region=GObjectPropertyBindable(features_params_factory, 'drop-region'),
             in_clip=region_clip,
         )
 
         self.needle_region_plugin = DefineRegionPluginModel(
-            in_region=GObjectPropertyBindable(edge_det_params, 'needle-region'),
+            in_region=GObjectPropertyBindable(features_params_factory, 'needle-region'),
             in_clip=region_clip,
         )
 
         self.edge_detection_plugin = EdgeDetectionPluginModel(
-            edge_det_params=edge_det_params,
+            features_params_factory=features_params_factory,
         )
 
         self.preview_plugin = IFTPreviewPluginModel(
             image_acquisition=image_acquisition,
-            edge_det_params=edge_det_params,
-            edge_det_service=edge_det_service,
+            features_params_factory=features_params_factory,
+            features_service=features_service,
         )
 
     def _get_region_clip(self) -> Optional[Rect2[int]]:

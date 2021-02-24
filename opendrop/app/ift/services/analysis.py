@@ -33,16 +33,18 @@ import time
 from asyncio import Future
 from enum import Enum
 from typing import Optional
-from injector import inject
+from injector import inject, Injector
 
 import numpy as np
 
 from opendrop.app.common.services.acquisition import InputImage
-from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
+from opendrop.app.ift.services.features import (
+    PendantFeatures,
+    PendantFeaturesParamsFactory,
+    PendantFeaturesService,
+)
 from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
 from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
-
-from opendrop.fit import needle_fit
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.geometry import Vector2
@@ -53,26 +55,13 @@ PI = math.pi
 
 class PendantAnalysisService:
     @inject
-    def __init__(
-            self,
-            *,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
-            ylfit_service: YoungLaplaceFitService,
-            phys_params: PendantPhysicalParamsFactory,
-    ) -> None:
-        self._edge_det_params = edge_det_params
-        self._edge_det_service = edge_det_service
-        self._ylfit_service = ylfit_service
-        self._phys_params = phys_params
+    def __init__(self, *, injector: Injector) -> None:
+        self._injector = injector
 
     def analyse(self, image: InputImage) -> 'PendantAnalysisJob':
-        return PendantAnalysisJob(
-            image,
-            edge_det_params=self._edge_det_params,
-            edge_det_service=self._edge_det_service,
-            ylfit_service=self._ylfit_service,
-            phys_params=self._phys_params,
+        return self._injector.create_object(
+            PendantAnalysisJob,
+            {'input_image': image},
         )
 
 
@@ -90,21 +79,22 @@ class PendantAnalysisJob:
         def __str__(self) -> str:
             return self.display_name
 
+    @inject
     def __init__(
             self,
             input_image: InputImage,
             *,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
+            physical_params_factory: PendantPhysicalParamsFactory,
+            features_params_factory: PendantFeaturesParamsFactory,
+            features_service: PendantFeaturesService,
             ylfit_service: YoungLaplaceFitService,
-            phys_params: PendantPhysicalParamsFactory,
     ) -> None:
         self._loop = asyncio.get_event_loop()
 
-        self._edge_det_params = edge_det_params
-        self._phys_params = phys_params
+        self._features_params_factory = features_params_factory
+        self._physical_params_factory = physical_params_factory
 
-        self._edge_det_service = edge_det_service
+        self._features_service = features_service
         self._ylfit_service = ylfit_service
 
         self._time_start = time.time()
@@ -144,8 +134,9 @@ class PendantAnalysisJob:
         # Attributes from FeatureExtractor
         self.bn_drop_region = VariableBindable(None)
         self.bn_needle_region = VariableBindable(None)
+        self.bn_canny_min = VariableBindable(None)
+        self.bn_canny_max = VariableBindable(None)
         self.bn_drop_profile_extract = VariableBindable(None)
-        self.bn_needle_profile_extract = VariableBindable(None)
         self.bn_needle_width_px = VariableBindable(math.nan)
 
         self.bn_is_done = AccessorBindable(getter=self._get_is_done)
@@ -157,12 +148,12 @@ class PendantAnalysisJob:
         self.bn_status.on_changed.connect(self.bn_is_done.poke)
         self.bn_status.on_changed.connect(self.bn_progress.poke)
 
-        self._loop.create_task(self._input_image.read()).add_done_callback(self._hdl_input_image_read)
+        self._loop.create_task(self._input_image.read()).add_done_callback(self._input_image_read_done)
 
-        self._extracted_features = None
-        self._young_laplace_fit = None
+        self._features = None
+        self._ylfit = None
 
-    def _hdl_input_image_read(self, read_task: Future) -> None:
+    def _input_image_read_done(self, read_task: Future) -> None:
         if read_task.cancelled():
             self.cancel()
             return
@@ -171,9 +162,9 @@ class PendantAnalysisJob:
             return
 
         image, image_timestamp = read_task.result()
-        self._start_fit(image, image_timestamp)
+        self._image_ready(image, image_timestamp)
 
-    def _start_fit(self, image: np.ndarray, image_timestamp: float) -> None:
+    def _image_ready(self, image: np.ndarray, image_timestamp: float) -> None:
         assert self._image is None
 
         self._image = image
@@ -182,19 +173,23 @@ class PendantAnalysisJob:
         # Set given image to be readonly to prevent introducing some accidental bugs.
         self._image.flags.writeable = False
 
-        edge_det_params = self._edge_det_params.create()
-        self.bn_drop_region.set(edge_det_params.drop_region)
-        self.bn_needle_region.set(edge_det_params.needle_region)
+        features_params = self._features_params_factory.create()
+        self.bn_drop_region.set(features_params.drop_region)
+        self.bn_needle_region.set(features_params.needle_region)
+        self.bn_canny_max.set(features_params.thresh2)
+        self.bn_canny_min.set(features_params.thresh1)
 
-        self._extracted_features = self._edge_det_service.detect(image, edge_det_params)
-        self._extracted_features.add_done_callback(self._edge_det_done)
+        self._features = self._features_service.extract(image, features_params)
+        self._features.add_done_callback(self._features_done)
 
         self.bn_image.poke()
         self.bn_image_timestamp.poke()
 
         self.bn_status.set(self.Status.FITTING)
 
-    def _edge_det_done(self, fut: asyncio.Future) -> None:
+    def _features_done(self, fut: asyncio.Future) -> None:
+        features: PendantFeatures
+
         if fut.cancelled():
             self.cancel()
             return
@@ -203,54 +198,59 @@ class PendantAnalysisJob:
         except Exception as e:
             raise e
 
-        self.bn_drop_profile_extract.set(features.drop_edge)
-        self.bn_needle_profile_extract.set((features.needle_left_edge, features.needle_right_edge))
+        self.bn_drop_profile_extract.set(features.drop_points.T)
+        self.bn_needle_width_px.set(features.needle_diameter)
 
-        needle_edge = np.concatenate((features.needle_left_edge, features.needle_right_edge))
-        self.bn_needle_width_px.set(2 * needle_fit(needle_edge.T).radius)
+        self._ylfit = self._ylfit_service.fit(features.drop_points)
+        self._ylfit.add_done_callback(self._ylfit_done)
 
-        self._young_laplace_fit = self._ylfit_service.fit(features.drop_edge.T)
-        self._young_laplace_fit.add_done_callback(self._young_laplace_fit_done)
-
-    def _young_laplace_fit_done(self, fut: asyncio.Future) -> None:
-        fit_result: YoungLaplaceFitResult
+    def _ylfit_done(self, fut: asyncio.Future) -> None:
+        result: YoungLaplaceFitResult
 
         if fut.cancelled():
             self.cancel()
             return
         try:
-            fit_result = fut.result()
+            result = fut.result()
         except Exception as e:
             raise e
 
-        phys_params = self._phys_params.create()
+        physical_params = self._physical_params_factory.create()
+        drop_density = physical_params.drop_density
+        continuous_density = physical_params.continuous_density
+        needle_diameter = physical_params.needle_diameter
+        gravity = physical_params.gravity
+
+        bond = result.bond
+        apex_x = result.apex_x
+        apex_y = result.apex_y
+        rotation = result.rotation
+        residuals = result.residuals
+        closest = result.closest
+        arclengths = result.arclengths
+        radius_px = result.radius
+        surface_area_px = result.surface_area
+        volume_px = result.volume
+
+        # Keep rotation angle between -90 to 90 degrees.
+        rotation = (rotation + np.pi/2) % np.pi - np.pi/2
 
         needle_diameter_px = self.bn_needle_width_px.get()
-        needle_diameter = phys_params.needle_diameter
-        px_size = needle_diameter/needle_diameter_px
+        if needle_diameter_px is not None:
+            px_size = needle_diameter/needle_diameter_px
+            delta_density = abs(drop_density - continuous_density)
 
-        bond = fit_result.bond
-        radius_px = fit_result.radius
-        apex_x = fit_result.apex_x
-        apex_y = fit_result.apex_y
-        rotation = fit_result.rotation
-        residuals = fit_result.residuals
-        closest = fit_result.closest
-        arclengths = fit_result.arclengths
-        surface_area_px = fit_result.surface_area
-        volume_px = fit_result.volume
-
-        gravity = phys_params.gravity
-        drop_density = phys_params.drop_density
-        continuous_density = phys_params.continuous_density
-
-        radius = radius_px * px_size
-        surface_area = surface_area_px * px_size**2
-        volume = volume_px * px_size**3
-
-        delta_density = abs(drop_density - continuous_density)
-        ift = delta_density * gravity * radius**2 / bond
-        worthington = (delta_density * gravity * volume) / (PI * ift * needle_diameter)
+            radius = radius_px * px_size
+            surface_area = surface_area_px * px_size**2
+            volume = volume_px * px_size**3
+            ift = delta_density * gravity * radius**2 / bond
+            worthington = (delta_density * gravity * volume) / (PI * ift * needle_diameter)
+        else:
+            radius = math.nan
+            surface_area = math.nan
+            volume = math.nan
+            ift = math.nan
+            worthington = math.nan
 
         self.bn_bond_number.set(bond)
         self.bn_apex_coords_px.set(Vector2(apex_x, apex_y))
@@ -258,7 +258,7 @@ class PendantAnalysisJob:
         self.bn_rotation.set(rotation)
         self.bn_residuals.set(residuals)
         self.bn_arclengths.set(arclengths)
-        self.bn_drop_profile_fit.set(closest.T)
+        self.bn_drop_profile_fit.set(closest.T[np.argsort(arclengths)])
 
         self.bn_apex_radius.set(radius)
         self.bn_surface_area.set(surface_area)
@@ -276,11 +276,11 @@ class PendantAnalysisJob:
         if self.bn_status.get() is self.Status.WAITING_FOR_IMAGE:
             self._input_image.cancel()
 
-        if self._extracted_features is not None:
-            self._extracted_features.cancel()
+        if self._features is not None:
+            self._features.cancel()
 
-        if self._young_laplace_fit is not None:
-            self._young_laplace_fit.cancel()
+        if self._ylfit is not None:
+            self._ylfit.cancel()
 
         self.bn_status.set(self.Status.CANCELLED)
 

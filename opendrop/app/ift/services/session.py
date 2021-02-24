@@ -37,7 +37,7 @@ from opendrop.app.ift.analysis_saver import IFTAnalysisSaverOptions
 from opendrop.app.ift.analysis_saver.save_functions import save_drops
 
 from .analysis import PendantAnalysisService, PendantAnalysisJob
-from .edges import PendantEdgeDetectionService, PendantEdgeDetectionParamsFactory
+from .features import PendantFeaturesParamsFactory, PendantFeaturesService
 from .quantities import PendantPhysicalParamsFactory
 from .younglaplace import YoungLaplaceFitService
 
@@ -46,10 +46,10 @@ class IFTSessionModule(Module):
     def configure(self, binder: Binder):
         binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
 
-        binder.bind(PendantEdgeDetectionParamsFactory, scope=singleton)
         binder.bind(PendantPhysicalParamsFactory, scope=singleton)
+        binder.bind(PendantFeaturesParamsFactory, scope=singleton)
 
-        binder.bind(PendantEdgeDetectionService, scope=singleton)
+        binder.bind(PendantFeaturesService, scope=singleton)
         binder.bind(YoungLaplaceFitService, scope=singleton)
 
         binder.bind(PendantAnalysisService, scope=singleton)
@@ -62,7 +62,7 @@ class IFTSession(GObject.Object):
     def __init__(
             self,
             image_acquisition: ImageAcquisitionService,
-            edge_det_service: PendantEdgeDetectionService,
+            features_service: PendantFeaturesService,
             ylfit_service: YoungLaplaceFitService,
             analysis_service: PendantAnalysisService,
     ) -> None:
@@ -71,7 +71,7 @@ class IFTSession(GObject.Object):
 
         self._image_acquisition = image_acquisition
 
-        self._edge_det_service = edge_det_service
+        self._features_service = features_service
         self._ylfit_service = ylfit_service
 
         self._analysis_service = analysis_service
@@ -148,3 +148,5 @@ class IFTSession(GObject.Object):
     def quit(self) -> None:
         self.clear_analyses()
         self._image_acquisition.destroy()
+        self._features_service.destroy()
+        self._ylfit_service.destroy()

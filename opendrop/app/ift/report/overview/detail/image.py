@@ -27,8 +27,6 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from injector import inject
-from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory
 from typing import Optional
 
 import cv2
@@ -36,8 +34,8 @@ import numpy as np
 
 from gi.repository import Gtk, Gdk, GObject
 
-from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, component, install
+from opendrop.app.ift.services.analysis import PendantAnalysisJob
 
 
 @component(
@@ -47,9 +45,7 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
     _analysis = None
     _event_connections = ()
 
-    @inject
-    def __init__(self, *, edget_det_params: PendantEdgeDetectionParamsFactory) -> None:
-        self._edge_det_params = edget_det_params
+    def __init__(self) -> None:
         self._canvas_cache = {}
 
     def after_view_init(self) -> None:
@@ -80,7 +76,14 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
         self.axes_image.set_extent((0, 1, 0, 1))
         self.axes.add_image(self.axes_image)
 
-        self.profile_extract_line = self.axes.plot([], linestyle='-', color='#0080ff', linewidth=1.5)[0]
+        self.profile_extract_line = self.axes.plot(
+            [],
+            color='#0080ff',
+            linestyle=None,
+            linewidth=0.0,
+            marker='o',
+            markersize=0.5,
+        )[0]
         self.profile_fit_line = self.axes.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
 
     def hdl_canvas_map(self, *_) -> None:
@@ -104,12 +107,12 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
 
         self._event_connections = (
             self._analysis.bn_image.on_changed.connect(self.hdl_analysis_image_changed),
-            self._analysis.bn_drop_profile_extract.on_changed.connect(self.hdl_analysis_drop_profile_fit_extract_changed),
+            self._analysis.bn_drop_profile_extract.on_changed.connect(self.hdl_analysis_drop_profile_extract_changed),
             self._analysis.bn_drop_profile_fit.on_changed.connect(self.hdl_analysis_drop_profile_fit_changed),
         )
 
         self.hdl_analysis_image_changed()
-        self.hdl_analysis_drop_profile_fit_extract_changed()
+        self.hdl_analysis_drop_profile_extract_changed()
         self.hdl_analysis_drop_profile_fit_changed()
 
     def hdl_analysis_image_changed(self) -> None:
@@ -124,7 +127,7 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
             self.canvas.draw_idle()
             return
 
-        drop_region = self._edge_det_params.drop_region
+        drop_region = self._analysis.bn_drop_region.get()
         assert drop_region is not None
 
         image = image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
@@ -139,23 +142,23 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
         self.axes_image.set_extent((0, image.shape[1], image.shape[0], 0))
         self.canvas.draw_idle()
 
-    def hdl_analysis_drop_profile_fit_extract_changed(self) -> None:
+    def hdl_analysis_drop_profile_extract_changed(self) -> None:
         if self._analysis is None: return
 
         profile = self._analysis.bn_drop_profile_extract.get()
 
         if profile is None:
-            self.profile_fit_line.set_visible(False)
+            self.profile_extract_line.set_visible(False)
             self.canvas.draw_idle()
             return
 
-        drop_region = self._edge_det_params.drop_region
+        drop_region = self._analysis.bn_drop_region.get()
         assert drop_region is not None
 
         profile = profile - drop_region.position
 
-        self.profile_fit_line.set_data(profile.T)
-        self.profile_fit_line.set_visible(True)
+        self.profile_extract_line.set_data(profile.T)
+        self.profile_extract_line.set_visible(True)
         self.canvas.draw_idle()
 
     def hdl_analysis_drop_profile_fit_changed(self) -> None:
@@ -164,17 +167,17 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
         profile = self._analysis.bn_drop_profile_fit.get()
 
         if profile is None:
-            self.profile_extract_line.set_visible(False)
+            self.profile_fit_line.set_visible(False)
             self.canvas.draw_idle()
             return
 
-        drop_region = self._edge_det_params.drop_region
+        drop_region = self._analysis.bn_drop_region.get()
         assert drop_region is not None
 
         profile = profile - drop_region.position
 
-        self.profile_extract_line.set_data(profile.T)
-        self.profile_extract_line.set_visible(True)
+        self.profile_fit_line.set_data(profile.T)
+        self.profile_fit_line.set_visible(True)
         self.canvas.draw_idle()
 
     def destroy(self, *_) -> None:

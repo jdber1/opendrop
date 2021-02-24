@@ -33,11 +33,15 @@ import numpy as np
 import cairo
 
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
-from opendrop.app.common.image_processing.plugins.preview import AcquirerController, ImageSequenceAcquirerController, \
-    image_sequence_navigator_cs
+from opendrop.app.common.image_processing.plugins.preview import (
+    AcquirerController,
+    ImageSequenceAcquirerController,
+    image_sequence_navigator_cs,
+)
 from opendrop.mvp import ComponentSymbol, View, Presenter
 from opendrop.geometry import Rect2
 from opendrop.widgets.canvas import ImageArtist, PolylineArtist
+from opendrop.features import colorize_labels
 from .model import IFTPreviewPluginModel
 
 ift_preview_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
@@ -57,26 +61,11 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         self._features_artist = ImageArtist()
         self._canvas.add_artist(self._features_artist, z_index=z_index)
 
-        self._drop_edge_artist = PolylineArtist(
-            stroke_color=(0.0, 0.5, 1.0),
-            stroke_width=2,
+        self._needle_artist = PolylineArtist(
+            stroke_color=(1.0, 1.0, 0.5),
             scale_strokes=True,
         )
-        self._canvas.add_artist(self._drop_edge_artist, z_index=z_index)
-
-        self._needle_left_edge = PolylineArtist(
-            stroke_color=(0.0, 0.5, 1.0),
-            stroke_width=2,
-            scale_strokes=True,
-        )
-        self._canvas.add_artist(self._needle_left_edge, z_index=z_index)
-
-        self._needle_right_edge = PolylineArtist(
-            stroke_color=(0.0, 0.5, 1.0),
-            stroke_width=2,
-            scale_strokes=True,
-        )
-        self._canvas.add_artist(self._needle_right_edge, z_index=z_index)
+        self._canvas.add_artist(self._needle_artist, z_index=z_index)
 
         self.presenter.view_ready()
 
@@ -94,34 +83,41 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         # Set zoom to minimum, i.e. scale image so it always fits.
         self._canvas.zoom(0)
 
-    def set_edge_detection(self, mask: Optional[np.ndarray]) -> None:
-        if mask is None:
+    def set_edges(self, edges: Optional[np.ndarray]) -> None:
+        if edges is None:
             self._features_artist.clear_data()
             return
 
-        data = np.full_like(mask, 0xff8080ff, dtype=np.uint32)
-        data *= mask//255
+        data = colorize_labels(
+            edges,
+            colors=np.array([
+                0x00000000,
+                0xff8080ff,  # Drop edges
+                0xff8080ff,  # Needle edges
+            ], dtype=np.uint32).view(np.uint8).reshape(-1, 4),
+        )
 
-        width = mask.shape[1]
-        height = mask.shape[0]
+        width = edges.shape[1]
+        height = edges.shape[0]
+
         self._features_artist.extents = Rect2(0, 0, width, height)
         self._features_artist.set_data(data, cairo.Format.ARGB32, width, height)
 
-    def set_drop_profile(self, drop_profile: Optional[np.ndarray]) -> None:
-        if drop_profile is None:
-            self._drop_edge_artist.props.polyline = None
+    def set_needle(self, needle_rect: Optional[Tuple]) -> None:
+        if needle_rect is None:
+            self._needle_artist.props.polyline = None
             return
 
-        self._drop_edge_artist.props.polyline = drop_profile
-
-    def set_needle_profile(self, needle_profile: Optional[Tuple[np.ndarray, np.ndarray]]) -> None:
-        if needle_profile is None:
-            self._needle_left_edge.props.polyline = None
-            self._needle_right_edge.props.polyline = None
-            return
-
-        self._needle_left_edge.props.polyline = needle_profile[0]
-        self._needle_right_edge.props.polyline = needle_profile[1]
+        needle_left = (needle_rect[0] + needle_rect[2])/2
+        needle_right = (needle_rect[1] + needle_rect[3])/2
+        self._needle_artist.props.polyline = np.array([
+            needle_rect[0],
+            needle_rect[2],
+            needle_left,
+            needle_right,
+            needle_rect[3],
+            needle_rect[1],
+        ])
 
     def show_image_sequence_navigator(self) -> None:
         if self._image_sequence_navigator_cid is not None:
@@ -150,9 +146,6 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
     def _do_destroy(self) -> None:
         self._canvas.remove_artist(self._bg_artist)
         self._canvas.remove_artist(self._features_artist)
-        self._canvas.remove_artist(self._drop_edge_artist)
-        self._canvas.remove_artist(self._needle_left_edge)
-        self._canvas.remove_artist(self._needle_right_edge)
 
 
 @ift_preview_plugin_cs.presenter(options=['model'])
@@ -168,14 +161,11 @@ class IFTPreviewPluginPresenter(Presenter['IFTPreviewPluginView']):
             self._model.bn_source_image.on_changed.connect(
                 self._update_preview_source_image,
             ),
-            self._model.bn_edge_detection.on_changed.connect(
-                self._update_edge_detection,
+            self._model.bn_edges.on_changed.connect(
+                self._update_edges,
             ),
-            self._model.bn_drop_profile.on_changed.connect(
-                self._update_drop_profile,
-            ),
-            self._model.bn_needle_profile.on_changed.connect(
-                self._update_needle_profile,
+            self._model.bn_needle_rect.on_changed.connect(
+                self._update_needle,
             ),
             self._model.bn_acquirer_controller.on_changed.connect(
                 self._hdl_model_acquirer_controller_changed,
@@ -183,26 +173,21 @@ class IFTPreviewPluginPresenter(Presenter['IFTPreviewPluginView']):
         ])
 
         self._update_preview_source_image()
-        self._update_edge_detection()
-        self._update_drop_profile()
-        self._update_needle_profile()
+        self._update_edges()
+        self._update_needle()
         self._hdl_model_acquirer_controller_changed()
 
     def _update_preview_source_image(self) -> None:
         source_image = self._model.bn_source_image.get()
         self.view.set_background_image(source_image)
 
-    def _update_edge_detection(self) -> None:
-        edge_detection = self._model.bn_edge_detection.get()
-        self.view.set_edge_detection(edge_detection)
+    def _update_edges(self) -> None:
+        edges = self._model.bn_edges.get()
+        self.view.set_edges(edges)
 
-    def _update_drop_profile(self) -> None:
-        drop_profile = self._model.bn_drop_profile.get()
-        self.view.set_drop_profile(drop_profile)
-
-    def _update_needle_profile(self) -> None:
-        needle_profile = self._model.bn_needle_profile.get()
-        self.view.set_needle_profile(needle_profile)
+    def _update_needle(self) -> None:
+        needle_rect = self._model.bn_needle_rect.get()
+        self.view.set_needle(needle_rect)
 
     def _hdl_model_acquirer_controller_changed(self) -> None:
         acquirer_controller = self.acquirer_controller

@@ -29,7 +29,7 @@
 
 import asyncio
 import operator
-from typing import Optional, Hashable, Tuple
+from typing import Callable, Optional, Hashable, Tuple
 
 import numpy as np
 
@@ -37,8 +37,13 @@ from opendrop.app.common.services.acquisition import ImageAcquisitionService, Im
 from opendrop.app.common.image_processing.plugins.preview.model import (
     AcquirerController,
     ImageSequenceAcquirerController,
-    CameraAcquirerController)
-from opendrop.app.ift.services.edges import PendantEdgeDetection, PendantEdgeDetectionParamsFactory, PendantEdgeDetectionService
+    CameraAcquirerController
+)
+from opendrop.app.ift.services.features import (
+    PendantFeaturesParamsFactory,
+    PendantFeatures,
+    PendantFeaturesService,
+)
 from opendrop.utility.bindable import VariableBindable, AccessorBindable
 from opendrop.utility.bindable.typing import Bindable
 
@@ -47,12 +52,12 @@ class IFTPreviewPluginModel:
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionService,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
+            features_params_factory: PendantFeaturesParamsFactory,
+            features_service: PendantFeaturesService,
     ) -> None:
         self._image_acquisition = image_acquisition
-        self._edge_det_params = edge_det_params
-        self._edge_det_service = edge_det_service
+        self._features_params_factory = features_params_factory
+        self._features_service = features_service
 
         self._watchers = 0
 
@@ -63,9 +68,9 @@ class IFTPreviewPluginModel:
         )
 
         self.bn_source_image = VariableBindable(None, check_equals=operator.is_)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_edge_detection = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_drop_profile = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_needle_profile = VariableBindable(None)  # type: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
+        self.bn_edges = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_drop_points = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_needle_rect = VariableBindable(None)
 
         self._image_acquisition.bn_acquirer.on_changed.connect(
             self._update_acquirer_controller,
@@ -90,22 +95,18 @@ class IFTPreviewPluginModel:
         if isinstance(new_acquirer, ImageSequenceAcquirer):
             new_acquirer_controller = IFTImageSequenceAcquirerController(
                 acquirer=new_acquirer,
-                edge_det_params=self._edge_det_params,
-                edge_det_service=self._edge_det_service,
-                source_image_out=self.bn_source_image,
-                edge_detection_out=self.bn_edge_detection,
-                drop_profile_out=self.bn_drop_profile,
-                needle_profile_out=self.bn_needle_profile,
+                features_params_factory=self._features_params_factory,
+                features_service=self._features_service,
+                out_image=self.bn_source_image,
+                show_features=self._show_features,
             )
         elif isinstance(new_acquirer, CameraAcquirer):
             new_acquirer_controller = IFTCameraAcquirerController(
                 acquirer=new_acquirer,
-                edge_det_params=self._edge_det_params,
-                edge_det_service=self._edge_det_service,
-                source_image_out=self.bn_source_image,
-                edge_detection_out=self.bn_edge_detection,
-                drop_profile_out=self.bn_drop_profile,
-                needle_profile_out=self.bn_needle_profile,
+                features_params_factory=self._features_params_factory,
+                features_service=self._features_service,
+                out_image=self.bn_source_image,
+                show_features=self._show_features,
             )
         elif new_acquirer is None:
             new_acquirer_controller = None
@@ -117,6 +118,17 @@ class IFTPreviewPluginModel:
 
         self._acquirer_controller = new_acquirer_controller
         self.bn_acquirer_controller.poke()
+
+    def _show_features(self, features: Optional[PendantFeatures]) -> None:
+        if features is None:
+            self.bn_edges.set(None)
+            self.bn_drop_points.set(None)
+            self.bn_needle_rect.set(None)
+            return
+
+        self.bn_edges.set(features.edges)
+        self.bn_drop_points.set(features.drop_points)
+        self.bn_needle_rect.set(features.needle_rect)
 
     def _destroy_acquirer_controller(self) -> None:
         acquirer_controller = self._acquirer_controller
@@ -132,18 +144,14 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
     def __init__(
             self, *,
             acquirer: ImageSequenceAcquirer,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
-            source_image_out: Bindable[Optional[np.ndarray]],
-            edge_detection_out: Bindable[Optional[np.ndarray]],
-            drop_profile_out: Bindable[Optional[np.ndarray]],
-            needle_profile_out: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
+            features_params_factory: PendantFeaturesParamsFactory,
+            features_service: PendantFeaturesService,
+            out_image: Bindable,
+            show_features: Callable,
     ) -> None:
-        self._edge_det_params = edge_det_params
-        self._edge_det_service = edge_det_service
-        self._edge_detection_out = edge_detection_out
-        self._drop_profile_out = drop_profile_out
-        self._needle_profile_out = needle_profile_out
+        self._features_params_factory = features_params_factory
+        self._features_service = features_service
+        self._show_features = show_features
 
         self.__destroyed = False
 
@@ -154,12 +162,13 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
 
         super().__init__(
             acquirer=acquirer,
-            source_image_out=source_image_out,
+            source_image_out=out_image,
         )
 
-        self._edge_det_params_changed_id = edge_det_params.connect('changed', self._edge_det_params_changed)
+        self._features_params_changed_id = \
+            features_params_factory.connect('changed', self._features_params_changed)
 
-    def _edge_det_params_changed(self, *_) -> None:
+    def _features_params_changed(self, *_) -> None:
         for fut in self._extracted_features.values():
             fut.cancel()
 
@@ -185,7 +194,10 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
         image = self._images[self._current_image]
 
         if image_id not in self._extracted_features:
-            fut = self._edge_det_service.detect(image, self._edge_det_params.create())
+            fut = asyncio.ensure_future(
+                self._features_service.extract(image, self._features_params_factory.create()),
+                loop=asyncio.get_event_loop(),
+            )
             self._extracted_features[image_id] = fut
             fut.add_done_callback(self._queue_update_preview)
 
@@ -200,22 +212,13 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
 
         self._update_preview(extracted_features)
 
-    def _update_preview(self, extracted_feature: Optional[PendantEdgeDetection]) -> None:
-        if extracted_feature is None:
-            self._edge_detection_out.set(None)
-            self._drop_profile_out.set(None)
-            self._needle_profile_out.set(None)
-            return
-
-        self._edge_detection_out.set(extracted_feature.edge_map)
-        self._drop_profile_out.set(extracted_feature.drop_edge)
-        self._needle_profile_out.set((extracted_feature.needle_left_edge, extracted_feature.needle_right_edge))
-
+    def _update_preview(self, extracted_feature: Optional[PendantFeatures]) -> None:
+        self._show_features(extracted_feature)
         self._current_preview = self._current_image
 
     def destroy(self) -> None:
         self.__destroyed = True
-        self._edge_det_params.disconnect(self._edge_det_params_changed_id)
+        self._features_params_factory.disconnect(self._features_params_changed_id)
         super().destroy()
 
 
@@ -223,18 +226,14 @@ class IFTCameraAcquirerController(CameraAcquirerController):
     def __init__(
             self, *,
             acquirer: CameraAcquirer,
-            edge_det_params: PendantEdgeDetectionParamsFactory,
-            edge_det_service: PendantEdgeDetectionService,
-            source_image_out: Bindable[Optional[np.ndarray]],
-            edge_detection_out: Bindable[Optional[np.ndarray]],
-            drop_profile_out: Bindable[Optional[np.ndarray]],
-            needle_profile_out: Bindable[Optional[Tuple[np.ndarray, np.ndarray]]]
+            features_params_factory: PendantFeaturesParamsFactory,
+            features_service: PendantFeaturesService,
+            out_image: Bindable[Optional[np.ndarray]],
+            show_features: Callable,
     ) -> None:
-        self._edge_det_params = edge_det_params
-        self._edge_det_service = edge_det_service
-        self._edge_detection_out = edge_detection_out
-        self._drop_profile_out = drop_profile_out
-        self._needle_profile_out = needle_profile_out
+        self._features_params_factory = features_params_factory
+        self._features_service = features_service
+        self._show_features = show_features
 
         self.__destroyed = False
 
@@ -242,12 +241,12 @@ class IFTCameraAcquirerController(CameraAcquirerController):
 
         super().__init__(
             acquirer=acquirer,
-            source_image_out=source_image_out,
+            source_image_out=out_image,
         )
 
-        self._source_image_out_changed_conn = source_image_out.on_changed.connect(self._source_image_out_changed)
+        self._source_image_changed_conn = out_image.on_changed.connect(self._source_image_changed)
 
-    def _source_image_out_changed(self) -> None:
+    def _source_image_changed(self) -> None:
         self._queue_update_preview()
 
     def _queue_update_preview(self) -> None:
@@ -261,7 +260,10 @@ class IFTCameraAcquirerController(CameraAcquirerController):
         if old is not None and not old.done():
             return
 
-        fut = self._edge_det_service.detect(image, self._edge_det_params.create())
+        fut = asyncio.ensure_future(
+            self._features_service.extract(image, self._features_params_factory.create()),
+            loop=asyncio.get_event_loop(),
+        )
         self._extracted_feature_fut = fut
         fut.add_done_callback(self._update_preview)
 
@@ -269,20 +271,12 @@ class IFTCameraAcquirerController(CameraAcquirerController):
         if fut.cancelled():
             return
 
-        extracted_feature = fut.result()
-        if extracted_feature is None:
-            self._edge_detection_out.set(None)
-            self._drop_profile_out.set(None)
-            self._needle_profile_out.set(None)
-            return
-
-        self._edge_detection_out.set(extracted_feature.edge_map)
-        self._drop_profile_out.set(extracted_feature.drop_edge)
-        self._needle_profile_out.set((extracted_feature.needle_left_edge, extracted_feature.needle_right_edge))
+        features = fut.result()
+        self._show_features(features)
 
     def destroy(self) -> None:
         self.__destroyed = True
         if self._extracted_feature_fut is not None:
             self._extracted_feature_fut.cancel()
-        self._source_image_out_changed_conn.disconnect()
+        self._source_image_changed_conn.disconnect()
         super().destroy()

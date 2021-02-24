@@ -28,12 +28,12 @@
 
 
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
-from opendrop.app.ift.services.edges import PendantEdgeDetectionParamsFactory
+from opendrop.app.ift.services.features import PendantFeaturesParamsFactory
 
 
 class EdgeDetectionPluginModel:
-    def __init__(self, edge_det_params: PendantEdgeDetectionParamsFactory) -> None:
-        self._feature_extractor_params = edge_det_params
+    def __init__(self, features_params_factory: PendantFeaturesParamsFactory) -> None:
+        self._features_params_factory = features_params_factory
 
-        self.bn_canny_min = GObjectPropertyBindable(edge_det_params, 'canny-min')
-        self.bn_canny_max = GObjectPropertyBindable(edge_det_params, 'canny-max')
+        self.bn_canny_min = GObjectPropertyBindable(features_params_factory, 'thresh1')
+        self.bn_canny_max = GObjectPropertyBindable(features_params_factory, 'thresh2')
