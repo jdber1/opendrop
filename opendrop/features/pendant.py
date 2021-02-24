@@ -21,7 +21,7 @@ RotatedRect = Tuple[Vector2[float], Vector2[float], Vector2[float], Vector2[floa
 class PendantFeatures(NamedTuple):
     labels: np.ndarray
 
-    drop_points: np.ndarray = np.empty((2, 0))
+    drop_points: np.ndarray = np.empty((2, 0), dtype=int)
 
     drop_apex: Optional[Vector2[int]] = None
     drop_radius: Optional[float] = None
@@ -66,7 +66,7 @@ def extract_pendant_features(
     else:
         needle_image = None
 
-    drop_points = np.empty((2, 0))
+    drop_points = np.empty((2, 0), dtype=int)
     drop_apex = None
     drop_radius = None
     drop_rotation = None
@@ -83,7 +83,7 @@ def extract_pendant_features(
             if ans is not None:
                 drop_apex, drop_radius, drop_rotation = ans
 
-    needle_points = np.empty((2, 0))
+    needle_points = np.empty((2, 0), dtype=int)
     needle_rect = None
     needle_diameter = None
 
