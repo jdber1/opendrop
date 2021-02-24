@@ -80,6 +80,14 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         surface_area_axes.tick_params(axis='x', direction='inout')
         surface_area_axes.set_ylabel('SA [mm²]')
 
+        self.ift_axes.grid(axis='x', linestyle='--', color="#dddddd")
+        volume_axes.grid(axis='x', linestyle='--', color="#dddddd")
+        surface_area_axes.grid(axis='x', linestyle='--', color="#dddddd")
+
+        self.ift_axes.grid(axis='y', linestyle='-', color="#dddddd")
+        volume_axes.grid(axis='y', linestyle='-', color="#dddddd")
+        surface_area_axes.grid(axis='y', linestyle='-', color="#dddddd")
+
         # Format the labels to scale to the right units.
         self.ift_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e3)))
         volume_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e9)))
