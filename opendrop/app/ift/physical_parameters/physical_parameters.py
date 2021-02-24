@@ -48,9 +48,9 @@ class IFTPhysicalParametersFormPresenter(Presenter):
         self._form = form
 
         self._form_callback_ids = [
-            self._form.connect('notify::drop-density', lambda *_: self.notify('inner-density')),
-            self._form.connect('notify::continuous-density', lambda *_: self.notify('outer-density')),
-            self._form.connect('notify::needle-diameter', lambda *_: self.notify('needle-width')),
+            self._form.connect('notify::drop-density', lambda *_: self.notify('drop-density')),
+            self._form.connect('notify::continuous-density', lambda *_: self.notify('continuous-density')),
+            self._form.connect('notify::needle-diameter', lambda *_: self.notify('needle-diameter')),
             self._form.connect('notify::gravity', lambda *_: self.notify('gravity')),
         ]
 
@@ -59,19 +59,19 @@ class IFTPhysicalParametersFormPresenter(Presenter):
             self._form.disconnect(callback_id)
 
     @GObject.Property
-    def inner_density(self) -> Optional[float]:
+    def drop_density(self) -> Optional[float]:
         return self._form.drop_density
 
-    @inner_density.setter
-    def inner_density(self, density: Optional[float]) -> None:
+    @drop_density.setter
+    def drop_density(self, density: Optional[float]) -> None:
         self._form.drop_density = density
 
     @GObject.Property
-    def outer_density(self) -> Optional[float]:
+    def continuous_density(self) -> Optional[float]:
         return self._form.continuous_density
 
-    @outer_density.setter
-    def outer_density(self, density: Optional[float]) -> None:
+    @continuous_density.setter
+    def continuous_density(self, density: Optional[float]) -> None:
         self._form.continuous_density = density
 
     @GObject.Property
@@ -83,15 +83,16 @@ class IFTPhysicalParametersFormPresenter(Presenter):
         self._form.gravity = gravity
 
     @GObject.Property
-    def needle_width(self) -> Optional[float]:
-        needle_width_m = self._form.needle_diameter
-        if needle_width_m is None:
+    def needle_diameter(self) -> Optional[float]:
+        needle_diameter_m = self._form.needle_diameter
+        if needle_diameter_m is None:
             return None
 
-        return needle_width_m*1000
+        # Return needle in millimeters.
+        return needle_diameter_m * 1000
 
-    @needle_width.setter
-    def needle_width(self, diameter_mm: Optional[float]) -> None:
+    @needle_diameter.setter
+    def needle_diameter(self, diameter_mm: Optional[float]) -> None:
         if diameter_mm is None:
             diameter_m = None
         else:

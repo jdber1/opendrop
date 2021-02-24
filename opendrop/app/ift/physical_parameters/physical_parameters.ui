@@ -15,7 +15,7 @@
       <object class="GtkLabel">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Inner density (kg/m³):</property>
+        <property name="label" translatable="yes">Drop density (kg/m³):</property>
         <property name="xalign">0</property>
       </object>
       <packing>
@@ -27,7 +27,7 @@
       <object class="GtkLabel">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Outer density (kg/m³):</property>
+        <property name="label" translatable="yes">Continuous density (kg/m³):</property>
         <property name="xalign">0</property>
       </object>
       <packing>
@@ -66,7 +66,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="@" bind-property="inner-density" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="drop-density" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -80,7 +80,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="@" bind-property="outer-density" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="continuous-density" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -94,7 +94,7 @@
         <property name="width_chars">10</property>
         <property name="input_purpose">number</property>
         <property name="lower">0</property>
-        <property name="value" bind-source="@" bind-property="needle-width" bind-flags="bidirectional|sync-create"/>
+        <property name="value" bind-source="@" bind-property="needle-diameter" bind-flags="bidirectional|sync-create"/>
       </object>
       <packing>
         <property name="left_attach">1</property>
