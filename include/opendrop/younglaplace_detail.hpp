@@ -442,20 +442,22 @@ void
 YoungLaplaceShape<realtype>::step_DBo()
 {
     int flag;
-    detail::sunreal tcur, tnext;
+    detail::sunreal told, tcur, tnext;
 
-    flag = ERKStepGetCurrentTime(arkode_mem_DBo, &tcur);
+    flag = ERKStepGetCurrentTime(arkode_mem_DBo, &told);
     if (flag == ARK_MEM_NULL) throw std::runtime_error("ARK_MEM_NULL");
 
     if (tcur == RCONST(0.0)) {
         // First step. Set tout to 0.1 to give a rough scale of t variable when using ARK_ONE_STEP.
-        tnext = tcur + RCONST(0.1);
+        tnext = told + RCONST(0.1);
     } else {
         tnext = INFINITY;
     }
 
     flag = ERKStepEvolve(arkode_mem_DBo, tnext, nv_DBo, &tcur, ARK_ONE_STEP);
     if (flag < 0) throw std::runtime_error("ERKStepEvolve() failed.");
+
+    if (tcur == told) throw std::runtime_error("ERKStepEvolve() failed: step size too small.");
 
     realtype y[2], dy_ds[2], d2y_ds2[2];
     y[0] = NV_Ith_S(nv_DBo, 0);
