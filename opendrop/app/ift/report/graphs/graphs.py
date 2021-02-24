@@ -80,6 +80,10 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         surface_area_axes.tick_params(axis='x', direction='inout')
         surface_area_axes.set_ylabel('SA [mm²]')
 
+        self.ift_axes.tick_params(axis='y', left=False, labelleft=False, right=True, labelright=True)
+        volume_axes.tick_params(axis='y', left=False, labelleft=False, right=True, labelright=True)
+        surface_area_axes.tick_params(axis='y', left=False, labelleft=False, right=True, labelright=True)
+
         self.ift_axes.grid(axis='x', linestyle='--', color="#dddddd")
         volume_axes.grid(axis='x', linestyle='--', color="#dddddd")
         surface_area_axes.grid(axis='x', linestyle='--', color="#dddddd")
@@ -111,7 +115,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.figure_canvas_mapped = False
 
     def hdl_canvas_size_allocate(self, *_) -> None:
-        self.figure.tight_layout(h_pad=0)
+        self.figure.tight_layout(pad=2.0, h_pad=0)
         self.figure.subplots_adjust(hspace=0)
 
     @install
@@ -144,7 +148,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.set_surface_area_data(surface_area_data)
 
         if self.figure_canvas_mapped:
-            self.figure.tight_layout(h_pad=0)
+            self.figure.tight_layout(pad=2.0, h_pad=0)
             self.figure.subplots_adjust(hspace=0)
 
         self.figure_canvas.draw_idle()
