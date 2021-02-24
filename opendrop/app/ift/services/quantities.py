@@ -32,6 +32,9 @@ import math
 from gi.repository import GObject
 
 
+GRAVITY = 9.81
+
+
 class PendantPhysicalParams:
     """Variables are in SI units."""
 
@@ -52,7 +55,7 @@ class PendantPhysicalParamsFactory(GObject.GObject):
     _drop_density: float = math.nan
     _continuous_density: float = math.nan
     _needle_diameter: float = math.nan
-    _gravity: float = math.nan
+    _gravity: float = GRAVITY
 
     def create(self) -> PendantPhysicalParams:
         return PendantPhysicalParams(
