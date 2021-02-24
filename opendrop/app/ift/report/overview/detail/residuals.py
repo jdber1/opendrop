@@ -29,7 +29,7 @@
 
 from typing import Optional
 
-from gi.repository import GObject, Gtk
+from gi.repository import GObject, Gtk, GLib
 
 from opendrop.app.ift.services.analysis import PendantAnalysisJob
 from opendrop.appfw import Presenter, component, install
@@ -48,10 +48,12 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
 
         figure = Figure(tight_layout=True)
         self.canvas = FigureCanvasGTK3Cairo(figure)
-        self.canvas.show()
-        self.host.add(self.canvas)
 
-        self.canvas.connect('map', self.hdl_canvas_map)
+        self.canvas_mapped = False
+        self.figure_stale = True
+        self.queue_draw_canvas_source_id = None
+        self.canvas.connect('map', self.canvas_map)
+        self.canvas.connect('unmap', self.canvas_unmap)
 
         self.axes = figure.add_subplot(1, 1, 1)
 
@@ -59,8 +61,53 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
         for item in (*self.axes.get_xticklabels(), *self.axes.get_yticklabels()):
             item.set_fontsize(8)
 
-    def hdl_canvas_map(self, *_) -> None:
+        self.canvas.show()
+        self.host.add(self.canvas)
+
+    def canvas_map(self, *_) -> None:
+        self.canvas_mapped = True
+        self.update_canvas()
+        if self.figure_stale:
+            self.canvas.hide()
+
+    def canvas_unmap(self, *_) -> None:
+        self.canvas_mapped = False
+
+    def update_canvas(self) -> None:
+        if not self.canvas_mapped:
+            return
+
+        if not self.figure_stale:
+            return
+
+        if self.queue_draw_canvas_source_id is not None:
+            return
+
+        self.queue_draw_canvas_source_id = GLib.idle_add(
+            priority=GLib.PRIORITY_LOW,
+            function=self.draw_canvas,
+        )
+
+    def draw_canvas(self) -> None:
+        self.queue_draw_canvas_source_id = None
+
+        analysis = self._analysis
+
+        ax = self.axes
+        ax.clear()
+
+        if analysis.bn_status.get() is not PendantAnalysisJob.Status.FINISHED:
+            ax.set_axis_off()
+        else:
+            ax.set_axis_on()
+            arclengths = analysis.bn_arclengths.get()
+            residuals = analysis.bn_residuals.get()
+            ax.scatter(arclengths, residuals, color='#0080ff')
+
+        self.figure_stale = False
+
         self.canvas.draw_idle()
+        self.canvas.show()
 
     @install
     @GObject.Property
@@ -79,34 +126,14 @@ class IFTReportOverviewResidualsPresenter(Presenter[Gtk.Bin]):
             return
 
         self.event_connections = (
-            self._analysis.bn_arclengths.on_changed.connect(self._hdl_analysis_residuals_changed),
-            self._analysis.bn_residuals.on_changed.connect(self._hdl_analysis_residuals_changed),
+            self._analysis.bn_status.on_changed.connect(self.analysis_status_changed),
         )
 
-        self._hdl_analysis_residuals_changed()
+        self.analysis_status_changed()
 
-    def _hdl_analysis_residuals_changed(self) -> None:
-        if self._analysis is None: return
-
-        arclengths = self._analysis.bn_arclengths.get()
-        residuals = self._analysis.bn_residuals.get()
-
-        axes = self.axes
-        axes.clear()
-
-        if arclengths is None or len(arclengths) == 0:
-            axes.set_axis_off()
-            self.canvas.draw_idle()
-            return
-
-        if residuals is None or len(residuals) == 0:
-            axes.set_axis_off()
-            self.canvas.draw_idle()
-            return
-
-        axes.set_axis_on()
-        axes.scatter(arclengths, residuals, color='#0080ff')
-        self.canvas.draw_idle()
+    def analysis_status_changed(self):
+        self.figure_stale = True
+        self.update_canvas()
 
     def destroy(self, *_) -> None:
         for conn in self.event_connections:

@@ -68,6 +68,7 @@ class PendantAnalysisService:
 class PendantAnalysisJob:
     class Status(Enum):
         WAITING_FOR_IMAGE = ('Waiting for image', False)
+        EXTRACTING_FEATURES = ('Extracting features', False)
         FITTING = ('Fitting', False)
         FINISHED = ('Finished', True)
         CANCELLED = ('Cancelled', True)
@@ -185,7 +186,7 @@ class PendantAnalysisJob:
         self.bn_image.poke()
         self.bn_image_timestamp.poke()
 
-        self.bn_status.set(self.Status.FITTING)
+        self.bn_status.set(self.Status.EXTRACTING_FEATURES)
 
     def _features_done(self, fut: asyncio.Future) -> None:
         features: PendantFeatures
@@ -203,6 +204,8 @@ class PendantAnalysisJob:
 
         self._ylfit = self._ylfit_service.fit(features.drop_points)
         self._ylfit.add_done_callback(self._ylfit_done)
+
+        self.bn_status.set(self.Status.FITTING)
 
     def _ylfit_done(self, fut: asyncio.Future) -> None:
         result: YoungLaplaceFitResult

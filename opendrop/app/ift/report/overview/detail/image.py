@@ -28,13 +28,15 @@
 
 
 from typing import Optional
+import cairo
 
-import cv2
 import numpy as np
 
-from gi.repository import Gtk, Gdk, GObject
+from gi.repository import Gtk, GObject
 
+from opendrop.geometry import Rect2
 from opendrop.appfw import Presenter, component, install
+from opendrop.widgets.canvas import Canvas, CanvasAlign, ImageArtist, PolylineArtist
 from opendrop.app.ift.services.analysis import PendantAnalysisJob
 
 
@@ -49,46 +51,20 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
         self._canvas_cache = {}
 
     def after_view_init(self) -> None:
-        from matplotlib.figure import Figure
-        from matplotlib.image import AxesImage
-        from matplotlib.colors import Normalize
-        from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo
-
-        figure = Figure(tight_layout=True)
-
-        self.canvas = FigureCanvasGTK3Cairo(figure)
-        self.canvas.show()
-
+        self.canvas = Canvas(align=CanvasAlign.FIT, hexpand=True, vexpand=True, visible=True)
         self.host.add(self.canvas)
 
-        self.canvas.connect('map', self.hdl_canvas_map)
+        self.image_artist = ImageArtist()
+        self.canvas.add_artist(self.image_artist)
 
-        # Axes
-        self.axes = figure.add_subplot(1, 1, 1)
-        self.axes.set_aspect('equal', 'box')
-        self.axes.xaxis.tick_top()
-        for item in (*self.axes.get_xticklabels(), *self.axes.get_yticklabels()):
-            item.set_fontsize(8)
+        self.drop_points_artist = ImageArtist()
+        self.canvas.add_artist(self.drop_points_artist)
 
-        self.axes_image = AxesImage(ax=self.axes, cmap='gray', norm=Normalize(0, 255))
-
-        # Placeholder transparent 1x1 image (rgba format)
-        self.axes_image.set_data(np.zeros((1, 1, 4)))
-        self.axes_image.set_extent((0, 1, 0, 1))
-        self.axes.add_image(self.axes_image)
-
-        self.profile_extract_line = self.axes.plot(
-            [],
-            color='#0080ff',
-            linestyle=None,
-            linewidth=0.0,
-            marker='o',
-            markersize=0.5,
-        )[0]
-        self.profile_fit_line = self.axes.plot([], linestyle='-', color='#ff0080', linewidth=1)[0]
-
-    def hdl_canvas_map(self, *_) -> None:
-        self.canvas.draw_idle()
+        self.drop_fit_artist = PolylineArtist(
+            stroke_color=(1.0, 0.0, 0.5),
+            scale_strokes=True,
+        )
+        self.canvas.add_artist(self.drop_fit_artist)
 
     @install
     @GObject.Property
@@ -107,79 +83,47 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
             return
 
         self._event_connections = (
-            self._analysis.bn_image.on_changed.connect(self.hdl_analysis_image_changed),
-            self._analysis.bn_drop_profile_extract.on_changed.connect(self.hdl_analysis_drop_profile_extract_changed),
-            self._analysis.bn_drop_profile_fit.on_changed.connect(self.hdl_analysis_drop_profile_fit_changed),
+            self._analysis.bn_status.on_changed.connect(self.analysis_status_changed),
         )
 
-        self.hdl_analysis_image_changed()
-        self.hdl_analysis_drop_profile_extract_changed()
-        self.hdl_analysis_drop_profile_fit_changed()
+        self.analysis_status_changed()
 
-    def hdl_analysis_image_changed(self) -> None:
+    def analysis_status_changed(self) -> None:
         if self._analysis is None: return
 
-        image = self._analysis.bn_image.get()
-
-        if image is None:
-            self.axes.set_axis_off()
-            self.axes_image.set_data(np.zeros((1, 1, 4)))
-            self.axes_image.set_extent((0, 1, 0, 1))
-            self.canvas.draw_idle()
-            return
-
+        status = self._analysis.bn_status.get()
         drop_region = self._analysis.bn_drop_region.get()
-        assert drop_region is not None
 
-        image = image[drop_region.y0:drop_region.y1, drop_region.x0:drop_region.x1]
+        if status is PendantAnalysisJob.Status.WAITING_FOR_IMAGE:
+            self.image_artist.clear_data()
+        else:
+            image = self._analysis.bn_image.get()
+            if drop_region is not None:
+                image = image[drop_region.y0:drop_region.y1+1, drop_region.x0:drop_region.x1+1]
+            self.image_artist.props.extents = Rect2(0, 0, image.shape[1], image.shape[0])
+            self.image_artist.set_array(image)
 
-        self.axes.set_axis_on()
+            self.canvas.set_content_size(image.shape[1], image.shape[0])
 
-        # Use a scaled down image so it draws faster.
-        thumb_size = (min(400, image.shape[1]), min(400, image.shape[0]))
-        image_thumb = cv2.resize(image, dsize=thumb_size)
-        self.axes_image.set_data(image_thumb)
+        if status is PendantAnalysisJob.Status.WAITING_FOR_IMAGE \
+                or status is PendantAnalysisJob.Status.EXTRACTING_FEATURES:
+            self.drop_points_artist.clear_data()
+        else:
+            drop_points = self._analysis.bn_drop_profile_extract.get().copy()
+            if drop_region is not None:
+                drop_points -= drop_region.position
+            data = np.zeros(image.shape[:2], np.uint32)
+            data[tuple(drop_points.T)[::-1]] = 0xff8080ff
+            self.drop_points_artist.props.extents = Rect2(0, 0, data.shape[1], data.shape[0])
+            self.drop_points_artist.set_data(data, cairo.Format.ARGB32, data.shape[1], data.shape[0])
 
-        self.axes_image.set_extent((0, image.shape[1], image.shape[0], 0))
-        self.canvas.draw_idle()
-
-    def hdl_analysis_drop_profile_extract_changed(self) -> None:
-        if self._analysis is None: return
-
-        profile = self._analysis.bn_drop_profile_extract.get()
-
-        if profile is None:
-            self.profile_extract_line.set_visible(False)
-            self.canvas.draw_idle()
-            return
-
-        drop_region = self._analysis.bn_drop_region.get()
-        assert drop_region is not None
-
-        profile = profile - drop_region.position
-
-        self.profile_extract_line.set_data(profile.T)
-        self.profile_extract_line.set_visible(True)
-        self.canvas.draw_idle()
-
-    def hdl_analysis_drop_profile_fit_changed(self) -> None:
-        if self._analysis is None: return
-
-        profile = self._analysis.bn_drop_profile_fit.get()
-
-        if profile is None:
-            self.profile_fit_line.set_visible(False)
-            self.canvas.draw_idle()
-            return
-
-        drop_region = self._analysis.bn_drop_region.get()
-        assert drop_region is not None
-
-        profile = profile - drop_region.position
-
-        self.profile_fit_line.set_data(profile.T)
-        self.profile_fit_line.set_visible(True)
-        self.canvas.draw_idle()
+        if status is not PendantAnalysisJob.Status.FINISHED:
+            self.drop_fit_artist.props.polyline = None
+        else:
+            fit = self._analysis.bn_drop_profile_fit.get().copy()
+            if drop_region is not None:
+                fit -= drop_region.position
+            self.drop_fit_artist.props.polyline = fit
 
     def destroy(self, *_) -> None:
         self.analysis = None
