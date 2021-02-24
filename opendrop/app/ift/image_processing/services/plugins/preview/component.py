@@ -83,13 +83,13 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
         # Set zoom to minimum, i.e. scale image so it always fits.
         self._canvas.zoom(0)
 
-    def set_edges(self, edges: Optional[np.ndarray]) -> None:
-        if edges is None:
+    def set_labels(self, labels: Optional[np.ndarray]) -> None:
+        if labels is None:
             self._features_artist.clear_data()
             return
 
         data = colorize_labels(
-            edges,
+            labels,
             colors=np.array([
                 0x00000000,
                 0xff8080ff,  # Drop edges
@@ -97,8 +97,8 @@ class IFTPreviewPluginView(View['IFTPreviewPluginPresenter', None]):
             ], dtype=np.uint32).view(np.uint8).reshape(-1, 4),
         )
 
-        width = edges.shape[1]
-        height = edges.shape[0]
+        width = labels.shape[1]
+        height = labels.shape[0]
 
         self._features_artist.extents = Rect2(0, 0, width, height)
         self._features_artist.set_data(data, cairo.Format.ARGB32, width, height)
@@ -161,8 +161,8 @@ class IFTPreviewPluginPresenter(Presenter['IFTPreviewPluginView']):
             self._model.bn_source_image.on_changed.connect(
                 self._update_preview_source_image,
             ),
-            self._model.bn_edges.on_changed.connect(
-                self._update_edges,
+            self._model.bn_labels.on_changed.connect(
+                self._update_labels,
             ),
             self._model.bn_needle_rect.on_changed.connect(
                 self._update_needle,
@@ -173,7 +173,7 @@ class IFTPreviewPluginPresenter(Presenter['IFTPreviewPluginView']):
         ])
 
         self._update_preview_source_image()
-        self._update_edges()
+        self._update_labels()
         self._update_needle()
         self._hdl_model_acquirer_controller_changed()
 
@@ -181,9 +181,9 @@ class IFTPreviewPluginPresenter(Presenter['IFTPreviewPluginView']):
         source_image = self._model.bn_source_image.get()
         self.view.set_background_image(source_image)
 
-    def _update_edges(self) -> None:
-        edges = self._model.bn_edges.get()
-        self.view.set_edges(edges)
+    def _update_labels(self) -> None:
+        labels = self._model.bn_labels.get()
+        self.view.set_labels(labels)
 
     def _update_needle(self) -> None:
         needle_rect = self._model.bn_needle_rect.get()

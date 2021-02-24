@@ -19,7 +19,7 @@ RotatedRect = Tuple[Vector2[float], Vector2[float], Vector2[float], Vector2[floa
 
 
 class PendantFeatures(NamedTuple):
-    edges: np.ndarray
+    labels: np.ndarray
 
     drop_points: np.ndarray = np.empty((2, 0))
 
@@ -52,6 +52,7 @@ def extract_pendant_features(
         *,
         thresh1: float = 100.0,
         thresh2: float = 200.0,
+        labels: bool = False,
 ) -> PendantFeatures:
     from opendrop.fit import needle_fit
 
@@ -132,13 +133,11 @@ def extract_pendant_features(
                 )
                 needle_diameter = 2 * needle_radius
 
-    edge_labels = np.zeros(image.shape[:2], dtype=int)
 
     if drop_region is not None:
         drop_points += np.reshape(drop_region.position, (2, 1))
         if drop_apex is not None:
             drop_apex += drop_region.position
-        edge_labels[tuple(drop_points)[::-1]] = 1
 
     if needle_region is not None:
         needle_points += np.reshape(needle_region.position, (2, 1))
@@ -149,10 +148,16 @@ def extract_pendant_features(
                 needle_region.position + needle_rect[2],
                 needle_region.position + needle_rect[3],
             )
-        edge_labels[tuple(needle_points)[::-1]] = 2
+
+    if labels:
+        labels_array = np.zeros(image.shape[:2], dtype=np.uint8)
+        labels_array[tuple(drop_points)[::-1]] = 1
+        labels_array[tuple(needle_points)[::-1]] = 2
+    else:
+        labels_array = None
 
     return PendantFeatures(
-        edges=edge_labels,
+        labels=labels_array,
 
         drop_points=drop_points,
         drop_apex=drop_apex,

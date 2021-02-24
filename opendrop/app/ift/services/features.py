@@ -129,7 +129,13 @@ class PendantFeaturesService:
         self._executor = ProcessPoolExecutor(max_workers=1)
         self._default_params_factory = default_params_factory
 
-    def extract(self, image: np.ndarray, params: Optional[PendantFeaturesParams] = None) -> asyncio.Future:
+    def extract(
+            self,
+            image: np.ndarray,
+            params: Optional[PendantFeaturesParams] = None,
+            *,
+            labels: bool = False,
+    ) -> asyncio.Future:
         if params is None:
             params = self._default_params_factory.create()
 
@@ -140,6 +146,7 @@ class PendantFeaturesService:
             params.needle_region,
             thresh1=params.thresh1,
             thresh2=params.thresh2,
+            labels=labels,
         )
 
         fut = asyncio.wrap_future(cfut, loop=asyncio.get_event_loop())

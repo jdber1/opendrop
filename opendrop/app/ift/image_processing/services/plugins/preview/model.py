@@ -68,7 +68,7 @@ class IFTPreviewPluginModel:
         )
 
         self.bn_source_image = VariableBindable(None, check_equals=operator.is_)  # type: Bindable[Optional[np.ndarray]]
-        self.bn_edges = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_labels = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_drop_points = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_needle_rect = VariableBindable(None)
 
@@ -121,12 +121,12 @@ class IFTPreviewPluginModel:
 
     def _show_features(self, features: Optional[PendantFeatures]) -> None:
         if features is None:
-            self.bn_edges.set(None)
+            self.bn_labels.set(None)
             self.bn_drop_points.set(None)
             self.bn_needle_rect.set(None)
             return
 
-        self.bn_edges.set(features.edges)
+        self.bn_labels.set(features.labels)
         self.bn_drop_points.set(features.drop_points)
         self.bn_needle_rect.set(features.needle_rect)
 
@@ -194,10 +194,12 @@ class IFTImageSequenceAcquirerController(ImageSequenceAcquirerController):
         image = self._images[self._current_image]
 
         if image_id not in self._extracted_features:
-            fut = asyncio.ensure_future(
-                self._features_service.extract(image, self._features_params_factory.create()),
-                loop=asyncio.get_event_loop(),
+            fut = self._features_service.extract(
+                image,
+                self._features_params_factory.create(),
+                labels=True,
             )
+
             self._extracted_features[image_id] = fut
             fut.add_done_callback(self._queue_update_preview)
 
@@ -260,9 +262,10 @@ class IFTCameraAcquirerController(CameraAcquirerController):
         if old is not None and not old.done():
             return
 
-        fut = asyncio.ensure_future(
-            self._features_service.extract(image, self._features_params_factory.create()),
-            loop=asyncio.get_event_loop(),
+        fut = self._features_service.extract(
+            image,
+            self._features_params_factory.create(),
+            labels=True,
         )
         self._extracted_feature_fut = fut
         fut.add_done_callback(self._update_preview)
