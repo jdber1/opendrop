@@ -10,11 +10,15 @@
     <property name="margin_top">5</property>
     <property name="margin_bottom">5</property>
     <child>
-      <object class="GtkLabel" id="no_data_label">
+      <object class="GtkSpinner" id="spinner">
+        <property name="width-request">32</property>
+        <property name="height-request">32</property>
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">&lt;b&gt;No data&lt;/b&gt;</property>
-        <property name="use_markup">True</property>
+        <property name="can-focus">False</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
       </object>
       <packing>
         <property name="name">page0</property>

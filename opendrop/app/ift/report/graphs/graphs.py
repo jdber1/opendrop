@@ -45,8 +45,8 @@ from .services.graphs import IFTReportGraphsService
     template_path='./graphs.ui',
 )
 class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
-    no_data_label = TemplateChild('no_data_label')
-    figure_container = TemplateChild('figure_container')  # type: TemplateChild[Gtk.Container]
+    spinner: TemplateChild[Gtk.Spinner] = TemplateChild('spinner')
+    figure_container: TemplateChild[Gtk.Container] = TemplateChild('figure_container')
 
     _analyses = ()
 
@@ -55,7 +55,7 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.graphs_service = graphs_service
 
     def after_view_init(self) -> None:
-        figure = Figure(tight_layout=True)
+        figure = Figure(tight_layout=False)
         self.figure = figure
 
         self.figure_canvas = FigureCanvas(figure)
@@ -64,24 +64,26 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.figure_canvas.props.visible = True
         self.figure_container.add(self.figure_canvas)
 
-        self.figure_canvas.connect('map', self.hdl_canvas_map)
+        self.figure_canvas_mapped = False
 
-        self.ift_axes = figure.add_subplot(3, 1, 1)
+        self.figure_canvas.connect('map', self.hdl_canvas_map)
+        self.figure_canvas.connect('unmap', self.hdl_canvas_unmap)
+        self.figure_canvas.connect('size-allocate', self.hdl_canvas_size_allocate)
+
+        self.ift_axes, volume_axes, surface_area_axes = figure.subplots(3, 1, sharex='col')
         self.ift_axes.set_ylabel('IFT [mN/m]')
-        volume_axes = figure.add_subplot(3, 1, 2, sharex=self.ift_axes)
+        self.ift_axes.tick_params(axis='x', direction='inout')
         volume_axes.xaxis.set_ticks_position('both')
+        volume_axes.tick_params(axis='x', direction='inout')
         volume_axes.set_ylabel('V [mm³]')
-        surface_area_axes = figure.add_subplot(3, 1, 3, sharex=self.ift_axes)
         surface_area_axes.xaxis.set_ticks_position('both')
+        surface_area_axes.tick_params(axis='x', direction='inout')
         surface_area_axes.set_ylabel('SA [mm²]')
 
         # Format the labels to scale to the right units.
         self.ift_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e3)))
         volume_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e9)))
         surface_area_axes.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.4g}'.format(x * 1e6)))
-
-        for lbl in (*self.ift_axes.get_xticklabels(), *volume_axes.get_xticklabels()):
-            lbl.set_visible(False)
 
         self.ift_line = self.ift_axes.plot([], marker='o', color='red')[0]
         self.volume_line = volume_axes.plot([], marker='o', color='blue')[0]
@@ -94,7 +96,15 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.hdl_model_data_changed()
 
     def hdl_canvas_map(self, *_) -> None:
+        self.figure_canvas_mapped = True
         self.figure_canvas.draw_idle()
+
+    def hdl_canvas_unmap(self, *_) -> None:
+        self.figure_canvas_mapped = False
+
+    def hdl_canvas_size_allocate(self, *_) -> None:
+        self.figure.tight_layout(h_pad=0)
+        self.figure.subplots_adjust(hspace=0)
 
     @install
     @GObject.Property
@@ -125,11 +135,19 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.set_volume_data(volume_data)
         self.set_surface_area_data(surface_area_data)
 
+        if self.figure_canvas_mapped:
+            self.figure.tight_layout(h_pad=0)
+            self.figure.subplots_adjust(hspace=0)
+
+        self.figure_canvas.draw_idle()
+
     def show_waiting_placeholder(self) -> None:
-        self.host.set_visible_child(self.no_data_label)
+        self.host.set_visible_child(self.spinner)
+        self.spinner.start()
 
     def hide_waiting_placeholder(self) -> None:
         self.host.set_visible_child(self.figure_container)
+        self.spinner.stop()
 
     def set_ift_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
@@ -142,8 +160,6 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.ift_axes.relim()
         self.ift_axes.margins(y=0.1)
 
-        self.figure_canvas.draw_idle()
-
     def set_volume_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
@@ -155,8 +171,6 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
         self.volume_line.axes.relim()
         self.volume_line.axes.margins(y=0.1)
 
-        self.figure_canvas.draw_idle()
-
     def set_surface_area_data(self, data: Sequence[Tuple[float, float]]) -> None:
         if len(data[0]) <= 1:
             return
@@ -167,8 +181,6 @@ class IFTReportGraphsPresenter(Presenter[Gtk.Stack]):
 
         self.surface_area_line.axes.relim()
         self.surface_area_line.axes.margins(y=0.1)
-
-        self.figure_canvas.draw_idle()
 
     def update_xlim(self) -> None:
         all_xdata = (
