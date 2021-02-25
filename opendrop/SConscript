@@ -11,11 +11,12 @@ if not env['GLIB_COMPILE_RESOURCES']:
 # SCons does not have recursive globs yet, use python glob module for now.
 from glob import glob
 
-modules = glob('**/*.py', recursive=True) + [
+modules = Flatten([
+    glob('**/*.py', recursive=True),
     SConscript('features/SConscript', exports='env'),
     SConscript('fit/needle/SConscript', exports='env'),
     SConscript('fit/younglaplace/SConscript', exports='env'),
-]
+])
 
 gresource_file = env.GResourceBundle('data.gresource', [
     env.GResource('/opendrop', glob('**/*.ui', recursive=True), compressed=True),
