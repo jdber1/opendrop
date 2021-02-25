@@ -60,7 +60,6 @@ class IFTImageProcessingPresenter(Presenter[Gtk.Grid]):
             tool_ids=[
                 ToolID.DROP_REGION,
                 ToolID.NEEDLE_REGION,
-                ToolID.EDGE_DETECTION,
             ],
             plugins=[
                 ift_drop_region_plugin_cs.factory(
@@ -70,9 +69,6 @@ class IFTImageProcessingPresenter(Presenter[Gtk.Grid]):
                 ift_needle_region_plugin_cs.factory(
                     model=self._service.needle_region_plugin,
                     z_index=DrawPriority.OVERLAY,
-                ),
-                edge_detection_plugin_cs.factory(
-                    model=self._service.edge_detection_plugin,
                 ),
                 ift_preview_plugin_cs.factory(
                     model=self._service.preview_plugin,

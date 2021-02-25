@@ -50,8 +50,8 @@ __all__ = (
 class PendantFeaturesParamsFactory(GObject.Object):
     _drop_region: Optional[Rect2[int]] = None
     _needle_region: Optional[Rect2[int]] = None
-    _thresh1 = 100.0
-    _thresh2 = 200.0
+    _thresh1 = 80.0
+    _thresh2 = 160.0
 
     def create(self) -> 'PendantFeaturesParams':
         return PendantFeaturesParams(

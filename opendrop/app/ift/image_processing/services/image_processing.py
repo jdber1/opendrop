@@ -74,10 +74,6 @@ class IFTImageProcessingModel:
             in_clip=region_clip,
         )
 
-        self.edge_detection_plugin = EdgeDetectionPluginModel(
-            features_params_factory=features_params_factory,
-        )
-
         self.preview_plugin = IFTPreviewPluginModel(
             image_acquisition=image_acquisition,
             features_params_factory=features_params_factory,

@@ -50,8 +50,8 @@ def extract_pendant_features(
         drop_region: Optional[Rect2[int]] = None,
         needle_region: Optional[Rect2[int]] = None,
         *,
-        thresh1: float = 100.0,
-        thresh2: float = 200.0,
+        thresh1: float = 80.0,
+        thresh2: float = 160.0,
         labels: bool = False,
 ) -> PendantFeatures:
     from opendrop.fit import needle_fit
@@ -88,7 +88,29 @@ def extract_pendant_features(
     needle_diameter = None
 
     if needle_image is not None:
-        needle_edges = cv2.Canny(needle_image, thresh1, thresh2)
+        if len(needle_image.shape) > 2:
+            needle_image = cv2.cvtColor(needle_image, cv2.COLOR_RGB2GRAY)
+
+        blur = cv2.GaussianBlur(needle_image, ksize=(5, 5), sigmaX=0)
+        dx = cv2.Scharr(blur, cv2.CV_16S, dx=1, dy=0)
+        dy = cv2.Scharr(blur, cv2.CV_16S, dx=0, dy=1)
+
+        # Use magnitude of gradient squared to get sharper edges.
+        mask = (dx.astype(float)**2 + dy.astype(float)**2)
+        mask = (mask/mask.max() * (2**8 - 1)).astype(np.uint8)
+        cv2.adaptiveThreshold(
+            mask,
+            maxValue=1,
+            adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            thresholdType=cv2.THRESH_BINARY,
+            blockSize=5,
+            C=0,
+            dst=mask
+        )
+
+        # Hack: Thin edges using cv2.Canny()
+        needle_edges = cv2.Canny(dx=mask*dx, dy=mask*dy, threshold1=0.0, threshold2=0.0)
+
         needle_points = np.array(needle_edges.nonzero()[::-1])
 
         # Use left and right-most points only for fitting.
@@ -171,11 +193,11 @@ def extract_pendant_features(
 
 def _extract_drop_edge(gray: np.ndarray, thresh1: float, thresh2: float) -> np.ndarray:
     blur = cv2.GaussianBlur(gray, ksize=(5, 5), sigmaX=0)
-    dx = cv2.Scharr(blur, cv2.CV_32F, dx=1, dy=0)
-    dy = cv2.Scharr(blur, cv2.CV_32F, dx=0, dy=1)
+    dx = cv2.Scharr(blur, cv2.CV_16S, dx=1, dy=0)
+    dy = cv2.Scharr(blur, cv2.CV_16S, dx=0, dy=1)
 
     # Use magnitude of gradient squared to get sharper edges.
-    grad = dx**2 + dy**2
+    grad = dx.astype(float)**2 + dy.astype(float)**2
     grad /= grad.max()
     grad = (grad * (2**8 - 1)).astype(np.uint8)
 
@@ -189,10 +211,9 @@ def _extract_drop_edge(gray: np.ndarray, thresh1: float, thresh2: float) -> np.n
         dst=grad
     )
 
-    # Hack: Use cv2.Canny() to do non-max suppression on grad.
+    # Hack: Use cv2.Canny() to do non-max suppression edge thinning.
     mask = _largest_connected_component(grad)
-    edges = cv2.Canny(gray, thresh1, thresh2)
-    edges *= mask
+    edges = cv2.Canny(dx*mask, dy*mask, thresh1, thresh2)
     points = np.array(edges.nonzero()[::-1])
 
     return points
