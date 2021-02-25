@@ -14,7 +14,7 @@ __all__ = ('YoungLaplaceFitResult', 'young_laplace_fit',)
 DELTA_TOL     = 1.e-8
 GRADIENT_TOL  = 1.e-8
 OBJECTIVE_TOL = 1.e-8
-MAX_STEPS     = 10
+MAX_STEPS     = 50
 
 
 class YoungLaplaceFitResult(NamedTuple):
