@@ -3,8 +3,8 @@ from typing import Tuple
 import numpy as np
 
 from opendrop.utility.misc import rotation_mat2d
+from opendrop.features import find_pendant_apex
 
-from ..pendant import find_pendant_apex
 from .types import YoungLaplaceParam
 
 
