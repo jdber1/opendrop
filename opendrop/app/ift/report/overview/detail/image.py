@@ -104,6 +104,7 @@ class IFTReportOverviewImagePresenter(Presenter[Gtk.Bin]):
             self.image_artist.set_array(image)
 
             self.canvas.set_content_size(image.shape[1], image.shape[0])
+            self.canvas.zoom(0.0)
 
         if status is PendantAnalysisJob.Status.WAITING_FOR_IMAGE \
                 or status is PendantAnalysisJob.Status.EXTRACTING_FEATURES:
