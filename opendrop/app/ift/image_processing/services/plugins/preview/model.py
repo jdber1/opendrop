@@ -67,7 +67,7 @@ class IFTPreviewPluginModel:
             getter=lambda: self._acquirer_controller
         )
 
-        self.bn_source_image = VariableBindable(None, check_equals=operator.is_)  # type: Bindable[Optional[np.ndarray]]
+        self.bn_source_image = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_labels = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_drop_points = VariableBindable(None)  # type: Bindable[Optional[np.ndarray]]
         self.bn_needle_rect = VariableBindable(None)

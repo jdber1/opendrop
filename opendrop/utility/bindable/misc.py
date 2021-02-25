@@ -10,7 +10,12 @@ def _general_purpose_equality_check(
         x_parent: Any = None,
         y_parent: Any = None,
 ) -> bool:
+    if x is y:
+        return True
+
     if x is None or y is None:
+        return x is y
+    elif isinstance(x, bool) or isinstance(y, bool):
         return x is y
     elif isinstance(x, np.ndarray) or isinstance(y, np.ndarray):
         return np.array_equal(x, y)
