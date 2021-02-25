@@ -122,7 +122,7 @@ class ConanReportOverviewMasterPresenter(Presenter):
         self.ignore_tree_selection_changes = False
 
         self.tree_view.append_column(Gtk.TreeViewColumn(
-            title='Timestamp (s)',
+            title='Time [s]',
             cell_renderer=Gtk.CellRendererText(),
             text=0,
         ))
@@ -134,13 +134,13 @@ class ConanReportOverviewMasterPresenter(Presenter):
         ))
 
         self.tree_view.append_column(Gtk.TreeViewColumn(
-            title='Left (degrees)',
+            title='Left [°]',
             cell_renderer=Gtk.CellRendererText(),
             text=2,
         ))
 
         self.tree_view.append_column(Gtk.TreeViewColumn(
-            title='Right (degrees)',
+            title='Right [°]',
             cell_renderer=Gtk.CellRendererText(),
             text=3,
         ))

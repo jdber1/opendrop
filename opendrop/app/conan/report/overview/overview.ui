@@ -5,12 +5,13 @@
   <template class="ConanReportOverview" parent="GtkPaned">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
-    <property name="orientation">vertical</property>
+    <property name="orientation">horizontal</property>
     <child>
-      <object class="ConanReportOverviewDetail">
+      <object class="ConanReportOverviewMaster">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="analysis" bind-source="@" bind-property="selection" bind-flags="sync-create"/>
+        <property name="analyses" bind-source="@" bind-property="analyses" bind-flags="sync-create"/>
+        <property name="selection" bind-source="@" bind-property="selection" bind-flags="sync-create|bidirectional"/>
       </object>
       <packing>
         <property name="resize">True</property>
@@ -18,11 +19,10 @@
       </packing>
     </child>
     <child>
-      <object class="ConanReportOverviewMaster">
+      <object class="ConanReportOverviewDetail">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="analyses" bind-source="@" bind-property="analyses" bind-flags="sync-create"/>
-        <property name="selection" bind-source="@" bind-property="selection" bind-flags="sync-create|bidirectional"/>
+        <property name="analysis" bind-source="@" bind-property="selection" bind-flags="sync-create"/>
       </object>
       <packing>
         <property name="resize">True</property>
