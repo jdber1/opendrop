@@ -127,7 +127,7 @@ class YoungLaplaceModel:
 
     @property
     def closest(self) -> np.ndarray:
-        xy = np.empty_like(self.data)
+        xy = np.empty_like(self.data, dtype=float)
 
         bond   = self._params[YoungLaplaceParam.BOND]
         radius = self._params[YoungLaplaceParam.RADIUS]
