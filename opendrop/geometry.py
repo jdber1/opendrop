@@ -27,6 +27,7 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from abc import abstractmethod
 import math
 import operator
 from typing import Any, Callable, Iterable, Tuple, TypeVar, overload
@@ -40,51 +41,51 @@ U_co = TypeVar('U_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
 
 
-class SupportsAdd(Protocol[T_contra, U_co]):
+class Add(Protocol[T_contra, U_co]):
     def __add__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsRAdd(Protocol[T_contra, U_co]):
+class RAdd(Protocol[T_contra, U_co]):
     def __radd__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsMul(Protocol[T_contra, U_co]):
+class Mul(Protocol[T_contra, U_co]):
     def __mul__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsRMul(Protocol[T_contra, U_co]):
+class RMul(Protocol[T_contra, U_co]):
     def __rmul__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsSub(Protocol[T_contra, U_co]):
+class Sub(Protocol[T_contra, U_co]):
     def __sub__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsRSub(Protocol[T_contra, U_co]):
+class RSub(Protocol[T_contra, U_co]):
     def __rsub__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsTrueDiv(Protocol[T_contra, U_co]):
+class TrueDiv(Protocol[T_contra, U_co]):
     def __truediv__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsRTrueDiv(Protocol[T_contra, U_co]):
+class RTrueDiv(Protocol[T_contra, U_co]):
     def __rtruediv__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsFloorDiv(Protocol[T_contra, U_co]):
+class FloorDiv(Protocol[T_contra, U_co]):
     def __floordiv__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsRFloorDiv(Protocol[T_contra, U_co]):
+class RFloorDiv(Protocol[T_contra, U_co]):
     def __rfloordiv__(self, other: T_contra) -> U_co: ...
 
 
-class SupportsNeg(Protocol[T_co]):
+class Neg(Protocol[T_co]):
     def __neg__(self) -> T_co: ...
 
 
-class SupportsPos(Protocol[T_co]):
+class Pos(Protocol[T_co]):
     def __pos__(self) -> T_co: ...
 
 
@@ -99,44 +100,46 @@ class Comparable(Protocol[T_contra]):
 
 
 class Number(
-        SupportsAdd,
-        SupportsSub,
-        SupportsMul,
-        SupportsTrueDiv,
-        SupportsNeg,
-        SupportsPos,
-        Comparable,
-        Protocol,
-):
-    ...
+    Add,
+    Sub,
+    Mul,
+    TrueDiv,
+    Neg,
+    Pos,
+    Comparable,
+    Protocol,
+): ...
 
 
-NumberT_co = TypeVar('NumberT_co', bound=Number, covariant=True)
-NumberU = TypeVar('NumberU', bound=Number)
-NumberV = TypeVar('NumberV', bound=Number)
+A_co = TypeVar('A_co', bound=Number, covariant=True)
+B = TypeVar('B', bound=Number)
+C = TypeVar('C', bound=Number)
 
 
-class _PlainVector2(Tuple[T_co, T_co]):
+class _Vector2(Tuple[T_co, T_co]):
+    @property
+    @abstractmethod
+    def x(self) -> T_co:
+        ...
+
+    @property
+    @abstractmethod
+    def y(self) -> T_co:
+        ...
+
+    @abstractmethod
     def __getitem__(self, index: Literal[0, 1]) -> T_co:
         return super().__getitem__(index)
-
-    @property
-    def x(self) -> T_co:
-        return self[0]
-
-    @property
-    def y(self) -> T_co:
-        return self[1]
 
     def __len__(self) -> Literal[2]:
         return 2
 
 
-class Vector2(_PlainVector2[NumberT_co]):
+class Vector2(_Vector2[A_co]):
     @overload
-    def __new__(cls, x: NumberT_co, y: NumberT_co) -> 'Vector2[NumberT_co]': ...
+    def __new__(cls, x: A_co, y: A_co) -> 'Vector2[A_co]': ...
     @overload
-    def __new__(cls, iterable: Iterable[NumberT_co]) -> 'Vector2[NumberT_co]': ...
+    def __new__(cls, iterable: Iterable[A_co]) -> 'Vector2[A_co]': ...
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
@@ -154,15 +157,15 @@ class Vector2(_PlainVector2[NumberT_co]):
             )
 
     @classmethod
-    def _from_xy(cls, x: NumberT_co, y: NumberT_co) -> 'Vector2[NumberT_co]':
+    def _from_xy(cls, x: A_co, y: A_co) -> 'Vector2[A_co]':
         return super().__new__(cls, (x, y))
 
     @classmethod
-    def _from_iterable(cls, iterable: Iterable[NumberT_co]) -> 'Vector2[NumberT_co]':
+    def _from_iterable(cls, iterable: Iterable[A_co]) -> 'Vector2[A_co]':
         x, y = iterable
         return cls._from_xy(x, y)
 
-    def replace(self: 'Vector2[NumberU]', **kwargs: NumberU) -> 'Vector2[NumberU]':
+    def replace(self: 'Vector2[B]', **kwargs: B) -> 'Vector2[B]':
         unexpected_names = set(kwargs.keys()) - {'x', 'y'}
         if unexpected_names:
             raise ValueError(
@@ -180,25 +183,25 @@ class Vector2(_PlainVector2[NumberT_co]):
 
         return Vector2(new_x, new_y)
 
-    def map(self, func: Callable[[NumberT_co], NumberU]) -> 'Vector2[NumberU]':
+    def map(self, func: Callable[[A_co], B]) -> 'Vector2[B]':
         return Vector2(map(func, self))
 
-    def __neg__(self: _PlainVector2[SupportsNeg[NumberU]]) -> 'Vector2[NumberU]':
+    def __neg__(self: _Vector2[Neg[B]]) -> 'Vector2[B]':
         try:
             return Vector2(map(operator.neg, self))
         except TypeError:
             return NotImplemented
 
-    def __pos__(self: _PlainVector2[SupportsPos[NumberU]]) -> 'Vector2[NumberU]':
+    def __pos__(self: _Vector2[Pos[B]]) -> 'Vector2[B]':
         try:
             return Vector2(map(operator.pos, self))
         except TypeError:
             return NotImplemented
 
     @overload
-    def __add__(self: _PlainVector2[SupportsAdd[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __add__(self: _Vector2[Add[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
     @overload
-    def __add__(self, other: Iterable[SupportsRAdd[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __add__(self, other: Iterable[RAdd[A_co, B]]) -> 'Vector2[B]': ...
 
     def __add__(self, other):
         try:
@@ -207,9 +210,9 @@ class Vector2(_PlainVector2[NumberT_co]):
             return NotImplemented
 
     @overload
-    def __radd__(self: _PlainVector2[SupportsRAdd[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __radd__(self: _Vector2[RAdd[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
     @overload
-    def __radd__(self, other: Iterable[SupportsAdd[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __radd__(self, other: Iterable[Add[A_co, B]]) -> 'Vector2[B]': ...
 
     def __radd__(self, other):
         try:
@@ -218,9 +221,9 @@ class Vector2(_PlainVector2[NumberT_co]):
             return NotImplemented
 
     @overload
-    def __sub__(self: _PlainVector2[SupportsSub[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __sub__(self: _Vector2[Sub[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
     @overload
-    def __sub__(self, other: Iterable[SupportsRSub[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __sub__(self, other: Iterable[RSub[A_co, B]]) -> 'Vector2[B]': ...
 
     def __sub__(self, other):
         try:
@@ -229,9 +232,9 @@ class Vector2(_PlainVector2[NumberT_co]):
             return NotImplemented
 
     @overload
-    def __rsub__(self: _PlainVector2[SupportsRSub[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __rsub__(self: _Vector2[RSub[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
     @overload
-    def __rsub__(self, other: Iterable[SupportsSub[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __rsub__(self, other: Iterable[Sub[A_co, B]]) -> 'Vector2[B]': ...
 
     def __rsub__(self, other):
         try:
@@ -240,16 +243,16 @@ class Vector2(_PlainVector2[NumberT_co]):
             return NotImplemented
 
     @overload
-    def __mul__(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    def __mul__(self: _Vector2[Mul[B, C]], other: B) -> 'Vector2[C]': ...
 
     @overload
-    def __mul__(self, other: SupportsRMul[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+    def __mul__(self, other: RMul[A_co, B]) -> 'Vector2[B]': ...
 
     @overload
-    def __mul__(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __mul__(self: _Vector2[Mul[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
 
     @overload
-    def __mul__(self, other: Iterable[SupportsRMul[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __mul__(self, other: Iterable[RMul[A_co, B]]) -> 'Vector2[B]': ...
 
     def __mul__(self, other):
         try:
@@ -260,20 +263,20 @@ class Vector2(_PlainVector2[NumberT_co]):
         except TypeError:
             return NotImplemented
 
-    def _elementwise_mul(self: _PlainVector2[SupportsMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]':
+    def _elementwise_mul(self: _Vector2[Mul[B, C]], other: Iterable[B]) -> 'Vector2[C]':
         return Vector2(map(operator.mul, self, other))
 
     @overload
-    def __rmul__(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    def __rmul__(self: _Vector2[RMul[B, C]], other: B) -> 'Vector2[C]': ...
 
     @overload
-    def __rmul__(self, other: SupportsMul[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+    def __rmul__(self, other: Mul[A_co, B]) -> 'Vector2[B]': ...
 
     @overload
-    def __rmul__(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]': ...
+    def __rmul__(self: _Vector2[RMul[B, C]], other: Iterable[B]) -> 'Vector2[C]': ...
 
     @overload
-    def __rmul__(self, other: Iterable[SupportsMul[NumberT_co, NumberU]]) -> 'Vector2[NumberU]': ...
+    def __rmul__(self, other: Iterable[Mul[A_co, B]]) -> 'Vector2[B]': ...
 
     def __rmul__(self, other):
         try:
@@ -284,13 +287,13 @@ class Vector2(_PlainVector2[NumberT_co]):
         except TypeError:
             return NotImplemented
 
-    def _elementwise_rmul(self: _PlainVector2[SupportsRMul[NumberU, NumberV]], other: Iterable[NumberU]) -> 'Vector2[NumberV]':
+    def _elementwise_rmul(self: _Vector2[RMul[B, C]], other: Iterable[B]) -> 'Vector2[C]':
         return Vector2(map(operator.mul, other, self))
 
     @overload
-    def __truediv__(self: _PlainVector2[SupportsTrueDiv[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    def __truediv__(self: _Vector2[TrueDiv[B, C]], other: B) -> 'Vector2[C]': ...
     @overload
-    def __truediv__(self, other: SupportsRTrueDiv[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+    def __truediv__(self, other: RTrueDiv[A_co, B]) -> 'Vector2[B]': ...
 
     def __truediv__(self, other):
         try:
@@ -299,9 +302,9 @@ class Vector2(_PlainVector2[NumberT_co]):
             return NotImplemented
 
     @overload
-    def __floordiv__(self: _PlainVector2[SupportsFloorDiv[NumberU, NumberV]], other: NumberU) -> 'Vector2[NumberV]': ...
+    def __floordiv__(self: _Vector2[FloorDiv[B, C]], other: B) -> 'Vector2[C]': ...
     @overload
-    def __floordiv__(self, other: SupportsRFloorDiv[NumberT_co, NumberU]) -> 'Vector2[NumberU]': ...
+    def __floordiv__(self, other: RFloorDiv[A_co, B]) -> 'Vector2[B]': ...
 
     def __floordiv__(self, other):
         try:
@@ -320,10 +323,7 @@ class Vector2(_PlainVector2[NumberT_co]):
         )
 
 
-class _PlainRect2(Tuple[T_co, T_co, T_co, T_co]):
-    def __getitem__(self, index: Literal[0, 1, 2, 3]) -> T_co:
-        return super().__getitem__(index)
-
+class _Rect2(Tuple[T_co, T_co, T_co, T_co]):
     @property
     def x0(self) -> T_co:
         return self[0]
@@ -340,23 +340,26 @@ class _PlainRect2(Tuple[T_co, T_co, T_co, T_co]):
     def y1(self) -> T_co:
         return self[3]
 
+    def __getitem__(self, index: Literal[0, 1, 2, 3]) -> T_co:
+        return super().__getitem__(index)
+
     def __len__(self) -> Literal[4]:
         return 4
 
 
-class Rect2(_PlainRect2[NumberT_co]):
+class Rect2(_Rect2[A_co]):
     @overload
-    def __new__(cls, iterable: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, iterable: Iterable[A_co]) -> 'Rect2[A_co]': ...
     @overload
-    def __new__(cls, x0: NumberT_co, y0: NumberT_co, x1: NumberT_co, y1: NumberT_co) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, x0: A_co, y0: A_co, x1: A_co, y1: A_co) -> 'Rect2[A_co]': ...
     @overload
-    def __new__(cls, pt0: Iterable[NumberT_co], pt1: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, pt0: Iterable[A_co], pt1: Iterable[A_co]) -> 'Rect2[A_co]': ...
     @overload
-    def __new__(cls, *, x: NumberT_co, y: NumberT_co, w: NumberT_co, h: NumberT_co) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, *, x: A_co, y: A_co, w: A_co, h: A_co) -> 'Rect2[A_co]': ...
     @overload
-    def __new__(cls, *, x: NumberT_co, y: NumberT_co, width: NumberT_co, height: NumberT_co) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, *, x: A_co, y: A_co, width: A_co, height: A_co) -> 'Rect2[A_co]': ...
     @overload
-    def __new__(cls, *, position: Iterable[NumberT_co], size: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]': ...
+    def __new__(cls, *, position: Iterable[A_co], size: Iterable[A_co]) -> 'Rect2[A_co]': ...
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
@@ -383,7 +386,7 @@ class Rect2(_PlainRect2[NumberT_co]):
             )
 
     @classmethod
-    def _from_x0y0x1y1(cls, x0: NumberT_co, y0: NumberT_co, x1: NumberT_co, y1: NumberT_co) -> 'Rect2[NumberT_co]':
+    def _from_x0y0x1y1(cls, x0: A_co, y0: A_co, x1: A_co, y1: A_co) -> 'Rect2[A_co]':
         if x0 > x1:
             x0, x1 = x1, x0
 
@@ -393,84 +396,84 @@ class Rect2(_PlainRect2[NumberT_co]):
         return super().__new__(cls, (x0, y0, x1, y1))
 
     @classmethod
-    def _from_pt0pt1(cls, pt0: Iterable[NumberT_co], pt1: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+    def _from_pt0pt1(cls, pt0: Iterable[A_co], pt1: Iterable[A_co]) -> 'Rect2[A_co]':
         x0, y0 = pt0
         x1, y1 = pt1
         return cls._from_x0y0x1y1(x0, y0, x1, y1)
 
     @classmethod
-    def _from_xywh(cls, x: NumberT_co, y: NumberT_co, w: NumberT_co, h: NumberT_co) -> 'Rect2[NumberT_co]':
+    def _from_xywh(cls, x: A_co, y: A_co, w: A_co, h: A_co) -> 'Rect2[A_co]':
         x0, y0 = x, y
         x1, y1 = x+w, y+h
         return cls._from_x0y0x1y1(x0, y0, x1, y1)
 
     @classmethod
-    def _from_position_and_size(cls, position: Iterable[NumberT_co], size: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+    def _from_position_and_size(cls, position: Iterable[A_co], size: Iterable[A_co]) -> 'Rect2[A_co]':
         x, y = position
         w, h = size
         return cls._from_xywh(x, y, w, h)
 
     @classmethod
-    def _from_iterable(cls, iterable: Iterable[NumberT_co]) -> 'Rect2[NumberT_co]':
+    def _from_iterable(cls, iterable: Iterable[A_co]) -> 'Rect2[A_co]':
         x0, y0, x1, y1 = iterable
         return cls._from_x0y0x1y1(x0, y0, x1, y1)
 
     @property
-    def pt0(self) -> Vector2[NumberT_co]:
+    def pt0(self) -> Vector2[A_co]:
         return Vector2(self.x0, self.y0)
 
     @property
-    def pt1(self) -> Vector2[NumberT_co]:
+    def pt1(self) -> Vector2[A_co]:
         return Vector2(self.x1, self.y1)
 
     @property
-    def x(self) -> NumberT_co:
+    def x(self) -> A_co:
         return self.x0
 
     @property
-    def y(self) -> NumberT_co:
+    def y(self) -> A_co:
         return self.y0
 
     @property
-    def xc(self) -> NumberT_co:
+    def xc(self) -> A_co:
         return (self.x0 + self.x1)/2
 
     @property
-    def yc(self) -> NumberT_co:
+    def yc(self) -> A_co:
         return (self.y0 + self.y1)/2
 
     @property
-    def w(self) -> NumberT_co:
+    def w(self) -> A_co:
         return self.x1 - self.x0
 
     @property
-    def h(self) -> NumberT_co:
+    def h(self) -> A_co:
         return self.y1 - self.y0
 
     @property
-    def width(self) -> NumberT_co:
+    def width(self) -> A_co:
         return self.w
 
     @property
-    def height(self) -> NumberT_co:
+    def height(self) -> A_co:
         return self.h
 
     @property
-    def position(self) -> Vector2[NumberT_co]:
+    def position(self) -> Vector2[A_co]:
         return Vector2(self.x, self.y)
 
     @property
-    def center(self) -> Vector2[NumberT_co]:
+    def center(self) -> Vector2[A_co]:
         return Vector2(self.xc, self.yc)
 
     @property
-    def size(self) -> Vector2[NumberT_co]:
+    def size(self) -> Vector2[A_co]:
         return Vector2(self.w, self.h)
 
-    def replace(self: 'Rect2[NumberU]', **kwargs: NumberU) -> 'Rect2[NumberU]':
+    def replace(self: 'Rect2[B]', **kwargs: B) -> 'Rect2[B]':
         raise NotImplementedError
 
-    def map(self, func: Callable[[NumberT_co], NumberU]) -> 'Rect2[NumberU]':
+    def map(self, func: Callable[[A_co], B]) -> 'Rect2[B]':
         return Rect2(map(func, self))
 
     def __repr__(self) -> str:
@@ -478,9 +481,9 @@ class Rect2(_PlainRect2[NumberT_co]):
                .format(class_name=type(self).__name__, x0=self.x0, y0=self.y0, x1=self.x1, y1=self.y1)
 
     @overload
-    def contains(self: _PlainRect2[Comparable[NumberU]], point: Iterable[NumberU], include_boundary: bool = True) -> bool: ...
+    def contains(self: _Rect2[Comparable[B]], point: Iterable[B], include_boundary: bool = True) -> bool: ...
     @overload
-    def contains(self, point: Iterable[Comparable[NumberT_co]], include_boundary: bool = True) -> bool: ...
+    def contains(self, point: Iterable[Comparable[A_co]], include_boundary: bool = True) -> bool: ...
 
     def contains(self, point, include_boundary=True):
         point_vec = Vector2(point)
@@ -490,9 +493,9 @@ class Rect2(_PlainRect2[NumberT_co]):
             return self.x0 < point_vec.x < self.x1 and self.y0 < point_vec.y < self.y1
 
     @overload
-    def intersects(self: _PlainRect2[Comparable[NumberU]], other: Iterable[NumberU]) -> bool: ...
+    def intersects(self: _Rect2[Comparable[B]], other: Iterable[B]) -> bool: ...
     @overload
-    def intersects(self, other: Iterable[Comparable[NumberT_co]]) -> bool: ...
+    def intersects(self, other: Iterable[Comparable[A_co]]) -> bool: ...
 
     def intersects(self, other):
         """Return True if this Rect2 is intersecting with the `other` Rect2. Return False if they do not
