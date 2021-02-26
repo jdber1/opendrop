@@ -309,6 +309,9 @@ class Vector2(_PlainVector2[NumberT_co]):
         except TypeError:
             return NotImplemented
 
+    def __abs__(self) -> float:
+        return (abs(self.x)**2 + abs(self.y)**2)**0.5
+
     def __repr__(self) -> str:
         return '{class_name}({x}, {y})'.format(
                 class_name=type(self).__name__,
@@ -516,6 +519,18 @@ class Line2:
     @property
     def pt1(self) -> Vector2[float]:
         return self._pt1
+
+    @property
+    def unit(self) -> Vector2[float]:
+        unit = self.pt1 - self.pt0
+        unit /= abs(unit)
+        return unit
+
+    @property
+    def perp(self) -> Vector2[float]:
+        unit = self.unit
+        perp = Vector2(-unit.y, unit.x)
+        return perp
 
     @property
     def gradient(self) -> float:
