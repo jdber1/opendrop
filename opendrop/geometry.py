@@ -506,11 +506,11 @@ class Line2:
         pt0_vec = Vector2(pt0)
         pt1_vec = Vector2(pt1)
 
-        if pt1_vec.x < pt0_vec.x:
-            pt1_vec, pt0_vec = pt0_vec, pt1_vec
+        if pt0_vec == pt1_vec:
+            raise ValueError("pt0 and pt1 cannot be equal")
 
-        self._pt0 = pt0_vec  # Left point
-        self._pt1 = pt1_vec  # Right point
+        self._pt0 = pt0_vec
+        self._pt1 = pt1_vec
 
     @property
     def pt0(self) -> Vector2[float]:
