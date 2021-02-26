@@ -108,7 +108,8 @@ class Number(
     Pos,
     Comparable,
     Protocol,
-): ...
+):
+    def __abs__(self) -> float: ...
 
 
 A_co = TypeVar('A_co', bound=Number, covariant=True)
