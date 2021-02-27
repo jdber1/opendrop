@@ -208,9 +208,17 @@ class DefineLinePluginPresenter(Presenter['DefineLinePluginView']):
             self.view.hide_control_point()
             return
 
+        pt0 = self._model.begin_define_pos
+        pt1 = current_cursor_pos
+
+        if pt0 == pt1:
+            self.view.bn_dragging.set(None)
+            self.view.hide_control_point()
+            return
+
         self.view.bn_dragging.set(Line2(
-            pt0=self._model.begin_define_pos,
-            pt1=current_cursor_pos,
+            pt0=pt0,
+            pt1=pt1,
         ))
 
         self.view.show_control_point(*self._model.begin_define_pos)
