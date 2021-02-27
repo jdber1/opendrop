@@ -332,7 +332,7 @@ class Vector2(_Vector2[A_co]):
         except TypeError:
             return NotImplemented
 
-    def __matmul__(self: _Vector2[B], other: Sequence[B]) -> 'Vector2[B]':
+    def __matmul__(self: _Vector2[B], other: Sequence[B]) -> B:
         """Return dot product with other."""
         if len(other) != 2:
             raise ValueError(f"dimension mismatch, got sequence with length {len(other)}")
