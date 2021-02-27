@@ -3,7 +3,6 @@ import math
 
 import cv2
 import numpy as np
-import scipy.optimize
 
 from opendrop.geometry import Rect2, Vector2
 from opendrop.utility.misc import rotation_mat2d
@@ -241,6 +240,8 @@ def _largest_connected_component(gray: np.ndarray) -> np.ndarray:
 
 
 def find_pendant_apex(data: Tuple[np.ndarray, np.ndarray]) -> Optional[tuple]:
+    from opendrop.fit import circle_fit
+
     x, y = data
 
     if len(x) == 0 or len(y) == 0:
@@ -251,22 +252,17 @@ def find_pendant_apex(data: Tuple[np.ndarray, np.ndarray]) -> Optional[tuple]:
     radius = np.hypot(x - xc, y - yc).mean()
 
     # Fit a circle to the most circular part of the data.
-    try:
-        ans = scipy.optimize.least_squares(
-            _circle_residues,
-            (xc, yc, radius),
-            _circle_jac,
-            args=(x, y),
-            loss='arctan',  # Ignore outliers.
-            f_scale=radius/100,
-            x_scale=(radius, radius, radius),
-            max_nfev=50,
-        )
-    except ValueError:
+    circle_fit_result = circle_fit(
+        data,
+        loss='arctan',
+        f_scale=radius/100,
+    )
+    if circle_fit_result is None:
         return None
 
-    xc, yc, radius = ans.x
-    resids = np.abs(ans.fun)
+    xc, yc = circle_fit_result.center
+    radius = circle_fit_result.radius
+    resids = np.abs(circle_fit_result.residuals)
     resids_50ptile = np.quantile(resids, 0.5)
 
     # The somewhat circular-ish part of the drop profile.
@@ -329,20 +325,14 @@ def find_pendant_apex(data: Tuple[np.ndarray, np.ndarray]) -> Optional[tuple]:
     if len(apex_arc_ix) > 10:
         # Fit another circle to a smaller arc around the apex. Points within 0.3 radians of the apex should
         # have roughly constant curvature across typical Bond values.
-        try:
-            ans = scipy.optimize.least_squares(
-                _circle_residues,
-                (xc, yc, radius),
-                _circle_jac,
-                args=(apex_arc_x, apex_arc_y),
-                method='lm',
-                x_scale=(radius, radius, radius),
-                max_nfev=50,
-            )
-        except ValueError:
-            pass
-        else:
-            xc, yc, radius = ans.x 
+        circle_fit_result = circle_fit(
+            np.array([apex_arc_x, apex_arc_y]),
+            xc=xc,
+            yc=yc,
+        )
+        if circle_fit_result is not None:
+            xc, yc = circle_fit_result.center
+            radius = circle_fit_result.radius
 
     apex_x, apex_y = [xc, yc] - radius * unit_z
 
