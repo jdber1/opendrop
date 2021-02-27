@@ -10,12 +10,13 @@ class NeedleModel:
         self.data.flags.writeable = False
 
         self._params = np.empty(len(NeedleParam))
+        self._params_set = False
         self._residuals = np.empty(shape=(self.data.shape[1],))
         self._jac = np.empty(shape=(self.data.shape[1], len(self._params)))
         self._lmask = np.empty(shape=(self.data.shape[1],), dtype=bool)
 
     def set_params(self, params: Sequence[float]) -> None:
-        if (self._params == params).all():
+        if self._params_set and (self._params == params).all():
             return
 
         w      = params[NeedleParam.ROTATION]

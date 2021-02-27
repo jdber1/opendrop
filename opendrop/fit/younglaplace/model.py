@@ -49,12 +49,13 @@ class YoungLaplaceModel:
         self.data.flags.writeable = False
 
         self._params = np.empty(len(YoungLaplaceParam))
+        self._params_set = False
         self._s = np.empty(shape=(self.data.shape[1],))
         self._residuals = np.empty(shape=(self.data.shape[1],))
         self._jac = np.empty(shape=(self.data.shape[1], len(self._params)))
 
     def set_params(self, params: Sequence[float]) -> None:
-        if (self._params == params).all():
+        if self._params_set and (self._params == params).all():
             return
 
         bond   = params[YoungLaplaceParam.BOND]
