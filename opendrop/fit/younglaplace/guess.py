@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 
@@ -8,10 +8,14 @@ from opendrop.features import find_pendant_apex
 from .types import YoungLaplaceParam
 
 
-def young_laplace_guess(data: Tuple[np.ndarray, np.ndarray]) -> tuple:
+def young_laplace_guess(data: Tuple[np.ndarray, np.ndarray]) -> Optional[tuple]:
     params = np.empty(len(YoungLaplaceParam))
 
-    apex, radius, rotation = find_pendant_apex(data)
+    ans = find_pendant_apex(data)
+    if ans is None:
+        return None
+
+    apex, radius, rotation = ans
 
     r, z = rotation_mat2d(-rotation) @ (data - np.reshape(apex, (2, 1))) 
     bond = _bond_selected_plane(r, z, radius)
@@ -37,35 +41,3 @@ def _bond_selected_plane(r: np.ndarray, z: np.ndarray, radius: float) -> float:
         bond = 0.15
 
     return bond
-
-
-def _calculate_inertia(x: np.ndarray, y: np.ndarray) -> Tuple[float, float, float]:
-    x = x - x.mean()
-    y = y - y.mean()
-    
-    Ixx = (y**2).sum()
-    Iyy = (x**2).sum()
-    Ixy = -(x @ y)
-    
-    return Ixx, Iyy, Ixy
-
-
-def _circle_residues(params, x, y):
-    xc, yc, radius = params
-    r = np.hypot(x - xc, y - yc)
-    return r - radius
-
-
-def _circle_jac(params, x, y):
-    jac = np.empty((len(x), 3))
-
-    xc, yc, radius = params
-    dist_x = x - xc
-    dist_y = y - yc
-    r = np.hypot(dist_x, dist_y)
-
-    jac[:, 0] = -dist_x/r
-    jac[:, 1] = -dist_y/r
-    jac[:, 2] = -1
-
-    return jac

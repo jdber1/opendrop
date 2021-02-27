@@ -32,6 +32,8 @@ from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
+from opendrop.utility.misc import rotation_mat2d
+
 from .shape import YoungLaplaceShape
 from .types import YoungLaplaceParam
 
@@ -74,8 +76,7 @@ class YoungLaplaceModel:
         de_dw  = self._jac[:, YoungLaplaceParam.ROTATION]
 
         shape = self._get_shape(bond)
-        Q = np.array([[np.cos(w), -np.sin(w)],
-                      [np.sin(w),  np.cos(w)]])
+        Q = rotation_mat2d(w)
 
         data_x, data_y = self.data
         data_r, data_z = Q.T @ (data_x - X0, data_y - Y0)
@@ -137,8 +138,7 @@ class YoungLaplaceModel:
         w      = self._params[YoungLaplaceParam.ROTATION]
 
         shape = self._get_shape(bond)
-        Q = np.array([[np.cos(w), -np.sin(w)],
-                      [np.sin(w),  np.cos(w)]])
+        Q = rotation_mat2d(w)
         s = self._s
 
         rz = radius * shape(s)

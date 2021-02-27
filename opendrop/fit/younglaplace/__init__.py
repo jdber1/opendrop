@@ -43,10 +43,16 @@ def young_laplace_fit(data: Tuple[np.ndarray, np.ndarray], verbose: bool = False
     def jac(params: Sequence[float], model: YoungLaplaceModel) -> np.ndarray:
         model.set_params(params)
         return model.jac
+    
+    initial_params = young_laplace_guess(data)
+    if initial_params is None:
+        raise ValueError("Parameter estimatation failed for this data set")
+    
+    model.set_params(initial_params)
 
     optimize_result = scipy.optimize.least_squares(
         fun,
-        young_laplace_guess(data),
+        model.params,
         jac,
         args=(model,),
         x_scale='jac',
