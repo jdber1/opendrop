@@ -609,6 +609,11 @@ class Line2:
             return math.copysign(dy, math.inf)
 
         return dy/dx
+    
+    @property
+    def angle(self) -> float:
+        unit = self.unit
+        return math.atan2(unit.y, unit.x)
 
     @overload
     def eval(self, *, x: float) -> Vector2[float]: ...
