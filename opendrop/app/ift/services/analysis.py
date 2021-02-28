@@ -38,13 +38,13 @@ from injector import inject, Injector
 import numpy as np
 
 from opendrop.app.common.services.acquisition import InputImage
-from opendrop.app.ift.services.features import (
+from .features import (
     PendantFeatures,
     PendantFeaturesParamsFactory,
     PendantFeaturesService,
 )
-from opendrop.app.ift.services.quantities import PendantPhysicalParamsFactory
-from opendrop.app.ift.services.younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
+from .quantities import PendantPhysicalParamsFactory
+from .younglaplace import YoungLaplaceFitService, YoungLaplaceFitResult
 
 from opendrop.utility.bindable import AccessorBindable, VariableBindable
 from opendrop.geometry import Vector2
