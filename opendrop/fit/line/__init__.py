@@ -27,9 +27,13 @@ class LineFitResult(NamedTuple):
 
 def line_fit(
         data: np.ndarray,
-        verbose: bool = False
+        *,
+        loss: str = 'linear',
+        f_scale: float = 1.0,
+        verbose: bool = False,
 ) -> Optional[LineFitResult]:
-    if data.shape[1] == 0:
+    if data.shape[1] < 2:
+        # Need at least two points to fit.
         return None
     
     model = LineModel(data)
@@ -51,7 +55,9 @@ def line_fit(
             fun,
             model.params,
             jac,
-            method='lm',
+            method='lm' if loss == 'linear' else 'trf',
+            loss=loss,
+            f_scale=f_scale,
             x_scale='jac',
             ftol=OBJECTIVE_TOL,
             xtol=DELTA_TOL,
@@ -80,11 +86,19 @@ def line_guess(data: np.ndarray) -> Sequence[float]:
     """A very crude guess that just fits a line between two arbitrary points."""
     params = np.empty(len(LineParam))
 
-    line = Line2(data[:, 0], data[:, -1])
-    unit = line.unit
-    perp = line.perp
+    pt0 = data[:,  0]
+    pt1 = data[:, -1]
 
-    params[LineParam.RHO] = line.perp @ line.pt0
-    params[LineParam.ANGLE] = np.arctan2(unit.y, unit.x)
+    if np.all(pt0 == pt1):
+        # Just initialize to anything.
+        params[LineParam.RHO] = 0
+        params[LineParam.ANGLE] = 0
+    else:
+        line = Line2(data[:, 0], data[:, -1])
+        unit = line.unit
+        perp = line.perp
+
+        params[LineParam.RHO] = line.perp @ line.pt0
+        params[LineParam.ANGLE] = np.arctan2(unit.y, unit.x)
 
     return params
