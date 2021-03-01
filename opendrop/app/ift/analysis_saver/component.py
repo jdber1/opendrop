@@ -127,7 +127,7 @@ class IFTSaveDialogView(View['IFTSaveDialogPresenter', Gtk.Window]):
         _, drop_residuals_figure_options_area = self.new_component(
             figure_options_cs.factory(
                 model=self.presenter.drop_residuals_figure_options,
-                figure_name='drop profile fit residuals plot',
+                figure_name='residuals plot',
             )
         )
         drop_residuals_figure_options_area.show()
