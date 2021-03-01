@@ -41,28 +41,28 @@ class IFTAnalysisSaverOptions:
         self.bn_save_dir_name = VariableBindable('')
 
         self.drop_residuals_figure_opts = FigureOptions(
-            should_save=True,
+            should_save=False,
             dpi=300,
             size_w=10,
             size_h=10
         )
 
         self.ift_figure_opts = FigureOptions(
-            should_save=True,
+            should_save=False,
             dpi=300,
             size_w=15,
             size_h=9
         )
 
         self.volume_figure_opts = FigureOptions(
-            should_save=True,
+            should_save=False,
             dpi=300,
             size_w=15,
             size_h=9
         )
 
         self.surface_area_figure_opts = FigureOptions(
-            should_save=True,
+            should_save=False,
             dpi=300,
             size_w=15,
             size_h=9

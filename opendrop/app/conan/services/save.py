@@ -55,7 +55,7 @@ class ConanSaveParamsFactory:
         self.bn_save_dir_name = VariableBindable('')
 
         self.angle_figure_opts = FigureOptions(
-            should_save=True,
+            should_save=False,
             dpi=300,
             size_w=15,
             size_h=9
