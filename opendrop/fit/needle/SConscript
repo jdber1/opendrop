@@ -5,7 +5,7 @@ env = \
 env.Clone(tools=['cython'],
           SHLIBPREFIX='',
           SHLIBSUFFIX='$PYTHON_EXT_SUFFIX')
-env.Append(CPPPATH=['$PYTHONINCLUDES', '$NUMPYINCLUDES'],
+env.Append(CPPPATH=['$PYTHONINCLUDES'],
            LIBS=['m'])
 env.VariantDir('.checkpoints', '.', duplicate=False)
 
