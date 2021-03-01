@@ -1,6 +1,6 @@
-from libc.string cimport memcpy
 cimport cython
-cimport numpy as np
+from libc.stdint cimport *
+from libc.string cimport memcpy
 from cpython cimport array
 import array
 
@@ -9,22 +9,22 @@ __all__ = ('colorize_labels',)
 
 
 ctypedef fused integral:
-    np.int8_t
-    np.uint8_t
-    np.int16_t
-    np.uint16_t
-    np.int32_t
-    np.uint32_t
-    np.int64_t
-    np.uint64_t
+    int8_t
+    uint8_t
+    int16_t
+    uint16_t
+    int32_t
+    uint32_t
+    int64_t
+    uint64_t
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def colorize_labels(integral[:, :] labels not None, np.uint8_t[:, ::1] colors not None):
+def colorize_labels(integral[:, :] labels not None, uint8_t[:, ::1] colors not None):
     cdef size_t i, j, n
     cdef array.array arr
-    cdef np.uint8_t[:, :, :] view
+    cdef uint8_t[:, :, :] view
     
     if colors.shape[1] != 4:
         raise ValueError(
@@ -35,7 +35,7 @@ def colorize_labels(integral[:, :] labels not None, np.uint8_t[:, ::1] colors no
     arr = array.array('B')
     array.resize(arr, labels.shape[0]*labels.shape[1]*4)
     
-    view = <np.uint8_t[:labels.shape[0], :labels.shape[1], :4]> arr.data.as_uchars
+    view = <uint8_t[:labels.shape[0], :labels.shape[1], :4]> arr.data.as_uchars
 
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):

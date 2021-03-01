@@ -2,14 +2,14 @@ Import('env')
 
 
 env = env.Clone(
-    tools=['cython', 'numpy'],
+    tools=['cython'],
 
     SHLIBPREFIX='',
     SHLIBSUFFIX='$PYTHON_EXT_SUFFIX',
 )
 
 env.Append(
-    CPPPATH=['$PYTHONINCLUDES', '$NUMPYINCLUDES'],
+    CPPPATH=['$PYTHONINCLUDES'],
 )
 
 env.VariantDir('.checkpoints', '.', duplicate=False)
