@@ -16,7 +16,7 @@ def exists(env):
 
 def generate(env):
     gcr = env.Detect('glib-compile-resources')
-    env['GLIB_COMPILE_RESOURCES'] = gcr
+    env.SetDefault(GLIB_COMPILE_RESOURCES=gcr)
 
     if env['GLIB_COMPILE_RESOURCES'] is None:
         print("Could not find glib-compile-resources")
