@@ -1,3 +1,4 @@
+import os
 import setuptools_scm
 
 
@@ -31,8 +32,9 @@ AddOption(
 env['BUILDDIR'] = GetOption('build_dir')
 
 env.Append(
+    ENV={'PATH': os.environ['PATH']},
     CPPPATH=[env.Dir('include')],
-    CCFLAGS=['-O3']
+    CCFLAGS=['-O3'],
 )
 
 env.Tool('python')
