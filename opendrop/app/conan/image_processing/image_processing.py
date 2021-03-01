@@ -35,10 +35,10 @@ from opendrop.appfw import Presenter, component
 
 from .services.image_processing import ConanImageProcessingModel
 from .services.plugins import ToolID
-from .services.plugins.drop_region import conan_drop_region_plugin_cs
-from .services.plugins.foreground_detection import foreground_detection_plugin_cs
+from .services.plugins.baseline import conan_baseline_plugin_cs
+from .services.plugins.roi import conan_roi_plugin_cs
+from .services.plugins.thresh import conan_thresh_plugin_cs
 from .services.plugins.preview import conan_preview_plugin_cs
-from .services.plugins.surface import conan_surface_plugin_cs
 
 
 @component(
@@ -53,21 +53,21 @@ class ConanImageProcessingPresenter(Presenter[Gtk.Container]):
         self.image_processor_component = image_processor_cs.factory(
             active_tool=self.service.bn_active_tool,
             tool_ids=[
-                ToolID.DROP_REGION,
-                ToolID.SURFACE,
-                ToolID.FOREGROUND_DETECTION,
+                ToolID.BASELINE,
+                ToolID.ROI,
+                ToolID.THRESH,
             ],
             plugins=[
-                conan_drop_region_plugin_cs.factory(
-                    model=self.service.drop_region_plugin,
+                conan_baseline_plugin_cs.factory(
+                    model=self.service.baseline_plugin,
                     z_index=DrawPriority.OVERLAY,
                 ),
-                conan_surface_plugin_cs.factory(
-                    model=self.service.surface_plugin,
+                conan_roi_plugin_cs.factory(
+                    model=self.service.roi_plugin,
                     z_index=DrawPriority.OVERLAY,
                 ),
-                foreground_detection_plugin_cs.factory(
-                    model=self.service.foreground_detection_plugin,
+                conan_thresh_plugin_cs.factory(
+                    model=self.service.thresh_plugin,
                 ),
                 conan_preview_plugin_cs.factory(
                     model=self.service.preview_plugin,

@@ -31,8 +31,8 @@ from typing import Optional
 
 from gi.repository import GObject
 
-from opendrop.app.conan.analysis import ConanAnalysis
 from opendrop.appfw import Presenter, TemplateChild, component, install
+from opendrop.app.conan.services.analysis import ConanAnalysisJob, ConanAnalysisStatus
 
 
 @component(
@@ -54,14 +54,13 @@ class ConanReportOverviewDetailPresenter(Presenter):
 
     @install
     @GObject.Property
-    def analysis(self) -> Optional[ConanAnalysis]:
+    def analysis(self) -> Optional[ConanAnalysisJob]:
         return self._analysis
 
     @analysis.setter
-    def analysis(self, value: Optional[ConanAnalysis]) -> None:
-        for conn in self.event_connections:
-            conn.disconnect()
-        self.event_connections = ()
+    def analysis(self, value: Optional[ConanAnalysisJob]) -> None:
+        if self._analysis:
+            self._analysis.disconnect(self.analysis_status_changed_id)
 
         self._analysis = value
 
@@ -69,14 +68,13 @@ class ConanReportOverviewDetailPresenter(Presenter):
             self.show_waiting_placeholder()
             return
 
-        self.event_connections = (
-            self._analysis.bn_image.on_changed.connect(self.hdl_analysis_image_changed),
-        )
+        self.analysis_status_changed_id = \
+            self._analysis.connect('notify::status', self.analysis_status_changed)
 
-        self.hdl_analysis_image_changed()
+        self.analysis_status_changed()
 
-    def hdl_analysis_image_changed(self) -> None:
-        if self._analysis is None or self._analysis.bn_image.get() is None:
+    def analysis_status_changed(self, *_) -> None:
+        if self.analysis.status is ConanAnalysisStatus.WAITING_FOR_IMAGE:
             self.show_waiting_placeholder()
         else:
             self.hide_waiting_placeholder()

@@ -31,18 +31,20 @@ import itertools
 
 from gi.repository import Gtk, GObject
 
+from opendrop.utility.bindable.gextension import GObjectPropertyBindable
+from opendrop.utility.bindable.binding import Binding
+from opendrop.mvp import ComponentSymbol, View, Presenter
+from opendrop.widgets.float_entry import FloatEntry
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
 from opendrop.app.conan.image_processing.services.plugins import ToolID
-from opendrop.mvp import ComponentSymbol, View, Presenter
-from opendrop.utility.bindable.gextension import GObjectPropertyBindable
-from opendrop.widgets.float_entry import FloatEntry
-from .model import ForegroundDetectionPluginModel
 
-foreground_detection_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
+from .model import ConanThreshPluginModel
+
+conan_thresh_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
 
 
-@foreground_detection_plugin_cs.view(options=['view_context'])
-class ForegroundDetectionPluginView(View['ForegroundDetectionPluginPresenter', None]):
+@conan_thresh_plugin_cs.view(options=['view_context'])
+class ConanThreshPluginView(View['ConanThreshPluginPresenter', None]):
     _STYLE = '''
         .small-pad {
              min-height: 0px;
@@ -56,7 +58,7 @@ class ForegroundDetectionPluginView(View['ForegroundDetectionPluginPresenter', N
 
     def _do_init(self, view_context: ImageProcessorPluginViewContext) -> None:
         self._view_context = view_context
-        self._tool_ref = self._view_context.get_tool_item(ToolID.FOREGROUND_DETECTION)
+        self._tool_ref = self._view_context.get_tool_item(ToolID.THRESH)
 
         self.bn_tool_button_is_active = self._tool_ref.bn_is_active
 
@@ -64,7 +66,7 @@ class ForegroundDetectionPluginView(View['ForegroundDetectionPluginPresenter', N
         self._tool_ref.button_interior.add(self._button_body)
 
         button_lbl = Gtk.Label(
-            label="Foreground detection",
+            label="Edge Threshold",
             vexpand=True,
             valign=Gtk.Align.CENTER,
         )
@@ -88,9 +90,9 @@ class ForegroundDetectionPluginView(View['ForegroundDetectionPluginPresenter', N
         )
         self._popover.add(popover_body)
 
-        thresh_inp = Gtk.Adjustment(value=255, lower=1, upper=255)
+        thresh_inp = Gtk.Adjustment(value=0, lower=0, upper=100)
 
-        thresh_lbl = Gtk.Label('Threshold:', halign=Gtk.Align.START)
+        thresh_lbl = Gtk.Label('% of max:', halign=Gtk.Align.START)
         popover_body.attach(thresh_lbl, 0, 0, 1, 1)
 
         thresh_scl = Gtk.Scale(
@@ -147,18 +149,19 @@ class ForegroundDetectionPluginView(View['ForegroundDetectionPluginPresenter', N
         self._popover.destroy()
 
 
-@foreground_detection_plugin_cs.presenter(options=['model'])
-class ForegroundDetectionPluginPresenter(Presenter['ForegroundDetectionPluginView']):
-    def _do_init(self, model: ForegroundDetectionPluginModel) -> None:
+@conan_thresh_plugin_cs.presenter(options=['model'])
+class ConanThreshPluginPresenter(Presenter['ConanThreshPluginView']):
+    def _do_init(self, model: ConanThreshPluginModel) -> None:
         self._model = model
         self.__data_bindings = []
         self.__event_connections = []
 
     def view_ready(self) -> None:
         self.__data_bindings.extend([
-            self._model.bn_thresh.bind(
-                self.view.bn_thresh
-            ),
+            Binding(src=self._model.bn_thresh,
+                    dst=self.view.bn_thresh,
+                    to_dst=lambda x: x*100,
+                    to_src=lambda x: x/100),
         ])
 
         self.__event_connections.extend([

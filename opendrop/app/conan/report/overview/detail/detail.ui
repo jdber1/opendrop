@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.38.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <template class="ConanReportOverviewDetail" parent="GtkStack">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="margin_left">10</property>
-    <property name="margin_right">10</property>
-    <property name="margin_top">10</property>
-    <property name="margin_bottom">10</property>
+    <property name="can-focus">False</property>
     <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
       <object class="GtkLabel" id="no_data_label">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="label" translatable="yes">&lt;b&gt;No data&lt;/b&gt;</property>
-        <property name="use_markup">True</property>
+        <property name="use-markup">True</property>
       </object>
       <packing>
         <property name="name">page0</property>
@@ -23,12 +19,52 @@
       </packing>
     </child>
     <child>
-      <object class="ConanReportOverviewImage" id="content">
-        <property name="analysis" bind-source="@" bind-property="analysis" bind-flags="sync-create"/>
+      <object class="GtkNotebook" id="content">
+        <property name="visible">True</property>
+        <property name="can-focus">True</property>
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
+        <property name="tab-pos">bottom</property>
+        <child>
+          <object class="ConanReportOverviewImage">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="analysis" bind-source="@" bind-property="analysis" bind-flags="sync-create"/>
+              </object>
+        </child>
+        <child type="tab">
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Image</property>
+          </object>
+          <packing>
+            <property name="tab-fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <object class="ConanReportOverviewResiduals">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="analysis" bind-source="@" bind-property="analysis" bind-flags="sync-create"/>
+              </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child type="tab">
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Residuals</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+            <property name="tab-fill">False</property>
+          </packing>
+        </child>
       </object>
       <packing>
-        <property name="name">page1</property>
-        <property name="title" translatable="yes">page1</property>
         <property name="position">1</property>
       </packing>
     </child>

@@ -34,17 +34,16 @@ from gi.repository import Gtk, GObject
 
 from opendrop.appfw import Presenter, component, install
 from opendrop.geometry import Rect2, Vector2
-from opendrop.widgets.canvas import Canvas, CanvasAlign, ImageArtist, LineArtist, PolylineArtist, AngleLabelArtist
+from opendrop.widgets.canvas import Canvas, CanvasAlign, ImageArtist, LineArtist, AngleLabelArtist
 
-from opendrop.app.conan.analysis import ConanAnalysis
+from opendrop.app.conan.services.analysis import ConanAnalysisJob
 
 
 @component(
     template_path='./image.ui',
 )
 class ConanReportOverviewImagePresenter(Presenter[Gtk.Container]):
-    _analysis: Optional[ConanAnalysis] = None
-    event_connections = ()
+    _analysis: Optional[ConanAnalysisJob] = None
 
     def after_view_init(self) -> None:
         self.canvas = Canvas(align=CanvasAlign.FIT, hexpand=True, vexpand=True, visible=True)
@@ -58,12 +57,6 @@ class ConanReportOverviewImagePresenter(Presenter[Gtk.Container]):
             scale_strokes=True,
         )
         self.canvas.add_artist(self.baseline_artist)
-
-        self.drop_edge_artist = PolylineArtist(
-            stroke_color=(0.0, 0.5, 1.0),
-            scale_strokes=True,
-        )
-        self.canvas.add_artist(self.drop_edge_artist)
 
         self.left_angle_artist = AngleLabelArtist(
             clockwise=False,
@@ -107,38 +100,27 @@ class ConanReportOverviewImagePresenter(Presenter[Gtk.Container]):
 
     @install
     @GObject.Property
-    def analysis(self) -> Optional[ConanAnalysis]:
+    def analysis(self) -> Optional[ConanAnalysisJob]:
         return self._analysis
 
     @analysis.setter
-    def analysis(self, analysis: Optional[ConanAnalysis]) -> None:
-        for conn in self.event_connections:
-            conn.disconnect()
-        self.event_connections = ()
+    def analysis(self, analysis: Optional[ConanAnalysisJob]) -> None:
+        if self.analysis is not None:
+            self.analysis.disconnect(self.analysis_status_changed_id)
 
         self._analysis = analysis
 
         if analysis is None:
             return
 
-        self.event_connections = (
-            analysis.bn_image.on_changed.connect(self.analysis_changed),
-            analysis.bn_drop_profile_extract.on_changed.connect(self.analysis_changed),
-            analysis.bn_left_angle.on_changed.connect(self.analysis_changed),
-            analysis.bn_left_point.on_changed.connect(self.analysis_changed),
-            analysis.bn_right_angle.on_changed.connect(self.analysis_changed),
-            analysis.bn_right_point.on_changed.connect(self.analysis_changed),
-            analysis.bn_surface_line.on_changed.connect(self.analysis_changed),
-        )
+        self.analysis_status_changed_id = analysis.connect('notify::status', self.analysis_status_changed)
+        self.analysis_status_changed()
 
-        self.analysis_changed()
-
-    def analysis_changed(self) -> None:
+    def analysis_status_changed(self, *_) -> None:
         analysis = self._analysis
-        if analysis is None:
-            return
+        if analysis is None: return
 
-        image = analysis.bn_image.get()
+        image = analysis.image
         if image is not None:
             self.bg_artist.set_array(image)
             self.bg_artist.props.extents = Rect2(0, 0, image.shape[1], image.shape[0])
@@ -147,24 +129,25 @@ class ConanReportOverviewImagePresenter(Presenter[Gtk.Container]):
         else:
             self.bg_artist.clear_data()
 
-        drop_edge = analysis.bn_drop_profile_extract.get()
-        self.drop_edge_artist.props.polyline = drop_edge
+        left_angle = analysis.left_angle
+        left_contact = analysis.left_contact
+        if left_angle is not None and left_contact is not None:
+            self.left_angle_artist.props.delta_angle = left_angle
+            self.left_angle_artist.props.x = left_contact.x
+            self.left_angle_artist.props.y = left_contact.y
+        else:
+            self.left_angle_artist.props.delta_angle = math.nan
 
-        left_angle = analysis.bn_left_angle.get() or math.nan
-        self.left_angle_artist.props.delta_angle = left_angle
+        right_angle = analysis.right_angle
+        right_contact = analysis.right_contact
+        if right_angle is not None and right_contact is not None:
+            self.right_angle_artist.props.delta_angle = -right_angle
+            self.right_angle_artist.props.x = right_contact.x
+            self.right_angle_artist.props.y = right_contact.y
+        else:
+            self.right_angle_artist.props.delta_angle = math.nan
 
-        left_point = analysis.bn_left_point.get() or Vector2(0, 0)
-        self.left_angle_artist.props.x = left_point.x
-        self.left_angle_artist.props.y = left_point.y
-#  
-        right_angle = analysis.bn_right_angle.get() or math.nan
-        self.right_angle_artist.props.delta_angle = -right_angle
-#  
-        right_point = analysis.bn_right_point.get() or Vector2(0, 0)
-        self.right_angle_artist.props.x = right_point.x
-        self.right_angle_artist.props.y = right_point.y
-
-        line = analysis.bn_surface_line.get()
+        line = analysis.baseline
         self.baseline_artist.props.line = line
 
     def destroy(self, *_) -> None:

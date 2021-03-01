@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import conan_surface_plugin_cs
+from .component import conan_roi_plugin_cs

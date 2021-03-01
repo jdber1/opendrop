@@ -28,19 +28,22 @@
 
 
 import asyncio
+from opendrop.utility.bindable.gextension.property import GObjectPropertyBindable
 from typing import Optional
 
 from injector import inject
-import numpy as np
+
+from opendrop.utility.bindable import VariableBindable, AccessorBindable
+from opendrop.geometry import Rect2
 
 from opendrop.app.common.services.acquisition import ImageAcquisitionService
 from opendrop.app.common.image_processing.plugins.define_line import DefineLinePluginModel
 from opendrop.app.common.image_processing.plugins.define_region import DefineRegionPluginModel
-from opendrop.app.conan.analysis import FeatureExtractor, FeatureExtractorParams, ContactAngleCalculatorParams
-from opendrop.utility.bindable import VariableBindable, AccessorBindable
-from opendrop.geometry import Rect2
+from opendrop.app.conan.services.params import ConanParamsFactory
+from opendrop.app.conan.services.features import ConanFeaturesService
+
 from .plugins import ToolID
-from .plugins.foreground_detection import ForegroundDetectionPluginModel
+from .plugins.thresh import ConanThreshPluginModel
 from .plugins.preview import ConanPreviewPluginModel
 
 
@@ -49,50 +52,41 @@ class ConanImageProcessingModel:
     def __init__(
             self, *,
             image_acquisition: ImageAcquisitionService,
-            feature_extractor_params: FeatureExtractorParams,
-            conancalc_params: ContactAngleCalculatorParams,
+            params_factory: ConanParamsFactory,
+            features_service: ConanFeaturesService,
     ) -> None:
         self._loop = asyncio.get_event_loop()
 
         self._image_acquisition = image_acquisition
-        self._feature_extractor_params = feature_extractor_params
-        self._conancalc_params = conancalc_params
+        self._params_factory = params_factory
 
-        self.bn_active_tool = VariableBindable(ToolID.DROP_REGION)
+        self.bn_active_tool = VariableBindable(ToolID.BASELINE)
 
         region_clip = AccessorBindable(
             getter=self._get_region_clip
         )
 
-        self.drop_region_plugin = DefineRegionPluginModel(
-            in_region=self._feature_extractor_params.bn_drop_region_px,
+        self.baseline_plugin = DefineLinePluginModel(
+            in_line=GObjectPropertyBindable(params_factory, 'baseline'),
             in_clip=region_clip,
         )
 
-        self.surface_plugin = DefineLinePluginModel(
-            in_line=self._conancalc_params.bn_surface_line_px,
+        self.roi_plugin = DefineRegionPluginModel(
+            in_region=GObjectPropertyBindable(params_factory, 'roi'),
             in_clip=region_clip,
         )
 
-        self.foreground_detection_plugin = ForegroundDetectionPluginModel(
-            feature_extractor_params=feature_extractor_params,
+        self.thresh_plugin = ConanThreshPluginModel(
+            params_factory=params_factory
         )
 
         self.preview_plugin = ConanPreviewPluginModel(
             image_acquisition=image_acquisition,
-            feature_extractor_params=feature_extractor_params,
-            do_extract_features=self._extract_features,
+            params_factory=params_factory,
+            features_service=features_service,
         )
-
-    def _extract_features(self, image: np.ndarray) -> FeatureExtractor:
-        return FeatureExtractor(image, self._feature_extractor_params, loop=self._loop)
 
     def _get_region_clip(self) -> Optional[Rect2[int]]:
         image_size_hint = self._image_acquisition.get_image_size_hint()
         if image_size_hint is None:
             return None
-
-        return Rect2(
-            position=(0, 0),
-            size=image_size_hint,
-        )

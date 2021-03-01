@@ -27,4 +27,4 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import conan_drop_region_plugin_cs
+from .component import conan_save_dialog_cs

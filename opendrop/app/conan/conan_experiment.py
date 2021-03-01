@@ -34,9 +34,13 @@ from opendrop.app.common.footer.analysis import AnalysisFooterStatus
 from opendrop.appfw import Presenter, TemplateChild, component
 from opendrop.widgets.yes_no_dialog import YesNoDialog
 
-from .analysis_saver import conan_save_dialog_cs
+from .save_dialog import conan_save_dialog_cs
 from .services.progress import ConanAnalysisProgressHelper
 from .services.session import ConanSession, ConanSessionModule
+from .services.save import ConanSaveParamsFactory
+
+
+SYNC_CREATE = GObject.BindingFlags.SYNC_CREATE
 
 
 @component(
@@ -44,40 +48,39 @@ from .services.session import ConanSession, ConanSessionModule
     modules=[ConanSessionModule],
 )
 class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
-    action_area = TemplateChild('action_area')  # type: TemplateChild[Gtk.Stack]
-
+    action_area: TemplateChild[Gtk.Stack] = TemplateChild('action_area')
     analysis_footer = TemplateChild('analysis_footer')
     report_page = TemplateChild('report_page')
 
     @inject
-    def __init__(self, session: ConanSession, progress_helper: ConanAnalysisProgressHelper) -> None:
+    def __init__(
+            self,
+            session: ConanSession,
+            progress_helper: ConanAnalysisProgressHelper,
+            save_params_factory: ConanSaveParamsFactory,
+    ) -> None:
         self.session = session
         self.progress_helper = progress_helper
-
-        session.bind_property('analyses', self.progress_helper, 'analyses', GObject.BindingFlags.SYNC_CREATE)
+        self.save_params_factory = save_params_factory
+        session.bind_property('analyses', self.progress_helper, 'analyses', SYNC_CREATE)
 
     def after_view_init(self) -> None:
-        self.session.bind_property('analyses', self.report_page, 'analyses', GObject.BindingFlags.SYNC_CREATE)
+        self.session.bind_property('analyses', self.report_page, 'analyses', SYNC_CREATE)
 
         self.progress_helper.bind_property(
-            'status', self.analysis_footer, 'status', GObject.BindingFlags.SYNC_CREATE,
-            lambda binding, x: {
-                ConanAnalysisProgressHelper.Status.ANALYSING: AnalysisFooterStatus.IN_PROGRESS,
-                ConanAnalysisProgressHelper.Status.FINISHED: AnalysisFooterStatus.FINISHED,
-                ConanAnalysisProgressHelper.Status.CANCELLED: AnalysisFooterStatus.CANCELLED,
+            'status', self.analysis_footer, 'status', SYNC_CREATE,
+            lambda _, x: {
+                ConanAnalysisProgressHelper.Status.ANALYSING: \
+                    AnalysisFooterStatus.IN_PROGRESS,
+                ConanAnalysisProgressHelper.Status.FINISHED: \
+                    AnalysisFooterStatus.FINISHED,
+                ConanAnalysisProgressHelper.Status.CANCELLED: \
+                    AnalysisFooterStatus.CANCELLED,
             }[x],
             None,
         )
-
-        self.progress_helper.bind_property(
-            'fraction', self.analysis_footer, 'progress', GObject.BindingFlags.SYNC_CREATE
-        )
-        self.progress_helper.bind_property(
-            'time-start', self.analysis_footer, 'time-start', GObject.BindingFlags.SYNC_CREATE
-        )
-        self.progress_helper.bind_property(
-            'est-complete', self.analysis_footer, 'time-complete', GObject.BindingFlags.SYNC_CREATE
-        )
+        self.progress_helper.bind_property('fraction', self.analysis_footer, 'progress', SYNC_CREATE)
+        self.progress_helper.bind_property('time-start', self.analysis_footer, 'time-start', SYNC_CREATE)
 
     def prepare(self, *_) -> None:
         cur_page = self.host.get_current_page()
@@ -143,12 +146,12 @@ class ConanExperimentPresenter(Presenter[Gtk.Assistant]):
     def save_analyses(self, *_) -> None:
         if hasattr(self, 'save_dialog_component'): return
 
-        save_options = self.session.create_save_options()
+        save_options = self.save_params_factory
 
         def hdl_ok() -> None:
             self.save_dialog_component.destroy()
             del self.save_dialog_component
-            self.session.save_analyses(save_options)
+            self.session.save_analyses()
 
         def hdl_cancel() -> None:
             self.save_dialog_component.destroy()

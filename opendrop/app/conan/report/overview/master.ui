@@ -2,18 +2,6 @@
 <!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkListStore" id="tree_model">
-    <columns>
-      <!-- column-name timestamp -->
-      <column type="gchararray"/>
-      <!-- column-name status -->
-      <column type="gchararray"/>
-      <!-- column-name left_angle -->
-      <column type="gchararray"/>
-      <!-- column-name right_angle -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <template class="ConanReportOverviewMaster" parent="GtkScrolledWindow">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
@@ -23,7 +11,6 @@
       <object class="GtkTreeView" id="tree_view">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="model">tree_model</property>
         <property name="enable_search">False</property>
         <property name="enable_grid_lines">both</property>
         <child internal-child="selection">

@@ -31,7 +31,7 @@ from typing import Optional, Iterable, Sequence
 
 from gi.repository import GObject
 
-from opendrop.app.conan.analysis import ConanAnalysis
+from opendrop.app.conan.services.analysis import ConanAnalysisJob
 from opendrop.appfw import Presenter, component, install
 
 
@@ -44,17 +44,17 @@ class ConanReportOverviewPresenter(Presenter):
 
     @install
     @GObject.Property
-    def analyses(self) -> Sequence[ConanAnalysis]:
+    def analyses(self) -> Sequence[ConanAnalysisJob]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, analyses: Iterable[ConanAnalysis]) -> None:
+    def analyses(self, analyses: Iterable[ConanAnalysisJob]) -> None:
         self._analyses = tuple(analyses)
 
     @GObject.Property
-    def selection(self) -> Optional[ConanAnalysis]:
+    def selection(self) -> Optional[ConanAnalysisJob]:
         return self._selection
 
     @selection.setter
-    def selection(self, selection: Optional[ConanAnalysis]) -> None:
+    def selection(self, selection: Optional[ConanAnalysisJob]) -> None:
         self._selection = selection

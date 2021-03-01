@@ -27,5 +27,5 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .component import foreground_detection_plugin_cs
-from .model import ForegroundDetectionPluginModel
+from .component import conan_thresh_plugin_cs
+from .model import ConanThreshPluginModel

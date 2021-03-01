@@ -27,37 +27,38 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import asyncio
 from typing import Sequence
 
 from gi.repository import GObject
 from injector import Binder, Module, inject, singleton
-import numpy as np
 
 from opendrop.app.common.services.acquisition import (
     AcquirerType,
     ImageAcquisitionService,
 )
-from opendrop.app.conan.analysis import (
-    ConanAnalysis,
-    ContactAngleCalculator,
-    ContactAngleCalculatorParams,
-    FeatureExtractor,
-    FeatureExtractorParams,
-)
-from opendrop.app.conan.analysis_saver import ConanAnalysisSaverOptions
-from opendrop.app.conan.analysis_saver.save_functions import save_drops
-from opendrop.utility.bindable import VariableBindable
-from opendrop.utility.bindable.typing import Bindable
+
+from .params import ConanParamsFactory
+from .features import ConanFeaturesService
+from .conan import ConanFitService
+from .analysis import ConanAnalysisJob, ConanAnalysisStatus, ConanAnalysisService
+from .save import ConanSaveParamsFactory, ConanSaveService
+
+
+READABLE        = GObject.ParamFlags.READABLE
+EXPLICIT_NOTIFY = GObject.ParamFlags.EXPLICIT_NOTIFY
 
 
 class ConanSessionModule(Module):
     def configure(self, binder: Binder):
-        binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
-        binder.bind(FeatureExtractorParams, to=FeatureExtractorParams, scope=singleton)
-        binder.bind(ContactAngleCalculatorParams, to=ContactAngleCalculatorParams, scope=singleton)
+        binder.bind(ConanParamsFactory, scope=singleton)
+        binder.bind(ConanSaveParamsFactory, scope=singleton)
 
-        binder.bind(ConanSession, to=ConanSession, scope=singleton)
+        binder.bind(ImageAcquisitionService, scope=singleton)
+        binder.bind(ConanFeaturesService, scope=singleton)
+        binder.bind(ConanFitService, scope=singleton)
+        binder.bind(ConanSaveService, scope=singleton)
+
+        binder.bind(ConanSession, scope=singleton)
 
 
 class ConanSession(GObject.Object):
@@ -65,24 +66,29 @@ class ConanSession(GObject.Object):
     def __init__(
             self,
             image_acquisition: ImageAcquisitionService,
-            feature_extractor_params: FeatureExtractorParams,
-            conancalc_params: ContactAngleCalculatorParams,
+            features_service: ConanFeaturesService,
+            cafit_service: ConanFitService,
+            analysis_service: ConanAnalysisService,
+            save_service: ConanSaveService,
     ) -> None:
-        self._analyses = ()  # type: Sequence[ConanAnalysis]
+        self._analyses = ()
         self._analyses_saved = False
 
-        self.image_acquisition = image_acquisition
-        self.image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
-        self._feature_extractor_params = feature_extractor_params
-        self._conancalc_params = conancalc_params
+        self._image_acquisition = image_acquisition
+        self._image_acquisition.use_acquirer_type(AcquirerType.LOCAL_STORAGE)
+
+        self._features_service = features_service
+        self._cafit_service = cafit_service
+        self._analysis_service = analysis_service
+        self._save_service = save_service
 
         super().__init__()
 
-    @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
-    def analyses(self) -> Sequence[ConanAnalysis]:
+    @GObject.Property(flags=READABLE | EXPLICIT_NOTIFY)
+    def analyses(self) -> Sequence[ConanAnalysisJob]:
         return self._analyses
 
-    @GObject.Property(flags=GObject.ParamFlags.READABLE | GObject.ParamFlags.EXPLICIT_NOTIFY)
+    @GObject.Property(flags=READABLE | EXPLICIT_NOTIFY)
     def analyses_saved(self) -> bool:
         return self._analyses_saved
 
@@ -94,7 +100,7 @@ class ConanSession(GObject.Object):
             return True
 
         all_images_replicated = all(
-            analysis.is_image_replicated
+            analysis.image_replicated
             for analysis in self._analyses
         )
         if all_images_replicated:
@@ -105,24 +111,28 @@ class ConanSession(GObject.Object):
     def start_analyses(self) -> None:
         assert not self._analyses
 
-        new_analyses = []
-
-        input_images = self.image_acquisition.acquire_images()
-
+        sources = self._image_acquisition.acquire_images()
         self._analyses = tuple(
-            ConanAnalysis(
-                input_image=im,
-                do_extract_features=self.extract_features,
-                do_calculate_conan=self.calculate_contact_angle,
-            ) for im in input_images
+            self._analysis_service.analyse(s)
+            for s in sources
         )
         self._analyses_saved = False
+
         self.notify('analyses')
         self.notify('analyses_saved')
 
     def cancel_analyses(self) -> None:
+        keep_analyses = []
         for analysis in self._analyses:
-            analysis.cancel()
+            if analysis.status == ConanAnalysisStatus.WAITING_FOR_IMAGE:
+                # If job is still waiting for image, then delete it
+                analysis.cancel()
+            else:
+                analysis.cancel()
+                keep_analyses.append(analysis)
+
+        self._analyses = tuple(keep_analyses)
+        self.notify('analyses')
 
     def clear_analyses(self) -> None:
         self.cancel_analyses()
@@ -131,28 +141,14 @@ class ConanSession(GObject.Object):
         self.notify('analyses')
         self.notify('analyses_saved')
 
-    def save_analyses(self, options: ConanAnalysisSaverOptions) -> None:
+    def save_analyses(self) -> None:
         if not self._analyses: return
-        save_drops(self._analyses, options)
+        self._save_service.save(self._analyses)
         self._analyses_saved = True
         self.notify('analyses_saved')
 
-    def create_save_options(self) -> ConanAnalysisSaverOptions:
-        return ConanAnalysisSaverOptions()
-
-    def extract_features(self, image: Bindable[np.ndarray]) -> FeatureExtractor:
-        return FeatureExtractor(
-            image=image,
-            params=self._feature_extractor_params,
-            loop=asyncio.get_event_loop(),
-        )
-
-    def calculate_contact_angle(self, extracted_features: FeatureExtractor) -> ContactAngleCalculator:
-        return ContactAngleCalculator(
-            features=extracted_features,
-            params=self._conancalc_params,
-        )
-
     def quit(self) -> None:
         self.clear_analyses()
-        self.image_acquisition.destroy()
+        self._image_acquisition.destroy()
+        self._features_service.destroy()
+        self._cafit_service.destroy()

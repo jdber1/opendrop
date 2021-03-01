@@ -30,34 +30,35 @@
 from gi.repository import Gtk
 
 from opendrop.app.common.image_processing.image_processor import ImageProcessorPluginViewContext
-from opendrop.app.common.image_processing.plugins.define_line import DefineLinePluginModel, define_line_plugin_cs
+from opendrop.app.common.image_processing.plugins.define_region import define_region_plugin_cs, DefineRegionPluginModel
 from opendrop.app.conan.image_processing.services.plugins import ToolID
 from opendrop.mvp import ComponentSymbol, View, Presenter
 
-conan_surface_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
+conan_roi_plugin_cs = ComponentSymbol()  # type: ComponentSymbol[None]
 
 
-@conan_surface_plugin_cs.view(options=['view_context', 'z_index'])
-class ConanSurfacePluginView(View['ConanSurfacePluginPresenter', None]):
+@conan_roi_plugin_cs.view(options=['view_context', 'z_index'])
+class ConanRoiPluginView(View['ConanRoiPluginPresenter', None]):
     def _do_init(self, view_context: ImageProcessorPluginViewContext, z_index: int) -> None:
         self._view_context = view_context
 
         self.new_component(
-            define_line_plugin_cs.factory(
-                model=self.presenter.define_line_plugin_model,
+            define_region_plugin_cs.factory(
+                model=self.presenter.define_region_plugin_model,
                 view_context=view_context,
-                tool_id=ToolID.SURFACE,
-                color=(0.1, 0.8, 0.1),
+                tool_id=ToolID.ROI,
+                color=(1.0, 0.1, 0.05),
+                label='ROI',
                 z_index=z_index,
             ),
         )
 
-        tool_ref = view_context.get_tool_item(ToolID.SURFACE)
+        tool_ref = view_context.get_tool_item(ToolID.ROI)
         self._tool_button_interior = Gtk.Grid(hexpand=True, vexpand=True)
         tool_ref.button_interior.add(self._tool_button_interior)
 
         tool_button_lbl = Gtk.Label(
-            label='Surface line',
+            label='ROI',
             vexpand=True,
             valign=Gtk.Align.CENTER,
         )
@@ -69,7 +70,7 @@ class ConanSurfacePluginView(View['ConanSurfacePluginPresenter', None]):
         self._tool_button_interior.destroy()
 
 
-@conan_surface_plugin_cs.presenter(options=['model'])
-class ConanSurfacePluginPresenter(Presenter['ConanSurfacePluginView']):
-    def _do_init(self, model: DefineLinePluginModel) -> None:
-        self.define_line_plugin_model = model
+@conan_roi_plugin_cs.presenter(options=['model'])
+class ConanRoiPluginPresenter(Presenter['ConanRoiPluginView']):
+    def _do_init(self, model: DefineRegionPluginModel) -> None:
+        self.define_region_plugin_model = model

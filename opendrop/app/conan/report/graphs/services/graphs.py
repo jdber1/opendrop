@@ -27,50 +27,44 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import math
 from typing import Sequence, Iterable, Tuple
 
 from gi.repository import GObject
+import numpy as np
 
-from opendrop.app.conan.analysis import ConanAnalysis
+from opendrop.app.conan.services.analysis import ConanAnalysisJob
 
 
 class ConanReportGraphsService(GObject.Object):
-    _analyses = ()  # type: Sequence[ConanAnalysis]
-    _left_angle = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
-    _right_angle = ((), ())  # type: Tuple[Sequence[float], Sequence[float]]
+    _analyses: Sequence[ConanAnalysisJob] = ()
+    _left_angle: Tuple[Sequence[float], Sequence[float]] = np.empty((2, 0))
+    _right_angle: Tuple[Sequence[float], Sequence[float]] = np.empty((2, 0))
 
     class _AnalysisWatcher:
-        def __init__(self, analysis: ConanAnalysis, owner: 'ConanReportGraphsService') -> None:
+        def __init__(self, analysis: ConanAnalysisJob, owner: 'ConanReportGraphsService') -> None:
             self.analysis = analysis
             self._owner = owner
             self._cleanup_tasks = []
 
-            event_connections = [
-                self.analysis.bn_left_angle.on_changed.connect(
-                    owner._tracked_analysis_data_changed
-                ),
-                self.analysis.bn_right_angle.on_changed.connect(
-                    owner._tracked_analysis_data_changed
-                ),
+            self._handler_ids = [
+                self.analysis.connect('notify::left-angle', owner._analysis_data_changed),
+                self.analysis.connect('notify::right-angle', owner._analysis_data_changed),
             ]
 
-            self._cleanup_tasks.extend(conn.disconnect for conn in event_connections)
-
         def destroy(self) -> None:
-            for f in self._cleanup_tasks:
-                f()
+            for hid in self._handler_ids:
+                self.analysis.disconnect(hid)
 
     def __init__(self, **properties) -> None:
         self._watchers = []
         super().__init__(**properties)
 
     @GObject.Property
-    def analyses(self) -> Sequence[ConanAnalysis]:
+    def analyses(self) -> Sequence[ConanAnalysisJob]:
         return self._analyses
 
     @analyses.setter
-    def analyses(self, value: Iterable[ConanAnalysis]) -> None:
+    def analyses(self, value: Iterable[ConanAnalysisJob]) -> None:
         self._analyses = tuple(value)
         self._analyses_changed()
 
@@ -84,56 +78,55 @@ class ConanReportGraphsService(GObject.Object):
 
     def _analyses_changed(self) -> None:
         analyses = self._analyses
-        watching = [w.analysis for w in self._watchers]
+        watchers = self._watchers
+        watching = {w.analysis for w in watchers}
 
-        to_watch = set(analyses) - set(watching)
-        for analysis in to_watch:
-            self._watchers.append(self._AnalysisWatcher(analysis, self))
+        for a in analyses:
+            if a not in watching:
+                self._watchers.append(self._AnalysisWatcher(a, self))
 
-        to_unwatch = set(watching) - set(analyses)
-        for analysis in to_unwatch:
-            for w in tuple(self._watchers):
-                if w.analysis == analysis:
-                    w.destroy()
-                    self._watchers.remove(w)
+        for w in watchers:
+            if w.analysis not in analyses:
+                w.destroy()
+                self._watchers.remove(w)
 
-        self._tracked_analysis_data_changed()
+        self._analysis_data_changed()
 
-    def _tracked_analysis_data_changed(self) -> None:
+    def _analysis_data_changed(self, *_) -> None:
         left_angle_data = []
         right_angle_data = []
 
         analyses = self._analyses
 
         for analysis in analyses:
-            timestamp = analysis.bn_image_timestamp.get()
-            if timestamp is None or not math.isfinite(timestamp):
-                continue
+            timestamp = analysis.timestamp
+            if timestamp is None: continue
 
-            left_angle_value = analysis.bn_left_angle.get()
-            right_angle_value = analysis.bn_right_angle.get()
+            left_angle = analysis.left_angle
+            right_angle = analysis.right_angle
 
-            if left_angle_value is not None and math.isfinite(left_angle_value):
-                left_angle_data.append((timestamp, left_angle_value))
+            if left_angle is not None:
+                left_angle_data.append([timestamp, left_angle])
 
-            if right_angle_value is not None and math.isfinite(right_angle_value):
-                right_angle_data.append((timestamp, right_angle_value))
+            if right_angle is not None:
+                right_angle_data.append([timestamp, right_angle])
 
-        # Sort in ascending order of timestamp
-        left_angle_data = sorted(left_angle_data, key=lambda x: x[0])
-        right_angle_data = sorted(right_angle_data, key=lambda x: x[0])
+        # Sort in ascending order of timestamp.
+        left_angle_data = sorted(left_angle_data, key=lambda p: p[0])
+        right_angle_data = sorted(right_angle_data, key=lambda p: p[0])
 
-        left_angle_data = tuple(zip(*left_angle_data))
-        right_angle_data = tuple(zip(*right_angle_data))
+        # Transpose data.
+        if len(left_angle_data) > 0:
+            left_angle_data = tuple(zip(*left_angle_data))
+        else:
+            left_angle_data = ((), ())
+        if len(right_angle_data) > 0:
+            right_angle_data = tuple(zip(*right_angle_data))
+        else:
+            right_angle_data = ((), ())
 
-        if len(left_angle_data) == 0:
-            left_angle_data = (tuple(), tuple())
-
-        if len(right_angle_data) == 0:
-            right_angle_data = (tuple(), tuple())
-
-        self._left_angle = left_angle_data
-        self._right_angle = right_angle_data
+        self._left_angle = np.array(left_angle_data)
+        self._right_angle = np.array(right_angle_data)
 
         self.notify('left-angle')
         self.notify('right-angle')

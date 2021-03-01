@@ -38,7 +38,7 @@ from opendrop.utility.bindable import AccessorBindable
 from opendrop.utility.bindable.gextension import GObjectPropertyBindable
 from opendrop.widgets.error_dialog import ErrorDialog
 from opendrop.widgets.yes_no_dialog import YesNoDialog
-from .model import ConanAnalysisSaverOptions
+from opendrop.app.conan.services.save import ConanSaveParamsFactory
 
 conan_save_dialog_cs = ComponentSymbol()  # type: ComponentSymbol[Gtk.Window]
 
@@ -245,7 +245,7 @@ class ConanSaveDialogView(View['ConanSaveDialogPresenter', Gtk.Window]):
 class ConanSaveDialogPresenter(Presenter['ConanSaveDialogView']):
     def _do_init(
             self,
-            model: ConanAnalysisSaverOptions,
+            model: ConanSaveParamsFactory,
             do_ok: Callable[[], Any],
             do_cancel: Callable[[], Any],
     ) -> None:
@@ -301,6 +301,6 @@ class ConanSaveDialogPresenter(Presenter['ConanSaveDialogView']):
     def cancel(self) -> None:
         self._do_cancel()
 
-    def destroy(self) -> None:
+    def _do_destroy(self) -> None:
         for db in self.__data_bindings:
             db.unbind()

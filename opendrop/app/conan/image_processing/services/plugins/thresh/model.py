@@ -27,26 +27,12 @@
 # with this software.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pathlib import Path
-from typing import Optional
-
-from opendrop.app.common.analysis_saver.figure_options import FigureOptions
-from opendrop.utility.bindable import VariableBindable
-from opendrop.utility.bindable.typing import Bindable
+from opendrop.utility.bindable.gextension.property import GObjectPropertyBindable
+from opendrop.app.conan.services.params import ConanParamsFactory
 
 
-class ConanAnalysisSaverOptions:
-    def __init__(self) -> None:
-        self.bn_save_dir_parent = VariableBindable(None)  # type: Bindable[Optional[Path]]
-        self.bn_save_dir_name = VariableBindable('')
+class ConanThreshPluginModel:
+    def __init__(self, params_factory: ConanParamsFactory) -> None:
+        self._params_factory = params_factory
 
-        self.angle_figure_opts = FigureOptions(
-            should_save=True,
-            dpi=300,
-            size_w=15,
-            size_h=9
-        )
-
-    @property
-    def save_root_dir(self) -> Path:
-        return self.bn_save_dir_parent.get() / self.bn_save_dir_name.get()
+        self.bn_thresh = GObjectPropertyBindable(params_factory, 'thresh')
