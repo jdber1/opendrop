@@ -48,7 +48,11 @@ def cython_build_action(target, source, env):
 
 
 def cython_build_strfunction(target, source, env):
-    return shlex.join(cython_build_command(target, source, env))
+    if getattr(shlex, 'join', None):
+        return shlex.join(cython_build_command(target, source, env))
+    else:
+        # XXX: For Python 3.6 compatibility.
+        return ' '.join(shlex.quote(s) for s in cython_build_command(target, source, env))
 
 
 def cython_build_command(target, source, env):
