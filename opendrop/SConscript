@@ -3,11 +3,6 @@ Import('env')
 
 env = env.Clone(tools=['gresource'])
 
-# Check build dependencies.
-if not env['GLIB_COMPILE_RESOURCES']:
-    print("Could not detect glib-compile-resources")
-    Exit(1)
-
 # SCons does not have recursive globs yet, use python glob module for now.
 from glob import glob
 

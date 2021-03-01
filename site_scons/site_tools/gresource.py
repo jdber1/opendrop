@@ -18,6 +18,10 @@ def generate(env):
     gcr = env.Detect('glib-compile-resources')
     env['GLIB_COMPILE_RESOURCES'] = gcr
 
+    if env['GLIB_COMPILE_RESOURCES'] is None:
+        print("Could not find glib-compile-resources")
+        env.Exit(1)
+
     env.AddMethod(gresource_bundle_builder_wrapper, 'GResourceBundle')
     env.AddMethod(gresource_method, 'GResource')
 
