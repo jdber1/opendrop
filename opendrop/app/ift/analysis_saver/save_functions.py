@@ -318,16 +318,79 @@ def _save_timeline_data(drops: Sequence[PendantAnalysisJob], out_file) -> None:
     ])
 
     for drop in drops:
+        timestamp = drop.bn_image_timestamp.get()
+        ift = drop.bn_interfacial_tension.get()
+        volume = drop.bn_volume.get()
+        surface = drop.bn_surface_area.get()
+        apex_radius = drop.bn_apex_radius.get()
+        worth = drop.bn_worthington.get()
+        bond = drop.bn_bond_number.get()
+        rotation = drop.bn_rotation.get()
+        apex = drop.bn_apex_coords_px.get()
+        needle_width = drop.bn_needle_width_px.get()
+
+        if timestamp is not None:
+            timestamp_txt = format(timestamp, '.1f')
+        else:
+            timestamp_txt = ''
+
+        if ift is not None:
+            ift_txt = format(ift, '.3g')
+        else:
+            ift_txt = ''
+
+        if volume is not None:
+            volume_txt = format(volume, '.3g')
+        else:
+            volume_txt = ''
+
+        if surface is not None:
+            surface_txt = format(surface, '.3g')
+        else:
+            surface_txt = ''
+
+        if apex_radius is not None:
+            apex_radius_txt = format(apex_radius, '.1f')
+        else:
+            apex_radius_txt = ''
+
+        if worth is not None:
+            worth_txt = format(worth, '.3g')
+        else:
+            worth_txt = ''
+
+        if bond is not None:
+            bond_txt = format(bond, '.3g')
+        else:
+            bond_txt = ''
+
+        if rotation is not None:
+            rotation_txt = format(math.degrees(rotation), '.3g')
+        else:
+            rotation_txt = ''
+
+        if apex is not None:
+            apex_x_txt = format(apex.x, '.1f')
+            apex_y_txt = format(apex.y, '.1f')
+        else:
+            apex_x_txt = ''
+            apex_y_txt = ''
+
+        if needle_width is not None:
+            needle_width_txt = format(needle_width, '.1f')
+        else:
+            needle_width_txt = ''
+
         writer.writerow([
-            format(drop.bn_image_timestamp.get(), '.1f'),
-            format(drop.bn_interfacial_tension.get(), '.3g'),
-            format(drop.bn_volume.get(), '.3g'),
-            format(drop.bn_surface_area.get(), '.3g'),
-            format(drop.bn_apex_radius.get(), '.3g'),
-            format(drop.bn_worthington.get(), '.3g'),
-            format(drop.bn_bond_number.get(), '.3g'),
-            format(math.degrees(drop.bn_rotation.get()), '.3g'),
-            format(drop.bn_apex_coords_px.get()[0], '.1f'),
-            format(drop.bn_apex_coords_px.get()[1], '.1f'),
-            format(drop.bn_needle_width_px.get(), '.1f'),
+            timestamp_txt,
+            ift_txt,
+            volume_txt,
+            surface_txt,
+            apex_radius_txt,
+            worth_txt,
+            bond_txt,
+            rotation_txt,
+            apex_x_txt,
+            apex_y_txt,
+            needle_width_txt,
         ])
