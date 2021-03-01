@@ -331,6 +331,6 @@ class IFTSaveDialogPresenter(Presenter['IFTSaveDialogView']):
     def cancel(self) -> None:
         self._do_cancel()
 
-    def destroy(self) -> None:
+    def _do_destroy(self) -> None:
         for db in self.__data_bindings:
             db.unbind()
