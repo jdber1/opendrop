@@ -141,11 +141,21 @@ def _save_drop_image(drop: PendantAnalysisJob, out_file_path: Path) -> None:
 
 def _save_drop_params(drop: PendantAnalysisJob, out_file) -> None:
     root = configparser.ConfigParser(allow_no_value=True)
+
+    drop_region = drop.bn_drop_region.get()
+    needle_region = drop.bn_needle_region.get()
+
     root.read_dict(OrderedDict((
         ('Feature', OrderedDict((
             ('; regions are defined by (left, top, right, bottom) tuples', None),
-            ('drop_region', tuple(drop.bn_drop_region.get())),
-            ('needle_region', tuple(drop.bn_needle_region.get())),
+            ('drop_region', (drop_region.x0,
+                             drop_region.y0,
+                             drop_region.x1,
+                             drop_region.y1)),
+            ('needle_region', (needle_region.x0,
+                               needle_region.y0,
+                               needle_region.x1,
+                               needle_region.y1)),
             ('; canny edge detection thresholds', None),
             ('thresh1', drop.bn_canny_min.get()),
             ('thresh2', drop.bn_canny_max.get()),
