@@ -2,7 +2,7 @@ Import('env')
 
 
 env = \
-env.Clone(tools=['cython', 'numpy'],
+env.Clone(tools=['cython'],
           SHLIBPREFIX='',
           SHLIBSUFFIX='$PYTHON_EXT_SUFFIX')
 env.Append(CPPPATH=['$PYTHONINCLUDES', '$NUMPYINCLUDES'],
