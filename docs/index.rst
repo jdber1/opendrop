@@ -4,7 +4,7 @@
     :hidden:
     :maxdepth: 2
 
-    getting_started/index
+    installation/index
     usage/index
     developers/index
 
@@ -18,7 +18,7 @@
     :start-after: |
     :end-before: *********
 
-For installation instructions, see ":doc:`getting_started/index`".
+For installation instructions, see ":doc:`installation/index`".
 
 ----
 
