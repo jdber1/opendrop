@@ -33,6 +33,10 @@ from opendrop.appfw import Injector
 
 
 def main(*argv) -> int:
+    # https://stackoverflow.com/questions/13514031/py2exe-with-multiprocessing-fails-to-run-the-processes#27547300
+    import multiprocessing
+    multiprocessing.freeze_support()
+
     injector = Injector()
     app = injector.create_object(OpendropApplication)
     return app.run(argv)
