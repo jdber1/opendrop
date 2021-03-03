@@ -9,10 +9,7 @@
 #include <arkode/arkode_erkstep.h>
 #include <nvector/nvector_serial.h>
 
-#include <boost/concept/requires.hpp>
-#include <boost/concept_check.hpp>
 #include <boost/math/differentiation/autodiff.hpp>
-#include <boost/numeric/ublas/vector.hpp>
 
 #include <opendrop/interpolate.hpp>
 
