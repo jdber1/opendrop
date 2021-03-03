@@ -3,7 +3,7 @@ Installation
 ############
 
 **************
-Release Builds
+Release builds
 **************
 
 Stand-alone builds for Windows are provided for certain major releases and do not require the installation of
