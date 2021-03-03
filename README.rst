@@ -9,7 +9,7 @@
 
 .. raw:: html
 
-    <img src="/screenshots/ift-prepare.png?raw=True" width="60%" alt="OpenDrop screenshot">
+    <img src="https://raw.githubusercontent.com/jdber1/opendrop/master/screenshots/ift-prepare.png" width="60%" alt="OpenDrop screenshot">
 
 The software is released under the **GNU GPL** open source license, and available for free.
 
