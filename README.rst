@@ -5,7 +5,7 @@
 
     <img src="https://opendrop.readthedocs.io/en/latest/_images/opendrop_logo_wide.png" width="185px" alt="Logo">
 
-|
+.. START 
 
 .. image:: https://joss.theoj.org/papers/10.21105/joss.02604/status.svg
     :target: https://doi.org/10.21105/joss.02604

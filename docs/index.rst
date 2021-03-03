@@ -15,7 +15,7 @@
 |
 
 .. include:: ../README.rst
-    :start-after: |
+    :start-after: .. START
     :end-before: *********
 
 For installation instructions, see ":doc:`installation/index`".
