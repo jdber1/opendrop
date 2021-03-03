@@ -14,7 +14,7 @@ OpenDrop is a fully-featured image analysis software for performing pendant drop
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/jdber1/opendrop/master/screenshots/ift-prepare.png" width="60%" alt="OpenDrop screenshot">
+    <img src="https://raw.githubusercontent.com/jdber1/opendrop/master/screenshots/ift-prepare.png" width="700px" alt="OpenDrop screenshot">
 
 The software is released under the **GNU GPL** open source license, and available for free.
 
