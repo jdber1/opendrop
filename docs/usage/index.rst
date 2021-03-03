@@ -1,3 +1,5 @@
+(todo: This page is out of date and should be updated.)
+
 *****
 Usage
 *****
@@ -13,4 +15,5 @@ Click on either of the 'Interfacial Tension' or 'Contact Angle' buttons to begin
 
 .. include:: ift.rst
 .. include:: conan.rst
+.. include:: genicam.rst
 .. include:: notes.rst
