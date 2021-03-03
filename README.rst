@@ -18,6 +18,9 @@ OpenDrop is a fully-featured image analysis software for performing pendant drop
 
 The software is released under the **GNU GPL** open source license, and available for free.
 
+.. |nbsp| unicode:: 0xA0
+    :trim:
+
 *********
 Installation & User Guide
 *********
@@ -33,6 +36,3 @@ Support
 For any questions, issues, or feedback feel free to `open an issue on the GitHub repo <https://github.com/jdber1/opendrop/issues>`_.
 
 We can also be contacted by email `here <mailto:opendrop.dev@gmail.com>`_.
-
-.. |nbsp| unicode:: 0xA0
-    :trim:
