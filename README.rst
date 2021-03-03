@@ -9,7 +9,7 @@
 
 .. raw:: html
 
-    <img src="https://opendrop.readthedocs.io/en/latest/_images/ift_image_processing_regions_defined.png" width="60%">
+    <img src="/screenshots/ift-prepare.png?raw=True" width="60%" alt="OpenDrop screenshot">
 
 The software is released under the **GNU GPL** open source license, and available for free.
 
