@@ -25,8 +25,8 @@ Other required Python packages will be automatically installed by pip.
 Platform specific build instructions follow.
 
 
-Ubuntu 16.04+/Debian 9+
-=======================
+Ubuntu
+======
 
 #. Install OpenCV.
 
@@ -39,9 +39,42 @@ Ubuntu 16.04+/Debian 9+
        pip3 install opencv-python
 
 
-#. Install Boost.Math and SUNDIALS::
+#. Install SUNDIALS. Unfortunately ``libsundials-dev`` from the Ubuntu repositories are too old, we require at least version 4.0.0 and above. Here are brief instructions for installing SUNDIALS from source.
 
-       sudo apt install libboost-math-dev libsundials-dev
+   #. Download the latest version from the `releases page <https://computing.llnl.gov/projects/sundials/sundials-software>`_. (Note: the latest version requires a CMake version newer than available in Ubuntu < 20.04. If this affects you, try an older version of SUNDIALS like 4.0.0 instead.)
+
+   #. Extract and change into the source directory, e.g.::
+
+       tar -xvf sundials-5.7.0.tar.gz
+       cd sundials-5.7.0/
+   
+   #. Create a build directory::
+
+       mkdir build
+       cd build/
+
+   #. Configure, build, and install (make sure ``cmake`` and ``build-essential`` are installed from the Ubuntu repos)::
+
+       cmake \
+         -DEXAMPLES_INSTALL=OFF \
+         -DBUILD_ARKODE=ON \
+         -DBUILD_CVODE=OFF \
+         -DBUILD_CVODES=OFF \
+         -DBUILD_IDA=OFF \
+         -DBUILD_IDAS=OFF \
+         -DBUILD_KINSOL=OFF \
+         -DBUILD_STATIC_LIBS=OFF \
+         -DCMAKE_BUILD_TYPE=Release \
+         ..
+       make
+       sudo make install
+
+#. Install Boost.Math. If on Ubuntu 20.04 or newer, run::
+
+       sudo apt install libboost-dev
+   
+   The ``libboost-dev`` package on older versions of Ubuntu is not recent enough and Boost will need to be
+   installed from source. We need at least Boost 1.71.0.
 
 #. Follow the `installation instructions here <https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-logo-ubuntu-debian-logo-debian>`_ for installing PyGObject and GTK.
 
