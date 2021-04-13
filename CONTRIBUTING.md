@@ -28,14 +28,14 @@ Make sure your system has GTK+ 3 installed.
 
 1. Clone the repository.
 2. Create a new Python virtual environment (e.g. in the '.venv/' subdirectory of the project root).
-3. Install the app's Python dependencies with `pip install -r requirements.txt` and manually install the OpenCV Python bindings to the virtual environment. Also install the build dependencies [setuptools_scm](https://pypi.org/project/setuptools-scm/) and [Scons](https://pypi.org/project/SCons/).
+3. Install the app's Python dependencies with `pip install -r requirements.txt` and manually install the OpenCV Python bindings to the virtual environment. Also install the build tool [Scons](https://pypi.org/project/SCons/).
 4. Add the project root to the Python path using a .pth [path configuration file](https://docs.python.org/3/library/site.html). This will let you test the app as you develop.
 
 ### Developing
 
 OpenDrop makes use of some GLib compiled resource features. Whenever a .ui file or a file in the 'opendrop/assets/' directory is modified, the GLib resource bundle needs to be rebuilt. This is done by running `scons opendrop/data.gresource` in the project root.
 
-Versioning is managed by setuptools_scm.
+Versions are generated from git tags.
 
 ### Code style
 

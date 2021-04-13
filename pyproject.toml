@@ -1,4 +1,4 @@
 [build-system]
-requires = ["scons", "cython", "setuptools_scm"]
+requires = ["scons", "cython"]
 backend-path = ["build_backend"]
 build-backend = "buildapi"

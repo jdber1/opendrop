@@ -1,10 +1,8 @@
 import os
-import setuptools_scm
 
 
 env = Environment(
     NAME='opendrop',
-    VERSION=setuptools_scm.get_version(),
 
     PACKAGE_METADATA = {
         'Requires-Python': '>=3.6',
@@ -37,6 +35,7 @@ env.Append(
     CCFLAGS=['-O3'],
 )
 
+env.Tool('gitversion')
 env.Tool('python')
 env.Tool('pydist')
 
