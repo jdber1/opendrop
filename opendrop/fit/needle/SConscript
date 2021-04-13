@@ -6,7 +6,7 @@ env.Clone(tools=['cython'],
           SHLIBPREFIX='',
           SHLIBSUFFIX='$PYTHON_EXT_SUFFIX')
 env.Append(CPPPATH=['$PYTHONINCLUDES'],
-	       LIBDIR=['$PYTHONLIBDIR'],
+           LIBPATH=['$PYTHONLIBPATH'],
            LIBS=['$PYTHONLIB', 'm'])
 env.VariantDir('.checkpoints', '.', duplicate=False)
 

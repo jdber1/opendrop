@@ -10,7 +10,7 @@ env = env.Clone(
 
 env.Append(
     CPPPATH=['$PYTHONINCLUDES'],
-    LIBDIR=['$PYTHONLIBDIR'],
+    LIBPATH=['$PYTHONLIBPATH'],
     LIBS=['$PYTHONLIB', 'sundials_arkode', 'sundials_nvecserial'],
 )
 
