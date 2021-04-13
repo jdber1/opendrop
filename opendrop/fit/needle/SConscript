@@ -6,7 +6,8 @@ env.Clone(tools=['cython'],
           SHLIBPREFIX='',
           SHLIBSUFFIX='$PYTHON_EXT_SUFFIX')
 env.Append(CPPPATH=['$PYTHONINCLUDES'],
-           LIBS=['m'])
+	       LIBDIR=['$PYTHONLIBDIR'],
+           LIBS=['$PYTHONLIB', 'm'])
 env.VariantDir('.checkpoints', '.', duplicate=False)
 
 hough = env.SharedLibrary('hough', env.Cython('.checkpoints/hough.pyx'))

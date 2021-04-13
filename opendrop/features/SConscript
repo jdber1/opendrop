@@ -10,6 +10,8 @@ env = env.Clone(
 
 env.Append(
     CPPPATH=['$PYTHONINCLUDES'],
+    LIBDIR=['$PYTHONLIBDIR'],
+    LIBS=['$PYTHONLIB'],
 )
 
 env.VariantDir('.checkpoints', '.', duplicate=False)

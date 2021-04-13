@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from msys import native_path as _
+
 
 def exists(env):
     return env.Detect('python3') or env.Detect('python')
@@ -34,14 +36,26 @@ def generate(env):
         .strip()
 
     env['PYTHONINCLUDES'] = env.Dir(
-        subprocess.check_output([
+        _(subprocess.check_output([
             env.subst('$PYTHON'),
             '-c',
             "import sysconfig; print(sysconfig.get_path('include'))"
         ])
         .decode()
-        .strip()
+        .strip())
     )
+
+    env['PYTHONLIBPATH'] = env.Dir(
+        _(subprocess.check_output([
+            env.subst('$PYTHON'),
+            '-c',
+            "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
+        ])
+        .decode()
+        .strip())
+    )
+
+    env['PYTHONLIB'] = 'python%s.%s' % tuple(env['PYTHONVERSION'].split('.')[:2])
 
     env['PYTHON_EXT_SUFFIX'] = \
         subprocess.check_output([
@@ -62,4 +76,4 @@ def generate(env):
         .strip() \
         .split('\n')
     
-    env['PYTHONPATH'] = env.Dir([p for p in paths if os.path.isdir(p)])
+    env['PYTHONPATH'] = env.Dir([_(p) for p in paths if os.path.isdir(p)])
