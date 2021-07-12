@@ -21,7 +21,7 @@ class SemVer(NamedTuple):
     def __str__(self):
         text = f"{self.major}.{self.minor}.{self.patch}"
         if self.pre:
-            text += f"-{self.pre}"
+            text += f".{self.pre}"
         if self.build:
             text += f"+{self.build}"
         return text
@@ -53,9 +53,9 @@ def generate(env):
 
     # "Increment" the last version (generate a semver with higher precedence).
     if semver.pre:
-        semver = semver._replace(pre=semver.pre + f'.dev.{distance}')
+        semver = semver._replace(pre=semver.pre + f'.dev{distance}')
     elif distance > 0:
-        semver = semver._replace(patch=semver.patch + 1, pre=f'dev.{distance}')
+        semver = semver._replace(patch=semver.patch + 1, pre=f'dev{distance}')
 
     # Add commit abbreviation if there are commits beyond the last tag.
     if distance > 0:
