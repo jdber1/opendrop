@@ -11,7 +11,7 @@ def generate(env):
     env['NUMPYINCLUDES'] = env.Dir(
         subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import numpy; print(numpy.get_include())"
         ])
         .decode()

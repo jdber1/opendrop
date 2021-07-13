@@ -20,7 +20,7 @@ def generate(env):
     env['PYTHONVERSION'] = \
         subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import sys; print('%d.%d.%d' % sys.version_info[:3])"
         ]) \
         .decode() \
@@ -29,7 +29,7 @@ def generate(env):
     env['PYTHON_DISTUTILS_PLATFORM'] = \
         subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import distutils.util; print(distutils.util.get_platform())"
         ]) \
         .decode() \
@@ -38,7 +38,7 @@ def generate(env):
     env['PYTHONINCLUDES'] = env.Dir(
         _(subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import sysconfig; print(sysconfig.get_path('include'))"
         ])
         .decode()
@@ -48,7 +48,7 @@ def generate(env):
     env['PYTHONLIBPATH'] = env.Dir(
         _(subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
         ])
         .decode()
@@ -60,7 +60,7 @@ def generate(env):
     env['PYTHON_EXT_SUFFIX'] = \
         subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
         ]) \
         .decode() \
@@ -69,7 +69,7 @@ def generate(env):
     paths = \
         subprocess.check_output([
             env.subst('$PYTHON'),
-            '-c',
+            '-Ic',
             "import sys; print('\\n'.join(sys.path))"
         ]) \
         .decode() \
