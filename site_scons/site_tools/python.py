@@ -55,7 +55,16 @@ def generate(env):
         .strip())
     )
 
-    env['PYTHONLIB'] = 'python%s.%s' % tuple(env['PYTHONVERSION'].split('.')[:2])
+    abiflags = \
+        subprocess.check_output([
+            env.subst('$PYTHON'),
+            '-Ic',
+            "import sys; print(sys.abiflags)"
+        ]) \
+        .decode() \
+        .strip()
+
+    env['PYTHONLIB'] = 'python%s.%s%s' % (*env['PYTHONVERSION'].split('.')[:2], abiflags)
 
     env['PYTHON_EXT_SUFFIX'] = \
         subprocess.check_output([
