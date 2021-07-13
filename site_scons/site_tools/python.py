@@ -9,7 +9,7 @@ def exists(env):
 
 
 def generate(env):
-    python = env.Detect('python3') or env.Detect('python') or os.environ.get('PYTHON', None)
+    python = os.environ.get('PYTHON', None) or env.Detect('python3') or env.Detect('python')
     env.SetDefault(PYTHON=python)
 
     if env['PYTHON'] is None:

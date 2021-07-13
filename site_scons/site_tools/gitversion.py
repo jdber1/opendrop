@@ -32,7 +32,7 @@ def exists(env):
 
 
 def generate(env):
-    git = env.Detect('git') or os.environ.get('GIT', None)
+    git = os.environ.get('GIT', None) or env.Detect('git')
 
     # Fallback git describe output.
     describe_output = 'v0.0.0-0-gdeadbee-dirty'
