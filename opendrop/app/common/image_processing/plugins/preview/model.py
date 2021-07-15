@@ -31,6 +31,7 @@ import asyncio
 import itertools
 from typing import Optional, Hashable, Iterable, MutableSequence
 
+from gi.repository import GLib
 import numpy as np
 
 from opendrop.app.common.services.acquisition import ImageSequenceAcquirer, CameraAcquirer
@@ -210,7 +211,7 @@ class ImageSequenceAcquirerController(AcquirerController):
 
 
 class CameraAcquirerController(AcquirerController):
-    PREVIEW_FRAME_RATE = 3
+    #  PREVIEW_FRAME_RATE = 20
 
     def __init__(
             self, *,
@@ -242,15 +243,19 @@ class CameraAcquirerController(AcquirerController):
 
         self._on_camera_changed()
 
-    def _update_loop(self) -> None:
+    def _update_loop(self, *_) -> None:
         self._cancel_pending_update_loop()
 
         self._update_source_image_out()
 
-        self._update_loop_handle = self._loop.call_later(
-            delay=1 / self.PREVIEW_FRAME_RATE,
-            callback=self._update_loop,
+        self._update_loop_handle = GLib.idle_add(
+            priority=GLib.PRIORITY_LOW,
+            function=self._update_loop,
         )
+        #  self._update_loop_handle = self._loop.call_later(
+            #  delay=1 / self.PREVIEW_FRAME_RATE,
+            #  callback=self._update_loop,
+        #  )
 
     def _update_source_image_out(self) -> None:
         camera = self._acquirer.bn_camera.get()
@@ -265,8 +270,11 @@ class CameraAcquirerController(AcquirerController):
         if self._update_loop_handle is None:
             return
 
-        self._update_loop_handle.cancel()
+        GLib.source_remove(self._update_loop_handle)
         self._update_loop_handle = None
+
+        #  self._update_loop_handle.cancel()
+        #  self._update_loop_handle = None
 
     def _on_camera_changed(self) -> None:
         pass
