@@ -1,9 +1,8 @@
-matplotlib
-numpy
-scipy
 pycairo
 pygobject
-pytest
+numpy
+matplotlib
+scipy
 injector
 genicam; extra == 'genicam'
 importlib_resources; python_version<'3.7'
