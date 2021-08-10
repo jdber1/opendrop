@@ -335,17 +335,17 @@ def _save_timeline_data(drops: Sequence[PendantAnalysisJob], out_file) -> None:
             timestamp_txt = ''
 
         if ift is not None:
-            ift_txt = format(ift, '.3g')
+            ift_txt = format(ift, '.4g')
         else:
             ift_txt = ''
 
         if volume is not None:
-            volume_txt = format(volume, '.3g')
+            volume_txt = format(volume, '.4g')
         else:
             volume_txt = ''
 
         if surface is not None:
-            surface_txt = format(surface, '.3g')
+            surface_txt = format(surface, '.4g')
         else:
             surface_txt = ''
 
@@ -355,17 +355,17 @@ def _save_timeline_data(drops: Sequence[PendantAnalysisJob], out_file) -> None:
             apex_radius_txt = ''
 
         if worth is not None:
-            worth_txt = format(worth, '.3g')
+            worth_txt = format(worth, '.4g')
         else:
             worth_txt = ''
 
         if bond is not None:
-            bond_txt = format(bond, '.3g')
+            bond_txt = format(bond, '.4g')
         else:
             bond_txt = ''
 
         if rotation is not None:
-            rotation_txt = format(math.degrees(rotation), '.3g')
+            rotation_txt = format(math.degrees(rotation), '.4g')
         else:
             rotation_txt = ''
 

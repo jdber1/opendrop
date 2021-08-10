@@ -314,11 +314,11 @@ class RowBinding:
         data = {
             Column.STATUS: status,
             Column.TIMESTAMP: f'{timestamp:.1f}',
-            Column.IFT: f'{ift:.3g}',
-            Column.VOLUME: f'{volume:.3g}',
-            Column.SURFACE_AREA: f'{surface_area:.3g}',
-            Column.BOND: f'{bond:.3g}',
-            Column.WORTHINGTON: f'{worthington:.3g}',
+            Column.IFT: f'{ift:.4g}',
+            Column.VOLUME: f'{volume:.4g}',
+            Column.SURFACE_AREA: f'{surface_area:.4g}',
+            Column.BOND: f'{bond:.4g}',
+            Column.WORTHINGTON: f'{worthington:.4g}',
         }
 
         self._model.set(self._iter, list(data.keys()), list(data.values()))
