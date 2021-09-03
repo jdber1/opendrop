@@ -32,7 +32,8 @@ env['BUILDDIR'] = GetOption('build_dir')
 env.Append(
     ENV={'PATH': os.environ['PATH']},
     CPPPATH=[env.Dir('include')],
-    CCFLAGS=['-O3'],
+    CCFLAGS=['-O3', '-std=c++11'],
+    CXXFLAGS=['-std=c++11'],
 )
 
 env.Tool('gitversion')
