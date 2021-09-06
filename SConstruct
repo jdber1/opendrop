@@ -33,7 +33,6 @@ env.Append(
     ENV={'PATH': os.environ['PATH']},
     CPPPATH=[env.Dir('include')],
     CCFLAGS=['-O3', '-std=c++14'],
-#    CXXFLAGS=['-std=c++11'],
 )
 
 env.Tool('gitversion')
