@@ -586,14 +586,14 @@ ode(YoungLaplaceShape<realtype> *self,
     const RandomAccessIt2 dy_ds,
     OutputIt d2y_ds2)
 {
-    static const realtype INFITESIMAL = std::numeric_limits<realtype>::denorm_min();
+    static const realtype INFINITESIMAL = std::numeric_limits<realtype>::denorm_min();
 
     auto const &r = y[0];
     auto const &z = y[1];
     auto const &dr_ds = dy_ds[0];
     auto const &dz_ds = dy_ds[1];
 
-    auto dphi_ds = 2.0 - (self->bond)*z - (dz_ds + INFITESIMAL)/(r + INFITESIMAL);
+    auto dphi_ds = 2.0 - (self->bond)*z - (dz_ds + INFINITESIMAL)/(r + INFINITESIMAL);
 
     *d2y_ds2++ = -dz_ds * dphi_ds;
     *d2y_ds2++ =  dr_ds * dphi_ds;
@@ -612,7 +612,7 @@ ode_DBo(YoungLaplaceShape<realtype> *self,
 {
     using namespace boost::math::differentiation;
 
-    static const realtype INFITESIMAL = std::numeric_limits<realtype>::denorm_min();
+    static const realtype INFINITESIMAL = std::numeric_limits<realtype>::denorm_min();
 
     auto const &dr_dBo = y[0];
     auto const &dz_dBo = y[1];
@@ -625,8 +625,8 @@ ode_DBo(YoungLaplaceShape<realtype> *self,
     realtype dr_ds = f[0].derivative(1);
     realtype dz_ds = f[1].derivative(1);
 
-    auto dphi_ds = 2.0 - (self->bond)*z - (dz_ds + INFITESIMAL)/(r + INFITESIMAL);
-    auto d2phi_dBods = -z - dz_dBo*(self->bond) - d2z_dBods/(r + INFITESIMAL) + dr_dBo*dz_ds/(r*r + INFITESIMAL);
+    auto dphi_ds = 2.0 - (self->bond)*z - (dz_ds + INFINITESIMAL)/(r + INFINITESIMAL);
+    auto d2phi_dBods = -z - dz_dBo*(self->bond) - d2z_dBods/(r + INFINITESIMAL) + dr_dBo*dz_ds/(r*r + INFINITESIMAL);
 
     *d2y_ds2++ = -d2z_dBods * dphi_ds - dz_ds * d2phi_dBods;
     *d2y_ds2++ =  d2r_dBods * dphi_ds + dr_ds * d2phi_dBods;
