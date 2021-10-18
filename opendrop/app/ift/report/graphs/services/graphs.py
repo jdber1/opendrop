@@ -1,7 +1,6 @@
 # Copyright © 2020, Joseph Berry, Rico Tabor (opendrop.dev@gmail.com)
 # OpenDrop is released under the GNU GPL License. You are free to
 # modify and distribute the code, but always under the same license
-# (i.e. you cannot make commercial derivatives).
 #
 # If you use this software in your research, please cite the following
 # journal articles:
