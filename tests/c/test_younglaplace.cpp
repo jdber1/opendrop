@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(test_young_laplace_shape_call)
 
     for (size_t i = 0; i < sizeof(s)/sizeof(*s); i++) {
         auto x = shape(s[i]);
-        BOOST_TEST(x[0] == r[i], tt::tolerance(1e-8));
-        BOOST_TEST(x[1] == z[i], tt::tolerance(1e-8));
+        BOOST_TEST(x[0] == r[i], tt::tolerance(1e-3));
+        BOOST_TEST(x[1] == z[i], tt::tolerance(1e-3));
     }
 }
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(test_young_laplace_volume)
 {
     YoungLaplaceShape<double> shape(0.21);
 
-    BOOST_TEST(shape.volume(4.0) == 5.53648, tt::tolerance(1e-5));
+    BOOST_TEST(shape.volume(4.0) == 5.53648, tt::tolerance(1e-3));
 }
 
 
@@ -142,5 +142,5 @@ BOOST_AUTO_TEST_CASE(test_young_laplace_surface_area)
 {
     YoungLaplaceShape<double> shape(0.21);
 
-    BOOST_TEST(shape.surface_area(4.0) == 15.9890, tt::tolerance(1e-5));
+    BOOST_TEST(shape.surface_area(4.0) == 15.9890, tt::tolerance(1e-3));
 }
