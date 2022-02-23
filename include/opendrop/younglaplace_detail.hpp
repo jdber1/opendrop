@@ -51,9 +51,15 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
 
     this->bond = bond;
 
-    nv = N_VNew_Serial(4);
+    flag = SUNContext_Create(NULL, &sunctx);
+    if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
+
+    flag = SUNContext_Create(NULL, &sunctx_DBo);
+    if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
+
+    nv = N_VNew_Serial(4, sunctx);
     if (nv == NULL) throw std::runtime_error("N_VNew_Serial() failed.");
-    nv_DBo = N_VNew_Serial(4);
+    nv_DBo = N_VNew_Serial(4, sunctx_DBo);
     if (nv_DBo == NULL) throw std::runtime_error("N_VNew_Serial() failed.");
 
     // Initial conditions.
@@ -75,7 +81,7 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
 
     dense_z_inv.push_back(0.0, 0.0);
 
-    arkode_mem = ERKStepCreate(arkrhs, RCONST(0.0), nv);
+    arkode_mem = ERKStepCreate(arkrhs, RCONST(0.0), nv, sunctx);
     if (arkode_mem == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetStopTime(arkode_mem, MAX_ARCLENGTH);
@@ -87,14 +93,14 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
     flag = ERKStepSetUserData(arkode_mem, (void *) this);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetUserData() failed.");
 
-    flag = ERKStepSetTableNum(arkode_mem, DEFAULT_ERK_6);
+    flag = ERKStepSetTableNum(arkode_mem, ARKODE_VERNER_8_5_6);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetTableNum() failed.");
 
     flag = ERKStepSStolerances(arkode_mem, RTOL, ATOL);
     if (flag == ARK_ILL_INPUT) throw std::domain_error("ERKStepSStolerances() returned ARK_ILL_INPUT.");
     else if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSStolerances() failed.");
 
-    arkode_mem_DBo = ERKStepCreate(arkrhs_DBo, RCONST(0.0), nv_DBo);
+    arkode_mem_DBo = ERKStepCreate(arkrhs_DBo, RCONST(0.0), nv_DBo, sunctx_DBo);
     if (arkode_mem_DBo == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetStopTime(arkode_mem_DBo, MAX_ARCLENGTH);
@@ -103,7 +109,7 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
     flag = ERKStepSetUserData(arkode_mem_DBo, (void *) this);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetUserData() failed.");
 
-    flag = ERKStepSetTableNum(arkode_mem_DBo, DEFAULT_ERK_6);
+    flag = ERKStepSetTableNum(arkode_mem_DBo, ARKODE_VERNER_8_5_6);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSetTableNum() failed.");
 
     flag = ERKStepSStolerances(arkode_mem_DBo, RTOL, ATOL);
@@ -129,10 +135,15 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(const YoungLaplaceShape<realtype>
 
 template <typename realtype>
 YoungLaplaceShape<realtype>::~YoungLaplaceShape() {
+    int flag;
+
     ERKStepFree(&arkode_mem);
-    ERKStepFree(&arkode_mem_DBo);
     N_VDestroy(nv);
+    SUNContext_Free(&sunctx);
+
+    ERKStepFree(&arkode_mem_DBo);
     N_VDestroy(nv_DBo);
+    SUNContext_Free(&sunctx_DBo);
 }
 
 
@@ -281,7 +292,7 @@ YoungLaplaceShape<realtype>::closest(realtype r, realtype z) {
 
     // Set initial guess to point with height equal to z.
     if (z > 0) {
-        try { 
+        try {
             s = z_inv(z);
         } catch (std::domain_error &) {
             // z is too high, set guess to max s (corresponding to max z).
@@ -315,7 +326,7 @@ YoungLaplaceShape<realtype>::closest(realtype r, realtype z) {
 
         if (std::abs(s - s_prev) < CLOSEST_TOL) break;
     }
-    
+
     return s;
 }
 
@@ -324,6 +335,7 @@ template <typename realtype>
 realtype
 YoungLaplaceShape<realtype>::volume(realtype s)
 {
+    // Should probably use a simple quadrature method instead of an ODE integrator.
     check_domain(s);
 
     int flag;
@@ -331,10 +343,14 @@ YoungLaplaceShape<realtype>::volume(realtype s)
 
     s = std::abs(s);
 
-    N_Vector nv_vol = N_VMake_Serial(1, data);
+    SUNContext sunctx_vol;
+    flag = SUNContext_Create(NULL, &sunctx_vol);
+    if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
+
+    N_Vector nv_vol = N_VMake_Serial(1, data, sunctx_vol);
     if (nv_vol == NULL) throw std::runtime_error("N_VMake_Serial() failed.");
 
-    void *arkode_mem_vol = ERKStepCreate(arkrhs_vol, RCONST(0.0), nv_vol);
+    void *arkode_mem_vol = ERKStepCreate(arkrhs_vol, RCONST(0.0), nv_vol, sunctx_vol);
     if (arkode_mem_vol == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetUserData(arkode_mem_vol, (void *) this);
@@ -352,6 +368,7 @@ YoungLaplaceShape<realtype>::volume(realtype s)
 
     ERKStepFree(&arkode_mem_vol);
     N_VDestroy(nv_vol);
+    SUNContext_Free(&sunctx_vol);
 
     return data[0];
 }
@@ -368,10 +385,14 @@ YoungLaplaceShape<realtype>::surface_area(realtype s)
 
     s = std::abs(s);
 
-    N_Vector nv_surf = N_VMake_Serial(1, data);
+    SUNContext sunctx_surf;
+    flag = SUNContext_Create(NULL, &sunctx_surf);
+    if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
+
+    N_Vector nv_surf = N_VMake_Serial(1, data, sunctx_surf);
     if (nv_surf == NULL) throw std::runtime_error("N_VMake_Serial() failed.");
 
-    void *arkode_mem_surf = ERKStepCreate(arkrhs_surf, RCONST(0.0), nv_surf);
+    void *arkode_mem_surf = ERKStepCreate(arkrhs_surf, RCONST(0.0), nv_surf, sunctx_surf);
     if (arkode_mem_surf == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetUserData(arkode_mem_surf, (void *) this);
@@ -389,6 +410,7 @@ YoungLaplaceShape<realtype>::surface_area(realtype s)
 
     ERKStepFree(&arkode_mem_surf);
     N_VDestroy(nv_surf);
+    SUNContext_Free(&sunctx_surf);
 
     return data[0];
 }

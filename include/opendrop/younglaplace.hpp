@@ -72,9 +72,11 @@ private:
     detail::LinearSpline1D<realtype> dense_z_inv;
     bool max_z_solved = false;
 
+    SUNContext sunctx;
     void *arkode_mem;
     N_Vector nv;
 
+    SUNContext sunctx_DBo;
     void *arkode_mem_DBo;
     N_Vector nv_DBo;
 
