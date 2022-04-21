@@ -86,6 +86,35 @@ Ubuntu
 
 #. Run ``python3 -m opendrop`` to launch the app.
 
+Fedora
+======
+
+Tested on Fedora 35.
+
+#. Install Python, pip, and OpenCV::
+
+       sudo dnf install python3-devel python3-opencv python3-pip
+    
+#. Install glib::
+
+       sudo dnf install glib2-devel
+    
+#. Install SUNDIALS::
+
+       sudo dnf install sundials-devel
+    
+#. Install Boost::
+
+       sudo dnf install boost-devel
+
+#. Use pip to install OpenDrop from the repo::
+
+       pip install git+https://github.com/jdber1/opendrop.git
+
+   Run ``pip uninstall opendrop`` to uninstall.
+
+#. Run ``python -m opendrop`` to launch the app.
+         
 
 macOS
 =====
