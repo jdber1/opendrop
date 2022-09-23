@@ -31,7 +31,7 @@ env['BUILDDIR'] = GetOption('build_dir')
 
 env.Append(
     ENV={'PATH': os.environ['PATH']},
-    CPPPATH=[env.Dir('include')],
+    CPPPATH=[env.Dir('include'), env.Dir('/opt/homebrew/include')],
     CCFLAGS=['-O3', '-std=c++14'],
 )
 
