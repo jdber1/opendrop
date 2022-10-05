@@ -33,6 +33,7 @@ env.Append(
     ENV={'PATH': os.environ['PATH']},
     RPATH=['/opt/homebrew/lib'],
     CPPPATH=[env.Dir('include'), env.Dir('/opt/homebrew/include')],
+    LIBPATH=[env.Dir('/opt/homebrew/lib')],
     CCFLAGS=['-O3', '-std=c++14'],
 )
 
