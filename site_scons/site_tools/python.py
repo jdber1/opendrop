@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 
 from msys import native_path as _
@@ -64,7 +65,10 @@ def generate(env):
         .decode() \
         .strip()
 
-    env['PYTHONLIB'] = 'python%s.%s%s' % (*env['PYTHONVERSION'].split('.')[:2], abiflags)
+    if platform.system() == 'Windows':
+        env['PYTHONLIB'] = 'python%s.%s%s' % (*env['PYTHONVERSION'].split('.')[:2], abiflags)
+    else:
+        env['PYTHONLIB'] = ''
 
     env['PYTHON_EXT_SUFFIX'] = \
         subprocess.check_output([
