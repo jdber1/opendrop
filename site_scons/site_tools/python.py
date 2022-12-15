@@ -26,11 +26,11 @@ def generate(env):
         .decode() \
         .strip()
 
-    env['PYTHON_DISTUTILS_PLATFORM'] = \
+    env['PYTHONPLATFORM'] = \
         subprocess.check_output([
             env.subst('$PYTHON'),
             '-Ic',
-            "import distutils.util; print(distutils.util.get_platform())"
+            "import sysconfig; print(sysconfig.get_platform())"
         ]) \
         .decode() \
         .strip()
