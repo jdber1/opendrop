@@ -469,7 +469,7 @@ YoungLaplaceShape<realtype>::step_DBo()
     flag = ERKStepGetCurrentTime(arkode_mem_DBo, &told);
     if (flag == ARK_MEM_NULL) throw std::runtime_error("ARK_MEM_NULL");
 
-    if (tcur == RCONST(0.0)) {
+    if (told == RCONST(0.0)) {
         // First step. Set tout to 0.1 to give a rough scale of t variable when using ARK_ONE_STEP.
         tnext = told + RCONST(0.1);
     } else {
