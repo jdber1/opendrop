@@ -39,7 +39,7 @@ from opendrop.utility.events import EventConnection
 
 
 class TestEvent:
-    def setup(self):
+    def setup_method(self):
         self.event = events.Event()
 
     def test_connect_and_fire(self):

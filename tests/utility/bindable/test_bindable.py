@@ -34,7 +34,7 @@ from opendrop.utility.bindable import abc, VariableBindable, AccessorBindable
 
 
 class TestBindable:
-    def setup(self) -> None:
+    def setup_method(self) -> None:
         self.bindable = StubBindable()
 
     def test_get(self) -> None:
@@ -59,7 +59,7 @@ class TestBindable:
 
 
 class TestBindable_WithUnimplementedGetter:
-    def setup(self) -> None:
+    def setup_method(self) -> None:
         self.bindable = StubBindable()
 
         patcher = patch.object(self.bindable, '_get_value', Mock(side_effect=NotImplementedError))
@@ -73,7 +73,7 @@ class TestBindable_WithUnimplementedGetter:
 
 
 class TestBindable_OnChanged:
-    def setup(self):
+    def setup_method(self):
         self.bindable = StubBindable()
 
         self.changed_callback = Mock()
@@ -95,7 +95,7 @@ class TestBindable_OnChanged:
 
 
 class TestBindable_OnChanged_With_CustomEqualityChecker:
-    def setup(self):
+    def setup_method(self):
         self.check_equals = Mock()
 
         self.bindable = StubBindable(check_equals=self.check_equals)
@@ -126,7 +126,7 @@ class TestBindable_OnChanged_With_CustomEqualityChecker:
 
 
 class TestVariableBindable:
-    def setup(self):
+    def setup_method(self):
         self.initial = object()
         self.bindable = VariableBindable(self.initial)
 
@@ -142,7 +142,7 @@ class TestVariableBindable:
 
 
 class TestAccessorBindable_WithGetterAndSetter:
-    def setup(self):
+    def setup_method(self):
         self.getter = Mock()
         self.setter = Mock()
 
@@ -174,7 +174,7 @@ class TestAccessorBindable_WithGetterAndSetter:
 
 
 class TestAccessorBindable_WithNoSetter:
-    def setup(self):
+    def setup_method(self):
         self.bindable = AccessorBindable(getter=Mock())
 
     def test_set(self):
@@ -183,7 +183,7 @@ class TestAccessorBindable_WithNoSetter:
 
 
 class TestAccessorBindable_WithNoGetter:
-    def setup(self):
+    def setup_method(self):
         self.bindable = AccessorBindable(setter=Mock())
 
     def test_get(self):
