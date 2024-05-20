@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include <sundials/sundials_types.h>
 #include <arkode/arkode_erkstep.h>
 #include <nvector/nvector_serial.h>
 #include <boost/math/differentiation/autodiff.hpp>
@@ -26,7 +27,6 @@ namespace detail {
 
 using namespace opendrop::interpolate;
 
-using sunreal = realtype;
 template <typename T, std::size_t N>
 using fvar = boost::math::differentiation::detail::fvar<T, N>;
 
@@ -51,10 +51,10 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
 
     this->bond = bond;
 
-    flag = SUNContext_Create(NULL, &sunctx);
+    flag = SUNContext_Create(SUN_COMM_NULL, &sunctx);
     if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
 
-    flag = SUNContext_Create(NULL, &sunctx_DBo);
+    flag = SUNContext_Create(SUN_COMM_NULL, &sunctx_DBo);
     if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
 
     nv = N_VNew_Serial(4, sunctx);
@@ -63,15 +63,15 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
     if (nv_DBo == NULL) throw std::runtime_error("N_VNew_Serial() failed.");
 
     // Initial conditions.
-    NV_Ith_S(nv, 0) = RCONST(0.0);  // r
-    NV_Ith_S(nv, 1) = RCONST(0.0);  // z
-    NV_Ith_S(nv, 2) = RCONST(1.0);  // dr/ds
-    NV_Ith_S(nv, 3) = RCONST(0.0);  // dz/ds
+    NV_Ith_S(nv, 0) = SUN_RCONST(0.0);  // r
+    NV_Ith_S(nv, 1) = SUN_RCONST(0.0);  // z
+    NV_Ith_S(nv, 2) = SUN_RCONST(1.0);  // dr/ds
+    NV_Ith_S(nv, 3) = SUN_RCONST(0.0);  // dz/ds
 
-    NV_Ith_S(nv_DBo, 0) = RCONST(0.0);  // dr/dBo
-    NV_Ith_S(nv_DBo, 1) = RCONST(0.0);  // dz/dBo
-    NV_Ith_S(nv_DBo, 2) = RCONST(0.0);  // d2r/dBods
-    NV_Ith_S(nv_DBo, 3) = RCONST(0.0);  // d2z/dBods
+    NV_Ith_S(nv_DBo, 0) = SUN_RCONST(0.0);  // dr/dBo
+    NV_Ith_S(nv_DBo, 1) = SUN_RCONST(0.0);  // dz/dBo
+    NV_Ith_S(nv_DBo, 2) = SUN_RCONST(0.0);  // d2r/dBods
+    NV_Ith_S(nv_DBo, 3) = SUN_RCONST(0.0);  // d2z/dBods
 
     realtype a0[] = {0.0, 1.0};  // (d2r/ds2, d2z/ds2)
     dense.push_back(0.0, NV_DATA_S(nv), NV_DATA_S(nv) + 2, a0);
@@ -81,7 +81,7 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
 
     dense_z_inv.push_back(0.0, 0.0);
 
-    arkode_mem = ERKStepCreate(arkrhs, RCONST(0.0), nv, sunctx);
+    arkode_mem = ERKStepCreate(arkrhs, SUN_RCONST(0.0), nv, sunctx);
     if (arkode_mem == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetStopTime(arkode_mem, MAX_ARCLENGTH);
@@ -100,7 +100,7 @@ YoungLaplaceShape<realtype>::YoungLaplaceShape(realtype bond) {
     if (flag == ARK_ILL_INPUT) throw std::domain_error("ERKStepSStolerances() returned ARK_ILL_INPUT.");
     else if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepSStolerances() failed.");
 
-    arkode_mem_DBo = ERKStepCreate(arkrhs_DBo, RCONST(0.0), nv_DBo, sunctx_DBo);
+    arkode_mem_DBo = ERKStepCreate(arkrhs_DBo, SUN_RCONST(0.0), nv_DBo, sunctx_DBo);
     if (arkode_mem_DBo == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetStopTime(arkode_mem_DBo, MAX_ARCLENGTH);
@@ -161,19 +161,19 @@ YoungLaplaceShape<realtype>::operator=(const YoungLaplaceShape<realtype> &other)
     max_z_solved = other.max_z_solved;
 
     // Initial conditions.
-    NV_Ith_S(nv, 0) = RCONST(0.0);  // r
-    NV_Ith_S(nv, 1) = RCONST(0.0);  // z
-    NV_Ith_S(nv, 2) = RCONST(1.0);  // dr/ds
-    NV_Ith_S(nv, 3) = RCONST(0.0);  // dz/ds
+    NV_Ith_S(nv, 0) = SUN_RCONST(0.0);  // r
+    NV_Ith_S(nv, 1) = SUN_RCONST(0.0);  // z
+    NV_Ith_S(nv, 2) = SUN_RCONST(1.0);  // dr/ds
+    NV_Ith_S(nv, 3) = SUN_RCONST(0.0);  // dz/ds
 
-    NV_Ith_S(nv_DBo, 0) = RCONST(0.0);  // dr/dBo
-    NV_Ith_S(nv_DBo, 1) = RCONST(0.0);  // dz/dBo
-    NV_Ith_S(nv_DBo, 2) = RCONST(0.0);  // d2r/dBods
-    NV_Ith_S(nv_DBo, 3) = RCONST(0.0);  // d2z/dBods
+    NV_Ith_S(nv_DBo, 0) = SUN_RCONST(0.0);  // dr/dBo
+    NV_Ith_S(nv_DBo, 1) = SUN_RCONST(0.0);  // dz/dBo
+    NV_Ith_S(nv_DBo, 2) = SUN_RCONST(0.0);  // d2r/dBods
+    NV_Ith_S(nv_DBo, 3) = SUN_RCONST(0.0);  // d2z/dBods
 
-    flag = ERKStepReInit(arkode_mem, arkrhs, RCONST(0.0), nv);
+    flag = ERKStepReInit(arkode_mem, arkrhs, SUN_RCONST(0.0), nv);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepReInit() failed.");
-    flag = ERKStepReInit(arkode_mem_DBo, arkrhs_DBo, RCONST(0.0), nv_DBo);
+    flag = ERKStepReInit(arkode_mem_DBo, arkrhs_DBo, SUN_RCONST(0.0), nv_DBo);
     if (flag != ARK_SUCCESS) throw std::runtime_error("ERKStepReInit() failed.");
 
     if (max_z_solved) flag = ERKStepRootInit(arkode_mem, 0, NULL);
@@ -339,18 +339,18 @@ YoungLaplaceShape<realtype>::volume(realtype s)
     check_domain(s);
 
     int flag;
-    detail::sunreal data[] = {RCONST(0.0)};
+    sunrealtype data[] = {SUN_RCONST(0.0)};
 
     s = std::abs(s);
 
     SUNContext sunctx_vol;
-    flag = SUNContext_Create(NULL, &sunctx_vol);
+    flag = SUNContext_Create(SUN_COMM_NULL, &sunctx_vol);
     if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
 
     N_Vector nv_vol = N_VMake_Serial(1, data, sunctx_vol);
     if (nv_vol == NULL) throw std::runtime_error("N_VMake_Serial() failed.");
 
-    void *arkode_mem_vol = ERKStepCreate(arkrhs_vol, RCONST(0.0), nv_vol, sunctx_vol);
+    void *arkode_mem_vol = ERKStepCreate(arkrhs_vol, SUN_RCONST(0.0), nv_vol, sunctx_vol);
     if (arkode_mem_vol == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetUserData(arkode_mem_vol, (void *) this);
@@ -381,18 +381,18 @@ YoungLaplaceShape<realtype>::surface_area(realtype s)
     check_domain(s);
 
     int flag;
-    detail::sunreal data[] = {RCONST(0.0)};
+    sunrealtype data[] = {SUN_RCONST(0.0)};
 
     s = std::abs(s);
 
     SUNContext sunctx_surf;
-    flag = SUNContext_Create(NULL, &sunctx_surf);
+    flag = SUNContext_Create(SUN_COMM_NULL, &sunctx_surf);
     if (flag < 0) throw std::runtime_error("SUNContext_Create() failed.");
 
     N_Vector nv_surf = N_VMake_Serial(1, data, sunctx_surf);
     if (nv_surf == NULL) throw std::runtime_error("N_VMake_Serial() failed.");
 
-    void *arkode_mem_surf = ERKStepCreate(arkrhs_surf, RCONST(0.0), nv_surf, sunctx_surf);
+    void *arkode_mem_surf = ERKStepCreate(arkrhs_surf, SUN_RCONST(0.0), nv_surf, sunctx_surf);
     if (arkode_mem_surf == NULL) throw std::runtime_error("ERKStepCreate() failed.");
 
     flag = ERKStepSetUserData(arkode_mem_surf, (void *) this);
@@ -421,17 +421,17 @@ void
 YoungLaplaceShape<realtype>::step()
 {
     int flag;
-    detail::sunreal tcur, tnext;
+    sunrealtype tcur, tnext;
     realtype y[2], dy_ds[2], d2y_ds2[2];
 
     flag = ERKStepGetCurrentTime(arkode_mem, &tcur);
     if (flag == ARK_MEM_NULL) throw std::runtime_error("ARK_MEM_NULL");
 
-    if (tcur == RCONST(0.0)) {
+    if (tcur == SUN_RCONST(0.0)) {
         // First step. Set tout to 0.1 to give a rough scale of t variable when using ARK_ONE_STEP.
-        tnext = tcur + RCONST(0.1);
+        tnext = tcur + SUN_RCONST(0.1);
     } else {
-        tnext = std::numeric_limits<detail::sunreal>::infinity();
+        tnext = std::numeric_limits<sunrealtype>::infinity();
     }
 
     flag = ERKStepEvolve(arkode_mem, tnext, nv, &tcur, ARK_ONE_STEP);
@@ -464,14 +464,14 @@ void
 YoungLaplaceShape<realtype>::step_DBo()
 {
     int flag;
-    detail::sunreal told, tcur, tnext;
+    sunrealtype told, tcur, tnext;
 
     flag = ERKStepGetCurrentTime(arkode_mem_DBo, &told);
     if (flag == ARK_MEM_NULL) throw std::runtime_error("ARK_MEM_NULL");
 
-    if (told == RCONST(0.0)) {
+    if (told == SUN_RCONST(0.0)) {
         // First step. Set tout to 0.1 to give a rough scale of t variable when using ARK_ONE_STEP.
-        tnext = told + RCONST(0.1);
+        tnext = told + SUN_RCONST(0.1);
     } else {
         tnext = INFINITY;
     }
@@ -496,15 +496,15 @@ YoungLaplaceShape<realtype>::step_DBo()
 template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
-arkrhs(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data)
+arkrhs(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data)
 {
     auto self = static_cast<YoungLaplaceShape<realtype> *>(user_data);
 
-    const detail::sunreal *y = NV_DATA_S(nv);
-    const detail::sunreal *dy_ds = y + 2;
+    const sunrealtype *y = NV_DATA_S(nv);
+    const sunrealtype *dy_ds = y + 2;
 
-    detail::sunreal *out_dy_ds = NV_DATA_S(nvdot);
-    detail::sunreal *out_d2y_ds2 = out_dy_ds + 2;
+    sunrealtype *out_dy_ds = NV_DATA_S(nvdot);
+    sunrealtype *out_d2y_ds2 = out_dy_ds + 2;
 
     out_dy_ds[0] = dy_ds[0];
     out_dy_ds[1] = dy_ds[1];
@@ -519,7 +519,7 @@ arkrhs(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data)
 template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
-arkrhs_DBo(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+arkrhs_DBo(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data) {
     if (s > MAX_ARCLENGTH) {
         // s outside of domain.
         // Return a positive number to indicate a recoverable error.
@@ -528,11 +528,11 @@ arkrhs_DBo(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data
 
     auto self = static_cast<YoungLaplaceShape<realtype> *>(user_data);
 
-    const detail::sunreal *y = NV_DATA_S(nv);
-    const detail::sunreal *dy_ds = y + 2;
+    const sunrealtype *y = NV_DATA_S(nv);
+    const sunrealtype *dy_ds = y + 2;
 
-    detail::sunreal *out_dy_ds = NV_DATA_S(nvdot);
-    detail::sunreal *out_d2y_ds2 = out_dy_ds + 2;
+    sunrealtype *out_dy_ds = NV_DATA_S(nvdot);
+    sunrealtype *out_d2y_ds2 = out_dy_ds + 2;
 
     out_dy_ds[0] = dy_ds[0];
     out_dy_ds[1] = dy_ds[1];
@@ -547,7 +547,7 @@ arkrhs_DBo(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data
 template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
-arkrhs_vol(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+arkrhs_vol(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data) {
     if (s > MAX_ARCLENGTH) {
         // s outside of domain.
         // Return a positive number to indicate a recoverable error.
@@ -566,7 +566,7 @@ arkrhs_vol(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data
 template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
-arkrhs_surf(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data) {
+arkrhs_surf(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data) {
     if (s > MAX_ARCLENGTH) {
         // s outside of domain.
         // Return a positive number to indicate a recoverable error.
@@ -585,10 +585,10 @@ arkrhs_surf(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_dat
 template <typename realtype>
 int
 YoungLaplaceShape<realtype>::
-arkroot(detail::sunreal s, const N_Vector nv, detail::sunreal *out, void *user_data)
+arkroot(sunrealtype s, const N_Vector nv, sunrealtype *out, void *user_data)
 {
-    const detail::sunreal *y = NV_DATA_S(nv);
-    const detail::sunreal *dy_ds = y + 2;
+    const sunrealtype *y = NV_DATA_S(nv);
+    const sunrealtype *dy_ds = y + 2;
 
     // Set root to be dz_ds = 0.
     out[0] = dy_ds[1];

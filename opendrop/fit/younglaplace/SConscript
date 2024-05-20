@@ -11,7 +11,7 @@ env = env.Clone(
 env.Append(
     CPPPATH=['$PYTHONINCLUDES'],
     LIBPATH=['$PYTHONLIBPATH'],
-    LIBS=['$PYTHONLIB', 'sundials_arkode', 'sundials_nvecserial'],
+    LIBS=['$PYTHONLIB', 'sundials_core', 'sundials_arkode', 'sundials_nvecserial'],
 )
 
 env.VariantDir('.checkpoints', '.', duplicate=False)

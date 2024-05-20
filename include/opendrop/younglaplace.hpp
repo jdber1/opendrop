@@ -22,7 +22,6 @@ namespace detail {
 
 using namespace opendrop::interpolate;
 
-using sunreal = realtype;
 template <typename T, std::size_t N>
 using fvar = boost::math::differentiation::detail::fvar<T, N>;
 
@@ -114,15 +113,15 @@ private:
              const RandomAccessIt y,
              OutputIt dy_ds);
 
-    static int arkrhs(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data);
+    static int arkrhs(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data);
 
-    static int arkrhs_DBo(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data);
+    static int arkrhs_DBo(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data);
 
-    static int arkrhs_vol(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data);
+    static int arkrhs_vol(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data);
 
-    static int arkrhs_surf(detail::sunreal s, const N_Vector nv, N_Vector nvdot, void *user_data);
+    static int arkrhs_surf(sunrealtype s, const N_Vector nv, N_Vector nvdot, void *user_data);
 
-    static int arkroot(detail::sunreal s, const N_Vector nv, detail::sunreal *out, void *user_data);
+    static int arkroot(sunrealtype s, const N_Vector nv, sunrealtype *out, void *user_data);
 
     void step();
 
