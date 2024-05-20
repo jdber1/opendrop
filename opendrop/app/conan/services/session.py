@@ -52,7 +52,6 @@ class ConanSessionModule(Module):
         binder.bind(ConanParamsFactory, scope=singleton)
         binder.bind(ConanSaveParamsFactory, scope=singleton)
 
-        binder.bind(ImageAcquisitionService, scope=singleton)
         binder.bind(ConanFeaturesService, scope=singleton)
         binder.bind(ConanFitService, scope=singleton)
         binder.bind(ConanSaveService, scope=singleton)

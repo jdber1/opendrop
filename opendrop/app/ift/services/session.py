@@ -43,8 +43,6 @@ from .younglaplace import YoungLaplaceFitService
 
 class IFTSessionModule(Module):
     def configure(self, binder: Binder):
-        binder.bind(ImageAcquisitionService, to=ImageAcquisitionService, scope=singleton)
-
         binder.bind(PendantPhysicalParamsFactory, scope=singleton)
         binder.bind(PendantFeaturesParamsFactory, scope=singleton)
 

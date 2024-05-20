@@ -29,10 +29,13 @@
 from enum import Enum
 from typing import Optional, Tuple, Sequence
 
+from injector import singleton
+
 from ._acquirer import ImageAcquirer, InputImage, LocalStorageAcquirer, USBCameraAcquirer, GenicamAcquirer
 from opendrop.utility.bindable import AccessorBindable
 
 
+@singleton
 class ImageAcquisitionService:
     def __init__(self) -> None:
         self._acquirer = None  # type: Optional[ImageAcquirer]
