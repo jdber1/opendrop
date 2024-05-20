@@ -3,7 +3,7 @@ pygobject
 numpy
 matplotlib
 scipy
-injector
+injector<0.21.0
 genicam; extra == 'genicam'
 importlib_resources; python_version<'3.7'
 typing_extensions; python_version<'3.8'

@@ -49,6 +49,8 @@ EXPLICIT_NOTIFY = GObject.ParamFlags.EXPLICIT_NOTIFY
 
 class ConanSessionModule(Module):
     def configure(self, binder: Binder):
+        binder.bind(ImageAcquisitionService, scope=singleton)
+
         binder.bind(ConanParamsFactory, scope=singleton)
         binder.bind(ConanSaveParamsFactory, scope=singleton)
 
