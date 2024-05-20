@@ -48,7 +48,7 @@ wheel = env.WheelPackage(
 
     python_tag='cp%s%s' % tuple(env['PYTHONVERSION'].split('.')[:2]),
     abi_tag='abi3',
-    platform_tag=env['PYTHON_DISTUTILS_PLATFORM'],
+    platform_tag=env['PYTHONPLATFORM'],
 )
 Alias('bdist_wheel', wheel)
 
