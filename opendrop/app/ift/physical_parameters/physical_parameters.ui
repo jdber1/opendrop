@@ -47,6 +47,18 @@
         <property name="top_attach">2</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Pixel scale (px/mm):</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">3</property>
+      </packing>
+    </child>
     <!-- <child> -->
       <!-- <object class="GtkLabel"> -->
         <!-- <property name="visible">True</property> -->
@@ -99,6 +111,20 @@
       <packing>
         <property name="left_attach">1</property>
         <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="FloatEntry">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="width_chars">10</property>
+        <property name="input_purpose">number</property>
+        <property name="lower">0</property>
+        <property name="value" bind-source="@" bind-property="pixel-scale" bind-flags="bidirectional|sync-create"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">3</property>
       </packing>
     </child>
     <!-- <child> -->

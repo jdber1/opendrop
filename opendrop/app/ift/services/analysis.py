@@ -221,6 +221,7 @@ class PendantAnalysisJob:
         drop_density = physical_params.drop_density
         continuous_density = physical_params.continuous_density
         needle_diameter = physical_params.needle_diameter
+        pixel_scale = physical_params.pixel_scale or np.nan
         gravity = physical_params.gravity
 
         bond = result.bond
@@ -238,15 +239,23 @@ class PendantAnalysisJob:
         rotation = (rotation + np.pi/2) % np.pi - np.pi/2
 
         needle_diameter_px = self.bn_needle_width_px.get()
-        if needle_diameter_px is not None:
-            px_size = needle_diameter/needle_diameter_px
+        if needle_diameter_px is not None or np.isfinite(pixel_scale):
+            if np.isfinite(pixel_scale):
+                px_size = 1/pixel_scale
+            else:
+                px_size = needle_diameter/needle_diameter_px
+
             delta_density = abs(drop_density - continuous_density)
 
             radius = radius_px * px_size
             surface_area = surface_area_px * px_size**2
             volume = volume_px * px_size**3
             ift = delta_density * gravity * radius**2 / bond
-            worthington = (delta_density * gravity * volume) / (PI * ift * needle_diameter)
+            
+            if needle_diameter is not None:
+                worthington = (delta_density * gravity * volume) / (PI * ift * needle_diameter)
+            else:
+                worthington = math.nan
         else:
             radius = math.nan
             surface_area = math.nan

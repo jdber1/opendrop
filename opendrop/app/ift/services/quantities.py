@@ -42,11 +42,13 @@ class PendantPhysicalParams:
             drop_density: float,
             continuous_density: float,
             needle_diameter: float,
+            pixel_scale: float,
             gravity: float
     ) -> None:
         self.drop_density = drop_density
         self.continuous_density = continuous_density
         self.needle_diameter = needle_diameter
+        self.pixel_scale = pixel_scale
         self.gravity = gravity
 
 
@@ -54,6 +56,7 @@ class PendantPhysicalParamsFactory(GObject.GObject):
     _drop_density: float = math.nan
     _continuous_density: float = math.nan
     _needle_diameter: float = math.nan
+    _pixel_scale: float = math.nan
     _gravity: float = GRAVITY
 
     def create(self) -> PendantPhysicalParams:
@@ -61,6 +64,7 @@ class PendantPhysicalParamsFactory(GObject.GObject):
             drop_density=self._drop_density,
             continuous_density=self._continuous_density,
             needle_diameter=self._needle_diameter,
+            pixel_scale=self._pixel_scale,
             gravity=self._gravity,
         )
 
@@ -93,6 +97,15 @@ class PendantPhysicalParamsFactory(GObject.GObject):
     @needle_diameter.setter
     def needle_diameter(self, diameter: float) -> None:
         self._needle_diameter = diameter
+        self.changed.emit()
+
+    @GObject.Property
+    def pixel_scale(self) -> float:
+        return self._pixel_scale
+
+    @pixel_scale.setter
+    def pixel_scale(self, pixel_scale: float) -> None:
+        self._pixel_scale = pixel_scale
         self.changed.emit()
     
     @GObject.Property

@@ -50,6 +50,7 @@ class IFTPhysicalParametersFormPresenter(Presenter):
             self._form.connect('notify::drop-density', lambda *_: self.notify('drop-density')),
             self._form.connect('notify::continuous-density', lambda *_: self.notify('continuous-density')),
             self._form.connect('notify::needle-diameter', lambda *_: self.notify('needle-diameter')),
+            self._form.connect('notify::pixel-scale', lambda *_: self.notify('pixel-scale')),
             self._form.connect('notify::gravity', lambda *_: self.notify('gravity')),
         ]
 
@@ -98,3 +99,21 @@ class IFTPhysicalParametersFormPresenter(Presenter):
             diameter_m = diameter_mm/1000
 
         self._form.needle_diameter = diameter_m
+
+    @GObject.Property
+    def pixel_scale(self) -> Optional[float]:
+        pixel_per_m = self._form.pixel_scale
+        if pixel_per_m is None:
+            return None
+
+        # Return pixel per millimeters.
+        return pixel_per_m * 1000
+
+    @pixel_scale.setter
+    def pixel_scale(self, pixel_per_mm: Optional[float]) -> None:
+        if pixel_per_mm is None:
+            pixel_per_m = None
+        else:
+            pixel_per_m = pixel_per_mm*1000
+
+        self._form.pixel_scale = pixel_per_m
