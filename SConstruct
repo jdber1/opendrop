@@ -1,10 +1,9 @@
 import os
-
+import re
 
 env = Environment(
     NAME='opendrop',
-
-    PACKAGE_METADATA = {
+    PACKAGE_METADATA={
         'Requires-Python': '>=3.6',
         'Provides-Extra': 'genicam',
         'Requires-Dist': File('requirements.txt').get_text_contents().splitlines(),
@@ -13,9 +12,13 @@ env = Environment(
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         ],
     },
-
     BUILDDIR='./build',
 )
+
+mpich_dir = os.getenv('MPICH_DIR', '/usr/include/mpich-x86_64/')
+boost_include_dir = os.getenv(
+    'BOOST_INCLUDE_DIR', '/opt/homebrew/Cellar/boost')
+env.Append(CPPPATH=[boost_include_dir, mpich_dir])
 
 
 AddOption(
@@ -25,7 +28,6 @@ AddOption(
     metavar='DIR',
     help='Set DIR as the build directory.',
 )
-
 
 env['BUILDDIR'] = GetOption('build_dir')
 
@@ -39,19 +41,20 @@ env.Tool('gitversion')
 env.Tool('python')
 env.Tool('pydist')
 
+env['PYTHONPLATFORM'] = env['PYTHONPLATFORM'].replace('-', '_')
 
 package_files = SConscript('opendrop/SConscript', exports='env')
 wheel = env.WheelPackage(
     '$BUILDDIR',
     package_files,
     packages={'opendrop': './opendrop'},
-
     python_tag='cp%s%s' % tuple(env['PYTHONVERSION'].split('.')[:2]),
     abi_tag='abi3',
     platform_tag=env['PYTHONPLATFORM'],
 )
 Alias('bdist_wheel', wheel)
 
+print(env['PYTHONPLATFORM'])
 
 c_tests = SConscript('tests/c/SConscript', exports='env')
 Alias('tests', c_tests)
