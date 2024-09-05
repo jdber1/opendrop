@@ -1,5 +1,4 @@
 import os
-import re
 
 env = Environment(
     NAME='opendrop',
@@ -41,8 +40,6 @@ env.Tool('gitversion')
 env.Tool('python')
 env.Tool('pydist')
 
-env['PYTHONPLATFORM'] = env['PYTHONPLATFORM'].replace('-', '_')
-
 package_files = SConscript('opendrop/SConscript', exports='env')
 wheel = env.WheelPackage(
     '$BUILDDIR',
@@ -53,8 +50,6 @@ wheel = env.WheelPackage(
     platform_tag=env['PYTHONPLATFORM'],
 )
 Alias('bdist_wheel', wheel)
-
-print(env['PYTHONPLATFORM'])
 
 c_tests = SConscript('tests/c/SConscript', exports='env')
 Alias('tests', c_tests)
