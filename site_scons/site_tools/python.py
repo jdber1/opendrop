@@ -9,13 +9,13 @@ def exists(env):
 
 
 def generate(env):
-    python = os.environ.get('PYTHON', None) or env.Detect(
-        'python3') or env.Detect('python')
+    python = os.environ.get('PYTHON', None) or env.Detect('python3') or env.Detect('python')
     env.SetDefault(PYTHON=python)
 
     if env['PYTHON'] is None:
         print("Could not find python executable")
         env.Exit(1)
+
 
     env['PYTHONVERSION'] = \
         subprocess.check_output([
@@ -41,8 +41,8 @@ def generate(env):
             '-Ic',
             "import sysconfig; print(sysconfig.get_path('include'))"
         ])
-            .decode()
-            .strip())
+        .decode()
+        .strip())
     )
 
     env['PYTHONLIBPATH'] = env.Dir(
@@ -51,8 +51,8 @@ def generate(env):
             '-Ic',
             "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
         ])
-            .decode()
-            .strip())
+        .decode()
+        .strip())
     )
 
     abiflags = \
@@ -64,8 +64,7 @@ def generate(env):
         .decode() \
         .strip()
 
-    env['PYTHONLIB'] = 'python%s.%s%s' % (
-        *env['PYTHONVERSION'].split('.')[:2], abiflags)
+    env['PYTHONLIB'] = 'python%s.%s%s' % (*env['PYTHONVERSION'].split('.')[:2], abiflags)
 
     env['PYTHON_EXT_SUFFIX'] = \
         subprocess.check_output([
@@ -85,5 +84,5 @@ def generate(env):
         .decode() \
         .strip() \
         .split('\n')
-
+    
     env['PYTHONPATH'] = env.Dir([_(p) for p in paths if os.path.isdir(p)])
