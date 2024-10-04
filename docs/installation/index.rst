@@ -83,9 +83,10 @@ Tested on Ubuntu22.04 using python3.10
 
 #. Ensure environment variables are properly set::
 
-       export PATH="/usr/local/bin:$PATH"
-       export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
-       ldconfig    
+       echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+       echo 'export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"' >> ~/.bashrc
+       ldconfig
+       source ~/.bashrc  
 
 #. Use pip to install OpenDrop from the repo::
 
@@ -142,9 +143,10 @@ Tested on Fedora 35, 40 using python3.10
 
 #. Ensure environment variables are properly set::
 
-       export PATH="/usr/local/bin:$PATH"
-       export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
-       ldconfig    
+       echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+       echo 'export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"' >> ~/.bashrc
+       ldconfig
+       source ~/.bashrc     
 
 #. Use pip to install OpenDrop from the repo::
 
@@ -175,9 +177,10 @@ macOS
 
 #. Ensure environment variables are properly set::
 
-       export PATH="/usr/local/bin:$PATH"
-       export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
-       ldconfig    
+       echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+       echo 'export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"' >> ~/.bashrc
+       ldconfig
+       source ~/.bashrc    
 
 #. Use pip to install OpenDrop from the repo::
 
@@ -189,8 +192,10 @@ macOS
 
        find /opt/ -name  "*.hpp" | grep boost
 
-       # Copy the path to the file without the file name
-       export BOOST_INCLUDE_DIR=path
+       # Copy the path to a folder containining the file
+       echo 'export BOOST_INCLUDE_DIR=path_to_folder' >> ~/.bashrc
+       ldconfig
+       source ~/.bashrc  
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
 .. _MacPorts: https://www.macports.org/
