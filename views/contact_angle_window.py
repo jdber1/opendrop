@@ -48,9 +48,9 @@ ENTRY_WIDTH = 11
 
 # fullPathName = os.path.abspath(os.path.dirname(sys.argv[0]))
 def call_user_input(user_input_data):
-    UserInterface(user_input_data)
+    ContactAngleWindow(user_input_data)
 
-class UserInterface(tk.Toplevel):
+class ContactAngleWindow(tk.Toplevel):
     def __init__(self, user_input_data):
         self.initialise = True # need this flag to disable float and integer checking for inputs
         #print("true")
@@ -718,5 +718,5 @@ class LabelFrameStyle():
 
 
 if __name__ == '__main__':
-    UserInterface()
+    ContactAngleWindow()
     # ui.app()

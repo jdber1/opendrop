@@ -17,7 +17,9 @@ from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Toler
 #from modules.PlotManager import PlotManager
 from modules.ExtractData import ExtractedData
 
-from modules.user_interface import call_user_input
+from views.contact_angle_window import call_user_input as ca_call_user_input
+from views.pendant_drop_window import call_user_input as pd_call_user_input
+from views.main_window import MainWindow
 from modules.read_image import get_image
 from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
 from modules.extract_profile import extract_drop_profile
@@ -30,7 +32,6 @@ from modules.fits import perform_fits
 # from modules. import add_data_to_lists
 
 import matplotlib.pyplot as plt
-
 
 import os
 import numpy as np
@@ -52,23 +53,10 @@ MAXIMUM_ARCLENGTH_STEPS = 10
 NEEDLE_TOL = 1.e-4
 NEEDLE_STEPS = 20
 
+def contact_angle(fitted_drop_data, user_inputs):
 
-
-def main():
-    clear_screen()
-    fitted_drop_data = DropData()
-    tolerances = Tolerances(
-        DELTA_TOL,
-        GRADIENT_TOL,
-        MAXIMUM_FITTING_STEPS,
-        OBJECTIVE_TOL,
-        ARCLENGTH_TOL,
-        MAXIMUM_ARCLENGTH_STEPS,
-        NEEDLE_TOL,
-        NEEDLE_STEPS)
-    user_inputs = ExperimentalSetup()
-
-    call_user_input(user_inputs)
+    # open the contact angle window
+    ca_call_user_input(user_inputs)
 
     if user_inputs.ML_boole == True:
         from modules.ML_model.prepare_experimental import prepare4model_v03, experimental_pred
@@ -164,6 +152,32 @@ def main():
 
 
         extracted_data.export_data(input_file,filename,i)
+
+def pendant_drop(fitted_drop_data, user_inputs):
+    pd_call_user_input(user_inputs)
+
+    # TO DO: implement tenpendant drop tensiometry analysis
+
+
+def main():
+    clear_screen()
+    fitted_drop_data = DropData()
+    tolerances = Tolerances(
+        DELTA_TOL,
+        GRADIENT_TOL,
+        MAXIMUM_FITTING_STEPS,
+        OBJECTIVE_TOL,
+        ARCLENGTH_TOL,
+        MAXIMUM_ARCLENGTH_STEPS,
+        NEEDLE_TOL,
+        NEEDLE_STEPS)
+    user_inputs = ExperimentalSetup()
+
+    app = MainWindow(
+        lambda: pendant_drop(fitted_drop_data, user_inputs),
+        lambda: contact_angle(fitted_drop_data, user_inputs)
+    )
+
 #    cheeky_pause()
 
 def clear_screen():
