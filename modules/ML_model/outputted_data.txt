@@ -1,0 +1,9 @@
+TRAINING DATA
+
+--- 90067.21679925919 seconds ---
+
+TEST DATA
+
+{'loss': 0.2623835802078247, 'mean_absolute_error': 0.33302080631256104, 'mean_squared_error': 0.2623835802078247}
+mean error is -3.54e-02 and standard deviation is 5.11e-01
+99.7% of errors are between -1.5683946671612041 and 1.4976736694868542

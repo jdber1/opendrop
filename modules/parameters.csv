@@ -1,0 +1,23 @@
+Drop ID method,Automated
+Image thresholding method,Automated
+Image thresholding value,50.0
+Baseline method,Automated
+Edge finder,OpenCV
+Continuous density,827.0
+Needle diameter,1.27
+Plot residuals,1
+Plot profiles,0
+Plot IFT,1
+Perform tangent fit,0
+Perform polynomial fit,0
+Perform circle fit,0
+Perform ellipse fit,0
+Perform YL fit,0
+Perform ML model prediction,1
+Image source,Local images
+Number of frames,1
+Wait time,1
+Save images,1
+Create new data folder,0
+Filename,temp
+Directory,/Users/dgshaw/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/files/conan/conan-ml
