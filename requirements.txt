@@ -34,6 +34,7 @@ protobuf
 pyasn1
 pyasn1-modules
 pyparsing
+pytest
 python-dateutil
 requests
 requests-oauthlib
