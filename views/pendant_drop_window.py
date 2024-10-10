@@ -5,9 +5,12 @@ from .navigation import create_navigation  # Import the navigation bar
 from .dynamic_content import DynamicContent
 from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
+from .output_page import OutputPage
+
 
 def call_user_input(user_input_data):
     PenDantDropWindow(user_input_data)
+
 
 class Stage(Enum):
     ACQUISITION = 1
@@ -15,6 +18,7 @@ class Stage(Enum):
     # IMAGE_REGION = 3
     ANALYSIS = 3
     OUTPUT =4
+
 
 class PenDantDropWindow(CTk):
     def __init__(self, user_input_data):
@@ -25,7 +29,6 @@ class PenDantDropWindow(CTk):
         self.widgets(user_input_data)
 
         self.stages = list(Stage)
-
         self.current_stage = Stage.ACQUISITION
 
         self.mainloop()  # Start the main loop
@@ -36,9 +39,10 @@ class PenDantDropWindow(CTk):
         self.navigation_frame.pack(fill="x", pady=10)
 
         # Frames for each stage
-        self.pd_acquisition_frame = PdAcquisition(self,fg_color="lightblue")
-        self.pd_preparation_frame = PdPreparation(self,fg_color="lightblue")
+        self.pd_acquisition_frame = PdAcquisition(self, fg_color="lightblue")
+        self.pd_preparation_frame = PdPreparation(self, fg_color="lightblue")
         self.dynamic_frame = DynamicContent(self)
+        self.output_frame = OutputPage(self, controller=self)  # Add the OutputPage frame
 
         self.pd_acquisition_frame.pack(fill="both", expand=True)
         
@@ -52,39 +56,46 @@ class PenDantDropWindow(CTk):
 
         self.next_button = CTkButton(self.button_frame, text="Next", command=self.next)
         self.next_button.pack(side="right", padx=10, pady=10)
-        # # Add navigation buttons (optional for next/back)
-        # self.back_button = CTkButton(self, text="Back", command=self.back)
-        # self.back_button.pack(side="left", padx=10, pady=10)
 
-        # self.next_button = CTkButton(self, text="Next", command=self.next)
-        # self.next_button.pack(side="right", padx=10, pady=10)
+        # Add save button for OutputPage (initially hidden)
+        self.save_button = CTkButton(self.button_frame, text="Save", command=self.save_output)
+        self.save_button.pack(side="right", padx=10, pady=10)
+        self.save_button.pack_forget()  # Hide it initially
 
     def back(self):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) - 1) % len(self.stages)]
-        # Go back to the initial screen
-        if (self.current_stage == Stage.ACQUISITION):
+        # Go back to the previous screen
+        if self.current_stage == Stage.ACQUISITION:
             self.pd_acquisition_frame.pack(fill="both", expand=True)
             self.pd_preparation_frame.pack_forget()
-        elif (self.current_stage == Stage.PREPARATION):
+        elif self.current_stage == Stage.PREPARATION:
             self.pd_preparation_frame.pack(fill="both", expand=True)
             self.dynamic_frame.pack_forget()
-        elif (self.current_stage == Stage.ANALYSIS):
-        
+        elif self.current_stage == Stage.ANALYSIS:
             self.dynamic_frame.pack(fill="both", expand=True)
-            self.dynamic_frame.pack_forget()
-        elif (self.current_stage == Stage.OUTPUT):
-            self.destroy()
+            self.output_frame.pack_forget()
 
+        # Show the next button and hide the save button when going back
+        self.next_button.pack(side="right", padx=10, pady=10)
+        self.save_button.pack_forget()
 
     def next(self):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + 1) % len(self.stages)]
         # Handle the "Next" button functionality
-        if (self.current_stage == Stage.PREPARATION):
+        if self.current_stage == Stage.PREPARATION:
             self.pd_acquisition_frame.pack_forget()
             self.pd_preparation_frame.pack(fill="both", expand=True)
-        elif (self.current_stage == Stage.ANALYSIS):
+        elif self.current_stage == Stage.ANALYSIS:
             self.pd_preparation_frame.pack_forget()
             self.dynamic_frame.pack(fill="both", expand=True)
-        elif (self.current_stage == Stage.OUTPUT):
+        elif self.current_stage == Stage.OUTPUT:
             self.dynamic_frame.pack_forget()
-            self.dynamic_frame.pack(fill="both", expand=True)
+            self.output_frame.pack(fill="both", expand=True)  # Show the OutputPage
+
+            # Hide the next button and show the save button
+            self.next_button.pack_forget()
+            self.save_button.pack(side="right", padx=10, pady=10)
+
+    def save_output(self):
+        # Implement the save logic here
+        print("Output saved!")
