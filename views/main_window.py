@@ -1,5 +1,6 @@
 import tkinter as tk
 import sys
+import signal
 from tkinter import messagebox
 
 from views.contact_angle_window import ContactAngleWindow
@@ -20,6 +21,8 @@ class MainWindow(tk.Tk):
             except tk.TclError:
                 print("Application already destroyed.")
             sys.exit(0)
+        # Attach the signal handler to SIGINT
+        signal.signal(signal.SIGINT, signal_handler)
 
         # Set up close and minimize buttons
         close_button = tk.Button(self, text="X", command=self.close_window, bg="white", fg="black", bd=0, font=("Arial", 12, "bold"))
