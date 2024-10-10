@@ -21,9 +21,9 @@ class PenDantDropWindow(CTk):
         self.navigation_frame = create_navigation(self)
         self.navigation_frame.pack(fill="x", pady=10)
 
-        # Create a frame for the dynamic content
-        self.dynamic_frame = DynamicContent(self)
-        self.dynamic_frame.pack(fill="both", expand=True)
+        # # Create a frame for the dynamic content
+        # self.dynamic_frame = DynamicContent(self)
+        # self.dynamic_frame.pack(fill="both", expand=True)
 
         self.ift_analysis = IftAnalysis(self)
         self.ift_analysis.pack(fill="both", expand=True)

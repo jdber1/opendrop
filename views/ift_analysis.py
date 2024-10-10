@@ -5,59 +5,47 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class IftAnalysis(CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.pack(fill="both", expand=True)
 
-        self.content_frame = None
-   
-        # Initialize the button frame at the top
-        self.toggle_results()
-        
-        # Below it should be the table or the graph
-        self.table()     
+        # Create and configure the CTkTabView
+        self.tab_view = CTkTabview(self)  
+        self.tab_view.pack(fill="both", expand=True, padx=20, pady=20)
 
-    def toggle_results(self):
-        # Create a frame to hold buttons, placing it at the top center
-        button_frame = CTkFrame(self)
-        button_frame.pack(side="top", pady=10)  # Placing it at the top with vertical padding
-        
-        # Create buttons inside the button frame
-        self.results_button = CTkButton(button_frame, text="Results", command=self.table)
-        self.results_button.grid(row=0, column=0, padx=5)
+        # Add "Results" and "Graphs" tabs
+        self.tab_view.add("Results")
+        self.tab_view.add("Graphs")
 
-        # Initially disabled
-        self.results_button.configure(state="disabled")
+        # Initialize content for each tab
+        self.create_table_view()
+        self.create_graph_view()
 
-        self.graphs_button = CTkButton(button_frame, text="Graphs", command=self.graph)
-        self.graphs_button.grid(row=0, column=1, padx=5)
-        
-        # To center the buttons in the frame
-        button_frame.pack(anchor="n", pady=10)  # "n" is for top-center alignment
+    def create_table_view(self):
+        results_tab = self.tab_view.tab("Results")
+        label = CTkLabel(results_tab, text="Table with results goes here.")
+        label.pack(padx=10, pady=10)
 
-    def graph(self):
-        self.graphs_button.configure(state="disabled")
-        self.results_button.configure(state="normal")
-        self.clear_content_frame()
-        
+        # Create a frame to hold the table
+        table_frame = CTkFrame(results_tab)
+        table_frame.pack(padx=10, pady=10)
+
+        # Create a grid for the table in the Results tab using pack
+        for i in range(5):  # 5 rows
+            row_frame = CTkFrame(table_frame)  # Create a frame for each row
+            row_frame.pack(side="top", fill="x")  # Pack the row frame vertically
+            for j in range(3):  # 3 columns
+                cell = CTkLabel(row_frame, text=f"Cell ({i+1},{j+1})")
+                cell.pack(side="left", padx=5, pady=5)  # Pack cells horizontally
+
+    def create_graph_view(self):
+        graphs_tab = self.tab_view.tab("Graphs")
+        label = CTkLabel(graphs_tab, text="Graph goes here.")
+        label.pack(padx=10, pady=10)
+
+        # Create a sample graph
         fig, ax = plt.subplots(figsize=(4, 3))
         ax.plot([1, 2, 3], [1, 4, 9])  # Sample data for graph
 
-        canvas = FigureCanvasTkAgg(fig, master=self.content_frame)
+        # Create a canvas to hold the graph in the Graphs tab
+        canvas = FigureCanvasTkAgg(fig, master=graphs_tab)
         canvas.get_tk_widget().pack(fill="both", expand=True)
         canvas.draw()
-
-    def table(self):
-        self.results_button.configure(state="disabled")
-        self.graphs_button.configure(state="normal")
-        self.clear_content_frame()
-
-        for i in range(5):  # 5 rows
-            for j in range(3):  # 3 columns
-                cell = CTkLabel(self.content_frame, text=f"Cell ({i+1},{j+1})")
-                cell.grid(row=i, column=j, padx=10, pady=10)
-
-    def clear_content_frame(self):
-        if self.content_frame:
-            self.content_frame.destroy()
-
-        # Create a new content frame
-        self.content_frame = CTkFrame(self)
-        self.content_frame.pack(fill="both", expand=True)
