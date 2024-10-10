@@ -74,24 +74,6 @@ class ImageApp(CTk):
             print(f"Error: The image file {image_path} was not found.")
             self.current_image = None  # Reset current_image if not found
 
-    # def display_image(self):
-    #     """Display the currently loaded image."""
-    #     if self.current_image:
-    #         # Get the current size of the image_label to match the frame size dynamically
-    #         label_width = self.image_label.winfo_width()
-    #         label_height = self.image_label.winfo_height()
-
-    #         # Resize the image based on the actual size of the label (frame)
-    #         resized_image = self.current_image.resize((300, 400), Image.LANCZOS)
-
-    #         # Create a CTkImage object from the resized image
-    #         self.tk_image = CTkImage(resized_image)
-
-    #         # Configure the label to display the image
-    #         self.image_label.configure(image=self.tk_image)
-
-    #         # Keep a reference to avoid garbage collection
-    #         self.image_label.image = self.tk_image
     def display_image(self):
         """Display the currently loaded image."""
         if self.current_image:

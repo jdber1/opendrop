@@ -37,7 +37,7 @@ class PenDantDropWindow(CTk):
 
         # Frames for each stage
         self.pd_acquisition_frame = PdAcquisition(self,fg_color="lightblue")
-        self.pd_preparation_frame = PdPreparation(self,fg_color="red")
+        self.pd_preparation_frame = PdPreparation(self,fg_color="lightblue")
         self.dynamic_frame = DynamicContent(self)
 
         self.pd_acquisition_frame.pack(fill="both", expand=True)

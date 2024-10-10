@@ -11,7 +11,7 @@ class ImageApp(CTkFrame):
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         # Image display area
-        self.image_label = CTkLabel(self.main_frame, text="Image will be displayed here", fg_color="lightgrey", width=400, height=300)
+        self.image_label = CTkLabel(self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
 
         # Drop region button

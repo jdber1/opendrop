@@ -5,9 +5,8 @@ AUTO_MANNUL_OPTIONS = ["Automated", "User-Selected"]  # Example options
 LABEL_WIDTH = 200  # Adjust as needed
 
 def create_user_input_fields(parent):
-   
     """Create user input fields and return the frame containing them."""
-    user_input_frame = CTkFrame(parent,fg_color='green')
+    user_input_frame = CTkFrame(parent)
     user_input_frame.pack(fill="both", padx=15, pady=15)
 
     # Create a label for the dynamic content
@@ -15,7 +14,7 @@ def create_user_input_fields(parent):
     label.pack(pady=(0, 10))  # Padding to separate from input fields
 
     # Create a frame to hold all input fields
-    input_fields_frame = CTkFrame(user_input_frame,fg_color='purple')
+    input_fields_frame = CTkFrame(user_input_frame)
     input_fields_frame.pack(fill="both", padx=10, pady=(0, 10))  # Padding around the input fields frame
 
     # Create input fields using custom styles
@@ -34,38 +33,36 @@ def create_user_input_fields(parent):
 
 def create_fitting_view_fields(parent):
     """Create user input fields and return the fitting."""
-    user_input_frame = CTkFrame(parent,fg_color="orange")
+    user_input_frame = CTkFrame(parent)
     user_input_frame.pack(fill="both", padx=15, pady=15)
 
     # Create a label for the dynamic content
     label = CTkLabel(user_input_frame, text="Analysis Methods", text_color="black")
     label.pack(pady=20)
 
-    input_fields_frame = CTkFrame(user_input_frame, fg_color='purple')
+    input_fields_frame = CTkFrame(user_input_frame)
     input_fields_frame.pack(padx=10, pady=(0, 10))  # Padding around the input fields frame
 
-     # Creating checkbox variables
+    # Creating checkbox variables
     var_residuals = BooleanVar(value=False)  # Default value for checkbox
 
     # Create checkboxes
     residuals_checkbox = CTkCheckBox(input_fields_frame, text="Residuals", variable=var_residuals)
     residuals_checkbox.pack(anchor='w', padx=5, pady=(5, 0))  # Anchored to the left with padding
 
-    user_input_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
-
     return user_input_frame  # Return the frame if needed for further use
 
 def create_analysis_method_fields(parent):
     """Create user input fields and return the frame containing them."""
-    user_input_frame = CTkFrame(parent, fg_color="yellow")
+    user_input_frame = CTkFrame(parent)
     user_input_frame.pack(fill="both", padx=15, pady=15)
 
     # Create a label for the dynamic content
     label = CTkLabel(user_input_frame, text="To View During Fitting", text_color="black")
     label.pack(pady=(0, 10)) 
 
-    input_fields_frame = CTkFrame(user_input_frame, fg_color='purple')
-    input_fields_frame.pack(fill="both", padx=10, pady=(0, 10))  # Padding around the input fields frame
+    input_fields_frame = CTkFrame(user_input_frame)
+    input_fields_frame.pack(padx=10, pady=(0, 10))  # Padding around the input fields frame
 
     # Creating checkbox variables
     var_default_method = BooleanVar(value=True)  # Default value for checkbox
@@ -74,16 +71,12 @@ def create_analysis_method_fields(parent):
     default_method_checkbox = CTkCheckBox(input_fields_frame, text="Default Method", variable=var_default_method)
     default_method_checkbox.pack(anchor='w', padx=5, pady=(5, 0))  # Anchored to the left with padding
 
-    # Optionally, you can add more input fields here if needed.
-
-    user_input_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
-
     return user_input_frame  # Return the frame if needed for further use
 
 def create_option_menu(parent, label_text, options):
     """Create an option menu and return it."""
     # Create a frame for the option menu with yellow background
-    frame = CTkFrame(parent, fg_color='yellow')
+    frame = CTkFrame(parent)
     
     # Pack the frame with specified padding and centered
     frame.pack(pady=8, fill='x', padx=15)  # Use padding of 8 and fill horizontally
@@ -104,7 +97,7 @@ def create_option_menu(parent, label_text, options):
 
 def create_float_entry(parent, label_text):
     """Creates a float entry with a label."""
-    frame = CTkFrame(parent,fg_color='yellow')  # Create a frame for the float entry
+    frame = CTkFrame(parent)  # Create a frame for the float entry
     # Pack the frame with specified padding and centered
     frame.pack(pady=8, fill='x', padx=15)  # Use padding of 8 and fill horizontally
 
@@ -115,13 +108,11 @@ def create_float_entry(parent, label_text):
     label = CTkLabel(frame, text=label_text)
     label.pack(side='left', padx=(5, 10))  # Padding to the right of the label
 
-    float_entry = CTkEntry(frame,width=200)  # Adjust to your custom entry style
+    float_entry = CTkEntry(frame, width=200)  # Adjust to your custom entry style
     float_entry.pack(side='right', padx=(0, 5))  # Fill the frame
 
     return float_entry
 
-
-    return float_entry
 if __name__ == "__main__":
     root = CTk()  # Create a CTk instance
     user_input_frame = create_user_input_fields(root)  # Create user input fields
