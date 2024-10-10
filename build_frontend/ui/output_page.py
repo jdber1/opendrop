@@ -7,23 +7,21 @@ class OutputPage(ctk.CTkFrame):
         self.controller = controller
         self.configure(fg_color='white')
 
+        # Set up the grid configuration for the entire frame
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        # Navigation frame (similar to the one in the first code)
+        navigation_frame = self.create_navigation(self)
+        navigation_frame.grid(row=0, column=0, pady=(20, 10), sticky="ew")
+
         # Info Button in the top-right corner (Above the tabs)
         info_button = ctk.CTkButton(self, text="❗", width=30, height=30, command=self.show_info_popup)
-        info_button.place(relx=0.95, rely=0.02)
-
-        # Tabs for navigation (Placed on a separate row)
-        tab_frame = ctk.CTkFrame(self, fg_color='white')
-        tab_frame.pack(fill='x', pady=(50, 10))
-
-        tabs = ["Acquisition", "Preparation", "Analysis", "Output"]
-        for tab in tabs:
-            tab_btn = ctk.CTkButton(tab_frame, text=tab, corner_radius=0, font=ctk.CTkFont(size=14),
-                                    fg_color="lightgray", hover_color="gray", text_color="black")
-            tab_btn.pack(side='left', fill='x', expand=True)
+        info_button.grid(row=0, column=0, sticky='ne', padx=(0, 10), pady=(10, 0))
 
         # Output Data Location Section
         output_frame = ctk.CTkFrame(self, fg_color='lightgray')
-        output_frame.pack(fill='x', padx=20, pady=10)
+        output_frame.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
         location_label = ctk.CTkLabel(output_frame, text="Location:", anchor='w')
         location_label.grid(row=0, column=0, sticky='w', padx=10, pady=5)
@@ -39,7 +37,7 @@ class OutputPage(ctk.CTkFrame):
 
         # Figure Section (Scrollable and Expandable)
         figure_frame = ctk.CTkFrame(self, fg_color='lightgray')
-        figure_frame.pack(fill='both', padx=20, pady=20, expand=True)
+        figure_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
 
         figure_label = ctk.CTkLabel(figure_frame, text="Figure", font=ctk.CTkFont(size=14, weight="bold"))
         figure_label.pack(pady=10)
@@ -60,19 +58,39 @@ class OutputPage(ctk.CTkFrame):
         self.plot_summary_label = ctk.CTkLabel(figure_frame, text="0 plots selected", anchor='center')
         self.plot_summary_label.pack(pady=10)
 
-        # Save and Back Buttons (Right aligned)
+        # Save and Back Buttons (Right aligned using grid)
         button_frame = ctk.CTkFrame(self, fg_color='white')
-        button_frame.pack(side='bottom', fill='x', pady=20)
+        button_frame.grid(row=3, column=0, pady=20, padx=20, sticky="se")
 
-        save_button = ctk.CTkButton(button_frame, text="Save", command=self.save_output)
-        save_button.pack(side='right', padx=10)
+        button_frame.grid_columnconfigure((0, 1), weight=1)
 
         back_button = ctk.CTkButton(button_frame, text="Back", command=lambda: controller.show_previous_page())
-        back_button.pack(side='right', padx=10)
+        back_button.grid(row=0, column=0, sticky='e', padx=10)
 
-        # Status Label (initially hidden)
-        self.status_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=16), anchor='center')
-        self.status_label.place(relx=0.5, rely=0.5, anchor='center')
+        save_button = ctk.CTkButton(button_frame, text="Save", command=self.save_output)
+        save_button.grid(row=0, column=1, sticky='e', padx=10)
+
+    def create_navigation(self, parent):
+        # Create a frame for the navigation
+        navigation_frame = ctk.CTkFrame(parent, fg_color="lightgray")
+        
+        # Define stage labels for navigation
+        stages = ["Acquisition", "Preparation", "Analysis", "Output"]
+        
+        # Create a label for each stage
+        for index, stage in enumerate(stages):
+            stage_label = ctk.CTkLabel(navigation_frame, text=stage, text_color="black")
+            stage_label.grid(row=0, column=index, padx=20, pady=10, sticky="nsew")
+            
+            # Create a dot to indicate the current stage
+            dot = ctk.CTkCanvas(navigation_frame, width=10, height=10, bg="white", highlightthickness=0)
+            dot.grid(row=1, column=index, padx=10)
+            dot.create_oval(2, 2, 8, 8, fill="black")  # Draw the dot
+            
+            # Make stage label responsive
+            navigation_frame.grid_columnconfigure(index, weight=1)
+
+        return navigation_frame
 
     def browse_location(self):
         directory = filedialog.askdirectory()
