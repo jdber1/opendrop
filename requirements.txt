@@ -19,7 +19,7 @@ joblib
 keras
 kiwisolver
 libclang
-llvmlite=
+llvmlite
 Markdown
 MarkupSafe
 matplotlib

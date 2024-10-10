@@ -1,6 +1,7 @@
 from customtkinter import *
 from .navigation import create_navigation  # Import the navigation bar
 from .dynamic_content import DynamicContent  # Import the dynamic content
+from .ift_analysis import IftAnalysis
 
 def call_user_input(user_input_data):
     PenDantDropWindow(user_input_data)
@@ -23,6 +24,9 @@ class PenDantDropWindow(CTk):
         # Create a frame for the dynamic content
         self.dynamic_frame = DynamicContent(self)
         self.dynamic_frame.pack(fill="both", expand=True)
+
+        self.ift_analysis = IftAnalysis(self)
+        self.ift_analysis.pack(fill="both", expand=True)
 
         # Add navigation buttons (optional for next/back)
         self.back_button = CTkButton(self, text="Back", command=self.back_to_initial)
