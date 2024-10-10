@@ -1,4 +1,3 @@
-from customtkinter import *
 import customtkinter as ctk
 from .component.preparation import create_analysis_method_fields, create_fitting_view_fields, create_user_input_fields
 from .component.imageProcessing import ImageApp

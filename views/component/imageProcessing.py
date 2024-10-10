@@ -1,6 +1,7 @@
-from customtkinter import CTkFrame, CTkButton, CTkLabel
+from customtkinter import CTkFrame, CTkButton, CTkLabel, CTkImage
 from PIL import ImageTk, Image
 from utils.image_handler import ImageHandler
+import os
 
 class ImageApp(CTkFrame):
     def __init__(self, parent):
