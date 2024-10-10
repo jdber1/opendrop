@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
 class OutputPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, user_input_data, controller):
         super().__init__(parent)
         self.controller = controller
         self.configure(fg_color='white')

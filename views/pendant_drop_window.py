@@ -1,10 +1,13 @@
-from enum import Enum
+import signal
+import sys
 
+from enum import Enum
 from customtkinter import *
 from .navigation import create_navigation  # Import the navigation bar
 from .dynamic_content import DynamicContent
 from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
+from .output_page import OutputPage
 
 def call_user_input(user_input_data):
     PenDantDropWindow(user_input_data)
@@ -34,9 +37,11 @@ class PenDantDropWindow(CTk):
         self.navigation_frame = create_navigation(self)
         self.navigation_frame.pack(fill="x", pady=10)
 
-        self.pd_acquisition_frame = PdAcquisition(self)
-        self.dynamic_content = DynamicContent(self)
-        self.pd_preparation_frame = PdPreparation(self)
+        # Frames for each stage
+        self.pd_acquisition_frame = PdAcquisition(self, user_input_data, fg_color="lightblue")
+        self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
+        self.dynamic_frame = DynamicContent(self)
+        self.output_frame = OutputPage(self, user_input_data, controller=self)  # Add the OutputPage frame
 
         self.pd_acquisition_frame.pack(fill="both", expand=True)
 
