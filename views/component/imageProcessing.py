@@ -1,18 +1,11 @@
-from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
-from PIL import Image, ImageTk  # You need to install Pillow for image handling
+from customtkinter import CTkFrame, CTkButton, CTkLabel, CTkImage
+from PIL import Image, ImageTk  # Ensure Pillow is installed
 import os
 
-class ImageApp(CTk):
-    from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
-    from PIL import Image, ImageTk  # You need to install Pillow for image handling
-    import os
-    def __init__(self,parent):
-        super().__init__()
+class ImageApp(CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
         
-        # # Set window title and size
-        # self.title("Image Processing Application")
-        # self.geometry("800x600")
-
         # Create main frame
         self.main_frame = CTkFrame(self)
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
@@ -65,33 +58,14 @@ class ImageApp(CTk):
 
     def load_image(self, selected_image):
         """Load and display the selected image."""
-        image_path = os.path.join(selected_image)
-        print("image: ", image_path)  # Check the constructed path
+        print("Loading image: ", selected_image)  # Check the constructed path
         try:
-            self.current_image = Image.open(image_path)  # Load the image
+            self.current_image = Image.open(selected_image)  # Load the image
             self.display_image()  # Display the image
         except FileNotFoundError:
-            print(f"Error: The image file {image_path} was not found.")
+            print(f"Error: The image file {selected_image} was not found.")
             self.current_image = None  # Reset current_image if not found
 
-    # def display_image(self):
-    #     """Display the currently loaded image."""
-    #     if self.current_image:
-    #         # Get the current size of the image_label to match the frame size dynamically
-    #         label_width = self.image_label.winfo_width()
-    #         label_height = self.image_label.winfo_height()
-
-    #         # Resize the image based on the actual size of the label (frame)
-    #         resized_image = self.current_image.resize((300, 400), Image.LANCZOS)
-
-    #         # Create a CTkImage object from the resized image
-    #         self.tk_image = CTkImage(resized_image)
-
-    #         # Configure the label to display the image
-    #         self.image_label.configure(image=self.tk_image)
-
-    #         # Keep a reference to avoid garbage collection
-    #         self.image_label.image = self.tk_image
     def display_image(self):
         """Display the currently loaded image."""
         if self.current_image:
@@ -99,8 +73,7 @@ class ImageApp(CTk):
             resized_image = self.current_image.resize((400, 300), Image.LANCZOS)
             self.tk_image = ImageTk.PhotoImage(resized_image)
             self.image_label.configure(image=self.tk_image)
-            self.image_label.image = self.tk_image  # 
-
+            self.image_label.image = self.tk_image  # Keep a reference to avoid garbage collection
 
     def show_previous_image(self):
         """Show the previous image in the directory."""
@@ -121,8 +94,3 @@ class ImageApp(CTk):
     def set_needle_region(self):
         """Placeholder for setting needle region functionality."""
         print("Needle region set")  # Implement functionality as needed
-
-# Run the application
-if __name__ == "__main__":
-    app = ImageApp()
-    app.mainloop()

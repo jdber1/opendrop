@@ -12,15 +12,16 @@ def call_user_input(user_input_data):
 class Stage(Enum):
     ACQUISITION = 1
     PREPARATION = 2
+    # IMAGE_REGION = 3
     ANALYSIS = 3
-    OUTPUT = 4
+    OUTPUT =4
 
 class PenDantDropWindow(CTk):
     def __init__(self, user_input_data):
         super().__init__()  # Call the parent class constructor
         self.title("CustomTkinter Dynamic Content Example")
         self.geometry("1920x1080")
-        
+        self.configure(fg_color="lightblue")
         self.widgets(user_input_data)
 
         self.stages = list(Stage)
@@ -34,18 +35,29 @@ class PenDantDropWindow(CTk):
         self.navigation_frame = create_navigation(self)
         self.navigation_frame.pack(fill="x", pady=10)
 
-        self.pd_acquisition_frame = PdAcquisition(self)
-        self.dynamic_content = DynamicContent(self)
-        self.pd_preparation_frame = PdPreparation(self)
+        # Frames for each stage
+        self.pd_acquisition_frame = PdAcquisition(self,fg_color="lightblue")
+        self.pd_preparation_frame = PdPreparation(self,fg_color="red")
+        self.dynamic_frame = DynamicContent(self)
 
         self.pd_acquisition_frame.pack(fill="both", expand=True)
+        
+        # Frame for navigation buttons
+        self.button_frame = CTkFrame(self)
+        self.button_frame.pack(side="bottom", fill="x", pady=10)
 
-        # Add navigation buttons (optional for next/back)
-        self.back_button = CTkButton(self, text="Back", command=self.back)
+        # Add navigation buttons to the button frame
+        self.back_button = CTkButton(self.button_frame, text="Back", command=self.back)
         self.back_button.pack(side="left", padx=10, pady=10)
 
-        self.next_button = CTkButton(self, text="Next", command=self.next)
+        self.next_button = CTkButton(self.button_frame, text="Next", command=self.next)
         self.next_button.pack(side="right", padx=10, pady=10)
+        # # Add navigation buttons (optional for next/back)
+        # self.back_button = CTkButton(self, text="Back", command=self.back)
+        # self.back_button.pack(side="left", padx=10, pady=10)
+
+        # self.next_button = CTkButton(self, text="Next", command=self.next)
+        # self.next_button.pack(side="right", padx=10, pady=10)
 
     def back(self):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) - 1) % len(self.stages)]
@@ -54,11 +66,11 @@ class PenDantDropWindow(CTk):
             self.pd_acquisition_frame.pack(fill="both", expand=True)
             self.pd_preparation_frame.pack_forget()
         elif (self.current_stage == Stage.PREPARATION):
-            self.pd_preparation_frame.pack()
+            self.pd_preparation_frame.pack(fill="both", expand=True)
             self.dynamic_frame.pack_forget()
         elif (self.current_stage == Stage.ANALYSIS):
         
-            self.dynamic_frame.pack()
+            self.dynamic_frame.pack(fill="both", expand=True)
             self.dynamic_frame.pack_forget()
         elif (self.current_stage == Stage.OUTPUT):
             self.destroy()
@@ -69,10 +81,10 @@ class PenDantDropWindow(CTk):
         # Handle the "Next" button functionality
         if (self.current_stage == Stage.PREPARATION):
             self.pd_acquisition_frame.pack_forget()
-            self.pd_preparation_frame.pack()
+            self.pd_preparation_frame.pack(fill="both", expand=True)
         elif (self.current_stage == Stage.ANALYSIS):
             self.pd_preparation_frame.pack_forget()
-            self.dynamic_frame.pack()
+            self.dynamic_frame.pack(fill="both", expand=True)
         elif (self.current_stage == Stage.OUTPUT):
             self.dynamic_frame.pack_forget()
-            self.dynamic_frame.pack()
+            self.dynamic_frame.pack(fill="both", expand=True)
