@@ -4,7 +4,7 @@ from utils.image_handler import ImageHandler
 import os
 
 
-class ImageApp(CTkFrame):
+class ImageGallery(CTkFrame):
     def __init__(self, parent, import_files):
         super().__init__(parent)
 
@@ -19,16 +19,6 @@ class ImageApp(CTkFrame):
         self.image_label = CTkLabel(
             self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
-
-        # Drop region button
-        self.drop_region_button = CTkButton(
-            self.main_frame, text="Set Drop Region", command=self.set_drop_region)
-        self.drop_region_button.pack(pady=5)
-
-        # Needle region button
-        self.needle_region_button = CTkButton(
-            self.main_frame, text="Set Needle Region", command=self.set_needle_region)
-        self.needle_region_button.pack(pady=5)
 
         # Load images from the directory
         self.image_paths = import_files  # Load all images
@@ -79,11 +69,3 @@ class ImageApp(CTkFrame):
                 self.current_index + direction) % len(self.image_paths)  # Wrap around
             # Load the new image
             self.load_image(self.image_paths[self.current_index])
-
-    def set_drop_region(self):
-        """Placeholder for setting drop region functionality."""
-        print("Drop region set")
-
-    def set_needle_region(self):
-        """Placeholder for setting needle region functionality."""
-        print("Needle region set")
