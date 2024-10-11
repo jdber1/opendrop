@@ -1,17 +1,20 @@
 from customtkinter import *
-from component.preparation import create_user_input_fields, create_analysis_method_fields, create_fitting_view_fields
 
+class InputFields(CTkFrame):
+    from .component.preparation import create_user_input_fields, create_analysis_method_fields, create_fitting_view_fields
 
-class InputFields:
     def __init__(self, parent):
+       
+        super().__init__(parent)
         """Initialize the input fields by creating top and bottom input frames."""
-        self.parent = parent  # Store reference to the parent container
-
+        self.parent = parent
+        
         # Call methods to create the fields and layout
         self.create_top_input_fields()
         self.create_bottom_input_fields()
 
     def create_top_input_fields(self):
+        from .component.preparation import create_user_input_fields, create_analysis_method_fields
         """Create the top user input fields and pack them into the layout."""
         # Create a frame for the top user input fields
         self.top_input_frame = CTkFrame(self.parent, fg_color='red')
@@ -37,6 +40,7 @@ class InputFields:
             side="right", fill="both", expand=True, padx=(24, 0))  # Second input set (35%)
 
     def create_bottom_input_fields(self):
+        from .component.preparation import create_fitting_view_fields
         """Create the bottom user input fields and pack them into the layout."""
         # Create a frame for the bottom user input field (row 2)
         self.bottom_input_frame = CTkFrame(self.parent)
@@ -48,16 +52,3 @@ class InputFields:
 
         # Pack the bottom user input field set
         self.bottom_user_input_fields.pack(pady=(0, 0))  # Align to the left
-
-
-# Example usage
-if __name__ == "__main__":
-    root = CTk()  # Create a CTk instance
-    dynamic_content = InputFields(root)  # Create the DynamicContent instance
-    # Pack the dynamic content frame
-    dynamic_content.pack(fill="both", expand=True)
-
-    # Run the single command to set up input fields
-    dynamic_content.run_input_fields()
-
-    root.mainloop()  # Start the main loop

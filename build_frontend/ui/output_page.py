@@ -12,7 +12,7 @@ class OutputPage(ctk.CTkFrame):
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Navigation frame (similar to the one in the first code)
+        # Navigation frame
         navigation_frame = self.create_navigation(self)
         navigation_frame.grid(row=0, column=0, pady=(20, 10), sticky="ew")
 
@@ -41,7 +41,7 @@ class OutputPage(ctk.CTkFrame):
         self.filename_entry = ctk.CTkEntry(output_frame, width=300)
         self.filename_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        # Figure Section (Scrollable and Expandable)
+        # Figure Section
         figure_frame = ctk.CTkFrame(self, fg_color='lightgray')
         figure_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
 
@@ -55,7 +55,7 @@ class OutputPage(ctk.CTkFrame):
         scrollable_frame.pack(fill='both', expand=True, padx=10, pady=5)
 
         self.check_vars = []
-        for i in range(20):  # Example with 20 plot options to show the scalability
+        for i in range(20):
             var = ctk.StringVar()
             self.check_vars.append(var)
             plot_check = ctk.CTkCheckBox(scrollable_frame, text=f"Plot {i+1}", variable=var, onvalue="on", offvalue="off",

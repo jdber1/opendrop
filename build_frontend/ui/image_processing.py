@@ -1,15 +1,18 @@
-from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel
+from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
 from PIL import Image, ImageTk  # You need to install Pillow for image handling
 import os
 
 
 class ImageApp(CTk):
-    def __init__(self):
+    from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
+    from PIL import Image, ImageTk  # You need to install Pillow for image handling
+    import os
+    def __init__(self,parent):
         super().__init__()
-
-        # Set window title and size
-        self.title("Image Processing Application")
-        self.geometry("800x600")
+        
+        # # Set window title and size
+        # self.title("Image Processing Application")
+        # self.geometry("800x600")
 
         # Create main frame
         self.main_frame = CTkFrame(self)
@@ -70,24 +73,24 @@ class ImageApp(CTk):
 
     def load_image(self, selected_image):
         """Load and display the selected image."""
-        # Use the selected image path directly
-        print("image: ", selected_image)  # Check the constructed path
+        image_path = os.path.join(selected_image)
+        print("image: ", image_path)  # Check the constructed path
         try:
-            self.current_image = Image.open(selected_image)  # Load the image
+            self.current_image = Image.open(image_path)  # Load the image
             self.display_image()  # Display the image
         except FileNotFoundError:
-            print(f"Error: The image file {selected_image} was not found.")
+            print(f"Error: The image file {image_path} was not found.")
+            self.current_image = None  # Reset current_image if not found
 
     def display_image(self):
         """Display the currently loaded image."""
         if self.current_image:
             # Resize and display the image
-            resized_image = self.current_image.resize(
-                (400, 300), Image.LANCZOS)
-
+            resized_image = self.current_image.resize((400, 300), Image.LANCZOS)
             self.tk_image = ImageTk.PhotoImage(resized_image)
             self.image_label.configure(image=self.tk_image)
-            self.image_label.image = self.tk_image  # Keep a reference
+            self.image_label.image = self.tk_image  # 
+
 
     def show_previous_image(self):
         """Show the previous image in the directory."""

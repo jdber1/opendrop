@@ -1,5 +1,5 @@
 from customtkinter import *
-
+import customtkinter as ctk
 
 class DynamicContent(CTkFrame):
     def __init__(self, parent):
