@@ -8,15 +8,19 @@ from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
 from .output_page import OutputPage
 
-def call_user_input(user_input_data):
-    PendantDropWindow(user_input_data)
-
 class Stage(Enum):
     ACQUISITION = 1
     PREPARATION = 2
     # IMAGE_REGION = 3
     ANALYSIS = 3
-    OUTPUT =4
+    OUTPUT = 4
+
+class Move(Enum):
+    Next = 1
+    Back = -1
+
+def call_user_input(user_input_data):
+    PendantDropWindow(user_input_data)
 
 class PendantDropWindow(CTk):
     def __init__(self, user_input_data):
@@ -27,7 +31,7 @@ class PendantDropWindow(CTk):
         self.widgets(user_input_data)
 
         self.stages = list(Stage)
-        self.current_stage = Stage.PREPARATION
+        self.current_stage = Stage.ACQUISITION
 
         self.mainloop()  # Start the main loop
         
@@ -37,8 +41,8 @@ class PendantDropWindow(CTk):
         self.navigation_frame.pack(fill="x", pady=10)
 
         # Frames for each stage
-        self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
-        self.pd_preparation_frame.pack(fill="both", expand=True)
+        self.pd_acquisition_frame = PdAcquisition(self, user_input_data, fg_color="lightblue")
+        self.pd_acquisition_frame.pack(fill="both", expand=True)
         
         # Frame for navigation buttons
         self.button_frame = CTkFrame(self)
@@ -90,7 +94,7 @@ class PendantDropWindow(CTk):
 
         return messages
     def back(self, user_input_data):
-        self.current_stage = self.stages[(self.stages.index(self.current_stage) - 1) % len(self.stages)]
+        self.update_stage(Move.Back.value)
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
             self.pd_acquisition_frame.pack(fill="both", expand=True)
@@ -107,37 +111,24 @@ class PendantDropWindow(CTk):
         self.save_button.pack_forget()
 
     def next(self, user_input_data):
-        self.current_stage = self.stages[(self.stages.index(self.current_stage) + 1) % len(self.stages)]
+        self.update_stage(Move.Next.value)
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
-            if (user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0):
+            if self.check_import(user_input_data):
                 # user have selected at least one file
                 self.pd_acquisition_frame.pack_forget()
                 # Note: Need to initialize there so that the frame can get the updated user_input_data
                 self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
                 self.pd_preparation_frame.pack(fill="both", expand=True)
             else:
+                self.update_stage(Move.Back.value)
                 messagebox.showinfo("No Selection", "Please select at least one file.")
         
         elif self.current_stage == Stage.ANALYSIS:
-            print("user_input_data.user_input_fields: ",user_input_data.user_input_fields)
-            print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
-            print("user_input_data.statistical_output: ",user_input_data.statistical_output)
-            # Validate user input data
-            validation_messages = self.validate_user_input_data(user_input_data)
-
-            if validation_messages:
-                # Print out the messages
-                all_messages = "\n".join(validation_messages)
-                # Show a single pop-up message with all validation messages
-                messagebox.showinfo("Missing: \n", all_messages)
-            else:
-                print("All required fields are filled.")
-                self.pd_preparation_frame.pack_forget()
-                # Temp use. Replace it with the analysis frame
-                self.dynamic_frame = DynamicContent(self)
-                self.dynamic_frame.pack(fill="both", expand=True)
-            
+            self.pd_preparation_frame.pack_forget()
+            # Temp use. Replace it with the analysis frame
+            self.dynamic_frame = DynamicContent(self)
+            self.dynamic_frame.pack(fill="both", expand=True)
         elif self.current_stage == Stage.OUTPUT:
             self.dynamic_frame.pack_forget()
             # Note: Need to initialize there so that the frame can get the updated user_input_data
@@ -152,3 +143,9 @@ class PendantDropWindow(CTk):
         # Implement the save logic here
         print("Output saved!")
     
+    def update_stage(self, direction):
+        self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
+
+    def check_import(self, user_input_data):
+        num_images = len(user_input_data.import_files)
+        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and num_images > 0 and num_images == user_input_data.number_of_frames

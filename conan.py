@@ -156,8 +156,6 @@ def contact_angle(fitted_drop_data, user_inputs):
 def pendant_drop(fitted_drop_data, user_inputs):
     pd_call_user_input(user_inputs)
 
-    # TO DO: implement tenpendant drop tensiometry analysis
-
 
 def main():
     clear_screen()
