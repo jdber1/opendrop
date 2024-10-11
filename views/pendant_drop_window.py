@@ -162,5 +162,4 @@ class PendantDropWindow(CTk):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
 
     def check_import(self, user_input_data):
-        num_images = len(user_input_data.import_files)
-        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and num_images > 0 and num_images == user_input_data.number_of_frames
+        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and len(user_input_data.import_files) > 0 and len(user_input_data.import_files) == user_input_data.number_of_frames
