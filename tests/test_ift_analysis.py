@@ -1,4 +1,6 @@
 import pytest
+import time
+import tkinter as tk
 from customtkinter import CTk, CTkFrame
 from views.ift_analysis import IftAnalysis
 
@@ -6,9 +8,11 @@ from views.ift_analysis import IftAnalysis
 @pytest.fixture
 def app():
     """Fixture to create a tkinter application instance for testing."""
+    # root = tk.Tk()
     app = CTk()
     frame = CTkFrame(app, width=700)
     frame.pack(fill='both', expand=True)
+    app.update()
     yield frame  # Use frame instead of app
     app.destroy()  # Cleanup after tests
 
@@ -64,7 +68,10 @@ def test_create_image_frame(app, image_path):
 
     image_frame = analysis.image_frame
     assert image_frame is not None  # Ensure the image frame is created
-    assert image_frame.winfo_width() > 0  # Check if the frame has a width
+    # Check if the frame has a width
+
+    time.sleep(0.1)
+    assert image_frame.winfo_width() > 0
 
 
 @pytest.mark.parametrize("event", [None, "resize"])
@@ -76,6 +83,13 @@ def test_resize_image(app, event):
     # Resize the image
     analysis.resize_image(event)
 
-    assert analysis.image_label.image is not None  # Check if the image is set
-    assert analysis.aspect_ratio() == analysis.image_label.winfo_height() / \
-        analysis.image_label.winfo_width()  # Check the aspect ratio
+    assert analysis.ctk_image is not None  # Check if the image is set
+
+    analysis.update()
+
+    # Get width and height from the PIL image
+    image_width = analysis.ctk_image._light_image.width
+    image_height = analysis.ctk_image._light_image.height
+
+    assert analysis.aspect_ratio == image_height / \
+        image_width  # Check the aspect ratio
