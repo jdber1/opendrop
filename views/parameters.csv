@@ -2,7 +2,7 @@ Drop ID method,Automated
 Image thresholding method,Automated
 Image thresholding value,0.0
 Baseline method,Automated
-Edge finder,OpenCV
+Edge finder,Both
 Continuous density,0.0
 Needle diameter,0.0
 Plot residuals,0
@@ -10,13 +10,13 @@ Plot profiles,0
 Plot IFT,0
 Perform tangent fit,1
 Perform polynomial fit,1
-Perform circle fit,1
-Perform ellipse fit,1
-Perform YL fit,1
-Perform ML model prediction,1
+Perform circle fit,0
+Perform ellipse fit,0
+Perform YL fit,0
+Perform ML model prediction,0
 Image source,Local images
-Number of frames,0
-Wait time,0
+Number of frames,5
+Wait time,2
 Save images,0
 Create new data folder,0
 Filename,

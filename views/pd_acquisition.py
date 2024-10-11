@@ -3,6 +3,7 @@ from customtkinter import CTkLabel
 from tkinter import filedialog, messagebox
 from PIL import ImageTk, Image
 from utils.image_handler import ImageHandler
+from utils.validators import validate_numeric_input
 
 PATH_TO_SCRIPT = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..')
 
@@ -13,16 +14,28 @@ class PdAcquisition(CTkFrame):
         self.image_handler = ImageHandler()
 
         self.image_source_button = CTkButton(self, text="Filesystem", width=150, height=40)
-        self.image_source_button.pack(pady=10)
+        self.image_source_button.grid(pady=10)
 
         self.choose_files_button = CTkButton(self, text="Choose File(s)", command=lambda: self.select_files(), width=150, height=40)
-        self.choose_files_button.pack(pady=10)
+        self.choose_files_button.grid(pady=10)
 
         self.images_frame = CTkFrame(self)
 
         self.current_index = 0
 
         self.user_input_data = user_input_data
+
+        self.frame_interval_var = StringVar()
+        self.frame_interval_var.trace_add("write", self.update_frame_interval)
+
+
+        numberic_validate_command = self.register(validate_numeric_input)
+
+        # Label for the input field
+        self.interval_input_label = CTkLabel(self, text="Frame Intervals:")
+        # Create an Entry widget with numeric validation
+        self.frame_interval_entry = CTkEntry(self, textvariable=self.frame_interval_var, validate="key", validatecommand=(numberic_validate_command, '%P'))
+
 
     def select_files(self):
         # Clear previous images
@@ -42,45 +55,53 @@ class PdAcquisition(CTkFrame):
         if num_files > 0:
             self.choose_files_button.configure(text=f"{num_files} File(s) Selected")
 
-            self.images_frame.pack(padx=20, pady=20, fill="both", expand=True)
+            self.images_frame.grid(padx=20, pady=20, fill="both", expand=True)
+
+            if (num_files > 1):
+                # If number of files bigger than 0, give user an opportunity to enter the frame interval
+                self.interval_input_label.grid(pady=10)
+                self.frame_interval_entry.grid(pady=10)
 
             # Image display area
             self.image_label = CTkLabel(self.images_frame, text="", fg_color="lightgrey", width=400, height=300)
-            self.image_label.pack(pady=10)
+            self.image_label.grid(pady=10)
 
             # Display the filename below the image
             file_name = os.path.basename(self.user_input_data.import_files[self.current_index])
             self.name_label = CTkLabel(self.images_frame, text=file_name, font=("Arial", 10))
-            self.name_label.pack()
+            self.name_label.grid()
 
             # Frame to hold navigation components
             self.image_navigation_frame = CTkFrame(self.images_frame, width=50)
-            self.image_navigation_frame.pack(pady=30)
+            self.image_navigation_frame.grid(pady=30)
 
             # Previous button
             self.prev_button = CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)
-            self.prev_button.pack(side="left", padx=10)
+            self.prev_button.grid(side="left", padx=10)
 
             # Initialize entry for current index
             self.index_entry = CTkEntry(self.image_navigation_frame, width=5)
-            self.index_entry.pack(side="left", padx=10)
+            self.index_entry.grid(side="left", padx=10)
             self.index_entry.bind("<Return>", lambda event: self.update_index_from_entry())
             self.index_entry.insert(0, str(self.current_index + 1))
 
             # Navigation label
             self.navigation_label = CTkLabel(self.image_navigation_frame, text=f" of {num_files}", font=("Arial", 12))
-            self.navigation_label.pack(side="left")
+            self.navigation_label.grid(side="left")
 
             # Next button
             self.next_button = CTkButton(self.image_navigation_frame, text=">", command=lambda: self.change_image(1), width=3)
-            self.next_button.pack(side="left", padx=10)
+            self.next_button.grid(side="left", padx=10)
 
             self.load_image(self.user_input_data.import_files[self.current_index])  # Load the first image by default
-
         else:
-            self.images_frame.pack_forget()
+            self.images_frame.grid_forget()
             self.choose_files_button.configure(text="Choose File(s)")  # Reset if no files were chosen
             messagebox.showinfo("No Selection", "No files were selected.")
+
+        if (num_files <= 1):
+            self.interval_input_label.grid_forget()
+            self.frame_interval_entry.grid_forget()
 
     def load_image(self, selected_image):
         """Load and display the selected image."""
@@ -126,3 +147,6 @@ class PdAcquisition(CTkFrame):
         """Update the index entry to reflect the current index."""
         self.index_entry.delete(0, 'end')  # Clear the current entry
         self.index_entry.insert(0, str(self.current_index + 1))  # Insert the new index (1-based)
+
+    def update_frame_interval(self, *args):
+        self.user_input_data.frame_interval = self.frame_interval_var.get()

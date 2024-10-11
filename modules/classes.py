@@ -56,6 +56,7 @@ class ExperimentalSetup(object):
         self.drop_region = None
         self.needle_region = None
         self.import_files = None
+        self.frame_interval = None
 
 class ExperimentalDrop(object):
     def __init__(self):
