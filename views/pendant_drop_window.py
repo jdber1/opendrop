@@ -7,6 +7,7 @@ from .dynamic_content import DynamicContent
 from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
 from .output_page import OutputPage
+from views.helper.validation import validate_user_input_data
 
 class Stage(Enum):
     ACQUISITION = 1
@@ -59,41 +60,6 @@ class PendantDropWindow(CTk):
         self.save_button = CTkButton(self.button_frame, text="Save", command=self.save_output)
         self.save_button.pack(side="right", padx=10, pady=10)
         self.save_button.pack_forget()  # Hide it initially
-
-    def validate_user_input_data(self,user_input_data):
-        """Validate the user input data and return messages for missing fields."""
-        messages = []
-
-        user_input_fields = user_input_data.user_input_fields
-            # Ensure if drop region is chosen, it must not be None
-        if user_input_fields['drop_region_choice'] != 'Automated' and user_input_data.ift_drop_region is None:
-            messages.append("Please select drop region")
-
-        # Ensure if needle region is chosen, it must not be None
-        if user_input_fields['needle_region_choice'] != 'Automated' and user_input_data.ift_needle_region is None:
-            messages.append("Please select needle region")
-
-            # Check user_input_fields for None values
-        
-        required_fields = {
-            'drop_region_choice': "Drop Region Choice",
-            'needle_region_choice': "Needle Region Choice",
-            'drop_density': "Drop Density",
-            'needle_diameter': "Needle Diameter",
-            'continuous_density': "Continuous Density",
-            'pixel_mm': "Pixel to mm"
-        }
-
-        for field, label in required_fields.items():
-            if user_input_fields.get(field) is None:
-                messages.append(f"{label} is required")
-
-        # Check if analysis_method_fields has at least one method selected
-        analysis_method_fields = user_input_data.analysis_method_fields
-        if not any(analysis_method_fields.values()):
-            messages.append("At least one analysis method must be selected.")
-
-        return messages
     def back(self, user_input_data):
         self.update_stage(Move.Back.value)
         # Go back to the previous screen
@@ -130,7 +96,7 @@ class PendantDropWindow(CTk):
             print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
             print("user_input_data.statistical_output: ",user_input_data.statistical_output)
             # Validate user input data
-            validation_messages = self.validate_user_input_data(user_input_data)
+            validation_messages = validate_user_input_data(user_input_data)
 
             if validation_messages:
                 # Print out the messages
@@ -162,5 +128,4 @@ class PendantDropWindow(CTk):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
 
     def check_import(self, user_input_data):
-        num_images = len(user_input_data.import_files)
-        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and num_images > 0 and num_images == user_input_data.number_of_frames
+        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and len(user_input_data.import_files) > 0 and len(user_input_data.import_files) == user_input_data.number_of_frames
