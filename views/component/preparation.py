@@ -111,6 +111,9 @@ def create_analysis_method_fields(parent, user_input_data):
     # Creating checkbox variables
     var_default_method = BooleanVar(value=True)  # Default value for checkbox
 
+    # Initialize user_input_data with default value
+    user_input_data["default_method"] = var_default_method.get()  # Store the initial state in user_input_data
+
     # Create checkboxes inside the input fields frame
     default_method_checkbox = CTkCheckBox(input_fields_frame, text="Default Method", variable=var_default_method)
     default_method_checkbox.pack(anchor='w', padx=5, pady=(5, 0))  # Anchored to the left with padding

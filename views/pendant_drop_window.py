@@ -88,9 +88,10 @@ class PendantDropWindow(CTk):
             if user_input_fields.get(field) is None:
                 messages.append(f"{label} is required")
 
-        # Check if analysis_method_fields is empty
-        if not user_input_data.analysis_method_fields:
-            messages.append("One method in Analysis Method Fields must be selected.")
+        # Check if analysis_method_fields has at least one method selected
+        analysis_method_fields = user_input_data.analysis_method_fields
+        if not any(analysis_method_fields.values()):
+            messages.append("At least one analysis method must be selected.")
 
         return messages
     def back(self, user_input_data):
@@ -125,10 +126,24 @@ class PendantDropWindow(CTk):
                 messagebox.showinfo("No Selection", "Please select at least one file.")
         
         elif self.current_stage == Stage.ANALYSIS:
-            self.pd_preparation_frame.pack_forget()
-            # Temp use. Replace it with the analysis frame
-            self.dynamic_frame = DynamicContent(self)
-            self.dynamic_frame.pack(fill="both", expand=True)
+            print("user_input_data.user_input_fields: ",user_input_data.user_input_fields)
+            print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
+            print("user_input_data.statistical_output: ",user_input_data.statistical_output)
+            # Validate user input data
+            validation_messages = self.validate_user_input_data(user_input_data)
+
+            if validation_messages:
+                # Print out the messages
+                self.update_stage(Move.Back.value)
+                all_messages = "\n".join(validation_messages)
+                # Show a single pop-up message with all validation messages
+                messagebox.showinfo("Missing: \n", all_messages)
+            else:
+                print("All required fields are filled.")
+                self.pd_preparation_frame.pack_forget()
+                # Temp use. Replace it with the analysis frame
+                self.dynamic_frame = DynamicContent(self)
+                self.dynamic_frame.pack(fill="both", expand=True)
         elif self.current_stage == Stage.OUTPUT:
             self.dynamic_frame.pack_forget()
             # Note: Need to initialize there so that the frame can get the updated user_input_data
