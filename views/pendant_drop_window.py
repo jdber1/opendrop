@@ -8,15 +8,19 @@ from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
 from .output_page import OutputPage
 
-def call_user_input(user_input_data):
-    PendantDropWindow(user_input_data)
-
 class Stage(Enum):
     ACQUISITION = 1
     PREPARATION = 2
     # IMAGE_REGION = 3
     ANALYSIS = 3
-    OUTPUT =4
+    OUTPUT = 4
+
+class Move(Enum):
+    Next = 1
+    Back = -1
+
+def call_user_input(user_input_data):
+    PendantDropWindow(user_input_data)
 
 class PendantDropWindow(CTk):
     def __init__(self, user_input_data):
@@ -57,7 +61,7 @@ class PendantDropWindow(CTk):
         self.save_button.pack_forget()  # Hide it initially
 
     def back(self, user_input_data):
-        self.current_stage = self.stages[(self.stages.index(self.current_stage) - 1) % len(self.stages)]
+        self.updateStage(Move.Back.value)
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
             self.pd_acquisition_frame.pack(fill="both", expand=True)
@@ -74,7 +78,7 @@ class PendantDropWindow(CTk):
         self.save_button.pack_forget()
 
     def next(self, user_input_data):
-        self.current_stage = self.stages[(self.stages.index(self.current_stage) + 1) % len(self.stages)]
+        self.updateStage(Move.Next.value)
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
             if (user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0):
@@ -84,6 +88,7 @@ class PendantDropWindow(CTk):
                 self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
                 self.pd_preparation_frame.pack(fill="both", expand=True)
             else:
+                self.updateStage(Move.Back.value)
                 messagebox.showinfo("No Selection", "Please select at least one file.")
         elif self.current_stage == Stage.ANALYSIS:
             self.pd_preparation_frame.pack_forget()
@@ -103,3 +108,6 @@ class PendantDropWindow(CTk):
     def save_output(self):
         # Implement the save logic here
         print("Output saved!")
+
+    def updateStage(self, direction):
+        self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]

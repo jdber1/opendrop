@@ -57,6 +57,8 @@ class ExperimentalSetup(object):
         self.needle_region = None
         self.import_files = None
         self.frame_interval = None
+        self.cv2_capture_num = None
+        self.genlcam_capture_num = None
 
 class ExperimentalDrop(object):
     def __init__(self):
