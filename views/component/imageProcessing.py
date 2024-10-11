@@ -4,7 +4,7 @@ from utils.image_handler import ImageHandler
 import os
 
 class ImageApp(CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, import_files):
         super().__init__(parent)
         
         # Initialize ImageHandler instance
@@ -27,7 +27,7 @@ class ImageApp(CTkFrame):
         self.needle_region_button.pack(pady=5)
 
         # Load images from the directory
-        self.image_paths = self.load_images()  # Load all images
+        self.image_paths = import_files  # Load all images
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Previous and Next buttons

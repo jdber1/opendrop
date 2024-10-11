@@ -1,10 +1,13 @@
 import customtkinter as ctk
+
 from .component.preparation import create_analysis_method_fields, create_fitting_view_fields, create_user_input_fields
 from .component.imageProcessing import ImageApp
 
 class PdPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
+
+        self.user_input_data = user_input_data
 
         # Configure the grid to allow expansion for both columns
         self.grid_rowconfigure(0, weight=1)
@@ -25,10 +28,8 @@ class PdPreparation(ctk.CTkFrame):
         self.create_fitting_view_fields(self.input_fields_frame)
 
         # Instantiate the ImageApp on the right
-        self.image_app = ImageApp(self.image_app_frame)  
-        self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame
-
-        self.user_input_data = user_input_data
+        self.image_app = ImageApp(self.image_app_frame, self.user_input_data.import_files)  
+        self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame   
 
     def create_user_input_fields(self, parent_frame):
         """Create and pack user input fields into the specified parent frame."""

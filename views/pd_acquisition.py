@@ -27,7 +27,7 @@ class PdAcquisition(CTkFrame):
     def setup_image_source_frame(self):
         """Set up the image source frame and its components."""
         self.image_source_frame = CTkFrame(self, fg_color="transparent")
-        self.image_source_frame.pack(pady=20)
+        self.image_source_frame.pack(pady=(20, 5))
         self.create_component_label(self.image_source_frame, "Image Source: ")
         self.image_source_button = CTkButton(self.image_source_frame, text="Filesystem", width=150, height=30)
         self.image_source_button.pack(side="left")
@@ -35,7 +35,7 @@ class PdAcquisition(CTkFrame):
     def setup_choose_files_frame(self):
         """Set up the choose files frame and its components."""
         self.choose_files_frame = CTkFrame(self, fg_color="transparent")
-        self.choose_files_frame.pack(pady=10)
+        self.choose_files_frame.pack(pady=5)
         self.create_component_label(self.choose_files_frame, "Image Files: ")
         self.choose_files_button = CTkButton(
             self.choose_files_frame,
@@ -63,8 +63,7 @@ class PdAcquisition(CTkFrame):
 
     def select_files(self):
         # Clear previous images
-        for widget in self.images_frame.winfo_children():
-            widget.destroy()
+        self.images_frame.destroy()
 
         self.user_input_data.import_files = filedialog.askopenfilenames(
             title="Select Files",
@@ -82,11 +81,12 @@ class PdAcquisition(CTkFrame):
 
             if (num_files > 1):
                 # If number of files bigger than 0, give user an opportunity to enter the frame interval
-                self.frame_interval_frame.pack(pady=10)
+                self.frame_interval_frame.pack(pady=5)
             else:
                 self.frame_interval_frame.pack_forget()
 
-            self.images_frame.pack(pady=20)
+            self.images_frame = CTkFrame(self)
+            self.images_frame.pack(pady=10)
 
             self.initialize_image_display(self)
         else:
