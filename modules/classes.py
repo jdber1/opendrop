@@ -57,6 +57,13 @@ class ExperimentalSetup(object):
         self.needle_region = None
         self.import_files = None
         self.frame_interval = None
+        self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
+        self.analysis_method_fields = {}
+        self.statistical_output = {}
+        self.ift_drop_region = None
+        self.ift_needle_region = None
+
+
 
 class ExperimentalDrop(object):
     def __init__(self):
@@ -71,6 +78,7 @@ class ExperimentalDrop(object):
         self.ret = None
         self.time = None
         self.pixels_to_mm = None
+        
         # self.time_full = None
         # self.filename = None
         # self.img_src = 2

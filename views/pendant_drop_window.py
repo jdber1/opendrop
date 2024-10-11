@@ -27,7 +27,7 @@ class PendantDropWindow(CTk):
         self.widgets(user_input_data)
 
         self.stages = list(Stage)
-        self.current_stage = Stage.ACQUISITION
+        self.current_stage = Stage.PREPARATION
 
         self.mainloop()  # Start the main loop
         
@@ -37,8 +37,8 @@ class PendantDropWindow(CTk):
         self.navigation_frame.pack(fill="x", pady=10)
 
         # Frames for each stage
-        self.pd_acquisition_frame = PdAcquisition(self, user_input_data, fg_color="lightblue")
-        self.pd_acquisition_frame.pack(fill="both", expand=True)
+        self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
+        self.pd_preparation_frame.pack(fill="both", expand=True)
         
         # Frame for navigation buttons
         self.button_frame = CTkFrame(self)
@@ -56,6 +56,39 @@ class PendantDropWindow(CTk):
         self.save_button.pack(side="right", padx=10, pady=10)
         self.save_button.pack_forget()  # Hide it initially
 
+    def validate_user_input_data(self,user_input_data):
+        """Validate the user input data and return messages for missing fields."""
+        messages = []
+
+        user_input_fields = user_input_data.user_input_fields
+            # Ensure if drop region is chosen, it must not be None
+        if user_input_fields['drop_region_choice'] != 'Automated' and user_input_data.ift_drop_region is None:
+            messages.append("Please select drop region")
+
+        # Ensure if needle region is chosen, it must not be None
+        if user_input_fields['needle_region_choice'] != 'Automated' and user_input_data.ift_needle_region is None:
+            messages.append("Please select needle region")
+
+            # Check user_input_fields for None values
+        
+        required_fields = {
+            'drop_region_choice': "Drop Region Choice",
+            'needle_region_choice': "Needle Region Choice",
+            'drop_density': "Drop Density",
+            'needle_diameter': "Needle Diameter",
+            'continuous_density': "Continuous Density",
+            'pixel_mm': "Pixel to mm"
+        }
+
+        for field, label in required_fields.items():
+            if user_input_fields.get(field) is None:
+                messages.append(f"{label} is required")
+
+        # Check if analysis_method_fields is empty
+        if not user_input_data.analysis_method_fields:
+            messages.append("One method in Analysis Method Fields must be selected.")
+
+        return messages
     def back(self, user_input_data):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) - 1) % len(self.stages)]
         # Go back to the previous screen
@@ -85,11 +118,26 @@ class PendantDropWindow(CTk):
                 self.pd_preparation_frame.pack(fill="both", expand=True)
             else:
                 messagebox.showinfo("No Selection", "Please select at least one file.")
+        
         elif self.current_stage == Stage.ANALYSIS:
-            self.pd_preparation_frame.pack_forget()
-            # Temp use. Replace it with the analysis frame
-            self.dynamic_frame = DynamicContent(self)
-            self.dynamic_frame.pack(fill="both", expand=True)
+            print("user_input_data.user_input_fields: ",user_input_data.user_input_fields)
+            print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
+            print("user_input_data.statistical_output: ",user_input_data.statistical_output)
+            # Validate user input data
+            validation_messages = self.validate_user_input_data(user_input_data)
+
+            if validation_messages:
+                # Print out the messages
+                all_messages = "\n".join(validation_messages)
+                # Show a single pop-up message with all validation messages
+                messagebox.showinfo("Missing: \n", all_messages)
+            else:
+                print("All required fields are filled.")
+                self.pd_preparation_frame.pack_forget()
+                # Temp use. Replace it with the analysis frame
+                self.dynamic_frame = DynamicContent(self)
+                self.dynamic_frame.pack(fill="both", expand=True)
+            
         elif self.current_stage == Stage.OUTPUT:
             self.dynamic_frame.pack_forget()
             # Note: Need to initialize there so that the frame can get the updated user_input_data
@@ -103,3 +151,4 @@ class PendantDropWindow(CTk):
     def save_output(self):
         # Implement the save logic here
         print("Output saved!")
+    

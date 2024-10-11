@@ -28,22 +28,22 @@ class PdPreparation(ctk.CTkFrame):
         self.create_fitting_view_fields(self.input_fields_frame)
 
         # Instantiate the ImageApp on the right
-        self.image_app = ImageApp(self.image_app_frame, self.user_input_data.import_files)  
+        self.image_app = ImageApp(self.image_app_frame, self.user_input_data)  
         self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame   
 
     def create_user_input_fields(self, parent_frame):
         """Create and pack user input fields into the specified parent frame."""
-        user_input_frame = create_user_input_fields(parent_frame)
+        user_input_frame = create_user_input_fields(parent_frame,self.user_input_data.user_input_fields)
         user_input_frame.pack(fill="x", expand=True, pady=(10, 0))  # Adjust as needed for your layout
 
     def create_analysis_method_fields(self, parent_frame):
         """Create and pack analysis method fields into the specified parent frame."""
-        analysis_frame = create_analysis_method_fields(parent_frame)
+        analysis_frame = create_analysis_method_fields(parent_frame,self.user_input_data.analysis_method_fields)
         analysis_frame.pack(fill="x", expand=True, pady=(10, 0))  # Adjust padding and expansion as needed
 
     def create_fitting_view_fields(self, parent_frame):
-        """Create and pack fitting view fields into the specified parent frame."""
-        fitting_view_frame = create_fitting_view_fields(parent_frame)
+        """Create and pack Statisitcal Output fields into the specified parent frame."""
+        fitting_view_frame = create_fitting_view_fields(parent_frame,self.user_input_data.statistical_output)
         fitting_view_frame.pack(fill="x", expand=True)  # Pack fitting view fields
 
 #     def open_image_processing_popup(self):

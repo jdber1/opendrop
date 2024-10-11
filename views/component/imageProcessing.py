@@ -4,7 +4,7 @@ from utils.image_handler import ImageHandler
 import os
 
 class ImageApp(CTkFrame):
-    def __init__(self, parent, import_files):
+    def __init__(self, parent, user_input_data):
         super().__init__(parent)
         
         # Initialize ImageHandler instance
@@ -26,8 +26,9 @@ class ImageApp(CTkFrame):
         self.needle_region_button = CTkButton(self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         self.needle_region_button.pack(pady=5)
 
+        self.user_input_data = user_input_data
         # Load images from the directory
-        self.image_paths = import_files  # Load all images
+        self.image_paths = user_input_data.import_files  # Load all images
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Previous and Next buttons
@@ -40,6 +41,7 @@ class ImageApp(CTkFrame):
         # Load the first image by default if available
         if self.image_paths:
             self.load_image(self.image_paths[self.current_index])  # Load the first image by default
+        # self.update_button_visibility()
 
     def load_images(self):
         """Load all images from the specified directory and return their paths."""
@@ -72,8 +74,29 @@ class ImageApp(CTkFrame):
 
     def set_drop_region(self):
         """Placeholder for setting drop region functionality."""
+        self.user_input_data.ift_drop_region = "Drop region set"
         print("Drop region set")
 
     def set_needle_region(self):
         """Placeholder for setting needle region functionality."""
+        self.user_input_data.ift_needle_region = "Drop region set"
         print("Needle region set")
+
+
+    def update_button_visibility(self):
+        """Update the visibility of the drop region and needle region buttons based on user_input_data."""
+        # Retrieve and print the values
+        drop_region_value = self.user_input_data.user_input_fields.get("drop_region_choice")
+        needle_region_value = self.user_input_data.user_input_fields.get("needle_region_choice")
+
+        # Show or hide the Drop Region button
+        if drop_region_value == "User-Selected":
+            self.drop_region_button.pack(pady=5)
+        else:
+            self.drop_region_button.pack_forget()
+
+        # Show or hide the Needle Region button
+        if needle_region_value == "User-Selected":
+            self.needle_region_button.pack(pady=5)
+        else:
+            self.needle_region_button.pack_forget()
