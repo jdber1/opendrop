@@ -8,6 +8,7 @@ class IftAnalysis(CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.pack(fill="both", expand=True)
+        self.IMAGE_SIZE = 400
 
         # Create and configure the CTkTabView
         self.tab_view = CTkTabview(self)
@@ -32,7 +33,6 @@ class IftAnalysis(CTkFrame):
         # Configure the row and column weights for expansion
         results_tab.grid_rowconfigure(0, weight=1)
         results_tab.grid_columnconfigure(0, weight=1)
-        # Give more weight to the visualization column
         results_tab.grid_columnconfigure(1, weight=2)
 
         self.create_table_frame(main_frame)
@@ -40,26 +40,33 @@ class IftAnalysis(CTkFrame):
 
     def create_table_frame(self, parent_frame):
         # Create a frame for the table
-        table_frame = CTkFrame(parent_frame)
+        table_frame = CTkScrollableFrame(parent_frame)
         table_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
+        # Configure the row and column weights for expansion
+        parent_frame.grid_rowconfigure(0, weight=1)
+        parent_frame.grid_columnconfigure(0, weight=1)
 
         headings = ["Time", "IFT", "V", "SA", "Bond", "Worth"]
         for j, heading in enumerate(headings):
             cell = CTkLabel(table_frame, text=heading)
             cell.grid(row=0, column=j, padx=10, pady=10, sticky="nsew")
-        for i in range(1, 6):
+
+        for i in range(1, 21):  # Adjusted to create more rows for better scrolling
             for j in range(len(headings)):
                 cell = CTkLabel(table_frame, text=f"Cell ({i},{j + 1})")
                 cell.grid(row=i, column=j, padx=10, pady=10, sticky="nsew")
+
         for j in range(len(headings)):
             table_frame.grid_columnconfigure(j, weight=1)
-        for i in range(6):
+
+        # Set row configuration to allow for vertical scrolling
+        for i in range(21):  # Adjust the range as needed
             table_frame.grid_rowconfigure(i, weight=1)
 
     def create_visualisation_frame(self, parent):
         images_frame = CTkFrame(parent)
-        images_frame.grid(row=0, column=1, padx=10,
-                          sticky="nsew")  # Move this to column 1
+        images_frame.grid(row=0, column=1, padx=10, sticky="nsew")
         images_frame.grid_rowconfigure(0, weight=1)
         images_frame.grid_rowconfigure(1, weight=1)
         self.create_image_frame(images_frame)
@@ -82,20 +89,21 @@ class IftAnalysis(CTkFrame):
             self.resize_image()
         except FileNotFoundError:
             print(f"Error: The file {path_to_image} was not found.")
+            self.image_label.configure(text="Image not found.")
 
     def resize_image(self, event=None):
-        if self.tab_view.winfo_width() > 0 and self.tab_view.winfo_height() > 0:
+        if hasattr(self, 'original_image') and self.tab_view.winfo_width() > 0 and self.tab_view.winfo_height() > 0:
             # Calculate new dimensions, keeping aspect ratio
-            image_width = 400  # self.tab_view.winfo_width() / 4
-            image_height = self.aspect_ratio * image_width
+            image_width = self.IMAGE_SIZE  # Set a fixed width
+            image_height = int(self.aspect_ratio * image_width)
 
             # Resize the original image
             self.resized_image = self.original_image.resize(
-                (int(image_width), int(image_height)), Image.LANCZOS)
+                (image_width, image_height), Image.LANCZOS)
 
             # Create a CTkImage from the resized image
             self.ctk_image = CTkImage(light_image=self.resized_image, dark_image=self.resized_image,
-                                      size=(int(image_width), int(image_height)))
+                                      size=(image_width, image_height))
 
             # Update the image label with CTkImage
             self.image_label.configure(image=self.ctk_image)
@@ -106,7 +114,8 @@ class IftAnalysis(CTkFrame):
         residuals_frame.grid(row=1, column=0, sticky="nsew")
 
         # Create the figure and axis
-        fig, ax = plt.subplots(figsize=(4, 3))
+        fig, ax = plt.subplots(
+            figsize=(self.IMAGE_SIZE / 100, self.IMAGE_SIZE * 3/400))
         ax.plot([1, 2, 3], [2, 5, 10])  # Example data for the residuals
         ax.set_title('Residuals')
 
@@ -118,7 +127,7 @@ class IftAnalysis(CTkFrame):
         toolbar = NavigationToolbar2Tk(canvas, residuals_frame)
         toolbar.update()
 
-        # Ensure the canvas is packed after toolbar
+        # Ensure the canvas is packed after the toolbar
         canvas.get_tk_widget().pack(fill="both", expand=True)
 
         # Draw the canvas to show the figure
