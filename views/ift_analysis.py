@@ -21,24 +21,24 @@ class IftAnalysis(CTkFrame):
         self.tab_view.add("Graphs")
 
         # Initialize content for each tab
-        self.create_results_tab()
-        self.create_graph_tab()
+        self.create_results_tab(self.tab_view.tab("Results"))
+        self.create_graph_tab(self.tab_view.tab("Graphs"))
 
-    def create_results_tab(self):
-        results_tab = self.tab_view.tab("Results")
+    def create_results_tab(self, parent):
+        """Create a split frame containing a Table on the left and Residuals with base image on the right into the parent frame"""
 
         # Configure the grid to allow expansion for both columns
-        results_tab.grid_rowconfigure(0, weight=1)
-        results_tab.grid_columnconfigure(0, weight=1)  # Left column for table
-        results_tab.grid_columnconfigure(
+        parent.grid_rowconfigure(0, weight=1)
+        parent.grid_columnconfigure(0, weight=1)  # Left column for table
+        parent.grid_columnconfigure(
             1, weight=1)  # Right column for visuals
 
         # Table can be large, so scrollable
-        self.table_frame = CTkScrollableFrame(results_tab)
+        self.table_frame = CTkScrollableFrame(parent)
         self.table_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(
             10, 0))  # Left side for table
 
-        self.visualisation_frame = CTkFrame(results_tab)
+        self.visualisation_frame = CTkFrame(parent)
         self.visualisation_frame.grid(row=0, column=1, padx=10, sticky="nsew")
         self.visualisation_frame.grid_rowconfigure(0, weight=1)
         self.visualisation_frame.grid_rowconfigure(1, weight=1)
@@ -48,6 +48,7 @@ class IftAnalysis(CTkFrame):
         self.create_residuals_frame(self.visualisation_frame)
 
     def create_table(self, parent_frame):
+        """Create a table into the parent frame. Headings are: Time, IFT, V, SA, Bond, Worth"""
 
         # Configure the row and column weights for expansion
         parent_frame.grid_rowconfigure(0, weight=1)
@@ -71,11 +72,14 @@ class IftAnalysis(CTkFrame):
             parent_frame.grid_rowconfigure(i, weight=1)
 
     def create_image_frame(self, parent):
+        """Create an Image Gallery that allows back and forth between base images into the parent frame"""
         self.image_frame = ImageGallery(
             parent, self.user_input_data.import_files)
         self.image_frame.grid(row=0, column=0, sticky="nsew")
 
     def create_residuals_frame(self, parent):
+        """Create a graph containing residuals into the parent frame. Graph is of same size as the Image Gallery."""
+
         residuals_frame = CTkFrame(parent)
         residuals_frame.grid(row=1, column=0, sticky="nsew")
 
@@ -100,16 +104,17 @@ class IftAnalysis(CTkFrame):
         # Draw the canvas to show the figure
         canvas.draw()
 
-    def create_graph_tab(self):
-        graphs_tab = self.tab_view.tab("Graphs")
+    def create_graph_tab(self, parent):
+        """Create a full sized graph into the parent frame"""
+
         fig, ax = plt.subplots(figsize=(4, 3))
         ax.plot([1, 2, 3], [1, 4, 9])
 
         # Create the canvas for the figure
-        canvas = FigureCanvasTkAgg(fig, graphs_tab)
+        canvas = FigureCanvasTkAgg(fig, parent)
         canvas.get_tk_widget().pack(fill="both", expand=True)
 
         # Create and pack the navigation toolbar
-        toolbar = NavigationToolbar2Tk(canvas, graphs_tab)
+        toolbar = NavigationToolbar2Tk(canvas, parent)
         toolbar.update()
         canvas.draw()

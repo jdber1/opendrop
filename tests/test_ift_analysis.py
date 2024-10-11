@@ -1,34 +1,51 @@
 import pytest
 import time
-import tkinter as tk
 from customtkinter import CTk, CTkFrame
 from views.ift_analysis import IftAnalysis
+from modules.classes import ExperimentalSetup
 
 
 @pytest.fixture
 def app():
     """Fixture to create a tkinter application instance for testing."""
-    # root = tk.Tk()
     app = CTk()
-    frame = CTkFrame(app, width=700)
+    frame = CTkFrame(app, width=1000, height=600)
     frame.pack(fill='both', expand=True)
     app.update()
     yield frame  # Use frame instead of app
     app.destroy()  # Cleanup after tests
 
 
-def test_if_analysis_creation(app):
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_if_analysis_creation(app, import_files):
     """Test the creation of IftAnalysis."""
-    analysis = IftAnalysis(app)
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
     # Check if the instance is created
     assert isinstance(analysis, IftAnalysis)
     assert analysis.tab_view  # Ensure tab view is created
 
 
-def test_create_table_view(app):
-    """Test the creation of table view in IftAnalysis."""
-    analysis = IftAnalysis(app)
-    analysis.create_table_view()
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_create_table(app, import_files):
+    """Test the creation of table in IftAnalysis."""
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
+    analysis.create_table(analysis.tab_view.tab("Results"))
 
     results_tab = analysis.tab_view.tab("Results")
     assert results_tab is not None  # Check if the Results tab exists
@@ -36,9 +53,18 @@ def test_create_table_view(app):
     assert len(results_tab.winfo_children()) > 0
 
 
-def test_create_visualisation_frame(app):
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_create_visualisation_frame(app, import_files):
     """Test the creation of the visualisation frame."""
-    analysis = IftAnalysis(app)
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
     analysis.create_visualisation_frame(analysis.tab_view.tab("Results"))
 
     # Check if the visualisation frame is created
@@ -47,10 +73,19 @@ def test_create_visualisation_frame(app):
     assert images_frame.winfo_width() <= 400  # Check if width is set to 400
 
 
-def test_create_graph_view(app):
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_create_graph_tab(app, import_files):
     """Test the creation of the graph view."""
-    analysis = IftAnalysis(app)
-    analysis.create_graph_view()
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
+    analysis.create_graph_tab(analysis.tab_view.tab("Graphs"))
 
     graphs_tab = analysis.tab_view.tab("Graphs")
     assert graphs_tab is not None  # Check if the Graphs tab exists
@@ -61,10 +96,19 @@ def test_create_graph_view(app):
 @pytest.mark.parametrize("image_path", [
     'experimental_data_set\\5.bmp',  # Test path
 ])
-def test_create_image_frame(app, image_path):
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_create_image_frame(app, image_path, import_files):
     """Test the creation of the image frame."""
-    analysis = IftAnalysis(app)
-    analysis.create_image_frame(analysis.tab_view.tab("Results"), image_path)
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
+    analysis.create_image_frame(analysis.tab_view.tab("Results"))
 
     image_frame = analysis.image_frame
     assert image_frame is not None  # Ensure the image frame is created
@@ -75,17 +119,24 @@ def test_create_image_frame(app, image_path):
 
 
 @pytest.mark.parametrize("event", [None, "resize"])
-def test_resize_image(app, event):
+@pytest.mark.parametrize("import_files", [
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp"]),
+    (["experimental_data_set/3.bmp"]),
+    (["experimental_data_set/3.bmp", "experimental_data_set/5.bmp",
+     "experimental_data_set/10.bmp"]),
+])
+def test_resize_image(app, import_files, event):
     """Test the resizing of the image."""
-    analysis = IftAnalysis(app)
+    user_input_data = ExperimentalSetup()
+    user_input_data.import_files = import_files
+
+    analysis = IftAnalysis(app, user_input_data)
     analysis.create_image_frame(analysis.tab_view.tab("Results"))
 
     # Resize the image
     analysis.resize_image(event)
 
     assert analysis.ctk_image is not None  # Check if the image is set
-
-    analysis.update()
 
     # Get width and height from the PIL image
     image_width = analysis.ctk_image._light_image.width
