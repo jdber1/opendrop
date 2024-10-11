@@ -61,7 +61,7 @@ class PendantDropWindow(CTk):
         self.save_button.pack_forget()  # Hide it initially
 
     def back(self, user_input_data):
-        self.updateStage(Move.Back.value)
+        self.update_stage(Move.Back.value)
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
             self.pd_acquisition_frame.pack(fill="both", expand=True)
@@ -78,17 +78,17 @@ class PendantDropWindow(CTk):
         self.save_button.pack_forget()
 
     def next(self, user_input_data):
-        self.updateStage(Move.Next.value)
+        self.update_stage(Move.Next.value)
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
-            if (user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0):
+            if self.check_import(user_input_data):
                 # user have selected at least one file
                 self.pd_acquisition_frame.pack_forget()
                 # Note: Need to initialize there so that the frame can get the updated user_input_data
                 self.pd_preparation_frame = PdPreparation(self, user_input_data, fg_color="lightblue")
                 self.pd_preparation_frame.pack(fill="both", expand=True)
             else:
-                self.updateStage(Move.Back.value)
+                self.update_stage(Move.Back.value)
                 messagebox.showinfo("No Selection", "Please select at least one file.")
         elif self.current_stage == Stage.ANALYSIS:
             self.pd_preparation_frame.pack_forget()
@@ -109,5 +109,9 @@ class PendantDropWindow(CTk):
         # Implement the save logic here
         print("Output saved!")
 
-    def updateStage(self, direction):
+    def update_stage(self, direction):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
+
+    def check_import(self, user_input_data):
+        num_images = len(user_input_data.import_files)
+        return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and num_images > 0 and num_images == user_input_data.number_of_frames
