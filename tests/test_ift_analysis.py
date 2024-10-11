@@ -1,50 +1,79 @@
 import pytest
-from unittest import mock
-from customtkinter import CTkFrame
+from customtkinter import CTk, CTkFrame
 from views.ift_analysis import IftAnalysis
-from PIL import Image
 
 
 @pytest.fixture
-def analysis():
-    # Create a mock parent widget with a 'tk' attribute
-    mock_ctk_frame = mock.Mock(spec=CTkFrame)
-    mock_ctk_frame.tk = mock.Mock()  # Add 'tk' attribute to the mock
-    # Initialize the IftAnalysis instance
-    return IftAnalysis(mock_ctk_frame)
+def app():
+    """Fixture to create a tkinter application instance for testing."""
+    app = CTk()
+    yield app
+    app.destroy()  # Cleanup after tests
 
 
-@mock.patch('PIL.Image.open')  # Patch Image.open for the test
-def test_create_image_frame(mock_open, analysis):
-    mock_image = mock.MagicMock()
-    mock_open.return_value = mock_image
-
-    # Create an image frame
-    analysis.create_image_frame(analysis)
-
-    # Check if the canvas is created
-    assert 'Canvas' in analysis.children
-
-    # Check if the image is set in the canvas
-    assert analysis.tk_image is not None
-
-    # Ensure that the image was opened
-    mock_open.assert_called_once()
+def test_if_analysis_creation(app):
+    """Test the creation of IftAnalysis."""
+    analysis = IftAnalysis(app)
+    # Check if the instance is created
+    assert isinstance(analysis, IftAnalysis)
+    assert analysis.tab_view  # Ensure tab view is created
 
 
-def test_create_table_frame(analysis):
-    # Test the creation of the table frame
-    analysis.create_table_frame(analysis)
+def test_create_table_view(app):
+    """Test the creation of table view in IftAnalysis."""
+    analysis = IftAnalysis(app)
+    analysis.create_table_view()
 
-    # Check if the table frame is created and packed
-    assert analysis.children is not None
-    assert 'CTkScrollableFrame' in analysis.children
+    results_tab = analysis.tab_view.tab("Results")
+    assert results_tab is not None  # Check if the Results tab exists
+    # Ensure the tab has children (elements)
+    assert len(results_tab.winfo_children()) > 0
 
-    # Check if the headings are created
-    headings = ["Time", "IFT", "V", "SA", "Bond", "Worth"]
-    scrollable_frame = analysis.children['CTkScrollableFrame']
-    heading_labels = [label.cget('text')
-                      for label in scrollable_frame.grid_slaves()]
 
-    for heading in headings:
-        assert heading in heading_labels
+def test_create_visualisation_frame(app):
+    """Test the creation of the visualisation frame."""
+    analysis = IftAnalysis(app)
+    analysis.create_visualisation_frame(analysis.tab_view.tab("Results"))
+
+    # Check if the visualisation frame is created
+    images_frame = analysis.tab_view.tab("Results").winfo_children()[-1]
+    assert isinstance(images_frame, CTkFrame)  # Ensure it's a CTkFrame
+    assert images_frame.winfo_width() == 400  # Check if width is set to 400
+
+
+def test_create_graph_view(app):
+    """Test the creation of the graph view."""
+    analysis = IftAnalysis(app)
+    analysis.create_graph_view()
+
+    graphs_tab = analysis.tab_view.tab("Graphs")
+    assert graphs_tab is not None  # Check if the Graphs tab exists
+    # Ensure the tab has children (elements)
+    assert len(graphs_tab.winfo_children()) > 0
+
+
+@pytest.mark.parametrize("image_path", [
+    'experimental_data_set\\5.bmp',  # Test path
+])
+def test_create_image_frame(app, image_path):
+    """Test the creation of the image frame."""
+    analysis = IftAnalysis(app)
+    analysis.create_image_frame(analysis.tab_view.tab("Results"), image_path)
+
+    image_frame = analysis.image_frame
+    assert image_frame is not None  # Ensure the image frame is created
+    assert image_frame.winfo_width() > 0  # Check if the frame has a width
+
+
+@pytest.mark.parametrize("event", [None, "resize"])
+def test_resize_image(app, event):
+    """Test the resizing of the image."""
+    analysis = IftAnalysis(app)
+    analysis.create_image_frame(analysis.tab_view.tab("Results"))
+
+    # Resize the image
+    analysis.resize_image(event)
+
+    assert analysis.image_label.image is not None  # Check if the image is set
+    assert analysis.aspect_ratio() == analysis.image_label.winfo_height() / \
+        analysis.image_label.winfo_width()  # Check the aspect ratio
