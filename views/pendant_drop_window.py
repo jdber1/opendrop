@@ -10,7 +10,7 @@ from .pd_preparation import PdPreparation
 from .output_page import OutputPage
 
 def call_user_input(user_input_data):
-    PenDantDropWindow(user_input_data)
+    PendantDropWindow(user_input_data)
 
 
 class Stage(Enum):
@@ -21,11 +21,11 @@ class Stage(Enum):
     OUTPUT =4
 
 
-class PenDantDropWindow(CTk):
+class PendantDropWindow(CTk):
     def __init__(self, user_input_data):
         super().__init__()  # Call the parent class constructor
-        self.title("CustomTkinter Dynamic Content Example")
-        self.geometry("1920x1080")
+        self.title("Pendant Drop")
+        self.geometry("1280x720")
         self.configure(fg_color="lightblue")
         self.widgets(user_input_data)
 

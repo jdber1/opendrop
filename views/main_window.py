@@ -4,7 +4,7 @@ import sys
 from tkinter import messagebox
 
 from views.contact_angle_window import ContactAngleWindow
-from views.pendant_drop_window import PenDantDropWindow
+from views.pendant_drop_window import PendantDropWindow
 
 
 class MainWindow(tk.Tk):
