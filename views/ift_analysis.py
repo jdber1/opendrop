@@ -49,8 +49,8 @@ class IftAnalysis(CTkFrame):
             table_frame.grid_rowconfigure(i, weight=1)
 
     def create_visualisation_frame(self, parent):
-        images_frame = CTkFrame(parent)
-        images_frame.pack(side="right", padx=10, fill="both", expand=True)
+        images_frame = CTkFrame(parent, width=400)
+        images_frame.pack(side="right", padx=10, fill="y", expand=False)
         images_frame.grid_rowconfigure(0, weight=1)
         images_frame.grid_rowconfigure(1, weight=1)
         self.create_image_frame(images_frame)
@@ -74,10 +74,6 @@ class IftAnalysis(CTkFrame):
     def resize_image(self, event=None):
         if self.tab_view.winfo_width() > 0 and self.tab_view.winfo_height() > 0:
             # Calculate new dimensions, keeping aspect ratio
-            print(
-                f'Original Image height: {self.original_image.height}, width: {self.original_image.width}')
-            print(
-                f"Tab height: {self.tab_view.winfo_height()}, width: {self.tab_view.winfo_width()}")
             image_width = 400  # self.tab_view.winfo_width() / 4
             image_height = self.aspect_ratio * image_width
 
@@ -97,8 +93,6 @@ class IftAnalysis(CTkFrame):
             ctk_image = CTkImage(light_image=resized_image, dark_image=resized_image, size=(
                 int(image_width), int(image_height)))
 
-            print(
-                f'Resized Image height: {image_height}, width: {image_width}')
             # Update the image label with CTkImage
             self.image_label.configure(image=ctk_image)
             self.image_label.image = ctk_image  # Prevent garbage collection
