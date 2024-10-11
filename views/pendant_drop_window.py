@@ -1,7 +1,8 @@
 from enum import Enum
 from customtkinter import *
 from tkinter import messagebox
-from .navigation import create_navigation  # Import the navigation bar
+
+from .navigation import create_navigation
 from .dynamic_content import DynamicContent
 from .pd_acquisition import PdAcquisition
 from .pd_preparation import PdPreparation
