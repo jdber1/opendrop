@@ -3,19 +3,21 @@ from .navigation import create_navigation  # Import the navigation bar
 from .dynamic_content import DynamicContent  # Import the dynamic content
 from .ift_analysis import IftAnalysis
 
+
 def call_user_input(user_input_data):
     PenDantDropWindow(user_input_data)
+
 
 class PenDantDropWindow(CTk):
     def __init__(self, user_input_data):
         super().__init__()  # Call the parent class constructor
         self.title("CustomTkinter Dynamic Content Example")
         self.geometry("1920x1080")
-        
+
         self.switch_to_progress(user_input_data)
 
         self.mainloop()  # Start the main loop
-        
+
     def switch_to_progress(self, user_input_data):
         # Create the navigation bar (progress bar style)
         self.navigation_frame = create_navigation(self)
@@ -29,7 +31,8 @@ class PenDantDropWindow(CTk):
         self.ift_analysis.pack(fill="both", expand=True)
 
         # Add navigation buttons (optional for next/back)
-        self.back_button = CTkButton(self, text="Back", command=self.back_to_initial)
+        self.back_button = CTkButton(
+            self, text="Back", command=self.back_to_initial)
         self.back_button.pack(side="left", padx=10, pady=10)
 
         self.next_button = CTkButton(self, text="Next", command=self.on_next)
