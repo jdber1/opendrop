@@ -80,8 +80,8 @@ class IftAnalysis(CTkFrame):
     def create_residuals_frame(self, parent):
         """Create a graph containing residuals into the parent frame. Graph is of same size as the Image Gallery."""
 
-        residuals_frame = CTkFrame(parent)
-        residuals_frame.grid(row=1, column=0, sticky="nsew")
+        self.residuals_frame = CTkFrame(parent)
+        self.residuals_frame.grid(row=1, column=0, sticky="nsew")
 
         # Create the figure and axis
         # width, height = self.image_frame.image_label.image.size
@@ -91,11 +91,11 @@ class IftAnalysis(CTkFrame):
         ax.set_title('Residuals')
 
         # Create a canvas for the figure
-        canvas = FigureCanvasTkAgg(fig, residuals_frame)
+        canvas = FigureCanvasTkAgg(fig, self.residuals_frame)
         canvas.get_tk_widget().pack(fill="both", expand=True)
 
         # Create and pack the navigation toolbar
-        toolbar = NavigationToolbar2Tk(canvas, residuals_frame)
+        toolbar = NavigationToolbar2Tk(canvas, self.residuals_frame)
         toolbar.update()
 
         # Ensure the canvas is packed after the toolbar
