@@ -1,5 +1,7 @@
 from customtkinter import CTk
-from ui.main_window import MainWindow  # Import the MainWindow class from main_window.py
+# Import the MainWindow class from main_window.py
+from ui.main_window import MainWindow
+
 
 def main():
     # Create the main application window
@@ -7,6 +9,6 @@ def main():
     # Run the application
     app.mainloop()
 
+
 if __name__ == "__main__":
     main()
-

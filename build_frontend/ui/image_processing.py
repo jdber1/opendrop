@@ -2,6 +2,7 @@ from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
 from PIL import Image, ImageTk  # You need to install Pillow for image handling
 import os
 
+
 class ImageApp(CTk):
     from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel,CTkImage
     from PIL import Image, ImageTk  # You need to install Pillow for image handling
@@ -18,15 +19,18 @@ class ImageApp(CTk):
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         # Image display area
-        self.image_label = CTkLabel(self.main_frame, text="Image will be displayed here", fg_color="lightgrey", width=400, height=300)
+        self.image_label = CTkLabel(
+            self.main_frame, text="Image will be displayed here", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
 
         # Drop region button
-        self.drop_region_button = CTkButton(self.main_frame, text="Set Drop Region", command=self.set_drop_region)
+        self.drop_region_button = CTkButton(
+            self.main_frame, text="Set Drop Region", command=self.set_drop_region)
         self.drop_region_button.pack(pady=5)
 
         # Needle region button
-        self.needle_region_button = CTkButton(self.main_frame, text="Set Needle Region", command=self.set_needle_region)
+        self.needle_region_button = CTkButton(
+            self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         self.needle_region_button.pack(pady=5)
 
         # Load images from the directory
@@ -34,15 +38,18 @@ class ImageApp(CTk):
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Previous and Next buttons
-        self.prev_button = CTkButton(self.main_frame, text="Previous", command=self.show_previous_image)
+        self.prev_button = CTkButton(
+            self.main_frame, text="Previous", command=self.show_previous_image)
         self.prev_button.pack(side="left", padx=20)
 
-        self.next_button = CTkButton(self.main_frame, text="Next", command=self.show_next_image)
+        self.next_button = CTkButton(
+            self.main_frame, text="Next", command=self.show_next_image)
         self.next_button.pack(side="right", padx=20)
 
         # Load the first image by default if available
         if self.image_paths:
-            self.load_image(self.image_paths[self.current_index])  # Load the first image by default
+            # Load the first image by default
+            self.load_image(self.image_paths[self.current_index])
 
         # Initialize current image
         self.current_image = None
@@ -59,7 +66,8 @@ class ImageApp(CTk):
             return []
 
         # Load all images from the directory
-        images = [f for f in os.listdir(directory) if f.lower().endswith(supported_extensions)]
+        images = [f for f in os.listdir(
+            directory) if f.lower().endswith(supported_extensions)]
         # Return the full paths of the images
         return [os.path.join(directory, img) for img in images]
 
@@ -87,14 +95,18 @@ class ImageApp(CTk):
     def show_previous_image(self):
         """Show the previous image in the directory."""
         if self.image_paths:
-            self.current_index = (self.current_index - 1) % len(self.image_paths)  # Wrap around
-            self.load_image(self.image_paths[self.current_index])  # Load the previous image
+            self.current_index = (self.current_index -
+                                  1) % len(self.image_paths)  # Wrap around
+            # Load the previous image
+            self.load_image(self.image_paths[self.current_index])
 
     def show_next_image(self):
         """Show the next image in the directory."""
         if self.image_paths:
-            self.current_index = (self.current_index + 1) % len(self.image_paths)  # Wrap around
-            self.load_image(self.image_paths[self.current_index])  # Load the next image
+            self.current_index = (self.current_index +
+                                  1) % len(self.image_paths)  # Wrap around
+            # Load the next image
+            self.load_image(self.image_paths[self.current_index])
 
     def set_drop_region(self):
         """Placeholder for setting drop region functionality."""
@@ -103,6 +115,7 @@ class ImageApp(CTk):
     def set_needle_region(self):
         """Placeholder for setting needle region functionality."""
         print("Needle region set")  # Implement functionality as needed
+
 
 # Run the application
 if __name__ == "__main__":

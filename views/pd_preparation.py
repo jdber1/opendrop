@@ -3,6 +3,7 @@ import customtkinter as ctk
 from .component.preparation import create_analysis_method_fields, create_fitting_view_fields, create_user_input_fields
 from .component.imageProcessing import ImageApp
 
+
 class PdPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
@@ -16,11 +17,13 @@ class PdPreparation(ctk.CTkFrame):
 
         # Create the frame for organizing input fields on the left
         self.input_fields_frame = ctk.CTkFrame(self)
-        self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(10, 0))  # Left side for input fields
+        self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(
+            10, 0))  # Left side for input fields
 
         # Create a frame for the right side image processing
         self.image_app_frame = ctk.CTkFrame(self)
-        self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))  # Right side for ImageApp
+        self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(
+            10, 0))  # Right side for ImageApp
 
         # Create user input fields and analysis fields on the left
         self.create_user_input_fields(self.input_fields_frame)

@@ -3,10 +3,11 @@ from PIL import ImageTk, Image
 from utils.image_handler import ImageHandler
 import os
 
+
 class ImageApp(CTkFrame):
     def __init__(self, parent, user_input_data):
         super().__init__(parent)
-        
+
         # Initialize ImageHandler instance
         self.image_handler = ImageHandler()
 
@@ -15,15 +16,18 @@ class ImageApp(CTkFrame):
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         # Image display area
-        self.image_label = CTkLabel(self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
+        self.image_label = CTkLabel(
+            self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
 
         # Drop region button
-        self.drop_region_button = CTkButton(self.main_frame, text="Set Drop Region", command=self.set_drop_region)
+        self.drop_region_button = CTkButton(
+            self.main_frame, text="Set Drop Region", command=self.set_drop_region)
         self.drop_region_button.pack(pady=5)
 
         # Needle region button
-        self.needle_region_button = CTkButton(self.main_frame, text="Set Needle Region", command=self.set_needle_region)
+        self.needle_region_button = CTkButton(
+            self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         self.needle_region_button.pack(pady=5)
 
         self.user_input_data = user_input_data
@@ -32,16 +36,17 @@ class ImageApp(CTkFrame):
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Previous and Next buttons
-        self.prev_button = CTkButton(self.main_frame, text="Previous", command=lambda: self.change_image(-1))
+        self.prev_button = CTkButton(
+            self.main_frame, text="Previous", command=lambda: self.change_image(-1))
         self.prev_button.pack(side="left", padx=20)
 
-        self.next_button = CTkButton(self.main_frame, text="Next", command=lambda: self.change_image(1))
+        self.next_button = CTkButton(
+            self.main_frame, text="Next", command=lambda: self.change_image(1))
         self.next_button.pack(side="right", padx=20)
 
-        # Load the first image by default if available
         if self.image_paths:
-            self.load_image(self.image_paths[self.current_index])  # Load the first image by default
-        # self.update_button_visibility()
+            # Load the first image by default
+            self.load_image(self.image_paths[self.current_index])
 
     def load_images(self):
         """Load all images from the specified directory and return their paths."""
@@ -64,13 +69,16 @@ class ImageApp(CTkFrame):
         if resized_image:
             self.tk_image = ImageTk.PhotoImage(resized_image)
             self.image_label.configure(image=self.tk_image)
-            self.image_label.image = self.tk_image  # Keep a reference to avoid garbage collection
+            # Keep a reference to avoid garbage collection
+            self.image_label.image = self.tk_image
 
     def change_image(self, direction):
         """Change the currently displayed image based on the direction."""
         if self.image_paths:
-            self.current_index = (self.current_index + direction) % len(self.image_paths)  # Wrap around
-            self.load_image(self.image_paths[self.current_index])  # Load the new image
+            self.current_index = (
+                self.current_index + direction) % len(self.image_paths)  # Wrap around
+            # Load the new image
+            self.load_image(self.image_paths[self.current_index])
 
     def set_drop_region(self):
         """Placeholder for setting drop region functionality."""

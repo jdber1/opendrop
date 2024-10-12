@@ -2,19 +2,21 @@ from customtkinter import *
 from .navigation import create_navigation  # Import the navigation bar
 from .dynamic_content import DynamicContent  # Import the dynamic content
 
+
 class MainWindow(CTk):
     def __init__(self):
         super().__init__()
         self.title("CustomTkinter Dynamic Content Example")
         self.geometry("1920x1080")
-        
+
         # Create the initial screen with a "Start" button
         self.initial_frame = CTkFrame(self)
         self.initial_frame.pack(fill="both", expand=True)
-        
-        self.start_button = CTkButton(self.initial_frame, text="Start", command=self.switch_to_progress)
+
+        self.start_button = CTkButton(
+            self.initial_frame, text="Start", command=self.switch_to_progress)
         self.start_button.pack(pady=100)  # Center the button
-        
+
     def switch_to_progress(self):
         from .navigation import create_navigation
         # Clear the initial frame

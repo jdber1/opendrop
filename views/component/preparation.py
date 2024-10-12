@@ -16,7 +16,8 @@ def create_user_input_fields(parent, user_input_data):
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(user_input_frame)
-    input_fields_frame.pack(fill="both", padx=10, pady=(0, 10))  # Padding around the input fields frame
+    # Padding around the input fields frame
+    input_fields_frame.pack(fill="both", padx=10, pady=(0, 10))
 
     # Create StringVars to hold the input field values
     drop_region_var = StringVar(value=AUTO_MANUAL_OPTIONS[0])  # Set default to "Automated"
@@ -78,14 +79,17 @@ def create_fitting_view_fields(parent, user_input_data):
     label.pack(pady=20)
 
     input_fields_frame = CTkFrame(user_input_frame)
-    input_fields_frame.pack(padx=10, pady=(0, 10))  # Padding around the input fields frame
+    # Padding around the input fields frame
+    input_fields_frame.pack(padx=10, pady=(0, 10))
 
     # Creating checkbox variables
     var_residuals = BooleanVar(value=False)  # Default value for checkbox
 
     # Create checkboxes
-    residuals_checkbox = CTkCheckBox(input_fields_frame, text="Residuals", variable=var_residuals)
-    residuals_checkbox.pack(anchor='w', padx=5, pady=(5, 0))  # Anchored to the left with padding
+    residuals_checkbox = CTkCheckBox(
+        input_fields_frame, text="Residuals", variable=var_residuals)
+    # Anchored to the left with padding
+    residuals_checkbox.pack(anchor='w', padx=5, pady=(5, 0))
 
     # Define a function to update user_input_data when checkbox state changes
     def update_residuals():
@@ -106,7 +110,8 @@ def create_analysis_method_fields(parent, user_input_data):
     label.pack(pady=(0, 10))
 
     input_fields_frame = CTkFrame(user_input_frame)
-    input_fields_frame.pack(padx=10, pady=(0, 10))  # Padding around the input fields frame
+    # Padding around the input fields frame
+    input_fields_frame.pack(padx=10, pady=(0, 10))
 
     # Creating checkbox variables
     var_default_method = BooleanVar(value=True)  # Default value for checkbox
@@ -115,8 +120,10 @@ def create_analysis_method_fields(parent, user_input_data):
     user_input_data["default_method"] = var_default_method.get()  # Store the initial state in user_input_data
 
     # Create checkboxes inside the input fields frame
-    default_method_checkbox = CTkCheckBox(input_fields_frame, text="Default Method", variable=var_default_method)
-    default_method_checkbox.pack(anchor='w', padx=5, pady=(5, 0))  # Anchored to the left with padding
+    default_method_checkbox = CTkCheckBox(
+        input_fields_frame, text="Default Method", variable=var_default_method)
+    # Anchored to the left with padding
+    default_method_checkbox.pack(anchor='w', padx=5, pady=(5, 0))
 
     # Update user_input_data when checkbox state changes
     def update_default_method():
@@ -133,15 +140,18 @@ def create_option_menu(parent, label_text, options, variable):
     frame = CTkFrame(parent)
 
     # Pack the frame with specified padding and centered
-    frame.pack(pady=8, fill='x', padx=15)  # Use padding of 8 and fill horizontally
+    # Use padding of 8 and fill horizontally
+    frame.pack(pady=8, fill='x', padx=15)
 
     # Center the frame in the parent
-    frame_width = int(parent.winfo_width() * 0.85)  # Set frame width to 85% of parent width
+    # Set frame width to 85% of parent width
+    frame_width = int(parent.winfo_width() * 0.85)
     frame.configure(width=frame_width)  # Configure the frame's width
 
     # Create and pack the label
     label = CTkLabel(frame, text=label_text)
-    label.pack(side='left', padx=(5, 10))  # Add padding to the right of the label
+    # Add padding to the right of the label
+    label.pack(side='left', padx=(5, 10))
 
     # Create and pack the option menu
     option_menu = CTkOptionMenu(frame, variable=variable, values=options, width=200)
@@ -154,10 +164,12 @@ def create_float_entry(parent, label_text, textvariable):
     """Creates a float entry with a label."""
     frame = CTkFrame(parent)  # Create a frame for the float entry
     # Pack the frame with specified padding and centered
-    frame.pack(pady=8, fill='x', padx=15)  # Use padding of 8 and fill horizontally
+    # Use padding of 8 and fill horizontally
+    frame.pack(pady=8, fill='x', padx=15)
 
     # Center the frame in the parent
-    frame_width = int(parent.winfo_width() * 0.85)  # Set frame width to 85% of parent width
+    # Set frame width to 85% of parent width
+    frame_width = int(parent.winfo_width() * 0.85)
     frame.configure(width=frame_width)  # Configure the frame's width
 
     label = CTkLabel(frame, text=label_text)

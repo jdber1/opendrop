@@ -8,7 +8,9 @@ from utils.validators import validate_numeric_input
 from .component.ctk_input_popup import CTkInputPopup
 from .component.ctk_table_popup import CTkTablePopup
 
-PATH_TO_SCRIPT = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..')
+PATH_TO_SCRIPT = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), '..')
+
 
 File_Source_Options = ["Filesystem", "cv2.VideoCapture", "GenlCam"]
 
@@ -146,7 +148,8 @@ class PdAcquisition(ctk.CTkFrame):
         self.user_input_data.number_of_frames = num_files
 
         if num_files > 0:
-            self.choose_files_button.configure(text=f"{num_files} File(s) Selected")
+            self.choose_files_button.configure(
+                text=f"{num_files} File(s) Selected")
 
             if num_files > 1:
                 # If number of files bigger than 0, give user an opportunity to enter the frame interval
@@ -202,28 +205,37 @@ class PdAcquisition(ctk.CTkFrame):
 
     def display_image(self):
         """Display the currently loaded image."""
-        resized_image = self.image_handler.resize_image_with_aspect_ratio(self.current_image)
+        resized_image = self.image_handler.resize_image_with_aspect_ratio(
+            self.current_image)
         if resized_image:
             self.tk_image = ImageTk.PhotoImage(resized_image)
             self.image_label.configure(image=self.tk_image)
-            self.image_label.image = self.tk_image  # Keep a reference to avoid garbage collection
+            # Keep a reference to avoid garbage collection
+            self.image_label.image = self.tk_image
 
     def change_image(self, direction):
         """Change the currently displayed image based on the direction."""
         if self.user_input_data.import_files:
-            self.current_index = (self.current_index + direction) % self.user_input_data.number_of_frames
-            self.load_image(self.user_input_data.import_files[self.current_index])  # Load the new image
+            self.current_index = (
+                self.current_index + direction) % self.user_input_data.number_of_frames
+            # Load the new image
+            self.load_image(
+                self.user_input_data.import_files[self.current_index])
             self.update_index_entry()  # Update the entry with the current index
-            file_name = os.path.basename(self.user_input_data.import_files[self.current_index])
+            file_name = os.path.basename(
+                self.user_input_data.import_files[self.current_index])
             self.name_label.configure(text=file_name)
 
     def update_index_from_entry(self):
         """Update current index based on user input in the entry."""
         try:
-            new_index = int(self.index_entry.get()) - 1  # Convert to zero-based index
+            new_index = int(self.index_entry.get()) - \
+                1  # Convert to zero-based index
             if 0 <= new_index < self.user_input_data.number_of_frames:
                 self.current_index = new_index
-                self.load_image(self.user_input_data.import_files[self.current_index])  # Load the new image
+                # Load the new image
+                self.load_image(
+                    self.user_input_data.import_files[self.current_index])
             else:
                 print("Index out of range.")
         except ValueError:
@@ -234,7 +246,8 @@ class PdAcquisition(ctk.CTkFrame):
     def update_index_entry(self):
         """Update the index entry to reflect the current index."""
         self.index_entry.delete(0, 'end')  # Clear the current entry
-        self.index_entry.insert(0, str(self.current_index + 1))  # Insert the new index (1-based)
+        # Insert the new index (1-based)
+        self.index_entry.insert(0, str(self.current_index + 1))
 
     def update_frame_interval(self, *args):
         self.user_input_data.frame_interval = self.frame_interval_var.get()
