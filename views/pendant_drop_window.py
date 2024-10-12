@@ -3,8 +3,8 @@ from customtkinter import *
 from tkinter import messagebox
 
 from .navigation import create_navigation
-from .pd_acquisition import PdAcquisition
-from .pd_preparation import PdPreparation
+from .ift_acquisition import IftAcquisition
+from .ift_preparation import IftPreparation
 from .ift_analysis import IftAnalysis
 from .output_page import OutputPage
 
@@ -44,7 +44,7 @@ class PendantDropWindow(CTk):
         self.navigation_frame.pack(fill="x", pady=10)
 
         # Initialise frame for first stage
-        self.pd_acquisition_frame = PdAcquisition(
+        self.pd_acquisition_frame = IftAcquisition(
             self, user_input_data, fg_color=self.FG_COLOR)
         self.pd_acquisition_frame.pack(fill="both", expand=True)
 
@@ -93,7 +93,7 @@ class PendantDropWindow(CTk):
                 # Note: Need to initialize there so that the frame can get the updated user_input_data
 
                 # Initialise Preparation frame
-                self.pd_preparation_frame = PdPreparation(
+                self.pd_preparation_frame = IftPreparation(
                     self, user_input_data, fg_color=self.FG_COLOR)
                 self.pd_preparation_frame.pack(fill="both", expand=True)
             else:

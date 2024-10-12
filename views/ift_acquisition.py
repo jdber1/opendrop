@@ -14,7 +14,7 @@ PATH_TO_SCRIPT = os.path.join(
 
 File_Source_Options = ["Filesystem", "cv2.VideoCapture", "GenlCam"]
 
-class PdAcquisition(ctk.CTkFrame):
+class IftAcquisition(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
 

@@ -4,7 +4,7 @@ from .component.preparation import create_analysis_method_fields, create_fitting
 from .component.imageProcessing import ImageApp
 
 
-class PdPreparation(ctk.CTkFrame):
+class IftPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
 
