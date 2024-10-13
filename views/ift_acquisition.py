@@ -203,13 +203,12 @@ class IftAcquisition(ctk.CTkFrame):
 
     def display_image(self):
         """Display the currently loaded image."""
-        resized_image = self.image_handler.resize_image_with_aspect_ratio(
-            self.current_image)
-        if resized_image:
-            self.tk_image = ImageTk.PhotoImage(resized_image)
-            self.image_label.configure(image=self.tk_image)
-            # Keep a reference to avoid garbage collection
-            self.image_label.image = self.tk_image
+        width, height = self.current_image.size
+        new_width, new_height = self.image_handler.get_fitting_dimensions(width, height)
+        self.tk_image = ctk.CTkImage(self.current_image, size=(new_width, new_height))
+        self.image_label.configure(image=self.tk_image)
+        # Keep a reference to avoid garbage collection
+        self.image_label.image = self.tk_image
 
     def change_image(self, direction):
         """Change the currently displayed image based on the direction."""

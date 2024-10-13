@@ -1,10 +1,10 @@
-from customtkinter import CTkFrame, CTkButton, CTkLabel, CTkImage
+import customtkinter as ctk
 from PIL import ImageTk, Image
 from utils.image_handler import ImageHandler
 import os
 
 
-class ImageGallery(CTkFrame):
+class ImageGallery(ctk.CTkFrame):
     def __init__(self, parent, import_files):
         super().__init__(parent)
 
@@ -12,11 +12,11 @@ class ImageGallery(CTkFrame):
         self.image_handler = ImageHandler()
 
         # Create main frame
-        self.main_frame = CTkFrame(self)
+        self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         # Image display area
-        self.image_label = CTkLabel(
+        self.image_label = ctk.CTkLabel(
             self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
 
@@ -25,11 +25,11 @@ class ImageGallery(CTkFrame):
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Previous and Next buttons
-        self.prev_button = CTkButton(
+        self.prev_button = ctk.CTkButton(
             self.main_frame, text="Previous", command=lambda: self.change_image(-1))
         self.prev_button.pack(side="left", padx=20)
 
-        self.next_button = CTkButton(
+        self.next_button = ctk.CTkButton(
             self.main_frame, text="Next", command=lambda: self.change_image(1))
         self.next_button.pack(side="right", padx=20)
 
@@ -55,12 +55,13 @@ class ImageGallery(CTkFrame):
 
     def display_image(self):
         """Display the currently loaded image."""
-        resized_image = self.image_handler.resize_image(self.current_image)
-        if resized_image:
-            self.tk_image = ImageTk.PhotoImage(resized_image)
-            self.image_label.configure(image=self.tk_image)
-            # Keep a reference to avoid garbage collection
-            self.image_label.image = self.tk_image
+        width, height = self.current_image.size
+        new_width, new_height = self.image_handler.get_fitting_dimensions(width, height)
+        self.tk_image = ctk.CTkImage(self.current_image, size=(new_width, new_height))
+
+        self.image_label.configure(image=self.tk_image)
+        # Keep a reference to avoid garbage collection
+        self.image_label.image = self.tk_image
 
     def change_image(self, direction):
         """Change the currently displayed image based on the direction."""

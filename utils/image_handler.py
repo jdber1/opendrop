@@ -20,35 +20,36 @@ class ImageHandler:
 
     def resize_image_with_aspect_ratio(self, image, max_width=400, max_height=300):
         if image:
-            # Get original dimensions
             width, height = image.size
-
-            # Calculate the aspect ratio
-            aspect_ratio = width / height
-
-            # Check if the image needs to be resized
-            if width > max_width or height > max_height:
-                # Calculate new dimensions while maintaining the aspect ratio
-                if aspect_ratio > 1:  # Wider than tall
-                    new_width = max_width
-                    new_height = int(max_width / aspect_ratio)
-                else:  # Taller than wide
-                    new_height = max_height
-                    new_width = int(max_height * aspect_ratio)
-            else:
-                # If the image is within the max dimensions, amplify it
-                if aspect_ratio > 1:  # Wider than tall
-                    new_width = max_width
-                    new_height = int(max_width / aspect_ratio)
-                    if new_height < max_height:  # Adjust to fit max_height if necessary
-                        new_height = max_height
-                        new_width = int(max_height * aspect_ratio)
-                else:  # Taller than wide
-                    new_height = max_height
-                    new_width = int(max_height * aspect_ratio)
-                    if new_width < max_width:  # Adjust to fit max_width if necessary
-                        new_width = max_width
-                        new_height = int(max_width / aspect_ratio)
-
+            new_width, new_height = self.get_fitting_dimensions(width, height, max_width, max_height)
             return image.resize((new_width, new_height), Image.LANCZOS)
         return None
+    
+    def get_fitting_dimensions(self, original_width, original_height, max_width=400, max_height=300):
+        # Calculate the aspect ratio
+        aspect_ratio = original_width / original_height
+
+        # Check if the image needs to be resized
+        if original_width > max_width or original_height > max_height:
+            # Calculate new dimensions while maintaining the aspect ratio
+            if aspect_ratio > 1:  # Wider than tall
+                new_width = max_width
+                new_height = int(max_width / aspect_ratio)
+            else:  # Taller than wide
+                new_height = max_height
+                new_width = int(max_height * aspect_ratio)
+        else:
+            # If the image is within the max dimensions, amplify it
+            if aspect_ratio > 1:  # Wider than tall
+                new_width = max_width
+                new_height = int(max_width / aspect_ratio)
+                if new_height < max_height:  # Adjust to fit max_height if necessary
+                    new_height = max_height
+                    new_width = int(max_height * aspect_ratio)
+            else:  # Taller than wide
+                new_height = max_height
+                new_width = int(max_height * aspect_ratio)
+                if new_width < max_width:  # Adjust to fit max_width if necessary
+                    new_width = max_width
+                    new_height = int(max_width / aspect_ratio)
+        return new_width, new_height
