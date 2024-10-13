@@ -10,13 +10,13 @@ Plot profiles,0
 Plot IFT,0
 Perform tangent fit,1
 Perform polynomial fit,1
-Perform circle fit,0
-Perform ellipse fit,0
-Perform YL fit,0
-Perform ML model prediction,0
+Perform circle fit,1
+Perform ellipse fit,1
+Perform YL fit,1
+Perform ML model prediction,1
 Image source,Local images
-Number of frames,5
-Wait time,2
+Number of frames,0
+Wait time,0
 Save images,0
 Create new data folder,0
 Filename,
