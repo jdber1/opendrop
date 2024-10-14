@@ -15,6 +15,7 @@ class CaPreparation(CTkFrame):
         
         self.create_user_inputs()
         self.create_plotting_checklist()
+        self.create_analysis_checklist()
 
     def create_user_inputs(self):
         user_input_frame = tk.LabelFrame(
@@ -52,6 +53,26 @@ class CaPreparation(CTkFrame):
         self.IFT_boole = CheckButton(
             self, plotting_clist_frame, "Physical quantities", self.update_IFT_boole, rw=2, cl=0, state_specify='normal')
         
+    def create_analysis_checklist(self):
+        analysis_clist_frame = tk.LabelFrame(
+            self, text="Analysis methods", padx=30, pady=10)  # , height=15)
+        analysis_clist_frame.config(background=BACKGROUND_COLOR)
+        analysis_clist_frame.grid(
+            row=3, columnspan=4, sticky="wens", padx=15, pady=15)  # , rowspan=3
+
+        self.tangent_boole = CheckButton(
+            self, analysis_clist_frame, "First-degree polynomial fit", self.update_tangent_boole, rw=0, cl=0)
+        self.second_deg_polynomial_boole = CheckButton(
+            self, analysis_clist_frame, "Second-degree polynomial fit", self.update_second_deg_polynomial_boole, rw=1, cl=0)
+        self.circle_boole = CheckButton(
+            self, analysis_clist_frame, "Circle fit", self.update_circle_boole, rw=2, cl=0)
+        self.ellipse_boole = CheckButton(
+            self, analysis_clist_frame, "Ellipse fit", self.update_ellipse_boole, rw=0, cl=1)
+        self.YL_boole = CheckButton(
+            self, analysis_clist_frame, "Young-Laplace fit", self.update_YL_boole, rw=1, cl=1)
+        self.ML_boole = CheckButton(
+            self, analysis_clist_frame, "ML model", self.update_ML_boole, rw=2, cl=1)
+        
 
     def update_drop_ID_method(self, *args):
         self.user_input_data.drop_ID_method = self.drop_ID_method.get_value()
@@ -79,3 +100,21 @@ class CaPreparation(CTkFrame):
 
     def update_IFT_boole(self, *args):
         self.user_input_data.IFT_boole = self.IFT_boole.get_value()
+
+    def update_tangent_boole(self, *args):
+        self.user_input_data.tangent_boole = self.tangent_boole.get_value()
+
+    def update_second_deg_polynomial_boole(self, *args):
+        self.user_input_data.second_deg_polynomial_boole = self.second_deg_polynomial_boole.get_value()
+
+    def update_circle_boole(self, *args):
+        self.user_input_data.circle_boole = self.circle_boole.get_value()  
+
+    def update_ellipse_boole(self, *args):
+        self.user_input_data.ellipse_boole = self.ellipse_boole.get_value()   
+
+    def update_YL_boole(self, *args):
+        self.user_input_data.YL_boole = self.YL_boole.get_value()
+
+    def update_ML_boole(self, *args):
+        self.user_input_data.ML_boole = self.ML_boole.get_value()        

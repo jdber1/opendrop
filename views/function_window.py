@@ -125,6 +125,9 @@ class FunctionWindow(CTk):
             print("user_input_data.user_input_fields: ",user_input_data.user_input_fields)
             print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
             print("user_input_data.statistical_output: ",user_input_data.statistical_output)
+
+            print("user_input_data.drop_ID_method: ",user_input_data.drop_ID_method)
+
             # Validate user input data
             validation_messages = validate_user_input_data(user_input_data)
 
