@@ -17,14 +17,14 @@ from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Toler
 #from modules.PlotManager import PlotManager
 from modules.ExtractData import ExtractedData
 
-from views.contact_angle_window import call_user_input as ca_call_user_input
-from views.pendant_drop_window import call_user_input as pd_call_user_input
 from views.main_window import MainWindow
+from views.function_window import call_user_input
 from modules.read_image import get_image
 from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
 from modules.extract_profile import extract_drop_profile
 from modules.extract_profile import image_crop
 from modules.initialise_parameters import initialise_parameters
+from utils.enums import *
 #from modules.analyse_needle import calculate_needle_diameter
 #from modules.fit_data import fit_experimental_drop
 from modules.fits import perform_fits
@@ -56,7 +56,9 @@ NEEDLE_STEPS = 20
 def contact_angle(fitted_drop_data, user_inputs):
 
     # open the contact angle window
-    ca_call_user_input(user_inputs)
+    call_user_input(FunctionType.CONTACT_ANGLE, user_inputs)
+
+    # TODO: Integrate this with frontend
 
     if user_inputs.ML_boole == True:
         from modules.ML_model.prepare_experimental import prepare4model_v03, experimental_pred
@@ -154,7 +156,7 @@ def contact_angle(fitted_drop_data, user_inputs):
         extracted_data.export_data(input_file,filename,i)
 
 def pendant_drop(fitted_drop_data, user_inputs):
-    pd_call_user_input(user_inputs)
+    call_user_input(FunctionType.PENDANT_DROP, user_inputs)
 
 
 def main():
@@ -171,7 +173,7 @@ def main():
         NEEDLE_STEPS)
     user_inputs = ExperimentalSetup()
 
-    app = MainWindow(
+    MainWindow(
         lambda: pendant_drop(fitted_drop_data, user_inputs),
         lambda: contact_angle(fitted_drop_data, user_inputs)
     )

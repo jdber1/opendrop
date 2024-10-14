@@ -1,10 +1,10 @@
-import customtkinter as ctk
+from customtkinter import *
 import os
 from tkinter import filedialog, messagebox
 from PIL import ImageTk, Image
 
 from utils.image_handler import ImageHandler
-from utils.validators import validate_numeric_input
+from utils.validators import *
 from .component.ctk_input_popup import CTkInputPopup
 from .component.ctk_table_popup import CTkTablePopup
 
@@ -14,7 +14,7 @@ PATH_TO_SCRIPT = os.path.join(
 
 File_Source_Options = ["Filesystem", "cv2.VideoCapture", "GenlCam"]
 
-class IftAcquisition(ctk.CTkFrame):
+class IftAcquisition(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
 
@@ -22,28 +22,28 @@ class IftAcquisition(ctk.CTkFrame):
         self.user_input_data = user_input_data
         self.current_index = 0
 
-        self.frame_interval_var = ctk.StringVar()
+        self.frame_interval_var = StringVar()
         self.frame_interval_var.trace_add("write", self.update_frame_interval)
 
-        self.selected_source = ctk.StringVar(value=File_Source_Options[0])
+        self.selected_source = StringVar(value=File_Source_Options[0])
 
-        self.cv2_capture_num_var = ctk.StringVar(value=1)
+        self.cv2_capture_num_var = StringVar(value=1)
         self.cv2_capture_num_var.trace_add("write", self.update_cv2_capture_num)
 
-        self.genlcam_capture_num_var = ctk.StringVar(value=1)
+        self.genlcam_capture_num_var = StringVar(value=1)
         self.genlcam_capture_num_var.trace_add("write", self.update_genlcam_capture_num)
 
         self.setup_image_source_frame()
         self.setup_filesystem_frame()
 
-        self.images_frame = ctk.CTkFrame(self)
+        self.images_frame = CTkFrame(self)
 
     def setup_image_source_frame(self):
         """Set up the image source frame and its components."""
-        self.image_source_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.image_source_frame = CTkFrame(self, fg_color="transparent")
         self.image_source_frame.pack(pady=(20, 5))
         self.setup_component_label(self.image_source_frame, "Image Source: ")
-        self.option_menu = ctk.CTkOptionMenu(self.image_source_frame, 
+        self.option_menu = CTkOptionMenu(self.image_source_frame, 
                                               variable=self.selected_source, 
                                               values=File_Source_Options,
                                               command=self.show_selected_source_frame)
@@ -51,10 +51,10 @@ class IftAcquisition(ctk.CTkFrame):
 
     def setup_choose_files_frame(self):
         """Set up the choose files frame and its components."""
-        self.choose_files_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.choose_files_frame = CTkFrame(self, fg_color="transparent")
         self.choose_files_frame.pack(pady=5)
         self.setup_component_label(self.choose_files_frame, "Image Files: ")
-        self.choose_files_button = ctk.CTkButton(
+        self.choose_files_button = CTkButton(
             self.choose_files_frame,
             text="Choose File(s)",
             command=self.select_files,
@@ -68,49 +68,49 @@ class IftAcquisition(ctk.CTkFrame):
         self.setup_numberic_entry(frame, variable)
     
     def setup_videocapture_frame(self):
-        self.videocapture_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.videocapture_frame = CTkFrame(self, fg_color="transparent")
         self.videocapture_frame.pack(pady=5)
         self.setup_component_label(self.videocapture_frame, "VideoCapture: ")
-        self.open_videocapture_button = ctk.CTkButton(self.videocapture_frame, text="None", command=self.open_videocapture_popup, height=30)
+        self.open_videocapture_button = CTkButton(self.videocapture_frame, text="None", command=self.open_videocapture_popup, height=30)
         self.open_videocapture_button.pack(side="left")
 
     def setup_camera_frame(self):
-        self.camera_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.camera_frame = CTkFrame(self, fg_color="transparent")
         self.camera_frame.pack(pady=5)
         self.setup_component_label(self.camera_frame, "Camera: ")
-        self.open_videocapture_button = ctk.CTkButton(self.camera_frame, text="None", command=self.open_camera_popup, height=30)
+        self.open_videocapture_button = CTkButton(self.camera_frame, text="None", command=self.open_camera_popup, height=30)
         self.open_videocapture_button.pack(side="left")
 
     def setup_capture_num_frame(self, variable):
-        numberic_entry_frame = ctk.CTkFrame(self, fg_color="transparent")
+        numberic_entry_frame = CTkFrame(self, fg_color="transparent")
         numberic_entry_frame.pack(pady=5)
         self.setup_numberic_entry_pair(numberic_entry_frame, "Number of images:", variable)
 
     def setup_filesystem_frame(self):
         self.setup_choose_files_frame()
-        self.frame_interval_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_interval_frame = CTkFrame(self, fg_color="transparent")
         self.setup_numberic_entry_pair(self.frame_interval_frame, "Frame Intervals:", self.frame_interval_var)
 
     def setup_cv2_videocapture_frame(self):
         self.setup_videocapture_frame()
         self.setup_capture_num_frame(self.cv2_capture_num_var)
-        self.frame_interval_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_interval_frame = CTkFrame(self, fg_color="transparent")
         self.frame_interval_frame.pack()
         self.setup_numberic_entry_pair(self.frame_interval_frame, "Frame Intervals:", self.frame_interval_var)
 
     def setup_genlcam_frame(self):
         self.setup_capture_num_frame(self.genlcam_capture_num_var)
-        self.frame_interval_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_interval_frame = CTkFrame(self, fg_color="transparent")
         self.frame_interval_frame.pack()
         self.setup_numberic_entry_pair(self.frame_interval_frame, "Frame Intervals:", self.frame_interval_var)
 
     def setup_component_label(self, frame, text):
-        label = ctk.CTkLabel(frame, text=text, font=("Roboto", 16, "bold"), width=150, anchor="w")
+        label = CTkLabel(frame, text=text, font=("Roboto", 16, "bold"), width=150, anchor="w")
         label.pack(side="left")
 
     def setup_numberic_entry(self, frame, variable):
         numberic_validate_command = self.register(validate_numeric_input)
-        entry = ctk.CTkEntry(
+        entry = CTkEntry(
             frame,
             textvariable=variable,
             validate="key",
@@ -155,7 +155,7 @@ class IftAcquisition(ctk.CTkFrame):
             else:
                 self.frame_interval_frame.pack_forget()
 
-            self.images_frame = ctk.CTkFrame(self)
+            self.images_frame = CTkFrame(self)
             self.images_frame.pack(pady=10)
 
             self.initialize_image_display()
@@ -166,28 +166,28 @@ class IftAcquisition(ctk.CTkFrame):
 
     def initialize_image_display(self):
         """Initialize the image display area."""
-        self.image_label = ctk.CTkLabel(self.images_frame, text="", fg_color="lightgrey", width=400, height=300)
+        self.image_label = CTkLabel(self.images_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack()
 
         file_name = os.path.basename(self.user_input_data.import_files[self.current_index])
-        self.name_label = ctk.CTkLabel(self.images_frame, text=file_name, font=("Arial", 10))
+        self.name_label = CTkLabel(self.images_frame, text=file_name, font=("Arial", 10))
         self.name_label.pack()
 
-        self.image_navigation_frame = ctk.CTkFrame(self.images_frame)
+        self.image_navigation_frame = CTkFrame(self.images_frame)
         self.image_navigation_frame.pack(pady=20)
 
-        self.prev_button = ctk.CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)
+        self.prev_button = CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)
         self.prev_button.pack(side="left", padx=10)
 
-        self.index_entry = ctk.CTkEntry(self.image_navigation_frame, width=5)
+        self.index_entry = CTkEntry(self.image_navigation_frame, width=5)
         self.index_entry.pack(side="left")
         self.index_entry.bind("<Return>", lambda event: self.update_index_from_entry())
         self.index_entry.insert(0, str(self.current_index + 1))
 
-        self.navigation_label = ctk.CTkLabel(self.image_navigation_frame, text=f" of {self.user_input_data.number_of_frames}", font=("Arial", 12))
+        self.navigation_label = CTkLabel(self.image_navigation_frame, text=f" of {self.user_input_data.number_of_frames}", font=("Arial", 12))
         self.navigation_label.pack(side="left")
 
-        self.next_button = ctk.CTkButton(self.image_navigation_frame, text=">", command=lambda: self.change_image(1), width=3)
+        self.next_button = CTkButton(self.image_navigation_frame, text=">", command=lambda: self.change_image(1), width=3)
         self.next_button.pack(side="left", padx=10)
 
         self.load_image(self.user_input_data.import_files[self.current_index])
@@ -205,7 +205,7 @@ class IftAcquisition(ctk.CTkFrame):
         """Display the currently loaded image."""
         width, height = self.current_image.size
         new_width, new_height = self.image_handler.get_fitting_dimensions(width, height)
-        self.tk_image = ctk.CTkImage(self.current_image, size=(new_width, new_height))
+        self.tk_image = CTkImage(self.current_image, size=(new_width, new_height))
         self.image_label.configure(image=self.tk_image)
         # Keep a reference to avoid garbage collection
         self.image_label.image = self.tk_image
@@ -259,7 +259,7 @@ class IftAcquisition(ctk.CTkFrame):
         """Display the corresponding frame based on the selected option."""
         # Clear previous frames
         for widget in self.winfo_children():
-            if isinstance(widget, ctk.CTkFrame) and widget != self.image_source_frame:
+            if isinstance(widget, CTkFrame) and widget != self.image_source_frame:
                 widget.destroy()
 
         if self.user_input_data.image_source != selection:

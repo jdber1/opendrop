@@ -5,10 +5,6 @@ import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 
-from views.contact_angle_window import ContactAngleWindow
-from views.pendant_drop_window import PendantDropWindow
-
-
 class MainWindow(ctk.CTk):
     def __init__(self, open_ift_window, open_ca_window):
         super().__init__()
@@ -56,12 +52,6 @@ class MainWindow(ctk.CTk):
     def run_function(self, func):
         self.destroy()  # Close the main window
         func()  # Execute the selected functionality
-
-    def close_window(self):
-        self.destroy()
-
-    def minimize_window(self):
-        self.iconify()
 
     def show_info_popup(self):
         messagebox.showinfo(
