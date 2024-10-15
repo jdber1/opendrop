@@ -1,11 +1,163 @@
 from customtkinter import *
-
+from utils.config import *
+from views.component.option_menu import OptionMenu
+from .float_entry import FloatEntry
+from .float_combobox import FloatCombobox
+from .check_button import CheckButton
 # Define your options and labels globally or pass them as parameters if preferred
 AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"]  # Example options
 LABEL_WIDTH = 200  # Adjust as needed
 
+# ift [User Input]
+def create_user_input_fields_ift(self, parent, user_input_data):
+    """Create user input fields and return the frame containing them."""
+    user_input_frame = CTkFrame(parent)
+    user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
-def create_user_input_fields(parent, user_input_data):
+    # Create a label for the dynamic content
+    label = CTkLabel(user_input_frame, text="User Inputs", text_color="black")
+    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+
+    # Create a frame to hold all input fields
+    input_fields_frame = CTkFrame(user_input_frame)
+    input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
+
+    # update the input value
+    def update_drop_region_method(*args):
+        user_input_data["drop_region_choice"] = self.drop_region_method.get_value()
+
+    def update_needle_region_method(*args):
+        user_input_data["needle_region_choice"] = self.needle_region_method.get_value()    
+
+    def update_drop_density(*args):
+        user_input_data["drop_density"] = self.drop_density_method.get_value() 
+
+    def update_continuous_density(*args):
+        user_input_data["continuous_density"] = self.continuous_density.get_value()       
+
+    def update_needle_diameter(*args):
+        user_input_data["needle_diameter"] = self.needle_diameter.get_value()       
+
+    def update_pixel_mm(*args):
+        user_input_data["pixel_mm"] = self.pixel_mm.get_value()      
+
+    # Pass the callback methods using lambda
+    self.drop_region_method = OptionMenu(
+        self, input_fields_frame, "Drop Region:", AUTO_MANUAL_OPTIONS, lambda *args: update_drop_region_method(*args), rw=0
+    )
+    self.needle_region_method = OptionMenu(
+        self, input_fields_frame, "Needle Region:", AUTO_MANUAL_OPTIONS, lambda *args: update_needle_region_method(*args), rw=1
+    )
+    
+    self.drop_density_method = FloatEntry(
+        self, input_fields_frame, "Drop Density:", lambda *args: update_drop_density(*args), rw=2
+    )
+    self.continuous_density = FloatEntry(
+        self, input_fields_frame, "Continuous density (kg/m)", lambda *args: update_continuous_density(*args), rw=3
+    )
+    self.needle_diameter = FloatEntry(
+        self, input_fields_frame, "Needle Diameter:", lambda *args: update_needle_diameter(*args), rw=4
+    )
+    self.pixel_mm = FloatEntry(
+        self, input_fields_frame, "Pixel to mm Ratio:", lambda *args: update_pixel_mm(*args), rw=5
+    )
+    return user_input_frame
+
+# ift [CheckList Select]
+def create_plotting_checklist(self,parent,user_input_data):
+
+    plotting_clist_frame = CTkFrame(parent)
+    plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
+
+    # Create a label for the dynamic content
+    label = CTkLabel(plotting_clist_frame, text="Statistical Output", text_color="black")
+    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+
+    # Create a frame to hold all input fields
+    input_fields_frame = CTkFrame(plotting_clist_frame)
+    input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
+
+    def update_residuals_boole(*args):
+        user_input_data["residuals"] = self.residuals_boole.get_value()      
+   
+    self.residuals_boole = CheckButton(
+        self, input_fields_frame, "Residuals", update_residuals_boole, rw=0, cl=0, state_specify='normal')
+    
+    return plotting_clist_frame
+
+# ift [Analysis Methods]
+def create_analysis_checklist(self,parent,user_input_data):
+
+        analysis_clist_frame = CTkFrame(parent)
+        analysis_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
+
+        # Create a label for the dynamic content
+        label = CTkLabel(analysis_clist_frame, text="Statistical Output", text_color="black")
+        label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+
+        # Create a frame to hold all input fields
+        input_fields_frame = CTkFrame(analysis_clist_frame)
+        input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
+
+        def update_default_method_boole(*args):
+            user_input_data["default_method"] = self.default_method_boole.get_value()   
+        self.default_method_boole = CheckButton(
+            self, input_fields_frame, "Default Method", update_default_method_boole, rw=0, cl=0)
+        return analysis_clist_frame
+
+# ca 
+def create_user_inputs(parent):
+    """Create user input fields for contact angle (CA) analysis and return the frame containing them."""
+    # Create the main frame to contain the user input fields
+    user_input_frame = CTkFrame(parent)
+    user_input_frame.pack(fill="both", padx=15, pady=15)
+
+    # Create a label for the section title
+    label = CTkLabel(user_input_frame, text="User Inputs", text_color="black")
+    label.pack(pady=(0, 10))  # Padding between the label and the input fields
+
+    # Create a frame to hold all input fields
+    input_fields_frame = CTkFrame(user_input_frame)
+    input_fields_frame.pack(fill="both", padx=10, pady=(0, 10))
+
+    # Set default values for dropdowns only
+    default_drop_ID_method = DROP_ID_OPTIONS[0]  # Default to first option in DROP_ID_OPTIONS
+    default_threshold_method = THRESHOLD_OPTIONS[1]  # Example: Set default to second option in THRESHOLD_OPTIONS
+    default_baseline_method = BASELINE_OPTIONS[0]  # Default to first option in BASELINE_OPTIONS
+    default_needle_diameter = NEEDLE_OPTIONS[1]  # Example: Set default to second option in NEEDLE_OPTIONS
+
+    # Create the input fields with relevant options and entry boxes
+    OptionMenu(input_fields_frame, "Drop ID method:", DROP_ID_OPTIONS, self.update_drop_ID_method, default_value=default_drop_ID_method)
+    threshold_method = OptionMenu(input_fields_frame, "Threshold value selection method:", THRESHOLD_OPTIONS, self.update_threshold_method, default_value=default_threshold_method)
+    
+    # Leave threshold value empty (no default value set)
+    threshold_val = FloatEntry(input_fields_frame, "Threshold value (ignored if method=Automated):", self.update_threshold_val, state_specify='normal')
+    
+    baseline_method = OptionMenu(input_fields_frame, "Baseline selection method:", BASELINE_OPTIONS, self.update_baseline_method, default_value=default_baseline_method)
+    
+    # Leave continuous density empty (no default value set)
+    density_outer = FloatEntry(input_fields_frame, "Continuous density (kg/m³):", self.update_density_outer, state_specify='normal')
+    
+    needle_diameter = FloatCombobox(input_fields_frame, "Needle diameter (mm):", NEEDLE_OPTIONS, self.update_needle_diameter, state_specify='normal', default_value=default_needle_diameter)
+
+
+
+    # self.drop_ID_method = OptionMenu(
+    #     self, user_input_frame, "Drop ID method:", DROP_ID_OPTIONS, self.update_drop_ID_method, rw=0)
+    # self.threshold_method = OptionMenu(
+    #     self, user_input_frame, "Threshold value selection method:", THRESHOLD_OPTIONS, self.update_threshold_method, rw=1)
+    # self.threshold_val = FloatEntry(
+    #     self, user_input_frame, "Threshold value (ignored if method=Automated):", self.update_threshold_val, rw=2, state_specify='normal')  # , label_width=LABEL_WIDTH)
+    # self.baseline_method = OptionMenu(
+    #     self, user_input_frame, "Baseline selection method:", BASELINE_OPTIONS, self.update_baseline_method, rw=3)
+    # self.density_outer = FloatEntry(
+    #     self, user_input_frame, "Continuous density (kg/m"u"\u00b3""):", self.update_density_outer, rw=4, state_specify='normal')  # , label_width=LABEL_WIDTH)
+    # self.needle_diameter = FloatCombobox(
+    #     self, user_input_frame, "Needle diameter (mm):", NEEDLE_OPTIONS, self.update_needle_diameter, rw=5, state_specify='normal')  # , label_width=LABEL_WIDTH)
+
+    # user_input_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
+
+def create_user_input_fields(self,parent, user_input_data):
     """Create user input fields and return the frame containing them."""
     user_input_frame = CTkFrame(parent)
     user_input_frame.pack(fill="both", padx=15, pady=15)
@@ -27,14 +179,15 @@ def create_user_input_fields(parent, user_input_data):
     continuous_density_var = StringVar()
     pixel_mm_var = StringVar()
 
+  
     # Create input fields using custom styles
-    drop_region_choice = create_option_menu(input_fields_frame, "Drop Region:", AUTO_MANUAL_OPTIONS, variable=drop_region_var)
-    needle_region_choice = create_option_menu(input_fields_frame, "Needle Region:", AUTO_MANUAL_OPTIONS, variable=needle_region_var)
+    create_option_menu(input_fields_frame, "Drop Region:", AUTO_MANUAL_OPTIONS, variable=drop_region_var)
+    create_option_menu(input_fields_frame, "Needle Region:", AUTO_MANUAL_OPTIONS, variable=needle_region_var)
 
-    drop_density = create_float_entry(input_fields_frame, "Drop Density:", textvariable=drop_density_var)
-    needle_diameter = create_float_entry(input_fields_frame, "Needle Diameter:", textvariable=needle_diameter_var)
-    continuous_density = create_float_entry(input_fields_frame, "Continuous density (kg/m³):", textvariable=continuous_density_var)
-    pixel_mm = create_float_entry(input_fields_frame, "Pixel to mm Ratio:", textvariable=pixel_mm_var)
+    create_float_entry(input_fields_frame, "Drop Density:", textvariable=drop_density_var)
+    create_float_entry(input_fields_frame, "Needle Diameter:", textvariable=needle_diameter_var)
+    create_float_entry(input_fields_frame, "Continuous density (kg/m³):", textvariable=continuous_density_var)
+    create_float_entry(input_fields_frame, "Pixel to mm Ratio:", textvariable=pixel_mm_var)
 
     # Update user_input_data whenever the StringVar changes
     def update_user_input_data(*args):

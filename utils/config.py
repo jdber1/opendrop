@@ -5,6 +5,7 @@ IMAGE_EXTENSION = '.png'
 BACKGROUND_COLOR = 'gray90'
 VERSION = '1.0'
 
+AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"] 
 DROP_ID_OPTIONS = ["Automated", "User-selected"]
 THRESHOLD_OPTIONS = ["Automated", "User-selected"]
 BASELINE_OPTIONS = ["Automated", "User-selected"]

@@ -2,12 +2,14 @@ import tkinter as tk
 from utils.config import *
 
 class OptionMenu():
-    def __init__(self, parent, frame, text_left, options_list, callback, rw=0, width_specify=15, label_width=None):
+    def __init__(self, parent, frame, text_left, options_list, callback, rw=0, default_value=None,width_specify=15, label_width=None):
         self.entry_list = options_list
         self.label = tk.Label(
             frame, text=text_left, background=BACKGROUND_COLOR, width=label_width, anchor="w")
         self.label.grid(row=rw, column=0, sticky="w")
-        self.text_variable = tk.StringVar()
+        
+        # Initialize StringVar and set default value if provided
+        self.text_variable = tk.StringVar(value=default_value if default_value in options_list else options_list[0])
 
         if callback:
             self.text_variable.trace_add("write", callback)
@@ -24,7 +26,7 @@ class OptionMenu():
         if value in self.entry_list:
             self.text_variable.set(value)
         else:
-            self.text_variable.set(self.entry_list[0])
+            self.text_variable.set(self.entry_list[0])  # Set to first option if value not found
 
     def disable(self):
         self.optionmenu.config(state="disabled")
