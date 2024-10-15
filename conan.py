@@ -109,6 +109,7 @@ def contact_angle(fitted_drop_data, user_inputs):
         # these methods don't need tilt correction
         if user_inputs.baseline_method == "Automated":
             if user_inputs.tangent_boole == True or user_inputs.second_deg_polynomial_boole == True or user_inputs.circle_boole == True or user_inputs.ellipse_boole == True:
+                print(f"Frame {i}: Drop contour before performing normal fits:", raw_experiment.drop_contour)
                 perform_fits(raw_experiment, tangent=user_inputs.tangent_boole, polynomial=user_inputs.second_deg_polynomial_boole, circle=user_inputs.circle_boole,ellipse=user_inputs.ellipse_boole)
 
         # YL fit and ML model need tilt correction
@@ -124,6 +125,7 @@ def contact_angle(fitted_drop_data, user_inputs):
 
             if user_inputs.YL_boole == True:
                 print('Performing YL fit...')
+                print(f"Frame {i}: Drop contour before performing YL & ML fit:", raw_experiment.drop_contour)
                 perform_fits(raw_experiment, YL=user_inputs.YL_boole)
             if user_inputs.ML_boole == True:
                 pred_ds = prepare4model_v03(raw_experiment.drop_contour)
