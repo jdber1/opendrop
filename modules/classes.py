@@ -58,9 +58,18 @@ class ExperimentalSetup(object):
         self.import_files = None
         self.frame_interval = None
         self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
-        # self.user_input_fields ={}
+        self.user_input_fields_cm = {
+            "drop_id_method": 'Automated',
+            "threshold_method": 'Automated',
+            "threshold_value": None,
+            "baseline_method": 'Automated',
+            "density_outer": None,
+            "needle_diameter": None
+        }
         self.analysis_method_fields = {}
+        self.analysis_method_fields_cm = {}
         self.statistical_output = {}
+        self.statistical_output_cm = {}
         self.ift_drop_region = None
         self.ift_needle_region = None
         self.cv2_capture_num = None

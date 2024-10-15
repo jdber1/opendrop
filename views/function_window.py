@@ -13,7 +13,7 @@ from .ca_preparation import CaPreparation
 from .output_page import OutputPage
 from utils.enums import *
 
-from views.helper.validation import validate_user_input_data
+from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm
 
 def call_user_input(function_type, user_input_data):
     FunctionWindow(function_type, user_input_data)
@@ -48,6 +48,7 @@ class FunctionWindow(CTk):
                 self, user_input_data, fg_color=self.FG_COLOR)
         self.ca_acquisition_frame = CaAcquisition(
                 self, user_input_data, fg_color=self.FG_COLOR)
+        
         if function_type == FunctionType.PENDANT_DROP:
             self.ift_acquisition_frame.pack(fill="both", expand=True)
         elif function_type == FunctionType.CONTACT_ANGLE:
@@ -122,17 +123,16 @@ class FunctionWindow(CTk):
                 messagebox.showinfo("No Selection", "Please select at least one file.")
         
         elif self.current_stage == Stage.ANALYSIS:
-            print("user_input_data.user_input_fields: ",user_input_data.user_input_fields)
-            print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
-            print("user_input_data.statistical_output: ",user_input_data.statistical_output)
-
-            print("user_input_data.drop_ID_method: ",user_input_data.drop_ID_method)
 
             # Validate user input data
-            validation_messages = validate_user_input_data(user_input_data)
+            if function_type == FunctionType.PENDANT_DROP:
+                validation_messages = validate_user_input_data_ift(user_input_data)
+            elif function_type == FunctionType.CONTACT_ANGLE:
+                validation_messages = validate_user_input_data_cm(user_input_data)
+            
 
             # TO DO: implement the validation when function type is contact angle
-            if validation_messages and function_type == FunctionType.PENDANT_DROP:
+            if validation_messages:
 
                 self.update_stage(Move.Back.value)
                 all_messages = "\n".join(validation_messages)

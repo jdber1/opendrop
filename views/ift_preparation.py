@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-from .component.preparation import create_analysis_checklist, create_plotting_checklist,create_user_input_fields_ift
+from .component.preparation import create_plotting_checklist_ift, create_analysis_checklist_ift,create_user_input_fields_ift
 from .component.imageProcessing import ImageApp
 
 
@@ -42,12 +42,12 @@ class IftPreparation(ctk.CTkFrame):
 
     def create_analysis_method_fields(self, parent_frame):
         """Create and pack analysis method fields into the specified parent frame."""
-        analysis_frame = create_analysis_checklist(self,parent_frame,self.user_input_data.analysis_method_fields)
+        analysis_frame = create_analysis_checklist_ift(self,parent_frame,self.user_input_data.analysis_method_fields)
         analysis_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
 
     def create_fitting_view_fields(self, parent_frame):
         """Create and pack Statisitcal Output fields into the specified parent frame."""
         print("create_fitting_view_fields, self: ",self)
-        fitting_view_frame = create_plotting_checklist(self,parent_frame,self.user_input_data.statistical_output)
+        fitting_view_frame = create_plotting_checklist_ift(self,parent_frame,self.user_input_data.statistical_output)
         fitting_view_frame.grid(row=2, column=0, sticky="nsew", pady=(10, 0))  # Use row 1
         # fitting_view_frame.pack(fill="x", expand=True)  # Pack fitting view fields
