@@ -64,6 +64,13 @@ class ExperimentalSetup(object):
         self.ift_needle_region = None
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
+        
+        self.tangent_boole = False
+        self.second_deg_polynomial_boole = False
+        self.circle_boole = False
+        self.ellipse_boole = False
+        self.YL_boole = False
+        self.ML_boole = False
 
 class ExperimentalDrop(object):
     def __init__(self):

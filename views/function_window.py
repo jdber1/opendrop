@@ -9,23 +9,30 @@ from .ift_analysis import IftAnalysis
 
 from .ca_acquisition import CaAcquisition
 from .ca_preparation import CaPreparation
+from .ca_analysis import CaAnalysis
 
 from .output_page import OutputPage
+
+from modules.ca_data_processor import CaDataProcessor
 from utils.enums import *
 
 from views.helper.validation import validate_user_input_data
 
-def call_user_input(function_type, user_input_data):
-    FunctionWindow(function_type, user_input_data)
+def call_user_input(function_type, user_input_data, fitted_drop_data):
+    FunctionWindow(function_type, user_input_data, fitted_drop_data)
 
 class FunctionWindow(CTk):
-    def __init__(self, function_type, user_input_data):
+    def __init__(self, function_type, user_input_data, fitted_drop_data):
         super().__init__()  # Call the parent class constructor
         self.FG_COLOR = "lightblue"
         self.title(function_type.value)
         self.geometry("1280x720")
         self.configure(fg_color=self.FG_COLOR)
-        self.widgets(function_type, user_input_data)
+
+        user_input_data.screen_resolution = [
+            self.winfo_screenwidth(), self.winfo_screenheight()]
+        
+        self.widgets(function_type, user_input_data, fitted_drop_data)
 
         self.stages = list(Stage)
         self.current_stage = Stage.ACQUISITION
@@ -38,7 +45,7 @@ class FunctionWindow(CTk):
 
         self.mainloop()  # Start the main loop
 
-    def widgets(self, function_type, user_input_data):
+    def widgets(self, function_type, user_input_data, fitted_drop_data):
         # Create the navigation bar (progress bar style)
         self.navigation_frame = create_navigation(self)
         self.navigation_frame.pack(fill="x", pady=10)
@@ -63,7 +70,7 @@ class FunctionWindow(CTk):
         self.back_button.pack(side="left", padx=10, pady=10)
 
         self.next_button = CTkButton(
-            self.button_frame, text="Next", command=lambda: self.next(function_type, user_input_data))
+            self.button_frame, text="Next", command=lambda: self.next(function_type, user_input_data, fitted_drop_data))
         self.next_button.pack(side="right", padx=10, pady=10)
 
         # Add save button for OutputPage (initially hidden)
@@ -90,14 +97,18 @@ class FunctionWindow(CTk):
             self.ift_analysis_frame.pack_forget()
 
         elif self.current_stage == Stage.ANALYSIS:
-            self.ift_analysis_frame.pack(fill="both", expand=True)
+            if function_type == FunctionType.PENDANT_DROP:
+                self.ift_analysis_frame.pack(fill="both", expand=True)
+            else:
+                self.ca_analysis_frame.pack(fill="both", expand=True)
+            
             self.output_frame.pack_forget()
 
         # Show the next button and hide the save button when going back
         self.next_button.pack(side="right", padx=10, pady=10)
         self.save_button.pack_forget()
 
-    def next(self, function_type, user_input_data):
+    def next(self, function_type, user_input_data, fitted_drop_data):
         self.update_stage(Move.Next.value)
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
@@ -126,8 +137,6 @@ class FunctionWindow(CTk):
             print("user_input_data.analysis_method_fields: ",user_input_data.analysis_method_fields)
             print("user_input_data.statistical_output: ",user_input_data.statistical_output)
 
-            print("user_input_data.drop_ID_method: ",user_input_data.drop_ID_method)
-
             # Validate user input data
             validation_messages = validate_user_input_data(user_input_data)
 
@@ -143,15 +152,25 @@ class FunctionWindow(CTk):
 
                 if function_type == FunctionType.PENDANT_DROP:
                     self.ift_preparation_frame.pack_forget()
+                    self.ift_analysis_frame = IftAnalysis(
+                        self, user_input_data, fg_color=self.FG_COLOR)
+                    self.ift_analysis_frame.pack(fill="both", expand=True)
                 else:
                     self.ca_preparation_frame.pack_forget()
 
+                    CaDataProcessor.process_data(self, fitted_drop_data, user_input_data, None)
+
+                    self.ca_analysis_frame = CaAnalysis(
+                        self, user_input_data, fg_color=self.FG_COLOR)
+                    self.ca_analysis_frame.pack(fill="both", expand=True)
+
                 # Initialise Analysis frame
-                self.ift_analysis_frame = IftAnalysis(
-                self, user_input_data, fg_color=self.FG_COLOR)
-                self.ift_analysis_frame.pack(fill="both", expand=True)
+                
         elif self.current_stage == Stage.OUTPUT:
-            self.ift_analysis_frame.pack_forget()
+            if function_type == FunctionType.PENDANT_DROP:
+                self.ift_analysis_frame.pack(fill="both", expand=True)
+            else:
+                self.ca_analysis_frame.pack(fill="both", expand=True)
 
             # Initialise Output frame
             self.output_frame = OutputPage(

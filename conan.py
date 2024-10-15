@@ -56,7 +56,7 @@ NEEDLE_STEPS = 20
 def contact_angle(fitted_drop_data, user_inputs):
 
     # open the contact angle window
-    call_user_input(FunctionType.CONTACT_ANGLE, user_inputs)
+    call_user_input(FunctionType.CONTACT_ANGLE, user_inputs, fitted_drop_data)
 
     # TODO: Integrate this with frontend
 
@@ -156,7 +156,7 @@ def contact_angle(fitted_drop_data, user_inputs):
         extracted_data.export_data(input_file,filename,i)
 
 def pendant_drop(fitted_drop_data, user_inputs):
-    call_user_input(FunctionType.PENDANT_DROP, user_inputs)
+    call_user_input(FunctionType.PENDANT_DROP, user_inputs, fitted_drop_data)
 
 
 def main():
