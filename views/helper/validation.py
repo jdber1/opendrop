@@ -63,7 +63,7 @@ def validate_user_input_data_cm(user_input_data):
 
     required_fields_method = {
         'tangent_boole': "Tangent",
-        'second_degree_polynomial_boole': "Second Degree Polynomial",
+        'second_deg_polynomial_boole': "Second Degree Polynomial",
         'circle_boole': "Circle Fit",
         'ellipse_boole': "Ellipse Fit",
         'YL_boole': "Young Laplace Fit",
