@@ -101,10 +101,10 @@ class FunctionWindow(CTk):
         elif self.current_stage == Stage.PREPARATION:
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_preparation_frame.pack(fill="both", expand=True)
+                self.ift_analysis_frame.pack_forget()
             else:
                 self.ca_preparation_frame.pack(fill="both", expand=True)
-
-            self.ift_analysis_frame.pack_forget()
+                self.ca_analysis_frame.pack_forget()
 
         elif self.current_stage == Stage.ANALYSIS:
             if function_type == FunctionType.PENDANT_DROP:
@@ -159,8 +159,7 @@ class FunctionWindow(CTk):
                 # Show a single pop-up message with all validation messages
                 messagebox.showinfo("Missing: \n", all_messages)
             else:
-                print("All required fields are filled.")
-
+                # print("All required fields are filled.")
                 if function_type == FunctionType.PENDANT_DROP:
                     self.ift_preparation_frame.pack_forget()
                     self.ift_analysis_frame = IftAnalysis(

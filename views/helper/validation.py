@@ -38,6 +38,8 @@ def validate_user_input_data_cm(user_input_data):
     messages = []
     print("validate_user_input_data_cm")
     user_input_fields = user_input_data
+
+    """
         # Ensure if drop region is chosen, it must not be None
     if user_input_fields.drop_ID_method != 'Automated' and user_input_data.edgefinder is None:
         messages.append("Please select drop_id_method")
@@ -49,21 +51,14 @@ def validate_user_input_data_cm(user_input_data):
     if user_input_fields.baseline_method != 'Automated' and user_input_data.edgefinder is None:
         messages.append("Please select baseline_method")
 
+    """
     
-    required_fields = {
-        'threshold_val': "Threshold Value",
-        'density_outer': "Continuous Density",
-        'needle_diameter_mm': "Needle Diameter"
-    }
-
-    for field, label in required_fields.items():
-        value = getattr(user_input_data, field)
-        if value is None:
-            messages.append(f"{label} is required.")
+    if user_input_fields.drop_ID_method != 'Automated' and user_input_data.threshold_value is None:
+        messages.append("threshold_value is required.")
 
     required_fields_method = {
         'tangent_boole': "Tangent",
-        'second_degree_polynomial_boole': "Second Degree Polynomial",
+        'second_deg_polynomial_boole': "Second Degree Polynomial",
         'circle_boole': "Circle Fit",
         'ellipse_boole': "Ellipse Fit",
         'YL_boole': "Young Laplace Fit",

@@ -6,10 +6,14 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 class MainWindow(ctk.CTk):
-    def __init__(self, open_ift_window, open_ca_window):
+    def __init__(self, continue_processing, open_ift_window, open_ca_window):
         super().__init__()
         self.title("Main Window")
         self.geometry("800x400")
+
+        self.continue_processing = continue_processing
+        self.open_ift_window = open_ift_window
+        self.open_ca_window = open_ca_window
 
         # Define a function to handle the SIGINT signal (Ctrl+C)
         def signal_handler(sig, frame):
@@ -21,6 +25,8 @@ class MainWindow(ctk.CTk):
             sys.exit(0)
         # Attach the signal handler to SIGINT
         signal.signal(signal.SIGINT, signal_handler)
+
+        self.protocol("WM_DELETE_WINDOW", self.close_window)
 
         # Display title
         title_label = ctk.CTkLabel(
@@ -52,7 +58,13 @@ class MainWindow(ctk.CTk):
     def run_function(self, func):
         self.destroy()  # Close the main window
         func()  # Execute the selected functionality
+        
 
     def show_info_popup(self):
         messagebox.showinfo(
             "Information", "Interfacial Tension: Measures the force at the surface of liquids.\n\nContact Angle: Measures the angle between the liquid surface and the solid surface.")
+        
+    def close_window(self):
+        self.continue_processing["status"] = False
+        print(self.continue_processing)
+        self.destroy()

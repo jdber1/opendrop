@@ -8,13 +8,6 @@ from utils.validators import *
 from utils.config import *
 from .component.ctk_input_popup import CTkInputPopup
 from .component.ctk_table_popup import CTkTablePopup
-from .component.option_menu import OptionMenu
-
-PATH_TO_SCRIPT = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), '..')
-
-
-File_Source_Options = ["Filesystem", "cv2.VideoCapture", "GenlCam"]
 
 class IftAcquisition(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
@@ -27,7 +20,7 @@ class IftAcquisition(CTkFrame):
         self.frame_interval_var = StringVar()
         self.frame_interval_var.trace_add("write", self.update_frame_interval)
 
-        self.image_source = StringVar(value=File_Source_Options[0])
+        self.image_source = StringVar()
 
         self.cv2_capture_num_var = StringVar(value=1)
         self.cv2_capture_num_var.trace_add("write", self.update_cv2_capture_num)
@@ -47,7 +40,7 @@ class IftAcquisition(CTkFrame):
         self.setup_component_label(self.image_source_frame, "Image Source: ")
         self.option_menu = CTkOptionMenu(self.image_source_frame, 
                                               variable=self.image_source, 
-                                              values=File_Source_Options,
+                                              values=FILE_SOURCE_OPTIONS_IFT,
                                               command=self.show_image_source_frame)
         self.option_menu.pack(side="left")
 
