@@ -1,51 +1,50 @@
-from customtkinter import *
+import tkinter as tk
+from tkinter import ttk
+import customtkinter as ctk
 
 from utils.config import *
 from utils.validators import *
 
 class FloatCombobox():
-    def __init__(self, parent, frame, text_left, options_list, callback, rw=0, width_specify=10, label_width=None, state_specify='normal'):
-
-        # Replace tk.Label with CTkLabel
-        self.label = CTkLabel(frame, text=text_left, text_color="black")
-        self.label.grid(row=rw, column=0, sticky="w")
-
-        self.text_variable = StringVar()
+    def __init__(self, parent, frame, text_left, options_list, callback, rw=0, padx=(5, 5), pady=(5, 5), width_specify=150, label_width=150, state_specify='normal'):
+        self.label = ctk.CTkLabel(frame, text=text_left, width=label_width, anchor="w")
+        self.label.grid(row=rw, column=0, sticky="w", padx=padx, pady=pady)
+        self.text_variable = ctk.StringVar()
 
         if callback:
             self.text_variable.trace_add("write", callback)
 
-        # Validate float input, if needed (though Combobox usually does not validate text in real-time)
-        vcmd_float = (parent.register(validate_float),
-                      '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.float_variable = 0.0
 
-        # Replace ttk.Combobox with CTkComboBox
-        self.combobox = CTkComboBox(frame, values=options_list, variable=self.text_variable)
+        #vcmd_float = (parent.register(validate_float),
+        #              '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        #self.combobox = ttk.Combobox(
+        #    frame, textvariable=self.text_variable, validate='key', validatecommand=vcmd_float)
+        
+        # CTkComboBox doesn't support manual entry
+        self.combobox = ctk.CTkComboBox(
+            frame, variable=self.text_variable, values=options_list)
         self.combobox.configure(width=width_specify, state=state_specify)
-        self.combobox.grid(row=rw, column=1, sticky="we")
-        # Bind the combobox selection event
-        self.combobox.bind("<<ComboboxSelected>>", self.validate_float_input)
-
-    def validate_float_input(self, event=None):
-        """Custom method to validate float input after selection."""
-        try:
-            value = float(self.text_variable.get())
-            # Optionally, you can do something with the valid value
-            print(f"Valid float input: {value}")
-        except ValueError:
-            # Handle the invalid input case (e.g., show a message)
-            print("Invalid input! Please enter a valid float.")
+        self.combobox.grid(row=rw, column=1, sticky="we", padx=padx, pady=pady)
 
     def get_value(self):
-        return float("0" + self.text_variable.get())
+        value = 0
+        try:
+            value = float("0" + self.text_variable.get())
+            self.float_variable = value
+            return value
+        except ValueError:
+            # if the user enters non-numeric character
+            self.set_value(self.float_variable)
+            return self.float_variable
 
     def set_value(self, value):
         self.text_variable.set(str(float(value)))
 
     def disable(self):
-        self.combobox.config(state="disabled")
-        self.label.config(state="disabled")
+        self.combobox.configure(state="disabled")
+        self.label.configure(state="disabled")
 
     def normal(self):
-        self.combobox.config(state="normal")
-        self.label.config(state="normal")
+        self.combobox.configure(state="normal")
+        self.label.configure(state="normal")

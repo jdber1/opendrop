@@ -67,7 +67,7 @@ class ExperimentalSetup(object):
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
         self.tangent_boole = False
-        self.second_degree_polynomial_boole = False
+        self.second_deg_polynomial_boole = False
         self.circle_boole = False
         self.ellipse_boole = False
         self.YL_boole = False
