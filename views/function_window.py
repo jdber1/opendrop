@@ -157,20 +157,20 @@ class FunctionWindow(CTk):
                     self.ift_analysis_frame.pack(fill="both", expand=True)
                 else:
                     self.ca_preparation_frame.pack_forget()
-
-                    CaDataProcessor.process_data(self, fitted_drop_data, user_input_data, None)
-
                     self.ca_analysis_frame = CaAnalysis(
                         self, user_input_data, fg_color=self.FG_COLOR)
                     self.ca_analysis_frame.pack(fill="both", expand=True)
+
+                    processor = CaDataProcessor()
+                    processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
 
                 # Initialise Analysis frame
                 
         elif self.current_stage == Stage.OUTPUT:
             if function_type == FunctionType.PENDANT_DROP:
-                self.ift_analysis_frame.pack(fill="both", expand=True)
+                self.ift_analysis_frame.pack_forget()
             else:
-                self.ca_analysis_frame.pack(fill="both", expand=True)
+                self.ca_analysis_frame.pack_forget()
 
             # Initialise Output frame
             self.output_frame = OutputPage(

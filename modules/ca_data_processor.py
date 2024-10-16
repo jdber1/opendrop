@@ -17,7 +17,7 @@ from tkinter import font as tkFont
 import timeit
 
 class CaDataProcessor:
-    def process_data(self, fitted_drop_data, user_input_data, progress_callback):    
+    def process_data(self, fitted_drop_data, user_input_data, callback):    
         if user_input_data.ML_boole == True:
             from modules.ML_model.prepare_experimental import prepare4model_v03, experimental_pred
             import tensorflow as tf
@@ -91,4 +91,4 @@ class CaDataProcessor:
 
             extracted_data.export_data(input_file,filename,i)
 
-        #   progress_callback(extracted_data)
+            callback(extracted_data)
