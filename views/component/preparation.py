@@ -121,22 +121,22 @@ def create_user_inputs_cm(self,parent,user_input_data):
 
     # Define update functions for each input
     def update_drop_id_method(*args):
-        user_input_data["drop_id_method"] = self.drop_ID_method.get_value()
+        user_input_data.drop_ID_method = self.drop_ID_method.get_value()
 
     def update_threshold_method(*args):
-        user_input_data["threshold_method"] = self.threshold_method.get_value()
+        user_input_data.threshold_method = self.threshold_method.get_value()
 
     def update_threshold_value(*args):
-        user_input_data["threshold_value"] = self.threshold_val.get_value()
+        user_input_data.threshold_val = self.threshold_val.get_value()
 
     def update_baseline_method(*args):
-        user_input_data["baseline_method"] = self.baseline_method.get_value()
+        user_input_data.baseline_method = self.baseline_method.get_value()
 
     def update_density_outer(*args):
-        user_input_data["density_outer"] = self.density_outer.get_value()
+        user_input_data.density_outer = self.density_outer.get_value()
 
     def update_needle_diameter(*args):
-        user_input_data["needle_diameter"] = self.needle_diameter.get_value()
+        user_input_data.needle_diameter_mm = self.needle_diameter.get_value()
 
     # Create input fields with the associated update methods
     self.drop_ID_method = OptionMenu(
@@ -185,13 +185,13 @@ def create_plotting_checklist_cm(self, parent, user_input_data):
 
     # Define update functions for each checkbox
     def update_residuals_boole(*args):
-        user_input_data["residuals"] = self.residuals_boole.get_value()
+        user_input_data.residuals_boole = self.residuals_boole.get_value()
 
     def update_profiles_boole(*args):
-        user_input_data["profiles"] = self.profiles_boole.get_value()
+        user_input_data.profiles_boole = self.profiles_boole.get_value()
 
     def update_ift_boole(*args):
-        user_input_data["ift"] = self.IFT_boole.get_value()
+        user_input_data.interfacial_tension_boole = self.IFT_boole.get_value()
 
     # Create check buttons with the associated update methods
     self.residuals_boole = CheckButton(
@@ -222,22 +222,22 @@ def create_analysis_checklist_cm(self, parent, user_input_data):
 
     # Define update functions for each checkbox
     def update_tangent_boole(*args):
-        user_input_data["tangent"] = self.tangent_boole.get_value()
+        user_input_data.tangent_boole = self.tangent_boole.get_value()
 
     def update_second_deg_polynomial_boole(*args):
-        user_input_data["second_degree_polynomial"] = self.second_deg_polynomial_boole.get_value()
+        user_input_data.second_deg_polynomial_boole = self.second_deg_polynomial_boole.get_value()
 
     def update_circle_boole(*args):
-        user_input_data["circle_fit"] = self.circle_boole.get_value()
+        user_input_data.circle_boole = self.circle_boole.get_value()
 
     def update_ellipse_boole(*args):
-        user_input_data["ellipse_fit"] = self.ellipse_boole.get_value()
+        user_input_data.ellipse_boole = self.ellipse_boole.get_value()
 
     def update_YL_boole(*args):
-        user_input_data["young_laplace_fit"] = self.YL_boole.get_value()
+        user_input_data.YL_boole = self.YL_boole.get_value()
 
     def update_ML_boole(*args):
-        user_input_data["ml_model"] = self.ML_boole.get_value()
+        user_input_data.ML_boole = self.ML_boole.get_value()
 
     # Create check buttons with the associated update methods
     self.tangent_boole = CheckButton(

@@ -1,22 +1,25 @@
-import tkinter as tk
+from customtkinter import *
 from utils.config import *
 
 class OptionMenu():
     def __init__(self, parent, frame, text_left, options_list, callback, rw=0, default_value=None,width_specify=15, label_width=None):
         self.entry_list = options_list
-        self.label = tk.Label(
-            frame, text=text_left, background=BACKGROUND_COLOR, width=label_width, anchor="w")
+        # Use CTkLabel instead of tk.Label
+        self.label = CTkLabel(
+            frame, text=text_left, anchor="w")
         self.label.grid(row=rw, column=0, sticky="w")
         
         # Initialize StringVar and set default value if provided
-        self.text_variable = tk.StringVar(value=default_value if default_value in options_list else options_list[0])
+        self.text_variable = StringVar(value=default_value if default_value in options_list else options_list[0])
 
         if callback:
             self.text_variable.trace_add("write", callback)
 
-        self.optionmenu = tk.OptionMenu(
-            *(frame, self.text_variable) + tuple(self.entry_list))
-        self.optionmenu.config(bg=BACKGROUND_COLOR, width=width_specify)
+        # Use CTkOptionMenu instead of tk.OptionMenu
+        self.optionmenu = CTkOptionMenu(
+            frame, variable=self.text_variable, values=self.entry_list)
+        
+        self.optionmenu.configure(width=width_specify)
         self.optionmenu.grid(row=rw, column=1, sticky="w")
 
     def get_value(self):

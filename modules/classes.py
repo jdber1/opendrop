@@ -36,12 +36,12 @@ class Tolerances(object):
 class ExperimentalSetup(object):
     def __init__(self):
         self.screen_resolution = None
-        self.drop_ID_method = None
-        self.threshold_method = None
+        self.drop_ID_method = 'Automated'
+        self.threshold_method = 'Automated'
         self.threshold_val = None
-        self.baseline_method = None
+        self.baseline_method = 'Automated'
         self.edgefinder = None
-        self.continuous_density = None
+        self.density_outer = None
         self.needle_diameter_mm = None
         self.residuals_boole = None
         self.profiles_boole = None
@@ -58,14 +58,6 @@ class ExperimentalSetup(object):
         self.import_files = None
         self.frame_interval = None
         self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
-        self.user_input_fields_cm = {
-            "drop_id_method": 'Automated',
-            "threshold_method": 'Automated',
-            "threshold_value": None,
-            "baseline_method": 'Automated',
-            "density_outer": None,
-            "needle_diameter": None
-        }
         self.analysis_method_fields = {}
         self.analysis_method_fields_cm = {}
         self.statistical_output = {}
@@ -74,6 +66,12 @@ class ExperimentalSetup(object):
         self.ift_needle_region = None
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
+        self.tangent_boole = False
+        self.second_degree_polynomial_boole = False
+        self.circle_boole = False
+        self.ellipse_boole = False
+        self.YL_boole = False
+        self.ML_boole = False
 
 class ExperimentalDrop(object):
     def __init__(self):
