@@ -20,7 +20,7 @@ class IftAcquisition(CTkFrame):
         self.frame_interval_var = StringVar()
         self.frame_interval_var.trace_add("write", self.update_frame_interval)
 
-        self.image_source = StringVar()
+        self.image_source = StringVar(value=user_input_data.image_source)
 
         self.cv2_capture_num_var = StringVar(value=1)
         self.cv2_capture_num_var.trace_add("write", self.update_cv2_capture_num)
@@ -250,11 +250,11 @@ class IftAcquisition(CTkFrame):
             self.user_input_data.import_files = None
             self.user_input_data.number_of_frames = None
         
-        if selection == File_Source_Options[0]:
+        if selection == FILE_SOURCE_OPTIONS_IFT[0]:
             self.setup_filesystem_frame()
-        elif selection == File_Source_Options[1]:
+        elif selection == FILE_SOURCE_OPTIONS_IFT[1]:
             self.setup_cv2_videocapture_frame()
-        elif selection == File_Source_Options[2]:
+        elif selection == FILE_SOURCE_OPTIONS_IFT[2]:
             self.setup_genlcam_frame()
 
         self.user_input_data.image_source = selection
