@@ -17,6 +17,7 @@ from modules.ca_data_processor import CaDataProcessor
 from utils.enums import *
 
 from views.helper.theme import get_system_appearance, DARK_MODE, LIGHT_MODE
+
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm
 
 def call_user_input(function_type, user_input_data, fitted_drop_data):
