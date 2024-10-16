@@ -26,30 +26,25 @@ class ImageHandler:
         return None
     
     def get_fitting_dimensions(self, original_width, original_height, max_width=400, max_height=300):
-        # Calculate the aspect ratio
         aspect_ratio = original_width / original_height
+
+        # Initialize new dimensions
+        new_width = original_width
+        new_height = original_height
 
         # Check if the image needs to be resized
         if original_width > max_width or original_height > max_height:
-            # Calculate new dimensions while maintaining the aspect ratio
-            if aspect_ratio > 1:  # Wider than tall
-                new_width = max_width
-                new_height = int(max_width / aspect_ratio)
-            else:  # Taller than wide
-                new_height = max_height
-                new_width = int(max_height * aspect_ratio)
+            # Determine scaling factor
+            width_scale = max_width / original_width
+            height_scale = max_height / original_height
+            scale = min(width_scale, height_scale)  # Use the smaller scale to maintain aspect ratio
+            
+            # Calculate new dimensions
+            new_width = int(original_width * scale)
+            new_height = int(original_height * scale)
         else:
-            # If the image is within the max dimensions, amplify it
-            if aspect_ratio > 1:  # Wider than tall
-                new_width = max_width
-                new_height = int(max_width / aspect_ratio)
-                if new_height < max_height:  # Adjust to fit max_height if necessary
-                    new_height = max_height
-                    new_width = int(max_height * aspect_ratio)
-            else:  # Taller than wide
-                new_height = max_height
-                new_width = int(max_height * aspect_ratio)
-                if new_width < max_width:  # Adjust to fit max_width if necessary
-                    new_width = max_width
-                    new_height = int(max_width / aspect_ratio)
+            # If the image is within the max dimensions, return original dimensions
+            new_width = original_width
+            new_height = original_height
+
         return new_width, new_height

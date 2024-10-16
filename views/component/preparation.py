@@ -15,8 +15,8 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(user_input_frame, text="User Inputs", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(user_input_frame)
@@ -73,8 +73,8 @@ def create_plotting_checklist_ift(self,parent,user_input_data):
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(plotting_clist_frame, text="Statistical Output", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+    label = CTkLabel(plotting_clist_frame, text="Statistical Output", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(plotting_clist_frame)
@@ -95,8 +95,8 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     analysis_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(analysis_clist_frame, text="Statistical Output", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+    label = CTkLabel(analysis_clist_frame, text="Statistical Output", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(analysis_clist_frame)
@@ -115,8 +115,8 @@ def create_user_inputs_cm(self,parent,user_input_data):
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(user_input_frame, text="User Inputs", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")
+    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(user_input_frame)
@@ -179,8 +179,8 @@ def create_plotting_checklist_cm(self, parent, user_input_data):
     plotting_clist_frame.grid(row=1, column=2, columnspan=1, sticky="wens", padx=15, pady=15)
 
     # Create a label for the checklist
-    label = CTkLabel(plotting_clist_frame, text="To view during fitting", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all checkbox fields
     input_fields_frame = CTkFrame(plotting_clist_frame)
@@ -216,8 +216,8 @@ def create_analysis_checklist_cm(self, parent, user_input_data):
     analysis_clist_frame.grid(row=3, columnspan=4, sticky="wens", padx=15, pady=15)
 
     # Create a label for the analysis checklist
-    label = CTkLabel(analysis_clist_frame, text="Analysis methods", text_color="black")
-    label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 10), sticky="w")  # Grid for label
+    label = CTkLabel(analysis_clist_frame, text="Analysis methods", font=("Roboto Bold", 16))
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all checkbox fields
     input_fields_frame = CTkFrame(analysis_clist_frame)

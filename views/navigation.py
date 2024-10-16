@@ -1,4 +1,3 @@
-# navigation.py
 from customtkinter import *
 
 def create_navigation(parent):
@@ -9,9 +8,10 @@ def create_navigation(parent):
     # Define stage labels for navigation
     stages = ["Preparation", "Acquisition", "Analysis", "Output"]
 
-    # Create a canvas for the progress bar
-    canvas = CTkCanvas(navigation_frame, height=50)
-    canvas.pack(fill='x', expand=True)
+    progress_bar = CTkProgressBar(navigation_frame)
+    progress_bar.pack(fill='x', expand=True, padx=130, pady=(20,10))
+
+    progress_bar.set(0)
 
     current_stage = 0  # Track the current stage
 
@@ -19,26 +19,7 @@ def create_navigation(parent):
     def update_progress(stage_index):
         nonlocal current_stage
         if 0 <= stage_index < len(stages):
-            # Get the current width of the canvas (parent container width)
-            canvas_width = canvas.winfo_width()
-
-            # Calculate 80% of the canvas width and center it
-            progress_width = int(0.8 * canvas_width)  # 80% of canvas width
-            left_x = (canvas_width - progress_width) // 2  # Center the bar
-            right_x = left_x + progress_width
-
-            # Update the background bar
-            canvas.coords(progress_bar_bg, left_x, 20, right_x, 30)
-
-            # Calculate the width for the progress bar based on the current stage
-            filled_width = left_x + (stage_index * (progress_width // (len(stages) - 1)))
-            canvas.coords(progress_bar, left_x, 20, filled_width, 30)
-
-            # Update label positions dynamically
-            for i, label in enumerate(stage_labels):
-                label_x = left_x + (i * (progress_width // (len(stages) - 1)))
-                canvas.coords(label, label_x, 15)
-
+            progress_bar.set(stage_index / (len(stages)-1))
             # Update current stage
             current_stage = stage_index
 
@@ -56,18 +37,14 @@ def create_navigation(parent):
         update_progress(current_stage)
 
     # Bind the resize event to dynamically adjust the progress bar and labels
-    canvas.bind("<Configure>", on_resize)
-
-    # Create the progress bar background (initial size, dynamically resized later)
-    progress_bar_bg = canvas.create_rectangle(10, 20, 390, 30, fill='lightgrey')
-
-    # Create the progress bar itself (initial size, dynamically resized later)
-    progress_bar = canvas.create_rectangle(10, 20, 10, 30, fill='blue')
+    navigation_frame.bind("<Configure>", on_resize)
 
     # Create stage labels at quarter positions
     stage_labels = []
     for i, stage in enumerate(stages):
-        label = canvas.create_text(10, 15, text=stage, anchor='center', font=("Helvetica", 8))
+        # Create a label for each stage
+        label = CTkLabel(navigation_frame, text=stage, font=("Roboto", 13), anchor='e')
+        label.pack(side='left', expand=True)
         stage_labels.append(label)
 
     # Return the control functions
@@ -76,7 +53,7 @@ def create_navigation(parent):
 # Main application window
 if __name__ == "__main__":
     app = CTk()
-    app.title("Responsive Progress Bar Example")
+    app.title("Progress Bar")
     app.geometry("600x150")
 
     next_stage, prev_stage = create_navigation(app)
