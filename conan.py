@@ -57,7 +57,7 @@ def main():
     clear_screen()
     
     continue_processing = {"status": True}
-
+    
     while continue_processing["status"]:
         fitted_drop_data = DropData()
         """
@@ -126,10 +126,13 @@ def quit_(root):
 
 if __name__ == '__main__':
     main()
+    """
     root = tk.Tk()
     # quit button
     buttonFont = tkFont.Font(family='Helvetica', size=48, weight='bold') #This isn't working for some reason (??)
     quit_button = tk.Button(master=root, font=buttonFont,text='Quit',height=4,width=15,
                             command=lambda: quit_(root),bg='blue',fg='white',activeforeground='white',activebackground='red')
     quit_button.pack()
+    
     root.mainloop()
+    """

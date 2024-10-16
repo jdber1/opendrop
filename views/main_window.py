@@ -8,7 +8,7 @@ import customtkinter as ctk
 class MainWindow(ctk.CTk):
     def __init__(self, continue_processing, open_ift_window, open_ca_window):
         super().__init__()
-        self.title("Main Window")
+        self.title("OpenDrop2")
         self.geometry("800x400")
 
         self.continue_processing = continue_processing
@@ -66,5 +66,4 @@ class MainWindow(ctk.CTk):
         
     def close_window(self):
         self.continue_processing["status"] = False
-        print(self.continue_processing)
         self.destroy()

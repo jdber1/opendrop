@@ -47,12 +47,6 @@ class FunctionWindow(CTk):
         self.stages = list(Stage)
         self.current_stage = Stage.ACQUISITION
 
-        def on_exit():
-            sys.exit(0)
-
-        # Bind the window close button (X) to the on_exit function
-        self.protocol("WM_DELETE_WINDOW", on_exit)
-
         self.mainloop()  # Start the main loop
 
     def widgets(self, function_type, user_input_data, fitted_drop_data):
@@ -78,7 +72,6 @@ class FunctionWindow(CTk):
         # Add navigation buttons to the button frame
         self.back_button = CTkButton(
             self.button_frame, text="Back", command=lambda: self.back(function_type, user_input_data))
-        self.back_button.pack(side="left", padx=10, pady=10)
 
         self.next_button = CTkButton(
             self.button_frame, text="Next", command=lambda: self.next(function_type, user_input_data, fitted_drop_data))
@@ -93,6 +86,7 @@ class FunctionWindow(CTk):
         self.prev_stage()
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
+            self.back_button.pack_forget()
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_acquisition_frame.pack(fill="both", expand=True)
                 self.ift_preparation_frame.pack_forget()
@@ -125,9 +119,12 @@ class FunctionWindow(CTk):
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
             if self.check_import(user_input_data):
+
+                self.back_button.pack(side="left", padx=10, pady=10)
+                self.next_stage()
+
                 # user have selected at least one file
                 if function_type == FunctionType.PENDANT_DROP:
-                    self.next_stage()
                     self.ift_acquisition_frame.pack_forget()
 
                     # Initialise Preparation frame
@@ -135,7 +132,6 @@ class FunctionWindow(CTk):
                     self, user_input_data, fg_color=self.FG_COLOR)
                     self.ift_preparation_frame.pack(fill="both", expand=True)
                 else:
-                    self.next_stage()
                     self.ca_acquisition_frame.pack_forget()
 
                     # Initialise Preparation frame
@@ -162,6 +158,7 @@ class FunctionWindow(CTk):
                 # Show a single pop-up message with all validation messages
                 messagebox.showinfo("Missing: \n", all_messages)
             else:
+                self.next_stage()
 
                 if function_type == FunctionType.PENDANT_DROP:
                     self.ift_preparation_frame.pack_forget()
