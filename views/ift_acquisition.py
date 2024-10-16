@@ -8,6 +8,7 @@ from utils.validators import *
 from utils.config import *
 from .component.ctk_input_popup import CTkInputPopup
 from .component.ctk_table_popup import CTkTablePopup
+from .component.option_menu import OptionMenu
 
 PATH_TO_SCRIPT = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), '..')
@@ -106,7 +107,7 @@ class IftAcquisition(CTkFrame):
         self.setup_numberic_entry_pair(self.frame_interval_frame, "Frame Intervals:", self.frame_interval_var)
 
     def setup_component_label(self, frame, text):
-        label = CTkLabel(frame, text=text, font=("Roboto", 16, "bold"), width=150, anchor="w")
+        label = CTkLabel(frame, text=text, width=150, anchor="w")
         label.pack(side="left")
 
     def setup_numberic_entry(self, frame, variable):

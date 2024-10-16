@@ -1,8 +1,5 @@
 import os
 
-IMAGE_EXTENSION = '.png'
-
-BACKGROUND_COLOR = 'gray90'
 VERSION = '1.0'
 
 AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"] 
