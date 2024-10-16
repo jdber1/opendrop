@@ -1,10 +1,11 @@
 from customtkinter import *
 import os
 from tkinter import filedialog, messagebox
-from PIL import ImageTk, Image
+from PIL import Image
 
 from utils.image_handler import ImageHandler
 from utils.validators import *
+from utils.config import *
 from .component.ctk_input_popup import CTkInputPopup
 from .component.ctk_table_popup import CTkTablePopup
 
@@ -122,21 +123,10 @@ class IftAcquisition(CTkFrame):
     def select_files(self):
         # Clear previous images
         self.images_frame.destroy()
-        
-        # Filter out None or invalid file types
-        filetypes = [
-            ("Image Files", "*.png"),
-            ("Image Files", "*.jpg"),
-            ("Image Files", "*.jpeg"),
-            ("Image Files", "*.gif"),
-            ("Image Files", "*.bmp"),
-            ("All Files", "*.*")
-        ]
-
-        
+  
         self.user_input_data.import_files = filedialog.askopenfilenames(
             title="Select Files",
-            filetypes=filetypes,
+            filetypes=IMAGE_TYPE,
             initialdir=PATH_TO_SCRIPT
         )
 
@@ -158,37 +148,37 @@ class IftAcquisition(CTkFrame):
             self.images_frame = CTkFrame(self)
             self.images_frame.pack(pady=10)
 
-            self.initialize_image_display()
+            self.initialize_image_display(self.images_frame)
         else:
             self.frame_interval_frame.pack_forget()
             self.choose_files_button.configure(text="Choose File(s)")  # Reset if no files were chosen
             messagebox.showinfo("No Selection", "No files were selected.")
 
-    def initialize_image_display(self):
+    def initialize_image_display(self, frame):
         """Initialize the image display area."""
-        self.image_label = CTkLabel(self.images_frame, text="", fg_color="lightgrey", width=400, height=300)
+        self.image_label = CTkLabel(frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack()
 
         file_name = os.path.basename(self.user_input_data.import_files[self.current_index])
-        self.name_label = CTkLabel(self.images_frame, text=file_name, font=("Arial", 10))
+        self.name_label = CTkLabel(frame, text=file_name, font=("Arial", 10))
         self.name_label.pack()
 
-        self.image_navigation_frame = CTkFrame(self.images_frame)
+        self.image_navigation_frame = CTkFrame(frame)
         self.image_navigation_frame.pack(pady=20)
 
         self.prev_button = CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)
-        self.prev_button.pack(side="left", padx=10)
+        self.prev_button.pack(side="left", padx=5, pady=5)
 
         self.index_entry = CTkEntry(self.image_navigation_frame, width=5)
-        self.index_entry.pack(side="left")
+        self.index_entry.pack(side="left", padx=5, pady=5)
         self.index_entry.bind("<Return>", lambda event: self.update_index_from_entry())
         self.index_entry.insert(0, str(self.current_index + 1))
 
         self.navigation_label = CTkLabel(self.image_navigation_frame, text=f" of {self.user_input_data.number_of_frames}", font=("Arial", 12))
-        self.navigation_label.pack(side="left")
+        self.navigation_label.pack(side="left", padx=5, pady=5)
 
         self.next_button = CTkButton(self.image_navigation_frame, text=">", command=lambda: self.change_image(1), width=3)
-        self.next_button.pack(side="left", padx=10)
+        self.next_button.pack(side="left", padx=5, pady=5)
 
         self.load_image(self.user_input_data.import_files[self.current_index])
 

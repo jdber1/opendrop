@@ -26,7 +26,7 @@ class FunctionWindow(CTk):
         super().__init__()  # Call the parent class constructor
         self.FG_COLOR = "lightblue"
         self.title(function_type.value)
-        self.geometry("1280x720")
+        self.geometry("1080x720")
         self.configure(fg_color=self.FG_COLOR)
 
         user_input_data.screen_resolution = [

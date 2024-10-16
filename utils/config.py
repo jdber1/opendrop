@@ -32,3 +32,11 @@ ARCLENGTH_TOL = 1.e-6
 MAXIMUM_ARCLENGTH_STEPS = 10
 NEEDLE_TOL = 1.e-4
 NEEDLE_STEPS = 20
+
+IMAGE_TYPE = [
+            ("Image Files", "*.png"),
+            ("Image Files", "*.jpg"),
+            ("Image Files", "*.jpeg"),
+            ("Image Files", "*.gif"),
+            ("Image Files", "*.bmp")
+        ]
