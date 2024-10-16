@@ -16,6 +16,7 @@ from .output_page import OutputPage
 from modules.ca_data_processor import CaDataProcessor
 from utils.enums import *
 
+from views.helper.theme import get_system_appearance, DARK_MODE, LIGHT_MODE
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm
 
 def call_user_input(function_type, user_input_data, fitted_drop_data):
@@ -24,13 +25,21 @@ def call_user_input(function_type, user_input_data, fitted_drop_data):
 class FunctionWindow(CTk):
     def __init__(self, function_type, user_input_data, fitted_drop_data):
         super().__init__()  # Call the parent class constructor
-        self.FG_COLOR = "lightblue"
         self.title(function_type.value)
         self.geometry("1080x720")
+
+        if get_appearance_mode() == LIGHT_MODE:
+            self.FG_COLOR = "lightblue"
+        else:
+            self.FG_COLOR = self.cget("fg_color")
+
         self.configure(fg_color=self.FG_COLOR)
 
         user_input_data.screen_resolution = [
             self.winfo_screenwidth(), self.winfo_screenheight()]
+        # temp
+        user_input_data.save_images_boole = False
+        user_input_data.create_folder_boole = False
         
         self.widgets(function_type, user_input_data, fitted_drop_data)
 

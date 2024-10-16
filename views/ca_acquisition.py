@@ -1,5 +1,4 @@
 from customtkinter import *
-import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image
 
@@ -21,10 +20,6 @@ class CaAcquisition(CTkFrame):
         self.image_handler = ImageHandler()
 
         self.grid_rowconfigure(0, weight=1)
-
-        # temp
-        self.user_input_data.save_images_boole = False
-        self.user_input_data.create_folder_boole = False
 
         self.input_fields_frame = CTkFrame(self)
         self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(

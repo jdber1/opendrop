@@ -15,13 +15,7 @@ class FloatCombobox():
             self.text_variable.trace_add("write", callback)
 
         self.float_variable = 0.0
-
-        #vcmd_float = (parent.register(validate_float),
-        #              '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        #self.combobox = ttk.Combobox(
-        #    frame, textvariable=self.text_variable, validate='key', validatecommand=vcmd_float)
         
-        # CTkComboBox doesn't support manual entry
         self.combobox = ctk.CTkComboBox(
             frame, variable=self.text_variable, values=options_list)
         self.combobox.configure(width=width_specify, state=state_specify)
