@@ -61,6 +61,9 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     self.pixel_mm = FloatEntry(
         self, input_fields_frame, "Pixel to mm Ratio:", lambda *args: update_pixel_mm(*args), rw=5
     )
+    # Configure grid columns in the input fields frame
+    input_fields_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
+    
     return user_input_frame
 
 # ift [CheckList Select]

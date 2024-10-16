@@ -56,8 +56,8 @@ class FunctionWindow(CTk):
 
     def widgets(self, function_type, user_input_data, fitted_drop_data):
         # Create the navigation bar (progress bar style)
-        self.navigation_frame = create_navigation(self)
-        self.navigation_frame.pack(fill="x", pady=10)
+        self.next_stage, self.prev_stage = create_navigation(self)
+        
 
         # Initialise frame for first stage
         self.ift_acquisition_frame = IftAcquisition(
@@ -89,6 +89,7 @@ class FunctionWindow(CTk):
 
     def back(self, function_type, user_input_data):
         self.update_stage(Move.Back.value)
+        self.prev_stage()
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
             if function_type == FunctionType.PENDANT_DROP:
@@ -125,6 +126,7 @@ class FunctionWindow(CTk):
             if self.check_import(user_input_data):
                 # user have selected at least one file
                 if function_type == FunctionType.PENDANT_DROP:
+                    self.next_stage()
                     self.ift_acquisition_frame.pack_forget()
 
                     # Initialise Preparation frame
@@ -132,6 +134,7 @@ class FunctionWindow(CTk):
                     self, user_input_data, fg_color=self.FG_COLOR)
                     self.ift_preparation_frame.pack(fill="both", expand=True)
                 else:
+                    self.next_stage()
                     self.ca_acquisition_frame.pack_forget()
 
                     # Initialise Preparation frame
@@ -160,7 +163,7 @@ class FunctionWindow(CTk):
                 messagebox.showinfo("Missing: \n", all_messages)
             else:
                 print("All required fields are filled.")
-
+                self.next_stage()
                 if function_type == FunctionType.PENDANT_DROP:
                     self.ift_preparation_frame.pack_forget()
                     self.ift_analysis_frame = IftAnalysis(
@@ -178,6 +181,7 @@ class FunctionWindow(CTk):
                 # Initialise Analysis frame
                 
         elif self.current_stage == Stage.OUTPUT:
+            self.next_stage()
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_analysis_frame.pack_forget()
             else:
