@@ -16,7 +16,7 @@ class IftPreparation(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=1)  # Right column for ImageApp
 
         # Create the frame for organizing input fields on the left with a background color
-        self.input_fields_frame = ctk.CTkFrame(self, fg_color="orange")
+        self.input_fields_frame = ctk.CTkFrame(self)
         self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(10, 0))  # Left side for input fields
 
         # Create a frame for the right side image processing
