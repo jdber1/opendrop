@@ -16,6 +16,7 @@ class CaAcquisition(CTkFrame):
         self.user_input_data.save_images_boole = False
         self.user_input_data.create_folder_boole = False
 
+        self.setup_image_source_frame()
         self.setup_choose_files_frame()
 
         self.frame_interval_frame = CTkFrame(self, fg_color="transparent")
@@ -38,6 +39,40 @@ class CaAcquisition(CTkFrame):
             self, image_acquisition_frame, "Number of frames:", None, rw=3, cl=0, pdx=10)
         self.wait_time = IntegerEntry(
             self, image_acquisition_frame, "Wait time (s):", self.update_wait_time, rw=4, cl=0, pdx=10)
+
+    def setup_image_source_frame(self):
+        """Set up the image source frame and its components."""
+        self.image_source_frame = CTkFrame(self, fg_color="transparent")
+        self.image_source_frame.grid(pady=(20, 5))
+        self.setup_component_label(self.image_source_frame, "Image Source: ")
+        self.image_source = StringVar(value=IMAGE_SOURCE_OPTIONS[0])
+        self.option_menu = CTkOptionMenu(self.image_source_frame, 
+                                              variable=self.image_source, 
+                                              values=IMAGE_SOURCE_OPTIONS,
+                                              command=self.show_image_source_frame)
+        self.option_menu.grid()
+
+    def show_image_source_frame(self, selection):
+        """Display the corresponding frame based on the selected option."""
+        # Clear previous frames
+        """
+        for widget in self.winfo_children():
+            if isinstance(widget, CTkFrame) and widget != self.image_source_frame:
+                widget.destroy()
+
+
+        if self.user_input_data.image_source != selection:
+            self.user_input_data.import_files = None
+            self.user_input_data.number_of_frames = None
+
+        if selection == File_Source_Options[0]:
+            self.setup_filesystem_frame()
+        elif selection == File_Source_Options[1]:
+            self.setup_cv2_videocapture_frame()
+        elif selection == File_Source_Options[2]:
+            self.setup_genlcam_frame()
+        """
+        self.user_input_data.image_source = selection
 
     def update_image_source(self, *args):
         self.user_input_data.image_source = self.image_source.get_value()

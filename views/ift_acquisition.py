@@ -25,7 +25,7 @@ class IftAcquisition(CTkFrame):
         self.frame_interval_var = StringVar()
         self.frame_interval_var.trace_add("write", self.update_frame_interval)
 
-        self.selected_source = StringVar(value=File_Source_Options[0])
+        self.image_source = StringVar(value=File_Source_Options[0])
 
         self.cv2_capture_num_var = StringVar(value=1)
         self.cv2_capture_num_var.trace_add("write", self.update_cv2_capture_num)
@@ -44,9 +44,9 @@ class IftAcquisition(CTkFrame):
         self.image_source_frame.pack(pady=(20, 5))
         self.setup_component_label(self.image_source_frame, "Image Source: ")
         self.option_menu = CTkOptionMenu(self.image_source_frame, 
-                                              variable=self.selected_source, 
+                                              variable=self.image_source, 
                                               values=File_Source_Options,
-                                              command=self.show_selected_source_frame)
+                                              command=self.show_image_source_frame)
         self.option_menu.pack(side="left")
 
     def setup_choose_files_frame(self):
@@ -255,7 +255,7 @@ class IftAcquisition(CTkFrame):
     def update_genlcam_capture_num(self, *args):
         self.user_input_data.genlcam_capture_num = self.genlcam_capture_num_var.get()
     
-    def show_selected_source_frame(self, selection):
+    def show_image_source_frame(self, selection):
         """Display the corresponding frame based on the selected option."""
         # Clear previous frames
         for widget in self.winfo_children():
