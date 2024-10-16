@@ -7,7 +7,8 @@ DROP_ID_OPTIONS = ["Automated", "User-selected"]
 THRESHOLD_OPTIONS = ["Automated", "User-selected"]
 BASELINE_OPTIONS = ["Automated", "User-selected"]
 NEEDLE_OPTIONS = ['0.7176', '1.270', '1.651']
-IMAGE_SOURCE_OPTIONS = ["Flea3", "USB camera", "Local images"]
+FILE_SOURCE_OPTIONS_CA = ["Local images", "Flea3", "USB camera"]
+FILE_SOURCE_OPTIONS_IFT = ["Local images", "cv2.VideoCapture", "GenlCam"]
 EDGEFINDER_OPTIONS = ["OpenCV", "Subpixel", "Both"]
 
 PATH_TO_SCRIPT = os.path.join(

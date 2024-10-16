@@ -31,7 +31,7 @@ class CaAcquisition(CTkFrame):
         image_acquisition_frame.grid_columnconfigure(2, weight=1)
 
         self.image_source = OptionMenu(self, image_acquisition_frame, "Image source:",
-                                            IMAGE_SOURCE_OPTIONS, self.update_image_source, rw=0, default_value=IMAGE_SOURCE_OPTIONS[2])
+                                            FILE_SOURCE_OPTIONS_CA, self.update_image_source, rw=0)
 
         self.setup_choose_files_frame(image_acquisition_frame)
 
@@ -45,15 +45,15 @@ class CaAcquisition(CTkFrame):
         
         self.images_frame = CTkFrame(self)
 
-    def update_image_source(self, *args):
-        image_source = self.image_source.get_value()
-        if image_source == IMAGE_SOURCE_OPTIONS[2]:
+    def update_image_source(self, selection):
+        print(selection)
+        if selection == FILE_SOURCE_OPTIONS_CA[0]:
+            # local images
             self.choose_files_button.configure(state="normal")
-            state="normal"
         else:
             self.choose_files_button.configure(state="disabled")
 
-        self.user_input_data.image_source = self.image_source.get_value()
+        self.user_input_data.image_source = selection
 
     def update_wait_time(self, *args):
         self.user_input_data.wait_time = self.wait_time.get_value()

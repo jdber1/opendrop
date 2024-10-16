@@ -24,9 +24,7 @@ MAX_IMAGE_TO_SCREEN_RATIO = 0.8
 def set_drop_region(experimental_drop, experimental_setup):
     # select the drop and needle regions in the image
     screen_size = experimental_setup.screen_resolution
-    print(screen_size)
     image_size = experimental_drop.image.shape
-    print(image_size)
     scale = set_scale(image_size, screen_size)
     screen_position = set_screen_position(screen_size)
     if experimental_setup.drop_ID_method == "Automated":

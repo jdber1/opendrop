@@ -41,6 +41,7 @@ def save_image(experimental_drop, experimental_setup, frame_number):
 # image_source = 2 : image on computer
 def import_from_source(experimental_drop, experimental_setup, frame_number):
     image_source = experimental_setup.image_source
+    print(image_source)
     # from Flea3 camera
     if image_source == "Flea3":
         image_from_Flea3(experimental_drop)

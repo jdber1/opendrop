@@ -12,14 +12,13 @@ class OptionMenu():
         
         # Initialize StringVar and set default value if provided
         self.text_variable = ctk.StringVar(value=default_value if default_value in options_list else options_list[0])
-
-        if callback:
-            self.text_variable.trace_add("write", callback)
         
         self.optionmenu = ctk.CTkOptionMenu(frame, 
                                         variable=self.text_variable, 
                                         values=options_list,
-                                        width=width_specify)
+                                        width=width_specify,
+                                        command=callback)
+        
         self.optionmenu.grid(row=rw, column=1, sticky="w", padx=padx, pady=pady)
 
     def get_value(self):
