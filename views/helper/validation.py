@@ -51,7 +51,7 @@ def validate_user_input_data_cm(user_input_data):
 
     """
     
-    if user_input_data.drop_ID_method != 'Automated' and user_input_data.threshold_value is None:
+    if user_input_data.threshold_method != 'Automated' and user_input_data.threshold_value is None:
         messages.append("threshold_value is required.")
 
     if not any(user_input_data.analysis_methods_ca.values()):
