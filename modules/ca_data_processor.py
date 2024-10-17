@@ -38,6 +38,8 @@ class CaDataProcessor:
 
         #get_image(raw_experiment, user_input_data, -1) #is this needed?
 
+        self.output = []
+
         for i in range(n_frames):
             print("\nProcessing frame %d of %d..." % (i+1, n_frames))
             input_file = user_input_data.import_files[i]
@@ -51,9 +53,6 @@ class CaDataProcessor:
 
             if i == 0:
                 extracted_data.initial_image_time = raw_experiment.time
-                # filename = user_input_data.filename[:-4] + '_' + user_input_data.time_string + ".csv"
-                filename = "Extracted_data" + '_' + user_input_data.time_string + ".csv"
-                # export_filename = os.path.join(user_input_data.directory_string, filename)
 
             set_surface_line(raw_experiment, user_input_data) #fits performed here if baseline_method is User-selected
 
@@ -97,6 +96,11 @@ class CaDataProcessor:
                     print('    ',extracted_data.contact_angles[key1][key2])
                     print()
 
-            extracted_data.export_data(input_file,filename,i)
+            self.output.append(extracted_data)
 
-            callback(extracted_data)
+            if callback:
+                callback(extracted_data)
+
+    def save_result(self, input_file, output_directory, filename):
+        for index, extracted_data in enumerate(self.output):
+            extracted_data.export_data(input_file, output_directory, filename, index)

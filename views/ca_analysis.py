@@ -55,7 +55,7 @@ class CaAnalysis(CTkFrame):
                 row_data.append(cell_label)  # Store reference to the cell label
             self.table_data.append(row_data)
 
-        self.table_data[len(self.output)][0].configure(text="PROCESSING...")
+        self.table_data[len(self.output)][1].configure(text="PROCESSING...")
 
     def receive_output(self , extracted_data):
         self.output.append(extracted_data)
@@ -90,7 +90,7 @@ class CaAnalysis(CTkFrame):
         display_frame = CTkFrame(frame)
         display_frame.grid(sticky="nsew", padx=15, pady=(10, 0))
 
-        self.image_label = CTkLabel(display_frame, text="", fg_color="lightgrey")
+        self.image_label = CTkLabel(display_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.grid(padx=10, pady=(10, 5))
 
         file_name = os.path.basename(self.user_input_data.import_files[self.current_index])

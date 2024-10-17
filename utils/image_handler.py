@@ -26,8 +26,6 @@ class ImageHandler:
         return None
     
     def get_fitting_dimensions(self, original_width, original_height, max_width=400, max_height=300):
-        aspect_ratio = original_width / original_height
-
         # Initialize new dimensions
         new_width = original_width
         new_height = original_height

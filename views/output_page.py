@@ -7,6 +7,8 @@ class OutputPage(ctk.CTkFrame):
         super().__init__(parent)
         self.controller = controller
 
+        self.user_input_data = user_input_data
+
         # Set up the grid configuration for the entire frame
         self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -33,12 +35,17 @@ class OutputPage(ctk.CTkFrame):
         filename_label = ctk.CTkLabel(
             output_frame, text="Filename:", anchor='w')
         filename_label.grid(row=2, column=0, sticky='w', padx=10, pady=5)
+
+        self.filename_var = ctk.StringVar()
+        self.filename_var.trace_add("write", self.on_filename_change)
+
         self.filename_entry = ctk.CTkEntry(output_frame, width=300)
         self.filename_entry.grid(row=2, column=1, padx=10, pady=5)
 
         # Figure Section
         figure_frame = ctk.CTkFrame(self)
-        figure_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
+        # hide this for now
+        #figure_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
 
         figure_label = ctk.CTkLabel(
             figure_frame, text="Figure", font=ctk.CTkFont(size=14, weight="bold"))
@@ -67,23 +74,14 @@ class OutputPage(ctk.CTkFrame):
         directory = filedialog.askdirectory()
         if directory:
             self.location_entry.insert(0, directory)
-
-    def save_output(self):
-        location = self.location_entry.get()
-        filename = self.filename_entry.get()
-        if not location or not filename:
-            messagebox.showerror(
-                "Error", "Please specify a location and filename.")
-            return
-
-        # Simulate a delay to mimic saving process (3 seconds here)
-        self.after(3000, self.show_saved_status)
-
-    def show_saved_status(self):
-        # Update the status to "Saved!" and keep the style
-        messagebox.showinfo("Success", "File saved successfully!")
+            self.user_input_data.output_directory = directory
+            print(directory)
 
     def update_plot_summary(self):
         selected_count = sum(var.get() == "on" for var in self.check_vars)
         self.plot_summary_label.configure(
             text=f"{selected_count} plots selected")
+        
+    def on_filename_change(self, *args):
+        self.user_input_data.filename = self.filename_var.get()
+

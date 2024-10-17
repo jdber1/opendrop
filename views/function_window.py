@@ -15,8 +15,9 @@ from .output_page import OutputPage
 
 from modules.ca_data_processor import CaDataProcessor
 from utils.enums import *
+from modules.ExtractData import ExtractedData
 
-from views.helper.theme import get_system_appearance, DARK_MODE, LIGHT_MODE
+from views.helper.theme import LIGHT_MODE
 
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm
 
@@ -35,6 +36,8 @@ class FunctionWindow(CTk):
             self.FG_COLOR = self.cget("fg_color")
 
         self.configure(fg_color=self.FG_COLOR)
+
+        self.ca_processor = CaDataProcessor()
 
         user_input_data.screen_resolution = [
             self.winfo_screenwidth(), self.winfo_screenheight()]
@@ -79,7 +82,7 @@ class FunctionWindow(CTk):
 
         # Add save button for OutputPage (initially hidden)
         self.save_button = CTkButton(
-            self.button_frame, text="Save", command=self.save_output)
+            self.button_frame, text="Save", command=lambda: self.save_output(user_input_data))
 
     def back(self, function_type, user_input_data):
         self.update_stage(Move.Back.value)
@@ -169,8 +172,7 @@ class FunctionWindow(CTk):
                         self, user_input_data, fg_color=self.FG_COLOR)
                     self.ca_analysis_frame.pack(fill="both", expand=True)
 
-                    processor = CaDataProcessor()
-                    processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
+                    self.ca_processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
 
                 # Initialise Analysis frame
                 
@@ -191,9 +193,17 @@ class FunctionWindow(CTk):
             self.next_button.pack_forget()
             self.save_button.pack(side="right", padx=10, pady=10)
 
-    def save_output(self):
-        # Implement the save logic here
-        print("Output saved!")
+    def save_output(self, user_input_data):
+        # filename = user_input_data.filename[:-4] + '_' + user_input_data.time_string + ".csv"
+        if user_input_data.filename:
+            filename = user_input_data.filename + '_' + user_input_data.time_string + ".csv"
+        else:
+            filename = "Extracted_data" + '_' + user_input_data.time_string + ".csv"
+        # export_filename = os.path.join(user_input_data.directory_string, filename)
+        self.ca_processor.save_result(user_input_data.import_files, user_input_data.output_directory, filename)
+
+        messagebox.showinfo("Success", "File saved successfully!")
+        self.destroy()
     
     def update_stage(self, direction):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]

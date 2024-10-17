@@ -18,7 +18,7 @@ class ExtractedData(object):
         # build the time-IFT-volume-area array used in the plotting function
         return [self.time[i], self.gamma_IFT_mN[i], self.volume[i], self.area[i]]
 
-    def export_data(self, input_file,filename,i):
+    def export_data(self, input_file, location, filename, i):
 
         # header and comment not supported for version number < 1.7
         # this is a hack routine to check this...
@@ -42,8 +42,11 @@ class ExtractedData(object):
         array = np.array(out)
         array = array.reshape(1, array.shape[0])
 
-        filename = './outputs/'+filename
-        with open(filename, 'a') as f:
+        if not location:
+            location = './outputs/'
+
+        output_file = location + '/' + filename
+        with open(output_file, 'a') as f:
             if i==0:
                 f.write(string+'\n')
             #for val in array[0]:
@@ -52,7 +55,7 @@ class ExtractedData(object):
             f.write('\n')
         if 0:
             try:
-                f = open(filename,'a')
+                f = open(output_file,'a')
                 np.savetxt(f, self.output_data(input_file,i), delimiter=',', fmt='%10.5f', header=self.header_string(i), comments='')
                 f.close()
             except:
