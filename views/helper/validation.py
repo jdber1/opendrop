@@ -1,7 +1,7 @@
 # frame_interval
 def validate_frame_interval(user_input_data):
     print(user_input_data.import_files)
-    if len(user_input_data.import_files) != 0:
+    if len(user_input_data.import_files) > 1:
         if user_input_data.frame_interval is None:
             return False
     return True
