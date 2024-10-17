@@ -6,14 +6,13 @@ class OutputPage(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, controller):
         super().__init__(parent)
         self.controller = controller
-        self.configure(fg_color='white')
 
         # Set up the grid configuration for the entire frame
         self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # Output Data Location Section
-        output_frame = ctk.CTkFrame(self, fg_color='lightgray')
+        output_frame = ctk.CTkFrame(self)
         output_frame.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
         # Output Location Label inside the gray frame (output_frame)
@@ -38,7 +37,7 @@ class OutputPage(ctk.CTkFrame):
         self.filename_entry.grid(row=2, column=1, padx=10, pady=5)
 
         # Figure Section
-        figure_frame = ctk.CTkFrame(self, fg_color='lightgray')
+        figure_frame = ctk.CTkFrame(self)
         figure_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
 
         figure_label = ctk.CTkLabel(
@@ -47,7 +46,7 @@ class OutputPage(ctk.CTkFrame):
 
         # Scrollable area for plots
         scrollable_frame = ctk.CTkScrollableFrame(
-            figure_frame, fg_color='white', height=150)
+            figure_frame, height=150)
         scrollable_frame.pack(fill='both', expand=True, padx=10, pady=5)
 
         self.check_vars = []

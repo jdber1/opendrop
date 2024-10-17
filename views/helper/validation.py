@@ -36,35 +36,25 @@ def validate_user_input_data_ift(user_input_data):
 def validate_user_input_data_cm(user_input_data):
     """Validate the user input data and return messages for missing fields."""
     messages = []
-    print("validate_user_input_data_cm")
-    user_input_fields = user_input_data
 
     """
         # Ensure if drop region is chosen, it must not be None
-    if user_input_fields.drop_ID_method != 'Automated' and user_input_data.edgefinder is None:
+    if user_input_data.drop_ID_method != 'Automated' and user_input_data.edgefinder is None:
         messages.append("Please select drop_id_method")
 
     # Ensure if needle region is chosen, it must not be None
-    if user_input_fields.threshold_method != 'Automated' and user_input_data.edgefinder is None:
+    if user_input_data.threshold_method != 'Automated' and user_input_data.edgefinder is None:
         messages.append("Please select threshold_method")
 
-    if user_input_fields.baseline_method != 'Automated' and user_input_data.edgefinder is None:
+    if user_input_data.baseline_method != 'Automated' and user_input_data.edgefinder is None:
         messages.append("Please select baseline_method")
 
     """
     
-    if user_input_fields.drop_ID_method != 'Automated' and user_input_data.threshold_value is None:
+    if user_input_data.drop_ID_method != 'Automated' and user_input_data.threshold_value is None:
         messages.append("threshold_value is required.")
 
-    required_fields_method = {
-        'tangent_boole': "Tangent",
-        'second_deg_polynomial_boole': "Second Degree Polynomial",
-        'circle_boole': "Circle Fit",
-        'ellipse_boole': "Ellipse Fit",
-        'YL_boole': "Young Laplace Fit",
-        'ML_boole': "ML Model"
-    }
-    if not any(getattr(user_input_data, key) for key in required_fields_method):
+    if not any(user_input_data.analysis_methods_ca.values()):
         messages.append("At least one analysis method must be selected.")
 
     return messages

@@ -7,6 +7,8 @@ from scipy.integrate import odeint
 
 import numpy as np
 
+from utils.config import *
+
 class Tolerances(object):
     def __init__(self, delta_tol, gradient_tol, maximum_fitting_steps, objective_tol, arclength_tol, maximum_arclength_steps, needle_tol, needle_steps):
         self.DELTA_TOL = delta_tol
@@ -60,18 +62,13 @@ class ExperimentalSetup(object):
         self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
         self.analysis_method_fields = {}
         self.analysis_method_fields_cm = {}
+        self.analysis_methods_ca = {TANGENT_FIT: False, POLYNOMIAL_FIT: False, CIRCLE_FIT: False, ELLIPSE_FIT: False, YL_FIT: False, ML_MODEL: False}
         self.statistical_output = {}
         self.statistical_output_cm = {}
         self.ift_drop_region = None
         self.ift_needle_region = None
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
-        self.tangent_boole = False
-        self.second_deg_polynomial_boole = False
-        self.circle_boole = False
-        self.ellipse_boole = False
-        self.YL_boole = False
-        self.ML_boole = False
 
 class ExperimentalDrop(object):
     def __init__(self):

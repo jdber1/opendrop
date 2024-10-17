@@ -11,6 +11,16 @@ FILE_SOURCE_OPTIONS_CA = ["Local images", "Flea3", "USB camera"]
 FILE_SOURCE_OPTIONS_IFT = ["Local images", "cv2.VideoCapture", "GenlCam"]
 EDGEFINDER_OPTIONS = ["OpenCV", "Subpixel", "Both"]
 
+TANGENT_FIT = "tangent fit"
+POLYNOMIAL_FIT = "polynomial fit"
+CIRCLE_FIT = "circle fit"
+ELLIPSE_FIT = "ellipse fit"
+YL_FIT = "YL fit"
+ML_MODEL = "ML model"
+
+LEFT_ANGLE = 'left angle'
+RIGHT_ANGLE = 'right angle'
+
 PATH_TO_SCRIPT = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), '..')
 PATH_TO_FILE = os.path.join(os.path.dirname(

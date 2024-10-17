@@ -44,6 +44,12 @@ def get_system_appearance():
     else:
         return LIGHT_MODE  # Default to light mode for unknown systems
 
+def get_system_text_color():
+    if get_system_appearance() == DARK_MODE:
+        return 'white'
+    else:
+        return 'black'
+
 # Example usage
 if __name__ == "__main__":
     appearance = get_system_appearance()

@@ -15,7 +15,7 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto Bold", 16))
+    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -73,7 +73,7 @@ def create_plotting_checklist_ift(self,parent,user_input_data):
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(plotting_clist_frame, text="Statistical Output", font=("Roboto Bold", 16))
+    label = CTkLabel(plotting_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -95,7 +95,7 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     analysis_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(analysis_clist_frame, text="Statistical Output", font=("Roboto Bold", 16))
+    label = CTkLabel(analysis_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -115,7 +115,7 @@ def create_user_inputs_cm(self,parent,user_input_data):
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto Bold", 16))
+    label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")
 
     # Create a frame to hold all input fields
@@ -179,7 +179,7 @@ def create_plotting_checklist_cm(self, parent, user_input_data):
     plotting_clist_frame.grid(row=1, column=2, columnspan=1, sticky="wens", padx=15, pady=15)
 
     # Create a label for the checklist
-    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto Bold", 16))
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all checkbox fields
@@ -216,7 +216,7 @@ def create_analysis_checklist_cm(self, parent, user_input_data):
     analysis_clist_frame.grid(row=3, columnspan=4, sticky="wens", padx=15, pady=15)
 
     # Create a label for the analysis checklist
-    label = CTkLabel(analysis_clist_frame, text="Analysis methods", font=("Roboto Bold", 16))
+    label = CTkLabel(analysis_clist_frame, text="Analysis methods", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all checkbox fields
@@ -225,22 +225,22 @@ def create_analysis_checklist_cm(self, parent, user_input_data):
 
     # Define update functions for each checkbox
     def update_tangent_boole(*args):
-        user_input_data.tangent_boole = self.tangent_boole.get_value()
+        user_input_data.analysis_methods_ca[TANGENT_FIT] = self.tangent_boole.get_value()
 
     def update_second_deg_polynomial_boole(*args):
-        user_input_data.second_deg_polynomial_boole = self.second_deg_polynomial_boole.get_value()
+        user_input_data.analysis_methods_ca[POLYNOMIAL_FIT] = self.second_deg_polynomial_boole.get_value()
 
     def update_circle_boole(*args):
-        user_input_data.circle_boole = self.circle_boole.get_value()
+        user_input_data.analysis_methods_ca[CIRCLE_FIT] = self.circle_boole.get_value()
 
     def update_ellipse_boole(*args):
-        user_input_data.ellipse_boole = self.ellipse_boole.get_value()
+        user_input_data.analysis_methods_ca[ELLIPSE_FIT] = self.ellipse_boole.get_value()
 
     def update_YL_boole(*args):
-        user_input_data.YL_boole = self.YL_boole.get_value()
+        user_input_data.analysis_methods_ca[YL_FIT] = self.YL_boole.get_value()
 
     def update_ML_boole(*args):
-        user_input_data.ML_boole = self.ML_boole.get_value()
+        user_input_data.analysis_methods_ca[ML_MODEL] = self.ML_boole.get_value()
 
     # Create check buttons with the associated update methods
     self.tangent_boole = CheckButton(

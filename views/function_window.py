@@ -149,8 +149,6 @@ class FunctionWindow(CTk):
             elif function_type == FunctionType.CONTACT_ANGLE:
                 validation_messages = validate_user_input_data_cm(user_input_data)
             
-
-            # TO DO: implement the validation when function type is contact angle
             if validation_messages:
 
                 self.update_stage(Move.Back.value)

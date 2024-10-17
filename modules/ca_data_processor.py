@@ -5,6 +5,7 @@ from modules.read_image import get_image
 from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
 from modules.extract_profile import extract_drop_profile
 from utils.enums import *
+from utils.config import *
 from modules.fits import perform_fits
 
 import matplotlib.pyplot as plt
@@ -17,8 +18,11 @@ from tkinter import font as tkFont
 import timeit
 
 class CaDataProcessor:
-    def process_data(self, fitted_drop_data, user_input_data, callback):    
-        if user_input_data.ML_boole == True:
+    def process_data(self, fitted_drop_data, user_input_data, callback):
+
+        analysis_methods = dict(user_input_data.analysis_methods_ca)
+
+        if analysis_methods[ML_MODEL]:
             from modules.ML_model.prepare_experimental import prepare4model_v03, experimental_pred
             import tensorflow as tf
             tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR) # to minimise tf warnings
@@ -55,11 +59,13 @@ class CaDataProcessor:
 
             # these methods don't need tilt correction
             if user_input_data.baseline_method == "Automated":
-                if user_input_data.tangent_boole == True or user_input_data.second_deg_polynomial_boole == True or user_input_data.circle_boole == True or user_input_data.ellipse_boole == True:
-                    perform_fits(raw_experiment, tangent=user_input_data.tangent_boole, polynomial=user_input_data.second_deg_polynomial_boole, circle=user_input_data.circle_boole,ellipse=user_input_data.ellipse_boole)
+                if analysis_methods[TANGENT_FIT] or analysis_methods[POLYNOMIAL_FIT] or analysis_methods[CIRCLE_FIT] or analysis_methods[ELLIPSE_FIT]:
+                    perform_fits(raw_experiment, tangent=analysis_methods[TANGENT_FIT], 
+                                 polynomial=analysis_methods[POLYNOMIAL_FIT], circle=analysis_methods[CIRCLE_FIT],
+                                 ellipse=analysis_methods[ELLIPSE_FIT])
 
             # YL fit and ML model need tilt correction
-            if user_input_data.ML_boole == True or user_input_data.YL_boole == True:
+            if analysis_methods[ML_MODEL] or analysis_methods[YL_FIT]:
                 correct_tilt(raw_experiment, user_input_data)
                 extract_drop_profile(raw_experiment, user_input_data)
                 if user_input_data.baseline_method == "Automated":
@@ -69,15 +75,17 @@ class CaDataProcessor:
                 #raw_experiment.contour = extract_edges_CV(raw_experiment.cropped_image, threshold_val=raw_experiment.ret, return_thresholed_value=False)
                 #experimental_drop.drop_contour, experimental_drop.contact_points = prepare_hydrophobic(experimental_drop.contour)
 
-                if user_input_data.YL_boole == True:
+                if analysis_methods[YL_FIT]:
                     print('Performing YL fit...')
-                    perform_fits(raw_experiment, YL=user_input_data.YL_boole)
-                if user_input_data.ML_boole == True:
+                    perform_fits(raw_experiment, YL=analysis_methods[YL_FIT])
+                if analysis_methods[ML_MODEL]:
                     pred_ds = prepare4model_v03(raw_experiment.drop_contour)
                     ML_predictions, timings = experimental_pred(pred_ds, model)
-                    raw_experiment.contact_angles['ML model'] = {}
-                    raw_experiment.contact_angles['ML model']['angles'] = [ML_predictions[0,0],ML_predictions[1,0]]
-                    raw_experiment.contact_angles['ML model']['timings'] = timings
+                    raw_experiment.contact_angles[ML_MODEL] = {}
+                    # raw_experiment.contact_angles[ML_MODEL]['angles'] = [ML_predictions[0,0],ML_predictions[1,0]]
+                    raw_experiment.contact_angles[ML_MODEL][LEFT_ANGLE] = ML_predictions[0,0]
+                    raw_experiment.contact_angles[ML_MODEL][RIGHT_ANGLE] = ML_predictions[1,0]
+                    raw_experiment.contact_angles[ML_MODEL]['timings'] = timings
 
             extracted_data.contact_angles = raw_experiment.contact_angles # DS 7/6/21
 
