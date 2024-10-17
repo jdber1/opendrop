@@ -19,7 +19,7 @@ from modules.ExtractData import ExtractedData
 
 from views.helper.theme import LIGHT_MODE
 
-from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm
+from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
 
 def call_user_input(function_type, user_input_data, fitted_drop_data):
     FunctionWindow(function_type, user_input_data, fitted_drop_data)
@@ -121,30 +121,39 @@ class FunctionWindow(CTk):
         self.update_stage(Move.Next.value)
         # Handle the "Next" button functionality
         if self.current_stage == Stage.PREPARATION:
-            if self.check_import(user_input_data):
-
-                self.back_button.pack(side="left", padx=10, pady=10)
-                self.next_stage()
-
-                # user have selected at least one file
-                if function_type == FunctionType.PENDANT_DROP:
-                    self.ift_acquisition_frame.pack_forget()
-
-                    # Initialise Preparation frame
-                    self.ift_preparation_frame = IftPreparation(
-                    self, user_input_data, fg_color=self.FG_COLOR)
-                    self.ift_preparation_frame.pack(fill="both", expand=True)
-                else:
-                    self.ca_acquisition_frame.pack_forget()
-
-                    # Initialise Preparation frame
-                    self.ca_preparation_frame = CaPreparation(
-                    self, user_input_data, fg_color=self.FG_COLOR)
-                    self.ca_preparation_frame.pack(fill="both", expand=True) 
-            else:
+            # First check if the user has imported files
+            
+            if not self.check_import(user_input_data):
                 self.update_stage(Move.Back.value)
                 messagebox.showinfo("No Selection", "Please select at least one file.")
-        
+                return
+
+            # Then check if the frame interval is valid
+            if function_type == FunctionType.PENDANT_DROP:
+                print("pedent")
+                if not validate_frame_interval(user_input_data):
+                    self.update_stage(Move.Back.value)
+                    messagebox.showinfo("Missing", "Frame Interval is required.")
+                    return         
+            self.back_button.pack(side="left", padx=10, pady=10)
+            self.next_stage()
+
+            # user have selected at least one file
+            if function_type == FunctionType.PENDANT_DROP:
+                self.ift_acquisition_frame.pack_forget()
+
+                # Initialise Preparation frame
+                self.ift_preparation_frame = IftPreparation(
+                self, user_input_data, fg_color=self.FG_COLOR)
+                self.ift_preparation_frame.pack(fill="both", expand=True)
+            else:
+                self.ca_acquisition_frame.pack_forget()
+
+                # Initialise Preparation frame
+                self.ca_preparation_frame = CaPreparation(
+                self, user_input_data, fg_color=self.FG_COLOR)
+                self.ca_preparation_frame.pack(fill="both", expand=True) 
+
         elif self.current_stage == Stage.ANALYSIS:
             # Validate user input data
             if function_type == FunctionType.PENDANT_DROP:

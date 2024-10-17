@@ -1,3 +1,11 @@
+# frame_interval
+def validate_frame_interval(user_input_data):
+    print(user_input_data.import_files)
+    if len(user_input_data.import_files) != 0:
+        if user_input_data.frame_interval is None:
+            return False
+    return True
+
 def validate_user_input_data_ift(user_input_data):
         """Validate the user input data and return messages for missing fields."""
         messages = []
