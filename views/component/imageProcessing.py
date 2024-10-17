@@ -19,16 +19,18 @@ class ImageApp(ctk.CTkFrame):
         self.image_label = ctk.CTkLabel(
             self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
-
+        
         # Drop region button
         self.drop_region_button = ctk.CTkButton(
             self.main_frame, text="Set Drop Region", command=self.set_drop_region)
-        self.drop_region_button.pack(pady=5)
+        # hide it for now
+        #self.drop_region_button.pack(pady=5)
 
         # Needle region button
         self.needle_region_button = ctk.CTkButton(
             self.main_frame, text="Set Needle Region", command=self.set_needle_region)
-        self.needle_region_button.pack(pady=5)
+        # hide it for now
+        #self.needle_region_button.pack(pady=5)
 
         self.user_input_data = user_input_data
         # Load images from the directory
