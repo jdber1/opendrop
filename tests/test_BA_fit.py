@@ -8,7 +8,7 @@ import warnings
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from modules.BA_fit import *
 
-# 忽略 np.float 的废弃警告
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class TestBAFit(unittest.TestCase):
