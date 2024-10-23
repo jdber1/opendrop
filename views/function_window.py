@@ -50,19 +50,7 @@ class FunctionWindow(CTk):
         self.stages = list(Stage)
         self.current_stage = Stage.ACQUISITION
 
-        self.protocol("WM_DELETE_WINDOW", self.close_window)
-
         self.mainloop()  # Start the main loop
-
-    def close_window(self):
-        try:
-            print('closing!!!')
-            self.quit()
-            self.destroy()
-            print('closed')
-
-        except TclError as e:
-            print(f"Error: {e}")
 
     def widgets(self, function_type, user_input_data, fitted_drop_data):
         # Create the navigation bar (progress bar style)
