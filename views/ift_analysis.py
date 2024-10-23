@@ -117,3 +117,7 @@ class IftAnalysis(CTkFrame):
         toolbar = NavigationToolbar2Tk(canvas, parent)
         toolbar.update()
         canvas.draw()
+
+    def destroy(self):
+        plt.close('all')
+        return super().destroy()
