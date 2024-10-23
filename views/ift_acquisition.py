@@ -94,6 +94,7 @@ class IftAcquisition(CTkFrame):
         self.setup_numberic_entry_pair(self.frame_interval_frame, "Frame Intervals:", self.frame_interval_var)
 
     def setup_genlcam_frame(self):
+        self.setup_camera_frame()
         self.setup_capture_num_frame(self.genlcam_capture_num_var)
         self.frame_interval_frame = CTkFrame(self, fg_color="transparent")
         self.frame_interval_frame.pack()
