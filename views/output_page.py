@@ -3,9 +3,8 @@ from tkinter import filedialog, messagebox
 
 
 class OutputPage(ctk.CTkFrame):
-    def __init__(self, parent, user_input_data, controller):
-        super().__init__(parent)
-        self.controller = controller
+    def __init__(self, parent, user_input_data, **kwargs):
+        super().__init__(parent, **kwargs)
 
         self.user_input_data = user_input_data
 

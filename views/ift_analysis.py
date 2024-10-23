@@ -10,7 +10,6 @@ class IftAnalysis(CTkFrame):
         super().__init__(parent, **kwargs)
 
         self.user_input_data = user_input_data
-        self.pack(fill="both", expand=True)
 
         # Create tabs
         self.tab_view = CTkTabview(self)

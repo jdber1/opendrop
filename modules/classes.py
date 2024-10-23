@@ -58,7 +58,7 @@ class ExperimentalSetup(object):
         self.drop_region = None
         self.needle_region = None
         self.import_files = None
-        self.frame_interval = None
+        self.frame_interval = 0
         self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
         self.analysis_method_fields = {}
         self.analysis_method_fields_cm = {}

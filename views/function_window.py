@@ -1,5 +1,5 @@
 from customtkinter import *
-from tkinter import messagebox
+from tkinter import messagebox, TclError
 
 from .navigation import create_navigation
 
@@ -50,7 +50,19 @@ class FunctionWindow(CTk):
         self.stages = list(Stage)
         self.current_stage = Stage.ACQUISITION
 
+        self.protocol("WM_DELETE_WINDOW", self.close_window)
+
         self.mainloop()  # Start the main loop
+
+    def close_window(self):
+        try:
+            print('closing!!!')
+            self.quit()
+            self.destroy()
+            print('closed')
+
+        except TclError as e:
+            print(f"Error: {e}")
 
     def widgets(self, function_type, user_input_data, fitted_drop_data):
         # Create the navigation bar (progress bar style)
@@ -82,7 +94,7 @@ class FunctionWindow(CTk):
 
         # Add save button for OutputPage (initially hidden)
         self.save_button = CTkButton(
-            self.button_frame, text="Save", command=lambda: self.save_output(user_input_data))
+            self.button_frame, text="Save", command=lambda: self.save_output(function_type, user_input_data))
 
     def back(self, function_type, user_input_data):
         self.update_stage(Move.Back.value)
@@ -113,9 +125,9 @@ class FunctionWindow(CTk):
             
             self.output_frame.pack_forget()
 
-        # Show the next button and hide the save button when going back
-        self.next_button.pack(side="right", padx=10, pady=10)
-        self.save_button.pack_forget()
+            # Show the next button and hide the save button when going back
+            self.next_button.pack(side="right", padx=10, pady=10)
+            self.save_button.pack_forget()
 
     def next(self, function_type, user_input_data, fitted_drop_data):
         self.update_stage(Move.Next.value)
@@ -180,9 +192,8 @@ class FunctionWindow(CTk):
                         self, user_input_data, fg_color=self.FG_COLOR)
                     self.ca_analysis_frame.pack(fill="both", expand=True)
 
+                    # analysis the given input data and send the output to the ca_analysis_frame for display
                     self.ca_processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
-
-                # Initialise Analysis frame
                 
         elif self.current_stage == Stage.OUTPUT:
             self.next_stage()
@@ -192,8 +203,7 @@ class FunctionWindow(CTk):
                 self.ca_analysis_frame.pack_forget()
 
             # Initialise Output frame
-            self.output_frame = OutputPage(
-                self, user_input_data, controller=self)
+            self.output_frame = OutputPage(self, user_input_data)
             # Show the OutputPage
             self.output_frame.pack(fill="both", expand=True)
 
@@ -201,17 +211,22 @@ class FunctionWindow(CTk):
             self.next_button.pack_forget()
             self.save_button.pack(side="right", padx=10, pady=10)
 
-    def save_output(self, user_input_data):
-        # filename = user_input_data.filename[:-4] + '_' + user_input_data.time_string + ".csv"
-        if user_input_data.filename:
-            filename = user_input_data.filename + '_' + user_input_data.time_string + ".csv"
+    def save_output(self, function_type, user_input_data):
+        if function_type == FunctionType.PENDANT_DROP:
+            messagebox.showinfo("Messagebox", "TODO: save file")
+            self.destroy()
         else:
-            filename = "Extracted_data" + '_' + user_input_data.time_string + ".csv"
-        # export_filename = os.path.join(user_input_data.directory_string, filename)
-        self.ca_processor.save_result(user_input_data.import_files, user_input_data.output_directory, filename)
+            # filename = user_input_data.filename[:-4] + '_' + user_input_data.time_string + ".csv"
+            if user_input_data.filename:
+                filename = user_input_data.filename + '_' + user_input_data.time_string + ".csv"
+            else:
+                filename = "Extracted_data" + '_' + user_input_data.time_string + ".csv"
+            # export_filename = os.path.join(user_input_data.directory_string, filename)
+            self.ca_processor.save_result(user_input_data.import_files, user_input_data.output_directory, filename)
 
-        messagebox.showinfo("Success", "File saved successfully!")
-        self.destroy()
+            messagebox.showinfo("Success", "File saved successfully!")
+            self.destroy()
+        
     
     def update_stage(self, direction):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
