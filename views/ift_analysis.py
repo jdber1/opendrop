@@ -14,7 +14,7 @@ class IftAnalysis(CTkFrame):
 
         # Create tabs
         self.tab_view = CTkTabview(self)
-        self.tab_view.pack(fill="both", expand=True, padx=20, pady=20)
+        self.tab_view.pack(fill="both", expand=True)
 
         # Add "Results" and "Graphs" tabs
         self.tab_view.add("Results")

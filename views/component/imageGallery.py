@@ -12,13 +12,18 @@ class ImageGallery(ctk.CTkFrame):
         self.image_handler = ImageHandler()
 
         # Create main frame
-        self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
+        self.main_frame = ctk.CTkFrame(self, width=400, height=400)
+        self.main_frame.grid(row=0, column=0, sticky="nsew")
+
+        # Configure grid to make widgets resize with the window
+        self.grid_rowconfigure(0, weight=1)  # Allow row 0 (image) to grow
+        self.grid_columnconfigure(0, weight=1)  # Center widgets horizontally
 
         # Image display area
         self.image_label = ctk.CTkLabel(
-            self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
-        self.image_label.pack(pady=10)
+            self.main_frame, text="", fg_color="lightgrey")
+        self.image_label.grid(
+            row=0, column=0, columnspan=2, sticky="nsew")
 
         # Load images from the directory
         self.image_paths = import_files  # Load all images
@@ -27,15 +32,14 @@ class ImageGallery(ctk.CTkFrame):
         # Previous and Next buttons
         self.prev_button = ctk.CTkButton(
             self.main_frame, text="Previous", command=lambda: self.change_image(-1))
-        self.prev_button.pack(side="left", padx=20)
+        self.prev_button.grid(row=1, column=0, padx=20, sticky="w")
 
         self.next_button = ctk.CTkButton(
             self.main_frame, text="Next", command=lambda: self.change_image(1))
-        self.next_button.pack(side="right", padx=20)
+        self.next_button.grid(row=1, column=1, padx=20, pady=2, sticky="e")
 
         # Load the first image by default if available
         if self.image_paths:
-            # Load the first image by default
             self.load_image(self.image_paths[self.current_index])
 
     def load_images(self):
@@ -56,8 +60,10 @@ class ImageGallery(ctk.CTkFrame):
     def display_image(self):
         """Display the currently loaded image."""
         width, height = self.current_image.size
-        new_width, new_height = self.image_handler.get_fitting_dimensions(width, height)
-        self.tk_image = ctk.CTkImage(self.current_image, size=(new_width, new_height))
+        new_width, new_height = self.image_handler.get_fitting_dimensions(
+            width, height)
+        self.tk_image = ctk.CTkImage(
+            self.current_image, size=(new_width, new_height))
 
         self.image_label.configure(image=self.tk_image)
         # Keep a reference to avoid garbage collection
