@@ -85,7 +85,7 @@ class IftAnalysis(CTkFrame):
         # Create the figure and axis
         # width, height = self.image_frame.image_label.image.size
         fig, ax = plt.subplots(
-            figsize=(4, 3))
+            figsize=(4, 2))
         ax.plot([1, 2, 3], [2, 5, 10])  # Example data for the residuals
         ax.set_title('Residuals')
 

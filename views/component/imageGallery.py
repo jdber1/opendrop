@@ -19,6 +19,13 @@ class ImageGallery(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)  # Allow row 0 (image) to grow
         self.grid_columnconfigure(0, weight=1)  # Center widgets horizontally
 
+        self.main_frame.grid_rowconfigure(0, weight=1)  # Center image
+        self.main_frame.grid_rowconfigure(1, weight=0)  # Buttons below image
+        self.main_frame.grid_columnconfigure(
+            0, weight=1)  # Center horizontally
+        self.main_frame.grid_columnconfigure(
+            1, weight=1)  # Center horizontally
+
         # Image display area
         self.image_label = ctk.CTkLabel(
             self.main_frame, text="", fg_color="lightgrey")
@@ -31,11 +38,11 @@ class ImageGallery(ctk.CTkFrame):
 
         # Previous and Next buttons
         self.prev_button = ctk.CTkButton(
-            self.main_frame, text="Previous", command=lambda: self.change_image(-1))
+            self.main_frame, text="Previous", command=lambda: self.change_image(-1), width=80, height=25)
         self.prev_button.grid(row=1, column=0, padx=20, sticky="w")
 
         self.next_button = ctk.CTkButton(
-            self.main_frame, text="Next", command=lambda: self.change_image(1))
+            self.main_frame, text="Next", command=lambda: self.change_image(1), width=80, height=25)
         self.next_button.grid(row=1, column=1, padx=20, pady=2, sticky="e")
 
         # Load the first image by default if available
@@ -61,7 +68,7 @@ class ImageGallery(ctk.CTkFrame):
         """Display the currently loaded image."""
         width, height = self.current_image.size
         new_width, new_height = self.image_handler.get_fitting_dimensions(
-            width, height)
+            width, height, max_height=250)
         self.tk_image = ctk.CTkImage(
             self.current_image, size=(new_width, new_height))
 
