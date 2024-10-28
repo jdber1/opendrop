@@ -13,8 +13,6 @@ class MainWindow(ctk.CTk):
         self.geometry("800x400")
 
         self.continue_processing = continue_processing
-        self.open_ift_window = open_ift_window
-        self.open_ca_window = open_ca_window
 
         # Define a function to handle the SIGINT signal (Ctrl+C)
         def signal_handler(sig, frame):
@@ -59,8 +57,7 @@ class MainWindow(ctk.CTk):
     def create_button(self, frame, text, command, image_path, column):
         # Load the image for the button
         button_image = Image.open(image_path)
-        button_image = button_image.resize((50, 50), Image.LANCZOS)  # Resize as needed
-        button_photo = ImageTk.PhotoImage(button_image)
+        button_photo = ctk.CTkImage(button_image, size=(40, 40))
 
         # Create a CTkButton with image and text
         button = ctk.CTkButton(
@@ -77,8 +74,10 @@ class MainWindow(ctk.CTk):
         button.grid(row=0, column=column, padx=20)
 
     def run_function(self, func):
-        self.destroy()  # Close the main window
-        func()  # Execute the selected functionality
+        # TO DO: change the code to fix the warning
+        self.destroy()
+        func()
+        
         
 
     def show_info_popup(self):
@@ -92,8 +91,7 @@ class MainWindow(ctk.CTk):
     def display_image(self, image_path):
         # Load the image using PIL
         image = Image.open(image_path)
-        image = image.resize((300, 200), Image.LANCZOS)  # Resize image if necessary
-        photo = ImageTk.PhotoImage(image)
+        photo = ctk.CTkImage(image, size=(300, 200))
 
         # Create a CTkLabel to display the image
         image_label = ctk.CTkLabel(self, image=photo)

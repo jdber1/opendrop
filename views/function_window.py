@@ -86,7 +86,6 @@ class FunctionWindow(CTk):
 
     def back(self, function_type, user_input_data):
         self.update_stage(Move.Back.value)
-        self.prev_stage()
         # Go back to the previous screen
         if self.current_stage == Stage.ACQUISITION:
             self.back_button.pack_forget()
@@ -135,7 +134,6 @@ class FunctionWindow(CTk):
                     messagebox.showinfo("Missing", "Frame Interval is required.")
                     return         
             self.back_button.pack(side="left", padx=10, pady=10)
-            self.next_stage()
 
             # user have selected at least one file
             if function_type == FunctionType.PENDANT_DROP:
@@ -161,14 +159,11 @@ class FunctionWindow(CTk):
                 validation_messages = validate_user_input_data_cm(user_input_data)
             
             if validation_messages:
-
                 self.update_stage(Move.Back.value)
                 all_messages = "\n".join(validation_messages)
                 # Show a single pop-up message with all validation messages
                 messagebox.showinfo("Missing: \n", all_messages)
             else:
-                self.next_stage()
-
                 if function_type == FunctionType.PENDANT_DROP:
                     self.ift_preparation_frame.pack_forget()
                     self.ift_analysis_frame = IftAnalysis(
@@ -184,7 +179,6 @@ class FunctionWindow(CTk):
                     self.ca_processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
                 
         elif self.current_stage == Stage.OUTPUT:
-            self.next_stage()
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_analysis_frame.pack_forget()
             else:
@@ -218,6 +212,10 @@ class FunctionWindow(CTk):
     
     def update_stage(self, direction):
         self.current_stage = self.stages[(self.stages.index(self.current_stage) + direction) % len(self.stages)]
+        if direction == Move.Next.value:
+            self.next_stage()
+        elif direction == Move.Back.value:
+            self.prev_stage()
 
     def check_import(self, user_input_data):
         return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and len(user_input_data.import_files) > 0 and len(user_input_data.import_files) == user_input_data.number_of_frames

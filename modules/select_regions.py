@@ -16,6 +16,7 @@ from scipy import optimize # DS 7/6/21 - for least squares fit
 import tensorflow as tf # DS 9/6/21 - for loading ML model
 
 from .preprocessing import prepare_hydrophobic, tilt_correction
+from utils.config import *
 
 # import os
 
@@ -251,22 +252,23 @@ def user_line(experimental_drop, experimental_setup):
         experimental_drop.contact_points = CPs
 
         if DRAW_TANGENT_LINE_WHILE_SETTING_BASELINE:
-            if experimental_setup.tangent_boole == True or experimental_setup.second_deg_polynomial_boole == True or experimental_setup.circle_boole == True or experimental_setup.ellipse_boole == True:
+            methods_boole = experimental_setup.analysis_methods_ca
+            if methods_boole[TANGENT_FIT] or methods_boole[POLYNOMIAL_FIT] or methods_boole[CIRCLE_FIT] or methods_boole[ELLIPSE_FIT]:
                 from .fits import perform_fits
-                perform_fits(experimental_drop, tangent=experimental_setup.tangent_boole, polynomial=experimental_setup.second_deg_polynomial_boole, circle=experimental_setup.circle_boole,ellipse=experimental_setup.ellipse_boole)
-            if experimental_setup.tangent_boole == True:
+                perform_fits(experimental_drop, tangent=methods_boole[TANGENT_FIT], polynomial=methods_boole[POLYNOMIAL_FIT], circle=methods_boole[CIRCLE_FIT],ellipse=methods_boole[ELLIPSE_FIT])
+            if methods_boole[TANGENT_FIT]:
                 tangent_lines = tuple(experimental_drop.contact_angles['tangent fit']['tangent lines'])
                 cv2.line(img, (int(tangent_lines[0][0][0]),int(tangent_lines[0][0][1])),(int(tangent_lines[0][1][0]),int(tangent_lines[0][1][1])), (0, 0, 255), 2)
                 cv2.line(img, (int(tangent_lines[1][0][0]),int(tangent_lines[1][0][1])),(int(tangent_lines[1][1][0]),int(tangent_lines[1][1][1])),(0, 0, 255), 2)
-            if experimental_setup.second_deg_polynomial_boole == True and experimental_setup.tangent_boole == False:
+            if methods_boole[POLYNOMIAL_FIT] == True and not methods_boole[TANGENT_FIT]:
                 tangent_lines = tuple(experimental_drop.contact_angles['polynomial fit']['tangent lines'])
                 cv2.line(img, tangent_lines[0][0],tangent_lines[0][1], (0, 0, 255), 2)
                 cv2.line(img, tangent_lines[1][0],tangent_lines[1][1], (0, 0, 255), 2)
-            if experimental_setup.circle_boole == True:
+            if methods_boole[CIRCLE_FIT]:
                 xc,yc = experimental_drop.contact_angles['circle fit']['circle center']
                 r = experimental_drop.contact_angles['circle fit']['circle radius']
                 cv2.circle(img,(int(xc),int(yc)),int(r),(255,150,0),1)
-            if experimental_setup.ellipse_boole == True:
+            if methods_boole[ELLIPSE_FIT]:
                 center = experimental_drop.contact_angles['ellipse fit']['ellipse center']
                 axes = experimental_drop.contact_angles['ellipse fit']['ellipse a and b']
                 phi = experimental_drop.contact_angles['ellipse fit']['ellipse rotation']
