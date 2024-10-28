@@ -44,7 +44,6 @@ class CaPreparation(ctk.CTkFrame):
 
     def create_fitting_view_fields(self, parent_frame):
         """Create and pack Statisitcal Output fields into the specified parent frame."""
-        print("create_fitting_view_fields, self: ",self)
         fitting_view_frame = create_plotting_checklist_cm(self,parent_frame,self.user_input_data)
         fitting_view_frame.grid(row=2, column=0, sticky="nsew", pady=(10, 0))  # Use row 1
         # fitting_view_frame.pack(fill="x", expand=True)  # Pack fitting view fields
