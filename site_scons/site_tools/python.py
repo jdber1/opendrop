@@ -33,7 +33,7 @@ def generate(env):
             "import sysconfig; print(sysconfig.get_platform())"
         ]) \
         .decode() \
-        .strip()
+        .strip().replace('-', '_')
 
     env['PYTHONINCLUDES'] = env.Dir(
         _(subprocess.check_output([

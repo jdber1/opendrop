@@ -22,6 +22,15 @@ The software is released under the **GNU GPL** open source license, and availabl
     :trim:
 
 *********
+Background
+*********
+OpenDrop-ML is an innovative, open-source software project aimed at modernizing contact angle and pendant drop tensiometry in surface science. 
+The project addresses the limitations of existing proprietary software, which is often costly and outdated, with some solutions locked to Windows XP.
+
+With OpenDrop-ML, we aim to provide an open-source, cross-platform alternative that leverages machine learning and computer vision to enhance accuracy, autonomy, and ease of use in surface science measurements.
+
+
+*********
 Installation & User Guide
 *********
 OpenDrop is currently distributed as a Python package and can be installed on most operating systems (Windows, macOS, Linux).
@@ -29,6 +38,27 @@ OpenDrop is currently distributed as a Python package and can be installed on mo
 For installation instructions and user guides, visit: https://opendrop.readthedocs.io/
 
 Example images have been provided in the 'example_images' folder.
+
+
+*********
+Software Specification
+*********
+- **Name:** OpenDrop-ML
+- **Languages:** Python
+- **License:** GNU GPL Open Source License
+- **Supported Platforms:** Windows, macOS, Linux
+- **Dependencies:**
+  - Python 3.x
+  - OpenCV (for image processing)
+  - Conan-ML (for machine learning-based analysis)
+  - USB webcam or GigE Vision / USB3 Vision compliant cameras (optional)
+- **Key Features:**
+  - High-precision pendant drop tensiometry and contact angle measurements
+  - Integration of Conan-ML for machine learning-based edge and object detection
+  - Modular architecture supporting customization and scalability
+  - Batch processing for large datasets and video analysis
+  - Cross-platform compatibility with a user-friendly interface
+Detailed software specifications: Teams files, Requirements folder, OpenDrop Software Specification.doc
 
 *********
 Support

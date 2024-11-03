@@ -54,3 +54,4 @@ docs/_build
 .sconsign*
 build/
 *.checkpoints/
+venv*/
