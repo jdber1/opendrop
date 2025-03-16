@@ -176,8 +176,9 @@ def pause_wait_time(elapsed_time, requested_time):
         time.sleep(requested_time - elapsed_time)
 
 def cheeky_pause():
-    import Tkinter
-    import tkMessageBox
+    import tkinter
+    from tkinter import messagebox
+
     import cv2
     #    cv2.namedWindow("Pause")
     #    while 1:
@@ -191,11 +192,11 @@ def cheeky_pause():
     #    B.pack()
     #    root.mainloop()
 
-    root = Tkinter.Tk()
-    frame = Tkinter.Frame(root)
+    root = tkinter.Tk()
+    frame = tkinter.Frame(root)
     frame.pack()
 
-    button = Tkinter.Button(frame)
+    button = tkinter.Button(frame)
     button['text'] ="Good-bye."
     button['command'] = root.destroy()#close_window(root)
     button.pack()
