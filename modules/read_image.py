@@ -87,7 +87,7 @@ def grabanimage():
         retval, im = camera.read()
         return im
 
-    for i in xrange(ramp_frames):
+    for i in range(ramp_frames):
         temp = get_image()
     print("Taking image...")
 # Take the actual image we want to keep

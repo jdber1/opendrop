@@ -599,7 +599,7 @@ class DirectoryEntryStyle():
     def update_directory(self, master):
         initdir = self.directory_string.get()
         temp_dir = tkFileDialog.askdirectory(parent = master, title="Select output data location", initialdir=initdir)
-        if temp_dir is not "":
+        if temp_dir !=  "":
             self.directory_string.set(temp_dir)
             self._directory_string.set(self.clip_dir(temp_dir))
 
