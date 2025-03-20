@@ -90,4 +90,4 @@ def test_perform_fits_YL(experimental_drop):
 # Run the tests
 if __name__ == "__main__":
     import sys
-    sys.exit(pytest.main(["-q", __file__]))
+    sys.exit(pytest.main(["-v", __file__]))
