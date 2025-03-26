@@ -6,7 +6,7 @@ from utils.validators import *
 
 class FloatEntry():
     def __init__(self, parent, frame, text_left, callback, rw=0, padx=(5, 5), pady=(5, 5), width_specify=150, label_width=150, state_specify='normal'):
-        self.label = ctk.CTkLabel(frame, text=text_left, width=label_width)
+        self.label = ctk.CTkLabel(frame, text=text_left, width=label_width, anchor="w")
         self.label.grid(row=rw, column=0, sticky="w", padx=padx, pady=pady)
         self.text_variable = ctk.StringVar()
 

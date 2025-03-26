@@ -22,7 +22,8 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     input_fields_frame = CTkFrame(user_input_frame)
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
-    # update the input value
+
+    # Update the input value functions
     def update_drop_region_method(*args):
         user_input_data["drop_region_choice"] = self.drop_region_method.get_value()
 
@@ -41,7 +42,7 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     def update_pixel_mm(*args):
         user_input_data["pixel_mm"] = self.pixel_mm.get_value()      
 
-    # Pass the callback methods using lambda
+    # Add input widgets with lambda functions for updates
     self.drop_region_method = OptionMenu(
         self, input_fields_frame, "Drop Region:", AUTO_MANUAL_OPTIONS, lambda *args: update_drop_region_method(*args), rw=0
     )
@@ -50,20 +51,19 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     )
     
     self.drop_density_method = FloatEntry(
-        self, input_fields_frame, "Drop Density:", lambda *args: update_drop_density(*args), rw=2
+        self, input_fields_frame, "Drop Density(kg/m³):", lambda *args: update_drop_density(*args), rw=2
     )
     self.continuous_density = FloatEntry(
-        self, input_fields_frame, "Continuous density (kg/m)", lambda *args: update_continuous_density(*args), rw=3
+        self, input_fields_frame, "Continuous density (kg/m):", lambda *args: update_continuous_density(*args), rw=3
     )
     self.needle_diameter = FloatEntry(
-        self, input_fields_frame, "Needle Diameter:", lambda *args: update_needle_diameter(*args), rw=4
+        self, input_fields_frame, "Needle Diameter(mm):", lambda *args: update_needle_diameter(*args), rw=4
     )
     self.pixel_mm = FloatEntry(
-        self, input_fields_frame, "Pixel to mm Ratio:", lambda *args: update_pixel_mm(*args), rw=5
+        self, input_fields_frame, "Pixel scale(px/mm):", lambda *args: update_pixel_mm(*args), rw=5
     )
-    # Configure grid columns in the input fields frame
-    input_fields_frame.grid_columnconfigure(0, minsize=LABEL_WIDTH)
-    
+
+    # Returning the user input frame
     return user_input_frame
 
 # ift [CheckList Select]
