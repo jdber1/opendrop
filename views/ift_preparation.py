@@ -15,21 +15,25 @@ class IftPreparation(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=1)  # Right column for ImageApp
 
         # Create the frame for organizing input fields on the left with a background color
-        self.input_fields_frame = ctk.CTkFrame(self)
+        self.input_fields_frame = ctk.CTkFrame(self, fg_color="pink")
         self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(10, 0))  # Left side for input fields
 
-        # Create a frame for the right side image processing
-        self.image_app_frame = ctk.CTkFrame(self)
-        self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))  # Right side for ImageApp
+        # Ensure that the parent frame (input_fields_frame) resizes properly
+        self.input_fields_frame.grid_rowconfigure(0, weight=1)  # Ensure row 0 expands
+        self.input_fields_frame.grid_columnconfigure(0, weight=1)  # Ensure column 0 expands
 
         # Create user input fields and analysis fields on the left
         self.create_user_input_fields(self.input_fields_frame)
         self.create_analysis_method_fields(self.input_fields_frame)
         self.create_fitting_view_fields(self.input_fields_frame)
 
+        # Create the frame for the right side image processing
+        self.image_app_frame = ctk.CTkFrame(self)
+        self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))  # Right side for ImageApp
+
         # Instantiate the ImageApp on the right
-        self.image_app = ImageApp(self.image_app_frame, self.user_input_data)  
-        self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame  
+        self.image_app = ImageApp(self.image_app_frame, self.user_input_data)
+        self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame
 
     def create_user_input_fields(self, parent_frame):
         """Create and pack user input fields into the specified parent frame."""

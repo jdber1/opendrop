@@ -28,7 +28,8 @@ class FunctionWindow(CTk):
     def __init__(self, function_type, user_input_data, fitted_drop_data):
         super().__init__()  # Call the parent class constructor
         self.title(function_type.value)
-        self.geometry("1080x720")
+        self.geometry("1000x750")
+        self.minsize(1000, 750) 
 
         if get_appearance_mode() == LIGHT_MODE:
             self.FG_COLOR = "lightblue"

@@ -11,8 +11,14 @@ LABEL_WIDTH = 200  # Adjust as needed
 # ift [User Input]
 def create_user_input_fields_ift(self, parent, user_input_data):
     """Create user input fields and return the frame containing them."""
-    user_input_frame = CTkFrame(parent)
+    user_input_frame = CTkFrame(parent, fg_color="red")
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
+
+    # Configure the grid for the user_input_frame to be resizable
+    user_input_frame.grid_rowconfigure(0, weight=0)  # No resizing for the label row
+    user_input_frame.grid_rowconfigure(1, weight=1)  # Allow resizing for the input fields row
+    user_input_frame.grid_columnconfigure(0, weight=1)  # Allow resizing for the first column
+    user_input_frame.grid_columnconfigure(1, weight=1)  # Allow resizing for the second column
 
     # Create a label for the dynamic content
     label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto", 16, "bold"))
@@ -22,6 +28,16 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     input_fields_frame = CTkFrame(user_input_frame)
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
+    # Configure the grid of the input_fields_frame to be resizable
+    input_fields_frame.grid_rowconfigure(0, weight=1)  # Allow first row to resize
+    input_fields_frame.grid_rowconfigure(1, weight=1)  # Allow second row to resize
+    input_fields_frame.grid_rowconfigure(2, weight=1)  # Allow third row to resize
+    input_fields_frame.grid_rowconfigure(3, weight=1)  # Allow fourth row to resize
+    input_fields_frame.grid_rowconfigure(4, weight=1)  # Allow fifth row to resize
+    input_fields_frame.grid_rowconfigure(5, weight=1)  # Allow sixth row to resize
+
+    input_fields_frame.grid_columnconfigure(0, weight=1)  # Allow first column to resize
+    input_fields_frame.grid_columnconfigure(1, weight=1)  # Allow second column to resize
 
     # Update the input value functions
     def update_drop_region_method(*args):
@@ -69,7 +85,7 @@ def create_user_input_fields_ift(self, parent, user_input_data):
 # ift [CheckList Select]
 def create_plotting_checklist_ift(self,parent,user_input_data):
 
-    plotting_clist_frame = CTkFrame(parent)
+    plotting_clist_frame = CTkFrame(parent,fg_color="green")
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
