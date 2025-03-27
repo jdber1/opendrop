@@ -91,7 +91,7 @@ def create_plotting_checklist_ift(self,parent,user_input_data):
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(plotting_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -113,7 +113,7 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     analysis_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(analysis_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
+    label = CTkLabel(analysis_clist_frame, text="Analysis methods", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -121,9 +121,11 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
     def update_default_method_boole(*args):
-        user_input_data["default_method"] = self.default_method_boole.get_value()   
+        user_input_data.analysis_methods_pd[INTERFACIAL_TENSION]= self.default_method_boole.get_value()  
+
     self.default_method_boole = CheckButton(
-        self, input_fields_frame, "Default Method", update_default_method_boole, rw=0, cl=0)
+        self, input_fields_frame, "Interfacial Tension", update_default_method_boole, rw=0, cl=0,initial_value=True)
+    
     return analysis_clist_frame
 
 def create_user_inputs_cm(self,parent,user_input_data):

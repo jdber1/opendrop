@@ -72,6 +72,7 @@ def main():
             NEEDLE_STEPS)
         """
         user_inputs = ExperimentalSetup()
+        drop_info = ExperimentalDrop()
 
         MainWindow(
             continue_processing,

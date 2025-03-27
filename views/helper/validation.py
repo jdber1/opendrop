@@ -35,8 +35,7 @@ def validate_user_input_data_ift(user_input_data):
                 messages.append(f"{label} is required")
 
         # Check if analysis_method_fields has at least one method selected
-        analysis_method_fields = user_input_data.analysis_method_fields
-        if not any(analysis_method_fields.values()):
+        if not any(user_input_data.analysis_methods_pd.values()):
             messages.append("At least one analysis method must be selected.")
 
         return messages

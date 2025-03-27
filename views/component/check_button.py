@@ -4,9 +4,9 @@ import customtkinter as ctk
 from utils.config import *
 
 class CheckButton():
-    def __init__(self, parent, frame, text_left, callback, rw=0, cl=0, width_specify=10, padx=(5, 5), pady=(1, 1), stcky="w", state_specify='normal'):  # , pd=5
+    def __init__(self, parent, frame, text_left, callback, rw=0, cl=0, width_specify=10, padx=(5, 5), pady=(1, 1), stcky="w", state_specify='normal',initial_value=False):  # , pd=5
         self._save_previous_variable = 0
-        self.int_variable = ctk.IntVar()
+        self.int_variable = ctk.IntVar(value=int(initial_value))
 
         if callback:
             self.int_variable.trace_add("write", callback)

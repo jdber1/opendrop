@@ -22,6 +22,32 @@ from utils.config import *
 
 MAX_IMAGE_TO_SCREEN_RATIO = 0.8
 
+# def set_drop_region(experimental_drop, experimental_setup):
+#     # select the drop and needle regions in the image
+#     screen_size = experimental_setup.screen_resolution
+#     image_size = experimental_drop.image.shape
+#     scale = set_scale(image_size, screen_size)
+#     screen_position = set_screen_position(screen_size)
+#     if experimental_setup.drop_ID_method == "Automated":
+#         from .preprocessing import auto_crop
+#         experimental_drop.cropped_image, (left,right,top,bottom) = auto_crop(experimental_drop.image)
+
+#         if 1: #show found drop
+#             plt.title('original image')
+#             plt.imshow(experimental_drop.image)
+#             plt.show()
+#             plt.close()
+
+#             plt.title('cropped image')
+#             plt.imshow(experimental_drop.cropped_image)
+#             plt.show()
+#             plt.close()
+#         experimental_setup.drop_region = [(left, top),(right,bottom)]
+#     elif experimental_setup.drop_ID_method == "User-selected":
+#         experimental_setup.drop_region = user_ROI(experimental_drop.image, 'Select drop region', scale, screen_position)
+#         experimental_drop.cropped_image = image_crop(experimental_drop.image, experimental_setup.drop_region)
+#  #   experimental_setup.needle_region = user_line(experimental_drop.image, 'Select needle region', scale, screen_position)
+
 def set_drop_region(experimental_drop, experimental_setup):
     # select the drop and needle regions in the image
     screen_size = experimental_setup.screen_resolution
@@ -47,6 +73,7 @@ def set_drop_region(experimental_drop, experimental_setup):
         experimental_setup.drop_region = user_ROI(experimental_drop.image, 'Select drop region', scale, screen_position)
         experimental_drop.cropped_image = image_crop(experimental_drop.image, experimental_setup.drop_region)
  #   experimental_setup.needle_region = user_line(experimental_drop.image, 'Select needle region', scale, screen_position)
+
 
 def image_crop(image, points):
     # return image[min(y):max(y), min(x),max(x)]
@@ -84,7 +111,18 @@ def set_screen_position(screen_size):
     y_position = int(0.5 * prec_free_space * screen_size[1]) # 0.5 moves window a little bit higher
     return [x_position, y_position]
 
-def user_ROI(raw_image, title,  scale, screen_position): #, line_colour=(0, 0, 255), line_thickness=2):
+def user_ROI(raw_image, title,  user_input_data): #, line_colour=(0, 0, 255), line_thickness=2):
+    
+    print("raw image: ",raw_image)
+    raw_image = cv2.imread(raw_image)
+
+# Get image dimensions (height, width, channels)
+    if raw_image is not None:
+        image_size = raw_image.shape[:2]
+    screen_size = user_input_data.screen_resolution
+    # image_size = raw_image.shape
+    scale = set_scale(image_size, screen_size)
+    screen_position = set_screen_position(screen_size)
     global drawing
     global ix, iy
     global fx, fy

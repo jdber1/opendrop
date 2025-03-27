@@ -46,7 +46,7 @@ class IftPreparation(ctk.CTkFrame):
 
     def create_analysis_method_fields(self, parent_frame):
         """Create and pack analysis method fields into the specified parent frame."""
-        analysis_frame = create_analysis_checklist_ift(self,parent_frame,self.user_input_data.analysis_method_fields)
+        analysis_frame = create_analysis_checklist_ift(self,parent_frame,self.user_input_data)
         analysis_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
 
     def create_fitting_view_fields(self, parent_frame):

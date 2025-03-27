@@ -11,6 +11,9 @@ FILE_SOURCE_OPTIONS_CA = ["Local images", "Flea3", "USB camera"]
 FILE_SOURCE_OPTIONS_IFT = ["Local images", "cv2.VideoCapture", "GenlCam"]
 EDGEFINDER_OPTIONS = ["OpenCV", "Subpixel", "Both"]
 
+#OPENDROP
+INTERFACIAL_TENSION = "Interfacial Tension"
+
 TANGENT_FIT = "tangent fit"
 POLYNOMIAL_FIT = "polynomial fit"
 CIRCLE_FIT = "circle fit"

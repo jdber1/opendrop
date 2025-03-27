@@ -2,7 +2,10 @@ import customtkinter as ctk
 from PIL import ImageTk, Image
 from utils.image_handler import ImageHandler
 import os
+from modules.select_regions import set_drop_region,set_surface_line, correct_tilt,user_ROI
+from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
 
+from modules.read_image import get_image
 
 class ImageApp(ctk.CTkFrame):
     def __init__(self, parent, user_input_data):
@@ -19,12 +22,11 @@ class ImageApp(ctk.CTkFrame):
         self.image_label = ctk.CTkLabel(
             self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
-        
-        user_input_fields = user_input_data.user_input_fields
+ 
         # Drop region button
         self.drop_region_button = ctk.CTkButton(
             # self.main_frame, text="Set Drop Region")
-            self.main_frame, text="Set Drop Region", command=self.set_drop_region)
+            self.main_frame, text="Set Drop Region", command=lambda: self.set_drop_region(user_input_data))
         # hide it for now
 
         # Needle region button
@@ -85,13 +87,20 @@ class ImageApp(ctk.CTkFrame):
             # Load the new image
             self.load_image(self.image_paths[self.current_index])
 
-    def set_drop_region(self):
+    def set_drop_region(self, user_input_data):
         """Placeholder for setting drop region functionality."""
+        # Pass user_input_data to the function and update it
+        raw_experiment = ExperimentalDrop()
+        get_image(raw_experiment, user_input_data, 0) # save image in here...
+        # set_drop_region(raw_experiment, user_input_data)
+        user_ROI(self.image_paths[0], 'Select drop region',user_input_data )
+     
         self.user_input_data.ift_drop_region = "Drop region set"
         print("Drop region set")
 
     def set_needle_region(self):
         """Placeholder for setting needle region functionality."""
+        # set_drop_region(user_input_data)
         self.user_input_data.ift_needle_region = "Drop region set"
         print("Needle region set")
 

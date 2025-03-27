@@ -60,9 +60,9 @@ class ExperimentalSetup(object):
         self.import_files = None
         self.frame_interval = 0
         self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
-        self.analysis_method_fields = {}
         self.analysis_method_fields_cm = {}
         self.analysis_methods_ca = {TANGENT_FIT: False, POLYNOMIAL_FIT: False, CIRCLE_FIT: False, ELLIPSE_FIT: False, YL_FIT: False, ML_MODEL: False}
+        self.analysis_methods_pd = {INTERFACIAL_TENSION: True}
         self.statistical_output = {}
         self.statistical_output_cm = {}
         self.ift_drop_region = None
