@@ -42,9 +42,11 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     # Update the input value functions
     def update_drop_region_method(*args):
         user_input_data["drop_region_choice"] = self.drop_region_method.get_value()
+        self.image_app.update_button_visibility()
 
     def update_needle_region_method(*args):
         user_input_data["needle_region_choice"] = self.needle_region_method.get_value()    
+        self.image_app.update_button_visibility()
 
     def update_drop_density(*args):
         user_input_data["drop_density"] = self.drop_density_method.get_value() 

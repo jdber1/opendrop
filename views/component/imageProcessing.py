@@ -20,17 +20,18 @@ class ImageApp(ctk.CTkFrame):
             self.main_frame, text="", fg_color="lightgrey", width=400, height=300)
         self.image_label.pack(pady=10)
         
+        user_input_fields = user_input_data.user_input_fields
         # Drop region button
         self.drop_region_button = ctk.CTkButton(
+            # self.main_frame, text="Set Drop Region")
             self.main_frame, text="Set Drop Region", command=self.set_drop_region)
         # hide it for now
-        #self.drop_region_button.pack(pady=5)
 
         # Needle region button
         self.needle_region_button = ctk.CTkButton(
             self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         # hide it for now
-        #self.needle_region_button.pack(pady=5)
+        
 
         self.user_input_data = user_input_data
         # Load images from the directory
@@ -49,6 +50,7 @@ class ImageApp(ctk.CTkFrame):
         if self.image_paths:
             # Load the first image by default
             self.load_image(self.image_paths[self.current_index])
+        self.update_button_visibility()
 
     def load_images(self):
         """Load all images from the specified directory and return their paths."""
