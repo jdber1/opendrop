@@ -69,6 +69,8 @@ class ExperimentalSetup(object):
         self.statistical_output_cm = {}
         self.ift_drop_region = None
         self.ift_needle_region = None
+        self.ca_drop_region = None
+        self.ca_baseline_region = None
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
         self.output_directory = None

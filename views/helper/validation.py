@@ -22,14 +22,17 @@ def validate_user_input_data_ift(user_input_data):
         
         required_fields = {
             'drop_density': "Drop Density",
-            'continuous_density': "Continuous Density",
-            'needle_diameter': "Needle Diameter",
+            'density_outer': "Continuous Density",
+            'needle_diameter_mm': "Needle Diameter",
             'pixel_mm': "Pixel to mm"
         }
 
         for field, label in required_fields.items():
-            if getattr(user_input_data, field, None) is None:
+            value = getattr(user_input_data, field, None)  # Get the attribute or None if missing
+            print(field," is ",value)
+            if value is None or value == "" or value ==0.0:  # Check for both None and empty string
                 messages.append(f"{label} is required")
+
 
         # Check if analysis_method_fields has at least one method selected
         if not any(user_input_data.analysis_methods_pd.values()):
@@ -54,11 +57,30 @@ def validate_user_input_data_cm(user_input_data):
         messages.append("Please select baseline_method")
 
     """
-    
-    if user_input_data.threshold_method != 'Automated' and user_input_data.threshold_val is None:
-        messages.append("threshold_value is required.")
+        # Ensure if drop region is chosen, it must not be None
+    if user_input_data.drop_ID_method != 'Automated' and user_input_data.ca_drop_region is None:
+        messages.append("Please select drop region")
 
-    if not any(user_input_data.analysis_methods_ca.values()):
+    # Ensure if needle region is chosen, it must not be None
+    if user_input_data.baseline_method != 'Automated' and user_input_data.ca_baseline_region is None:
+        messages.append("Please select baseline region")
+
+        # Check user_input_fields for None values
+    
+    required_fields = {
+        'threshold_method':"Threshold Value",
+        'density_outer': "Continuous Density",
+        'needle_diameter_mm': "Needle Diameter",
+    }
+
+    for field, label in required_fields.items():
+        value = getattr(user_input_data, field, None)  # Get the attribute or None if missing
+        if value is None or value == "":  # Check for both None and empty string
+            messages.append(f"{label} is required")
+
+    # Check if analysis_method_fields has at least one method selected
+    if not any(user_input_data.analysis_methods_pd.values()):
         messages.append("At least one analysis method must be selected.")
 
     return messages
+    

@@ -17,16 +17,16 @@ from modules.ca_data_processor import CaDataProcessor
 from modules.pd_data_processor import pdDataProcessor
 from utils.enums import *
 from modules.ExtractData import ExtractedData
-
+from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
 from views.helper.theme import LIGHT_MODE
 
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
 
-def call_user_input(function_type, user_input_data, fitted_drop_data):
-    FunctionWindow(function_type, user_input_data, fitted_drop_data)
+def call_user_input(function_type, fitted_drop_data):
+    FunctionWindow(function_type, fitted_drop_data)
 
 class FunctionWindow(CTk):
-    def __init__(self, function_type, user_input_data, fitted_drop_data):
+    def __init__(self, function_type, fitted_drop_data):
         super().__init__()  # Call the parent class constructor
         self.title(function_type.value)
         self.geometry("1000x750")
@@ -41,6 +41,8 @@ class FunctionWindow(CTk):
 
         self.ca_processor = CaDataProcessor()
         self.pd_processor = pdDataProcessor()
+
+        user_input_data = ExperimentalSetup()
 
         user_input_data.screen_resolution = [
             self.winfo_screenwidth(), self.winfo_screenheight()]

@@ -71,13 +71,13 @@ def main():
             NEEDLE_TOL,
             NEEDLE_STEPS)
         """
-        user_inputs = ExperimentalSetup()
+        # user_inputs = ExperimentalSetup()
         drop_info = ExperimentalDrop()
-
+        
         MainWindow(
             continue_processing,
-            lambda: call_user_input(FunctionType.PENDANT_DROP, user_inputs, fitted_drop_data),
-            lambda: call_user_input(FunctionType.CONTACT_ANGLE, user_inputs, fitted_drop_data)
+            lambda: call_user_input(FunctionType.PENDANT_DROP, fitted_drop_data),
+            lambda: call_user_input(FunctionType.CONTACT_ANGLE, fitted_drop_data)
         )
 
 #    cheeky_pause()
