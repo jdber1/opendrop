@@ -5,7 +5,7 @@ from .float_entry import FloatEntry
 from .float_combobox import FloatCombobox
 from .check_button import CheckButton
 # Define your options and labels globally or pass them as parameters if preferred
-# AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"]  # Example options
+# AUTO_MANUAL_OPTIONS = ["Automated", "User-selected"]  # Example options
 LABEL_WIDTH = 200  # Adjust as needed
 
 # ift [User Input]
@@ -41,24 +41,24 @@ def create_user_input_fields_ift(self, parent, user_input_data):
 
     # Update the input value functions
     def update_drop_region_method(*args):
-        user_input_data["drop_region_choice"] = self.drop_region_method.get_value()
+        user_input_data.drop_ID_method = self.drop_region_method.get_value()
         self.image_app.update_button_visibility()
 
     def update_needle_region_method(*args):
-        user_input_data["needle_region_choice"] = self.needle_region_method.get_value()    
+        user_input_data.needle_region_choice = self.needle_region_method.get_value()    
         self.image_app.update_button_visibility()
 
     def update_drop_density(*args):
-        user_input_data["drop_density"] = self.drop_density_method.get_value() 
+        user_input_data.drop_density = self.drop_density_method.get_value() 
 
     def update_continuous_density(*args):
-        user_input_data["continuous_density"] = self.continuous_density.get_value()       
+        user_input_data.density_outer = self.continuous_density.get_value()       
 
     def update_needle_diameter(*args):
-        user_input_data["needle_diameter"] = self.needle_diameter.get_value()       
+        user_input_data.needle_diameter_mm = self.needle_diameter.get_value()       
 
     def update_pixel_mm(*args):
-        user_input_data["pixel_mm"] = self.pixel_mm.get_value()      
+        user_input_data.pixel_mm = self.pixel_mm.get_value()      
 
     # Add input widgets with lambda functions for updates
     self.drop_region_method = OptionMenu(
@@ -145,15 +145,18 @@ def create_user_inputs_cm(self,parent,user_input_data):
     # Define update functions for each input
     def update_drop_id_method(*args):
         user_input_data.drop_ID_method = self.drop_ID_method.get_value()
+        self.image_app.update_button_visibility()
 
     def update_threshold_method(*args):
         user_input_data.threshold_method = self.threshold_method.get_value()
+        self.image_app.update_button_visibility()
 
     def update_threshold_value(*args):
         user_input_data.threshold_val = self.threshold_val.get_value()
 
     def update_baseline_method(*args):
         user_input_data.baseline_method = self.baseline_method.get_value()
+        self.image_app.update_button_visibility()
 
     def update_density_outer(*args):
         user_input_data.density_outer = self.density_outer.get_value()

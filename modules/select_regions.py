@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from __future__ import print_function
-# from classes import ExperimentalDrop
+
 # from subprocess import call
 # import numpy as np
 import cv2

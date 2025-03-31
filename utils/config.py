@@ -2,7 +2,7 @@ import os
 
 VERSION = '1.0'
 
-AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"] 
+AUTO_MANUAL_OPTIONS = ["Automated", "User-selected"] 
 DROP_ID_OPTIONS = ["Automated", "User-selected"]
 THRESHOLD_OPTIONS = ["Automated", "User-selected"]
 BASELINE_OPTIONS = ["Automated", "User-selected"]

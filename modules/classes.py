@@ -40,11 +40,14 @@ class ExperimentalSetup(object):
         self.screen_resolution = None
         self.drop_ID_method = 'Automated'
         self.threshold_method = 'Automated'
+        self.needle_region_choice = 'Automated'
         self.threshold_val = None
         self.baseline_method = 'Automated'
         self.edgefinder = None
-        self.density_outer = None
+        self.density_outer = None # contininous density
         self.needle_diameter_mm = None
+        self.drop_density = None
+        self.pixel_mm = None
         self.residuals_boole = None
         self.profiles_boole = None
         self.interfacial_tension_boole = None
@@ -59,7 +62,6 @@ class ExperimentalSetup(object):
         self.needle_region = None
         self.import_files = None
         self.frame_interval = 0
-        self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
         self.analysis_method_fields_cm = {}
         self.analysis_methods_ca = {TANGENT_FIT: False, POLYNOMIAL_FIT: False, CIRCLE_FIT: False, ELLIPSE_FIT: False, YL_FIT: False, ML_MODEL: False}
         self.analysis_methods_pd = {INTERFACIAL_TENSION: True}

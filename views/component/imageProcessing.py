@@ -8,12 +8,12 @@ from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Toler
 from modules.read_image import get_image
 
 class ImageApp(ctk.CTkFrame):
-    def __init__(self, parent, user_input_data):
+    def __init__(self, parent, user_input_data,application):
         super().__init__(parent)
-
+        
+        self.application = application
         # Initialize ImageHandler instance
         self.image_handler = ImageHandler()
-
         # Create main frame
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
@@ -27,13 +27,23 @@ class ImageApp(ctk.CTkFrame):
         self.drop_region_button = ctk.CTkButton(
             # self.main_frame, text="Set Drop Region")
             self.main_frame, text="Set Drop Region", command=lambda: self.set_drop_region(user_input_data))
-        # hide it for now
+       
+
+        # Needle region button
+        self.needle_region_button = ctk.CTkButton(
+            self.main_frame, text="Set Needle Region", command=self.set_needle_region)
+        
+        
+        # Drop region button
+        self.basline_region_button = ctk.CTkButton(
+            # self.main_frame, text="Set Drop Region")
+            self.main_frame, text="Set Baseline Region", command=lambda: self.set_drop_region(user_input_data))
+        
 
         # Needle region button
         self.needle_region_button = ctk.CTkButton(
             self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         # hide it for now
-        
 
         self.user_input_data = user_input_data
         # Load images from the directory
@@ -108,17 +118,29 @@ class ImageApp(ctk.CTkFrame):
     def update_button_visibility(self):
         """Update the visibility of the drop region and needle region buttons based on user_input_data."""
         # Retrieve and print the values
-        drop_region_value = self.user_input_data.user_input_fields.get("drop_region_choice")
-        needle_region_value = self.user_input_data.user_input_fields.get("needle_region_choice")
+        drop_region_value = self.user_input_data.drop_ID_method
+
+        if self.application == "IFT":
+            needle_region_value = self.user_input_data.needle_region_choice
+            # Show or hide the Needle Region button
+            if needle_region_value == "User-selected":
+                self.needle_region_button.pack(pady=5)
+            else:
+                self.needle_region_button.pack_forget()
+        #  or self.user_input_data.drop_ID_method
+        else: 
+            baseline_region_value = self.user_input_data.baseline_method
+            # Show or hide the Needle Region button
+            if baseline_region_value == "User-selected":
+                self.basline_region_button.pack(pady=5)
+            else:
+                self.basline_region_button.pack_forget()
+
 
         # Show or hide the Drop Region button
-        if drop_region_value == "User-Selected":
+        if drop_region_value == "User-selected":
             self.drop_region_button.pack(pady=5)
         else:
             self.drop_region_button.pack_forget()
 
-        # Show or hide the Needle Region button
-        if needle_region_value == "User-Selected":
-            self.needle_region_button.pack(pady=5)
-        else:
-            self.needle_region_button.pack_forget()
+        
