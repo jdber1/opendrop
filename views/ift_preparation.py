@@ -4,12 +4,12 @@ from .component.preparation import create_plotting_checklist_ift, create_analysi
 from .component.imageProcessing import ImageApp
 
 class IftPreparation(ctk.CTkFrame):
-    def __init__(self, parent, user_input_data, **kwargs):
+    def __init__(self, parent, user_input_data,experimental_drop, **kwargs):
         super().__init__(parent, **kwargs)
 
         self.application = "IFT"
         self.user_input_data = user_input_data
-
+        self.experimental_drop = experimental_drop
         # Configure the grid to allow expansion for both columns
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)  # Left column for input fields
@@ -28,7 +28,7 @@ class IftPreparation(ctk.CTkFrame):
         self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))  # Right side for ImageApp
 
         # Instantiate the ImageApp on the right
-        self.image_app = ImageApp(self.image_app_frame, self.user_input_data,self.application)
+        self.image_app = ImageApp(self.image_app_frame, self.user_input_data,self.experimental_drop,self.application)
         print("self is Ift? ",self)
         self.image_app.pack(fill="both", expand=True)  # Pack the image app to fill the frame
 

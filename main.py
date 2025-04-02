@@ -19,7 +19,7 @@ from modules.ExtractData import ExtractedData
 
 from views.main_window import MainWindow
 from views.function_window import call_user_input
-from modules.read_image import get_image
+# from modules.read_image import get_image
 from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
 from modules.extract_profile import extract_drop_profile
 from modules.extract_profile import image_crop
@@ -72,7 +72,6 @@ def main():
             NEEDLE_STEPS)
         """
         # user_inputs = ExperimentalSetup()
-        drop_info = ExperimentalDrop()
         
         MainWindow(
             continue_processing,

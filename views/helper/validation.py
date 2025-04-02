@@ -40,7 +40,7 @@ def validate_user_input_data_ift(user_input_data):
 
         return messages
 
-def validate_user_input_data_cm(user_input_data):
+def validate_user_input_data_cm(user_input_data,experimental_drop):
     """Validate the user input data and return messages for missing fields."""
     messages = []
 
@@ -58,26 +58,31 @@ def validate_user_input_data_cm(user_input_data):
 
     """
         # Ensure if drop region is chosen, it must not be None
-    if user_input_data.drop_ID_method != 'Automated' and user_input_data.ca_drop_region is None:
+    if user_input_data.drop_ID_method != 'Automated' and experimental_drop.cropped_image is None:
         messages.append("Please select drop region")
 
     # Ensure if needle region is chosen, it must not be None
-    if user_input_data.baseline_method != 'Automated' and user_input_data.ca_baseline_region is None:
+    if user_input_data.baseline_method != 'Automated' and experimental_drop.drop_contour is None:
         messages.append("Please select baseline region")
 
         # Check user_input_fields for None values
-    
+    if user_input_data.baseline_method != 'Automated' and user_input_data.threshold_val is None:
+        messages.append("Please enter threshold value")
+
     required_fields = {
         'threshold_method':"Threshold Value",
         'density_outer': "Continuous Density",
         'needle_diameter_mm': "Needle Diameter",
     }
 
+    if not any(user_input_data.analysis_methods_ca.values()):
+            messages.append("At least one analysis method must be selected.")
+
     for field, label in required_fields.items():
         value = getattr(user_input_data, field, None)  # Get the attribute or None if missing
         if value is None or value == "":  # Check for both None and empty string
             messages.append(f"{label} is required")
-
+    
     # Check if analysis_method_fields has at least one method selected
     if not any(user_input_data.analysis_methods_pd.values()):
         messages.append("At least one analysis method must be selected.")

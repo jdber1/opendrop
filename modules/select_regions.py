@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 #coding=utf-8
 from __future__ import print_function
-
+# from classes import ExperimentalDrop
 # from subprocess import call
 # import numpy as np
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import tkinter.messagebox as msgbox
+import tkinter.simpledialog as simpledialog
 # import time
 # import datetime
 # from Tkinter import *
@@ -16,37 +18,12 @@ from scipy import optimize # DS 7/6/21 - for least squares fit
 import tensorflow as tf # DS 9/6/21 - for loading ML model
 
 from .preprocessing import prepare_hydrophobic, tilt_correction
+from .extract_profile import extract_drop_profile
 from utils.config import *
 
 # import os
 
 MAX_IMAGE_TO_SCREEN_RATIO = 0.8
-
-# def set_drop_region(experimental_drop, experimental_setup):
-#     # select the drop and needle regions in the image
-#     screen_size = experimental_setup.screen_resolution
-#     image_size = experimental_drop.image.shape
-#     scale = set_scale(image_size, screen_size)
-#     screen_position = set_screen_position(screen_size)
-#     if experimental_setup.drop_ID_method == "Automated":
-#         from .preprocessing import auto_crop
-#         experimental_drop.cropped_image, (left,right,top,bottom) = auto_crop(experimental_drop.image)
-
-#         if 1: #show found drop
-#             plt.title('original image')
-#             plt.imshow(experimental_drop.image)
-#             plt.show()
-#             plt.close()
-
-#             plt.title('cropped image')
-#             plt.imshow(experimental_drop.cropped_image)
-#             plt.show()
-#             plt.close()
-#         experimental_setup.drop_region = [(left, top),(right,bottom)]
-#     elif experimental_setup.drop_ID_method == "User-selected":
-#         experimental_setup.drop_region = user_ROI(experimental_drop.image, 'Select drop region', scale, screen_position)
-#         experimental_drop.cropped_image = image_crop(experimental_drop.image, experimental_setup.drop_region)
-#  #   experimental_setup.needle_region = user_line(experimental_drop.image, 'Select needle region', scale, screen_position)
 
 def set_drop_region(experimental_drop, experimental_setup):
     # select the drop and needle regions in the image
@@ -74,12 +51,34 @@ def set_drop_region(experimental_drop, experimental_setup):
         experimental_drop.cropped_image = image_crop(experimental_drop.image, experimental_setup.drop_region)
  #   experimental_setup.needle_region = user_line(experimental_drop.image, 'Select needle region', scale, screen_position)
 
-
 def image_crop(image, points):
     # return image[min(y):max(y), min(x),max(x)]
     return image[int(points[0][1]):int(points[1][1]), int(points[0][0]):int(points[1][0])]
 
 def set_surface_line(experimental_drop, experimental_setup):
+    # message = []
+
+    # 
+    if experimental_drop.cropped_image is None:
+        if experimental_setup.drop_ID_method == "User-selected":
+            msgbox.showwarning("Warning", "Please select the drop region")
+            set_drop_region(experimental_drop, experimental_setup)
+            return  
+        # autuomatic
+        else: 
+            set_drop_region(experimental_drop, experimental_setup)
+
+    if experimental_setup.threshold_method == "User-selected":
+        if experimental_setup.threshold_val is None:
+            threshold = simpledialog.askinteger("Input Required", "Enter the threshold value:")
+            if threshold is None:  # User pressed "Cancel"
+                msgbox.showwarning("Warning", "Threshold is required to continue.")
+                return  
+            experimental_setup.threshold_val = threshold
+    
+    
+    extract_drop_profile(experimental_drop, experimental_setup)
+    
     if experimental_setup.baseline_method == "Automated":
         experimental_drop.drop_contour, experimental_drop.contact_points = prepare_hydrophobic(experimental_drop.contour)
     elif experimental_setup.baseline_method == "User-selected":
@@ -111,18 +110,7 @@ def set_screen_position(screen_size):
     y_position = int(0.5 * prec_free_space * screen_size[1]) # 0.5 moves window a little bit higher
     return [x_position, y_position]
 
-def user_ROI(raw_image, title,  user_input_data): #, line_colour=(0, 0, 255), line_thickness=2):
-    
-    print("raw image: ",raw_image)
-    raw_image = cv2.imread(raw_image)
-
-# Get image dimensions (height, width, channels)
-    if raw_image is not None:
-        image_size = raw_image.shape[:2]
-    screen_size = user_input_data.screen_resolution
-    # image_size = raw_image.shape
-    scale = set_scale(image_size, screen_size)
-    screen_position = set_screen_position(screen_size)
+def user_ROI(raw_image, title,  scale, screen_position): #, line_colour=(0, 0, 255), line_thickness=2):
     global drawing
     global ix, iy
     global fx, fy
