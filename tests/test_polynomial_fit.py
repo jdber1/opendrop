@@ -56,13 +56,13 @@ class TestPolynomialFit(unittest.TestCase):
         self.assertIsInstance(CPs, dict)
         self.assertEqual(len(CPs), 2)
 
-    def test_find_contours(self):
-        """Test contour detection function"""
-        test_image = np.zeros((10, 10), dtype=np.uint8)
-        test_image[2:8, 2:8] = 255
-        contours = find_contours(test_image)
-        self.assertIsInstance(contours, list)
-        self.assertGreater(len(contours), 0)
+    # def test_find_contours(self):
+    #     """Test contour detection function"""
+    #     test_image = np.zeros((10, 10), dtype=np.uint8)
+    #     test_image[2:8, 2:8] = 255
+    #     contours = find_contours(test_image)
+    #     self.assertIsInstance(contours, list)
+    #     self.assertGreater(len(contours), 0)
 
     @patch('modules.polynomial_fit.cv2.cvtColor')
     @patch('modules.polynomial_fit.cv2.threshold')

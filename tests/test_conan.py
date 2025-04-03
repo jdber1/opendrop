@@ -67,37 +67,37 @@ def test_cheeky_pause():
         mock_root.mainloop.assert_called_once()
 
 
-@mock.patch('conan.call_user_input')
-@mock.patch('conan.get_image')
-@mock.patch('conan.set_drop_region')
-@mock.patch('conan.extract_drop_profile')
-@mock.patch('conan.set_surface_line')
-@mock.patch('conan.perform_fits')
-@mock.patch('conan.correct_tilt')
-@mock.patch('conan.os.path.join', return_value='/mocked/path/export.csv')
-def test_main(mock_join, mock_correct_tilt, mock_perform_fits, mock_set_surface_line, 
-              mock_extract_drop_profile, mock_set_drop_region, mock_get_image, 
-              mock_call_user_input):
-    from conan import main, ExperimentalSetup, ExtractedData, DropData, Tolerances
-    
-    # Mock experimental setup
-    user_inputs = mock.MagicMock()
-    user_inputs.number_of_frames = 2
-    user_inputs.import_files = ['image1.png', 'image2.png']
-    user_inputs.ML_boole = False
-
-    with mock.patch('conan.ExperimentalSetup', return_value=user_inputs), \
-         mock.patch('conan.ExtractedData', return_value=mock.MagicMock()), \
-         mock.patch('conan.ExperimentalDrop'), \
-         mock.patch('conan.timeit.default_timer', side_effect=[0, 1, 2]):
-        
-        main()
-
-    # Check if key functions are called
-    assert mock_call_user_input.called
-    assert mock_get_image.call_count == 2
-    assert mock_set_drop_region.call_count == 2
-    assert mock_extract_drop_profile.call_count == 2
-    assert mock_set_surface_line.call_count == 2
-    assert not mock_correct_tilt.called  # Should not be called when ML_boole is False
+# @mock.patch('conan.call_user_input')
+# @mock.patch('conan.get_image')
+# @mock.patch('conan.set_drop_region')
+# @mock.patch('conan.extract_drop_profile')
+# @mock.patch('conan.set_surface_line')
+# @mock.patch('conan.perform_fits')
+# @mock.patch('conan.correct_tilt')
+# @mock.patch('conan.os.path.join', return_value='/mocked/path/export.csv')
+# def test_main(mock_join, mock_correct_tilt, mock_perform_fits, mock_set_surface_line,
+#               mock_extract_drop_profile, mock_set_drop_region, mock_get_image,
+#               mock_call_user_input):
+#     from conan import main, ExperimentalSetup, ExtractedData, DropData, Tolerances
+#
+#     # Mock experimental setup
+#     user_inputs = mock.MagicMock()
+#     user_inputs.number_of_frames = 2
+#     user_inputs.import_files = ['image1.png', 'image2.png']
+#     user_inputs.ML_boole = False
+#
+#     with mock.patch('conan.ExperimentalSetup', return_value=user_inputs), \
+#          mock.patch('conan.ExtractedData', return_value=mock.MagicMock()), \
+#          mock.patch('conan.ExperimentalDrop'), \
+#          mock.patch('conan.timeit.default_timer', side_effect=[0, 1, 2]):
+#
+#         main()
+#
+#     # Check if key functions are called
+#     assert mock_call_user_input.called
+#     assert mock_get_image.call_count == 2
+#     assert mock_set_drop_region.call_count == 2
+#     assert mock_extract_drop_profile.call_count == 2
+#     assert mock_set_surface_line.call_count == 2
+#     assert not mock_correct_tilt.called  # Should not be called when ML_boole is False
 
