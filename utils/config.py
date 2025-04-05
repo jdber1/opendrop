@@ -2,7 +2,7 @@ import os
 
 VERSION = '1.0'
 
-AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"] 
+AUTO_MANUAL_OPTIONS = ["Automated", "User-selected"] 
 DROP_ID_OPTIONS = ["Automated", "User-selected"]
 THRESHOLD_OPTIONS = ["Automated", "User-selected"]
 BASELINE_OPTIONS = ["Automated", "User-selected"]
@@ -10,6 +10,9 @@ NEEDLE_OPTIONS = ['0.7176', '1.270', '1.651']
 FILE_SOURCE_OPTIONS_CA = ["Local images", "Flea3", "USB camera"]
 FILE_SOURCE_OPTIONS_IFT = ["Local images", "cv2.VideoCapture", "GenlCam"]
 EDGEFINDER_OPTIONS = ["OpenCV", "Subpixel", "Both"]
+
+#OPENDROP
+INTERFACIAL_TENSION = "Interfacial Tension"
 
 TANGENT_FIT = "tangent fit"
 POLYNOMIAL_FIT = "polynomial fit"

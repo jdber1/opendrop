@@ -5,14 +5,20 @@ from .float_entry import FloatEntry
 from .float_combobox import FloatCombobox
 from .check_button import CheckButton
 # Define your options and labels globally or pass them as parameters if preferred
-# AUTO_MANUAL_OPTIONS = ["Automated", "User-Selected"]  # Example options
+# AUTO_MANUAL_OPTIONS = ["Automated", "User-selected"]  # Example options
 LABEL_WIDTH = 200  # Adjust as needed
 
 # ift [User Input]
 def create_user_input_fields_ift(self, parent, user_input_data):
     """Create user input fields and return the frame containing them."""
-    user_input_frame = CTkFrame(parent)
+    user_input_frame = CTkFrame(parent, fg_color="red")
     user_input_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
+
+    # Configure the grid for the user_input_frame to be resizable
+    user_input_frame.grid_rowconfigure(0, weight=0)  # No resizing for the label row
+    user_input_frame.grid_rowconfigure(1, weight=1)  # Allow resizing for the input fields row
+    user_input_frame.grid_columnconfigure(0, weight=1)  # Allow resizing for the first column
+    user_input_frame.grid_columnconfigure(1, weight=1)  # Allow resizing for the second column
 
     # Create a label for the dynamic content
     label = CTkLabel(user_input_frame, text="User Inputs", font=("Roboto", 16, "bold"))
@@ -22,25 +28,37 @@ def create_user_input_fields_ift(self, parent, user_input_data):
     input_fields_frame = CTkFrame(user_input_frame)
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
+    # Configure the grid of the input_fields_frame to be resizable
+    input_fields_frame.grid_rowconfigure(0, weight=1)  # Allow first row to resize
+    input_fields_frame.grid_rowconfigure(1, weight=1)  # Allow second row to resize
+    input_fields_frame.grid_rowconfigure(2, weight=1)  # Allow third row to resize
+    input_fields_frame.grid_rowconfigure(3, weight=1)  # Allow fourth row to resize
+    input_fields_frame.grid_rowconfigure(4, weight=1)  # Allow fifth row to resize
+    input_fields_frame.grid_rowconfigure(5, weight=1)  # Allow sixth row to resize
+
+    input_fields_frame.grid_columnconfigure(0, weight=1)  # Allow first column to resize
+    input_fields_frame.grid_columnconfigure(1, weight=1)  # Allow second column to resize
 
     # Update the input value functions
     def update_drop_region_method(*args):
-        user_input_data["drop_region_choice"] = self.drop_region_method.get_value()
+        user_input_data.drop_ID_method = self.drop_region_method.get_value()
+        self.image_app.update_button_visibility()
 
     def update_needle_region_method(*args):
-        user_input_data["needle_region_choice"] = self.needle_region_method.get_value()    
+        user_input_data.needle_region_choice = self.needle_region_method.get_value()    
+        self.image_app.update_button_visibility()
 
     def update_drop_density(*args):
-        user_input_data["drop_density"] = self.drop_density_method.get_value() 
+        user_input_data.drop_density = self.drop_density_method.get_value() 
 
     def update_continuous_density(*args):
-        user_input_data["continuous_density"] = self.continuous_density.get_value()       
+        user_input_data.density_outer = self.continuous_density.get_value()       
 
     def update_needle_diameter(*args):
-        user_input_data["needle_diameter"] = self.needle_diameter.get_value()       
+        user_input_data.needle_diameter_mm = self.needle_diameter.get_value()       
 
     def update_pixel_mm(*args):
-        user_input_data["pixel_mm"] = self.pixel_mm.get_value()      
+        user_input_data.pixel_mm = self.pixel_mm.get_value()      
 
     # Add input widgets with lambda functions for updates
     self.drop_region_method = OptionMenu(
@@ -69,11 +87,11 @@ def create_user_input_fields_ift(self, parent, user_input_data):
 # ift [CheckList Select]
 def create_plotting_checklist_ift(self,parent,user_input_data):
 
-    plotting_clist_frame = CTkFrame(parent)
+    plotting_clist_frame = CTkFrame(parent,fg_color="green")
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(plotting_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -95,7 +113,7 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     analysis_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(analysis_clist_frame, text="Statistical Output", font=("Roboto", 16, "bold"))
+    label = CTkLabel(analysis_clist_frame, text="Analysis methods", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
@@ -103,9 +121,11 @@ def create_analysis_checklist_ift(self,parent,user_input_data):
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
     def update_default_method_boole(*args):
-        user_input_data["default_method"] = self.default_method_boole.get_value()   
+        user_input_data.analysis_methods_pd[INTERFACIAL_TENSION]= self.default_method_boole.get_value()  
+
     self.default_method_boole = CheckButton(
-        self, input_fields_frame, "Default Method", update_default_method_boole, rw=0, cl=0)
+        self, input_fields_frame, "Interfacial Tension", update_default_method_boole, rw=0, cl=0,initial_value=True)
+    
     return analysis_clist_frame
 
 def create_user_inputs_cm(self,parent,user_input_data):
@@ -125,15 +145,21 @@ def create_user_inputs_cm(self,parent,user_input_data):
     # Define update functions for each input
     def update_drop_id_method(*args):
         user_input_data.drop_ID_method = self.drop_ID_method.get_value()
+        self.experimental_drop.cropped_image = None  # Reset baseline dependencies
+        self.image_app.update_button_visibility()
 
     def update_threshold_method(*args):
         user_input_data.threshold_method = self.threshold_method.get_value()
+        user_input_data.threshold_val = None
+        self.image_app.update_button_visibility()
 
     def update_threshold_value(*args):
         user_input_data.threshold_val = self.threshold_val.get_value()
 
     def update_baseline_method(*args):
         user_input_data.baseline_method = self.baseline_method.get_value()
+        # user_input_data.threshold_val = None
+        self.image_app.update_button_visibility()
 
     def update_density_outer(*args):
         user_input_data.density_outer = self.density_outer.get_value()

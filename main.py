@@ -19,7 +19,7 @@ from modules.ExtractData import ExtractedData
 
 from views.main_window import MainWindow
 from views.function_window import call_user_input
-from modules.read_image import get_image
+# from modules.read_image import get_image
 from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
 from modules.extract_profile import extract_drop_profile
 from modules.extract_profile import image_crop
@@ -71,12 +71,12 @@ def main():
             NEEDLE_TOL,
             NEEDLE_STEPS)
         """
-        user_inputs = ExperimentalSetup()
-
+        # user_inputs = ExperimentalSetup()
+        
         MainWindow(
             continue_processing,
-            lambda: call_user_input(FunctionType.PENDANT_DROP, user_inputs, fitted_drop_data),
-            lambda: call_user_input(FunctionType.CONTACT_ANGLE, user_inputs, fitted_drop_data)
+            lambda: call_user_input(FunctionType.PENDANT_DROP, fitted_drop_data),
+            lambda: call_user_input(FunctionType.CONTACT_ANGLE, fitted_drop_data)
         )
 
 #    cheeky_pause()
