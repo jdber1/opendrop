@@ -112,13 +112,56 @@ class CaAnalysis(CTkFrame):
                 method_to_use = None
                 if 'tangent fit' in extracted_data.contact_angles:
                     method_to_use = 'tangent fit'
-                elif TANGENT_FIT in extracted_data.contact_angles:
-                    method_to_use = TANGENT_FIT
+                elif 'ellipse fit' in extracted_data.contact_angles:
+                    method_to_use = 'ellipse fit'
+                elif ML_MODEL in extracted_data.contact_angles:
+                    method_to_use = ML_MODEL
                 
                 if method_to_use:
                     angles_data = extracted_data.contact_angles[method_to_use]
                     print(f"Using method '{method_to_use}' data, keys: {angles_data.keys()}")
-                    
+
+                    # Special handling for ellipse fit only
+                    if method_to_use == 'ellipse fit' and 'baseline intercepts' in angles_data:
+                        baseline_intercepts = angles_data['baseline intercepts']
+                        
+                        # For ellipse fit, we know the angles are reversed
+                        # Always use the first point as left (assuming baseline_intercepts are ordered by x-coordinate)
+                        if baseline_intercepts[0][0] < baseline_intercepts[1][0]:
+                            # The first point is on the left (smaller x-coordinate)
+                            left_point = baseline_intercepts[0]
+                            right_point = baseline_intercepts[1]
+                        else:
+                            # The first point is on the right (larger x-coordinate)
+                            left_point = baseline_intercepts[1]
+                            right_point = baseline_intercepts[0]
+                            
+                        # Create contact_points from baseline_intercepts
+                        angles_data['contact points'] = [left_point, right_point]
+                        
+                        # Swap the angles for ellipse fit specifically
+                        left_angle = angles_data['left angle']
+                        right_angle = angles_data['right angle']
+                        
+                        left_angle_rad = math.radians(left_angle)
+                        right_angle_rad = math.radians(180 - right_angle)
+
+                        # Length of tangent line
+                        line_length = 50
+                        
+                        # Calculate tangent line endpoints
+                        left_dx = math.cos(left_angle_rad) * line_length
+                        left_dy = math.sin(left_angle_rad) * line_length
+                        right_dx = math.cos(right_angle_rad) * line_length
+                        right_dy = math.sin(right_angle_rad) * line_length
+                        
+                        # Create tangent lines in the expected format
+                        angles_data['tangent lines'] = (
+                            ((float(left_point[0]), float(left_point[1])), 
+                            (float(left_point[0] + left_dx), float(left_point[1] - left_dy))),
+                            ((float(right_point[0]), float(right_point[1])), 
+                            (float(right_point[0] + right_dx), float(right_point[1] - right_dy)))
+                        )
                     # Get left and right angle values
                     left_angle = right_angle = None
                     for key in [LEFT_ANGLE, 'left angle', 'left_angle']:
@@ -134,9 +177,13 @@ class CaAnalysis(CTkFrame):
                     if left_angle is not None and right_angle is not None:
                         # Find contact points data
                         contact_points = None
-                        for key in ['contact_points', 'tangent contact points', 'contact points']:
+                        for key in ['contact_points', 'tangent contact points', 'contact points', 'baseline intercepts']:
                             if key in angles_data:
-                                contact_points = angles_data[key]
+                                if key == 'baseline intercepts':
+                                    # Convert baseline intercepts to contact points format
+                                    contact_points = angles_data[key]
+                                else:
+                                    contact_points = angles_data[key]
                                 print(f"Found contact points data: {key} = {contact_points}")
                                 break
                         
