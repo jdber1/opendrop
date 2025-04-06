@@ -116,6 +116,10 @@ class CaAnalysis(CTkFrame):
                     method_to_use = 'ellipse fit'
                 elif 'polynomial fit' in extracted_data.contact_angles:
                     method_to_use = 'polynomial fit'
+                elif 'circle fit' in extracted_data.contact_angles:
+                    method_to_use = 'circle fit'
+                elif 'YL fit' in extracted_data.contact_angles:
+                    method_to_use = 'YL fit'
                 elif ML_MODEL in extracted_data.contact_angles:
                     method_to_use = ML_MODEL
                 
@@ -124,7 +128,7 @@ class CaAnalysis(CTkFrame):
                     print(f"Using method '{method_to_use}' data, keys: {angles_data.keys()}")
 
                     # Special handling for ellipse fit only
-                    if method_to_use == 'ellipse fit' and 'baseline intercepts' in angles_data:
+                    if method_to_use in [ 'ellipse fit', 'circle fit'] and 'baseline intercepts' in angles_data:
                         baseline_intercepts = angles_data['baseline intercepts']
                         
                         # For ellipse fit, determine left and right points
@@ -199,7 +203,46 @@ class CaAnalysis(CTkFrame):
                                 ((float(right_point[0]), float(right_point[1])), 
                                 (float(right_point[0] + right_dx), float(right_point[1] - right_dy)))
                             )
-                    
+                    elif method_to_use == 'YL fit' and 'fit shape' in angles_data and 'baseline' in angles_data:
+                        # For YL fit, extract contact points from the fit shape and baseline
+                        fit_shape = angles_data['fit shape']
+                        baseline = angles_data['baseline']
+                        
+                        # The first and last points of the fit shape are likely the contact points
+                        # Alternatively, use the first and last points of the baseline
+                        if len(baseline) >= 2:
+                            left_point = baseline[0]
+                            right_point = baseline[-1]
+                        elif len(fit_shape) >= 2:
+                            left_point = fit_shape[0]
+                            right_point = fit_shape[len(fit_shape)//2]  # Middle point might be the right contact point
+                        
+                        # Create contact_points
+                        angles_data['contact points'] = [left_point, right_point]
+                        
+                        # Get the angles
+                        left_angle = angles_data['left angle']
+                        right_angle = angles_data['right angle']
+                        
+                        # Calculate tangent lines using angles
+                        left_angle_rad = math.radians(left_angle)
+                        right_angle_rad = math.radians(180 - right_angle)
+                        
+                        line_length = 50
+                        
+                        # Calculate tangent line endpoints
+                        left_dx = math.cos(left_angle_rad) * line_length
+                        left_dy = math.sin(left_angle_rad) * line_length
+                        right_dx = math.cos(right_angle_rad) * line_length
+                        right_dy = math.sin(right_angle_rad) * line_length
+                        
+                        # Create tangent lines in the expected format
+                        angles_data['tangent lines'] = (
+                            ((float(left_point[0]), float(left_point[1])), 
+                            (float(left_point[0] + left_dx), float(left_point[1] - left_dy))),
+                            ((float(right_point[0]), float(right_point[1])), 
+                            (float(right_point[0] + right_dx), float(right_point[1] - right_dy)))
+                        )
                     # Get left and right angle values
                     left_angle = right_angle = None
                     for key in [LEFT_ANGLE, 'left angle', 'left_angle']:
