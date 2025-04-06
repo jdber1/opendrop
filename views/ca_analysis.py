@@ -114,6 +114,8 @@ class CaAnalysis(CTkFrame):
                     method_to_use = 'tangent fit'
                 elif 'ellipse fit' in extracted_data.contact_angles:
                     method_to_use = 'ellipse fit'
+                elif 'polynomial fit' in extracted_data.contact_angles:
+                    method_to_use = 'polynomial fit'
                 elif ML_MODEL in extracted_data.contact_angles:
                     method_to_use = ML_MODEL
                 
@@ -125,8 +127,7 @@ class CaAnalysis(CTkFrame):
                     if method_to_use == 'ellipse fit' and 'baseline intercepts' in angles_data:
                         baseline_intercepts = angles_data['baseline intercepts']
                         
-                        # For ellipse fit, we know the angles are reversed
-                        # Always use the first point as left (assuming baseline_intercepts are ordered by x-coordinate)
+                        # For ellipse fit, determine left and right points
                         if baseline_intercepts[0][0] < baseline_intercepts[1][0]:
                             # The first point is on the left (smaller x-coordinate)
                             left_point = baseline_intercepts[0]
@@ -139,7 +140,7 @@ class CaAnalysis(CTkFrame):
                         # Create contact_points from baseline_intercepts
                         angles_data['contact points'] = [left_point, right_point]
                         
-                        # Swap the angles for ellipse fit specifically
+                        # Get the angles
                         left_angle = angles_data['left angle']
                         right_angle = angles_data['right angle']
                         
@@ -162,6 +163,43 @@ class CaAnalysis(CTkFrame):
                             ((float(right_point[0]), float(right_point[1])), 
                             (float(right_point[0] + right_dx), float(right_point[1] - right_dy)))
                         )
+                    # Special handling for polynomial fit
+                    elif method_to_use == 'polynomial fit' and 'contact points' in angles_data:
+                        contact_points = angles_data['contact points']
+                        
+                        # For polynomial fit, create tangent lines based on the angles
+                        if 'left angle' in angles_data and 'right angle' in angles_data:
+                            left_angle = angles_data['left angle']
+                            right_angle = angles_data['right angle']
+                            
+                            # Determine left and right points
+                            if contact_points[0][0] < contact_points[1][0]:
+                                left_point = contact_points[0]
+                                right_point = contact_points[1]
+                            else:
+                                left_point = contact_points[1]
+                                right_point = contact_points[0]
+                            
+                            # Calculate tangent lines using angles
+                            left_angle_rad = math.radians(left_angle)
+                            right_angle_rad = math.radians(180 - right_angle)
+                            
+                            line_length = 50
+                            
+                            # Calculate tangent line endpoints
+                            left_dx = math.cos(left_angle_rad) * line_length
+                            left_dy = math.sin(left_angle_rad) * line_length
+                            right_dx = math.cos(right_angle_rad) * line_length
+                            right_dy = math.sin(right_angle_rad) * line_length
+                            
+                            # Create tangent lines in the expected format
+                            angles_data['tangent lines'] = (
+                                ((float(left_point[0]), float(left_point[1])), 
+                                (float(left_point[0] + left_dx), float(left_point[1] - left_dy))),
+                                ((float(right_point[0]), float(right_point[1])), 
+                                (float(right_point[0] + right_dx), float(right_point[1] - right_dy)))
+                            )
+                    
                     # Get left and right angle values
                     left_angle = right_angle = None
                     for key in [LEFT_ANGLE, 'left angle', 'left_angle']:
