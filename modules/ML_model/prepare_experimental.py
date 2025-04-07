@@ -2070,10 +2070,18 @@ def experimental_pred(pred_ds, model, side='both', cluster=True, display=False):
     start_time = time.time()
 
     if side == 'left':
-        input_left = np.array([pred_ds[0,0]])
+        input_left = np.array([pred_ds[0,0]], dtype=np.float32)  # Convert to float32
         ML_prediction_start_time = time.time()
 
-        prediction_left = model.predict(input_left)
+        # Use signatures approach instead of predict
+        input_tensor = tf.convert_to_tensor(input_left)
+        prediction_left = model.signatures['serving_default'](**{'conv1d_input': input_tensor})
+        # Extract from result dictionary if needed
+        if isinstance(prediction_left, dict):
+            prediction_left = list(prediction_left.values())[0]
+        # Convert tensor to numpy if needed
+        if hasattr(prediction_left, 'numpy'):
+            prediction_left = prediction_left.numpy()
 
         ML_prediction_time = time.time() - ML_prediction_start_time
         analysis_time = time.time() - start_time
@@ -2090,10 +2098,18 @@ def experimental_pred(pred_ds, model, side='both', cluster=True, display=False):
         return prediction_left, timings
 
     if side == 'right':
-        input_right = np.array([pred_ds[0,1]])
+        input_right = np.array([pred_ds[0,1]], dtype=np.float32)  # Convert to float32
         ML_prediction_start_time = time.time()
 
-        prediction_right = model.predict(input_right)
+        # Use signatures approach instead of predict
+        input_tensor = tf.convert_to_tensor(input_right)
+        prediction_right = model.signatures['serving_default'](**{'conv1d_input': input_tensor})
+        # Extract from result dictionary if needed
+        if isinstance(prediction_right, dict):
+            prediction_right = list(prediction_right.values())[0]
+        # Convert tensor to numpy if needed
+        if hasattr(prediction_right, 'numpy'):
+            prediction_right = prediction_right.numpy()
 
         ML_prediction_time = time.time() - ML_prediction_start_time
         analysis_time = time.time() - start_time
@@ -2110,9 +2126,19 @@ def experimental_pred(pred_ds, model, side='both', cluster=True, display=False):
         return prediction_right, timings
 
     if side == 'both':
+        # Convert to float32
+        pred_ds_float32 = pred_ds.astype(np.float32)
         ML_prediction_start_time = time.time()
 
-        predictions = model.predict(pred_ds)
+        # Use signatures approach instead of predict
+        input_tensor = tf.convert_to_tensor(pred_ds_float32)
+        predictions = model.signatures['serving_default'](**{'conv1d_input': input_tensor})
+        # Extract from result dictionary if needed
+        if isinstance(predictions, dict):
+            predictions = list(predictions.values())[0]
+        # Convert tensor to numpy if needed
+        if hasattr(predictions, 'numpy'):
+            predictions = predictions.numpy()
 
         ML_prediction_time = time.time() - ML_prediction_start_time
         analysis_time = time.time() - start_time
