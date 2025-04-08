@@ -159,7 +159,7 @@ def create_user_inputs_cm(self,parent,user_input_data):
     def update_baseline_method(*args):
         user_input_data.baseline_method = self.baseline_method.get_value()
         # user_input_data.threshold_val = None
-        self.image_app.update_button_visibility()
+        # self.image_app.update_button_visibility()
 
     def update_density_outer(*args):
         user_input_data.density_outer = self.density_outer.get_value()

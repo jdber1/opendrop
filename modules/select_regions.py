@@ -59,25 +59,25 @@ def set_surface_line(experimental_drop, experimental_setup):
     # message = []
 
     # 
-    if experimental_drop.cropped_image is None:
-        if experimental_setup.drop_ID_method == "User-selected":
-            msgbox.showwarning("Warning", "Please select the drop region")
-            set_drop_region(experimental_drop, experimental_setup)
-            return  
-        # autuomatic
-        else: 
-            set_drop_region(experimental_drop, experimental_setup)
+    # if experimental_drop.cropped_image is None:
+    #     if experimental_setup.drop_ID_method == "User-selected":
+    #         msgbox.showwarning("Warning", "Please select the drop region")
+    #         set_drop_region(experimental_drop, experimental_setup)
+    #         return  
+    #     # autuomatic
+    #     else: 
+    #         set_drop_region(experimental_drop, experimental_setup)
 
-    if experimental_setup.threshold_method == "User-selected":
-        if experimental_setup.threshold_val is None:
-            threshold = simpledialog.askinteger("Input Required", "Enter the threshold value:")
-            if threshold is None:  # User pressed "Cancel"
-                msgbox.showwarning("Warning", "Threshold is required to continue.")
-                return  
-            experimental_setup.threshold_val = threshold
+    # if experimental_setup.threshold_method == "User-selected":
+    #     if experimental_setup.threshold_val is None:
+    #         threshold = simpledialog.askinteger("Input Required", "Enter the threshold value:")
+    #         if threshold is None:  # User pressed "Cancel"
+    #             msgbox.showwarning("Warning", "Threshold is required to continue.")
+    #             return  
+    #         experimental_setup.threshold_val = threshold
     
     
-    extract_drop_profile(experimental_drop, experimental_setup)
+    # extract_drop_profile(experimental_drop, experimental_setup)
     
     if experimental_setup.baseline_method == "Automated":
         experimental_drop.drop_contour, experimental_drop.contact_points = prepare_hydrophobic(experimental_drop.contour)

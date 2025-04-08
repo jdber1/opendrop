@@ -177,16 +177,19 @@ class FunctionWindow(CTk):
                         self, user_input_data, fg_color=self.FG_COLOR)
                     self.ift_analysis_frame.pack(fill="both", expand=True)
                     print("FunctionType.PENDANT_DROP")
-                    # self.pd_processor.process_data(fitted_drop_data, user_input_data, callback=self.ift_analysis_frame.receive_output)
+                  
                 else:
                     self.ca_preparation_frame.pack_forget()
                     self.ca_analysis_frame = CaAnalysis(
                         self, user_input_data, fg_color=self.FG_COLOR)
                     self.ca_analysis_frame.pack(fill="both", expand=True)
+                    
                     print("FunctionType.Contact_Angle")
                     # analysis the given input data and send the output to the ca_analysis_frame for display
+                    self.withdraw()
                     self.ca_processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
-                
+                    self.deiconify()
+                    
         elif self.current_stage == Stage.OUTPUT:
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_analysis_frame.pack_forget()
