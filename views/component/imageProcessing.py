@@ -30,21 +30,21 @@ class ImageApp(ctk.CTkFrame):
         self.initialize_image_display(self.main_frame)
 
         # Drop region button
-        self.drop_region_button = ctk.CTkButton(
-            self.main_frame, text="Set Drop Region", command=lambda: set_drop_region(experimental_drop, user_input_data))
-        # self.drop_region_button.grid(row=1, column=0, pady=5)  # Change to grid
+        # self.drop_region_button = ctk.CTkButton(
+        #     self.main_frame, text="Set Drop Region", command=lambda: set_drop_region(experimental_drop, user_input_data))
+        # # self.drop_region_button.grid(row=1, column=0, pady=5)  # Change to grid
 
-        # Needle region button
-        if application == "IFT":
-            self.needle_region_button = ctk.CTkButton(
-                self.main_frame, text="Set Needle Region", command=self.set_needle_region)
+        # # Needle region button
+        # if application == "IFT":
+        #     self.needle_region_button = ctk.CTkButton(
+        #         self.main_frame, text="Set Needle Region", command=self.set_needle_region)
         
-        if application == "CA":
-            # Baseline region button
-            self.basline_region_button = ctk.CTkButton(
-                self.main_frame, text="Set Baseline Region", command=lambda: set_surface_line(experimental_drop, user_input_data))
+        # if application == "CA":
+        #     # Baseline region button
+        #     self.basline_region_button = ctk.CTkButton(
+        #         self.main_frame, text="Set Baseline Region", command=lambda: set_surface_line(experimental_drop, user_input_data))
 
-        self.update_button_visibility()
+        # self.update_button_visibility()
 
     def initialize_image_display(self, frame):
         """Initialize the image display and navigation buttons inside the provided frame."""

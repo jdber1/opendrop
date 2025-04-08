@@ -19,12 +19,12 @@ def validate_user_input_data_ift(user_input_data):
         messages = []
 
             # Ensure if drop region is chosen, it must not be None
-        if user_input_data.drop_ID_method != 'Automated' and user_input_data.ift_drop_region is None:
-            messages.append("Please select drop region")
+        # if user_input_data.drop_ID_method != 'Automated' and user_input_data.ift_drop_region is None:
+        #     messages.append("Please select drop region")
 
-        # Ensure if needle region is chosen, it must not be None
-        if user_input_data.needle_region_choice != 'Automated' and user_input_data.ift_needle_region is None:
-            messages.append("Please select needle region")
+        # # Ensure if needle region is chosen, it must not be None
+        # if user_input_data.needle_region_choice != 'Automated' and user_input_data.ift_needle_region is None:
+        #     messages.append("Please select needle region")
 
             # Check user_input_fields for None values
         
@@ -66,30 +66,31 @@ def validate_user_input_data_cm(user_input_data,experimental_drop):
 
     """
         # Ensure if drop region is chosen, it must not be None
-    if user_input_data.drop_ID_method != 'Automated' and experimental_drop.cropped_image is None:
-        messages.append("Please select drop region")
+    # if user_input_data.drop_ID_method != 'Automated' and experimental_drop.cropped_image is None:
+    #     messages.append("Please select drop region")
 
     # Ensure if needle region is chosen, it must not be None
-    if user_input_data.baseline_method != 'Automated' and experimental_drop.drop_contour is None:
-        messages.append("Please select baseline region")
+    # if user_input_data.baseline_method != 'Automated' and experimental_drop.drop_contour is None:
+    #     messages.append("Please select baseline region")
 
         # Check user_input_fields for None values
-    if user_input_data.baseline_method != 'Automated' and user_input_data.threshold_val is None:
+    if user_input_data.threshold_method != 'Automated' and user_input_data.threshold_val is None:
         messages.append("Please enter threshold value")
 
     required_fields = {
-        'threshold_method':"Threshold Value",
         'density_outer': "Continuous Density",
         'needle_diameter_mm': "Needle Diameter",
     }
-
-    if not any(user_input_data.analysis_methods_ca.values()):
-            messages.append("At least one analysis method must be selected.")
 
     for field, label in required_fields.items():
         value = getattr(user_input_data, field, None)  # Get the attribute or None if missing
         if value is None or value == "":  # Check for both None and empty string
             messages.append(f"{label} is required")
+
+    if not any(user_input_data.analysis_methods_ca.values()):
+            messages.append("At least one analysis method must be selected.")
+
+    
     
     # Check if analysis_method_fields has at least one method selected
     if not any(user_input_data.analysis_methods_pd.values()):

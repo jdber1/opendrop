@@ -146,12 +146,12 @@ def create_user_inputs_cm(self,parent,user_input_data):
     def update_drop_id_method(*args):
         user_input_data.drop_ID_method = self.drop_ID_method.get_value()
         self.experimental_drop.cropped_image = None  # Reset baseline dependencies
-        self.image_app.update_button_visibility()
+        # self.image_app.update_button_visibility()
 
     def update_threshold_method(*args):
         user_input_data.threshold_method = self.threshold_method.get_value()
         user_input_data.threshold_val = None
-        self.image_app.update_button_visibility()
+        # self.image_app.update_button_visibility()
 
     def update_threshold_value(*args):
         user_input_data.threshold_val = self.threshold_val.get_value()
