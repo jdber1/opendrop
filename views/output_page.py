@@ -38,7 +38,7 @@ class OutputPage(ctk.CTkFrame):
         self.filename_var = ctk.StringVar()
         self.filename_var.trace_add("write", self.on_filename_change)
 
-        self.filename_entry = ctk.CTkEntry(output_frame, width=300)
+        self.filename_entry = ctk.CTkEntry(output_frame, width=300, textvariable=self.filename_var)
         self.filename_entry.grid(row=2, column=1, padx=10, pady=5)
 
         # Figure Section
