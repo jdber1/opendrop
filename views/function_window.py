@@ -138,7 +138,7 @@ class FunctionWindow(CTk):
             if not validate_frame_interval(user_input_data):
                 self.update_stage(Move.Back.value)
                 messagebox.showinfo("Missing", "Frame Interval is required.")
-                return         
+                return
             self.back_button.pack(side="left", padx=10, pady=10)
 
             # user have selected at least one file
