@@ -6,12 +6,12 @@ def validate_frame_interval(user_input_data):
             return False
     return True
 
-def validate_wait_time(user_input_data):
-    if len(user_input_data.import_files) > 1:
-            # Check if wait_time is None or empty
-        if not user_input_data.wait_time:
-             return False
-    return True
+# def validate_wait_time(user_input_data):
+#     if len(user_input_data.import_files) > 1:
+#             # Check if wait_time is None or empty
+#         if not user_input_data.wait_time:
+#              return False
+#     return True
 
 
 def validate_user_input_data_ift(user_input_data):
@@ -74,7 +74,7 @@ def validate_user_input_data_cm(user_input_data,experimental_drop):
     #     messages.append("Please select baseline region")
 
         # Check user_input_fields for None values
-    if user_input_data.threshold_method != 'Automated' and user_input_data.threshold_val is None:
+    if user_input_data.threshold_method != 'Automated' and not user_input_data.threshold_val:
         messages.append("Please enter threshold value")
 
     required_fields = {
@@ -83,8 +83,9 @@ def validate_user_input_data_cm(user_input_data,experimental_drop):
     }
 
     for field, label in required_fields.items():
-        value = getattr(user_input_data, field, None)  # Get the attribute or None if missing
-        if value is None or value == "":  # Check for both None and empty string
+        print(field,label)
+        value = getattr(user_input_data, field)  # Get the attribute or None if missing
+        if not value:  # Check for both None and empty string
             messages.append(f"{label} is required")
 
     if not any(user_input_data.analysis_methods_ca.values()):

@@ -134,11 +134,11 @@ class FunctionWindow(CTk):
                 return
 
             # Then check if the frame interval is valid
-            if function_type == FunctionType.PENDANT_DROP:
-                if not validate_frame_interval(user_input_data):
-                    self.update_stage(Move.Back.value)
-                    messagebox.showinfo("Missing", "Frame Interval is required.")
-                    return         
+            # if function_type == FunctionType.PENDANT_DROP:
+            if not validate_frame_interval(user_input_data):
+                self.update_stage(Move.Back.value)
+                messagebox.showinfo("Missing", "Frame Interval is required.")
+                return         
             self.back_button.pack(side="left", padx=10, pady=10)
 
             # user have selected at least one file
@@ -156,7 +156,7 @@ class FunctionWindow(CTk):
                 self.ca_preparation_frame = CaPreparation(
                 self, user_input_data, experimental_drop,fg_color=self.FG_COLOR)
                 self.ca_preparation_frame.pack(fill="both", expand=True) 
-                # self.ca_processor.gather_image_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
+
 
         elif self.current_stage == Stage.ANALYSIS:
             # Validate user input data
@@ -189,7 +189,7 @@ class FunctionWindow(CTk):
                     self.withdraw()
                     self.ca_processor.process_data(fitted_drop_data, user_input_data, callback=self.ca_analysis_frame.receive_output)
                     self.deiconify()
-                    
+
         elif self.current_stage == Stage.OUTPUT:
             if function_type == FunctionType.PENDANT_DROP:
                 self.ift_analysis_frame.pack_forget()

@@ -66,6 +66,7 @@ class CaAnalysis(CTkFrame):
     def receive_output(self, extracted_data, experimental_drop=None):
         """Process results and display contact angles"""
         self.output.append(extracted_data)
+        
         index = len(self.output) - 1
 
         # Update table data
@@ -87,6 +88,8 @@ class CaAnalysis(CTkFrame):
             
             # Get cropped image from experimental_drop
             cropped_cv = None
+            print(f"experimental_drop is not None: {experimental_drop is not None}")
+            print(f"hasattr(experimental_drop, 'cropped_image'): {hasattr(experimental_drop, 'cropped_image')}")
             if experimental_drop is not None and hasattr(experimental_drop, 'cropped_image'):
                 cropped_cv = experimental_drop.cropped_image
                 print(f"Retrieved cropped image from experimental_drop")
@@ -277,6 +280,9 @@ class CaAnalysis(CTkFrame):
                                 break
                         
                         # Draw annotations on cropped image
+                        print(f"Index: {index}")
+                        print(f"self.cropped_images:{self.cropped_images}")
+                        print(f"Index in self.cropped_images: {index in self.cropped_images}")
                         if contact_points is not None and tangent_lines is not None and index in self.cropped_images:
                             print(f"Creating angle annotations on cropped image")
                             

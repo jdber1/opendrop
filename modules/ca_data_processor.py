@@ -99,7 +99,7 @@ class CaDataProcessor:
             self.output.append(extracted_data)
 
             if callback:
-                callback(extracted_data)
+                callback(extracted_data,raw_experiment)
 
     def save_result(self, input_file, output_directory, filename):
         for index, extracted_data in enumerate(self.output):
