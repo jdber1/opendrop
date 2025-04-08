@@ -6,6 +6,14 @@ def validate_frame_interval(user_input_data):
             return False
     return True
 
+def validate_wait_time(user_input_data):
+    if len(user_input_data.import_files) > 1:
+            # Check if wait_time is None or empty
+        if not user_input_data.wait_time:
+             return False
+    return True
+
+
 def validate_user_input_data_ift(user_input_data):
         """Validate the user input data and return messages for missing fields."""
         messages = []

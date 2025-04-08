@@ -6,7 +6,7 @@ def create_navigation(parent):
     navigation_frame.pack(pady=10, padx=10, fill='x')
 
     # Define stage labels for navigation
-    stages = ["Preparation", "Acquisition", "Analysis", "Output"]
+    stages = ["Acquisition", "Preparation", "Analysis", "Output"]
 
     progress_bar = CTkProgressBar(navigation_frame)
     progress_bar.pack(fill='x', expand=True, padx=130, pady=(20,10))
