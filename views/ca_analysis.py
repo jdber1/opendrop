@@ -472,7 +472,7 @@ class CaAnalysis(CTkFrame):
             
             # Draw baseline - connect the two contact points
             baseline_width = 2
-            baseline_color = '#0000FF'  # Blue
+            baseline_color = 'yellow'
             
             # Calculate baseline direction vector
             baseline_dx = right_point[0] - left_point[0]
@@ -499,20 +499,20 @@ class CaAnalysis(CTkFrame):
                 draw.line((left_point[0], left_point[1], right_point[0], right_point[1]), 
                         fill=baseline_color, width=baseline_width)
             
-            # Draw contact points (red dots)
-            dot_radius = 5
+            # Draw contact points (green dots)
+            dot_radius = 3
             draw.ellipse((left_point[0]-dot_radius, left_point[1]-dot_radius, 
-                        left_point[0]+dot_radius, left_point[1]+dot_radius), fill='red')
+                        left_point[0]+dot_radius, left_point[1]+dot_radius), fill='#39FF14')
             draw.ellipse((right_point[0]-dot_radius, right_point[1]-dot_radius, 
-                        right_point[0]+dot_radius, right_point[1]+dot_radius), fill='red')
+                        right_point[0]+dot_radius, right_point[1]+dot_radius), fill='#39FF14')
             
-            # Draw tangent lines (green lines)
+            # Draw tangent lines (red lines)
             draw.line((left_point[0], left_point[1], 
                     extended_left_tangent_end[0], extended_left_tangent_end[1]), 
-                    fill='#00FF00', width=2)
+                    fill='red', width=2)
             draw.line((right_point[0], right_point[1], 
                     extended_right_tangent_end[0], extended_right_tangent_end[1]), 
-                    fill='#00FF00', width=2)
+                    fill='red', width=2)
             
             # Add angle label text
             try:
@@ -529,11 +529,11 @@ class CaAnalysis(CTkFrame):
             
             # Set text positions - based on tangent direction
             text_offset = 25
-            left_text_pos = (left_point[0] - text_offset, left_point[1] - text_offset)
-            right_text_pos = (right_point[0] + 10, right_point[1] - text_offset)
+            left_text_pos = (left_point[0] + 0.5*text_offset, left_point[1] - 2*text_offset)
+            right_text_pos = (right_point[0] - 3*text_offset, right_point[1] - 3.5*text_offset)
             
-            draw.text(left_text_pos, left_text, fill='blue', font=font)
-            draw.text(right_text_pos, right_text, fill='blue', font=font)
+            draw.text(left_text_pos, left_text, fill='red', font=font)
+            draw.text(right_text_pos, right_text, fill='red', font=font)
         
         return img
 
