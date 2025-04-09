@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <template class="ImageAcquisitionConfigurator" parent="GtkBin">
+    <property name="can_focus">False</property>
+    <signal name="destroy" handler="destroy" swapped="no"/>
+  </template>
+</interface>
