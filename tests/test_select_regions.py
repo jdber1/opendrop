@@ -12,7 +12,6 @@ from numpy.testing import assert_array_equal
 from unittest.mock import patch, MagicMock
 
 
-
 class TestSelectRegions(unittest.TestCase):
 
     @patch('modules.preprocessing.auto_crop')
@@ -28,7 +27,7 @@ class TestSelectRegions(unittest.TestCase):
         experimental_setup.drop_ID_method = "Automated"
 
         # Call the function to be tested
-        set_drop_region(experimental_drop, experimental_setup)
+        set_drop_region(experimental_drop, experimental_setup, index=0)  # Added index parameter
 
         # Check if auto_crop was called correctly
         mock_auto_crop.assert_called_once_with(mock_image)
@@ -55,10 +54,11 @@ class TestSelectRegions(unittest.TestCase):
         experimental_setup.drop_ID_method = "User-selected"
 
         # Call the function to be tested
-        set_drop_region(experimental_drop, experimental_setup)
+        set_drop_region(experimental_drop, experimental_setup, index=1)  # Added index parameter
 
         # Check if user_ROI was called correctly
-        mock_user_ROI.assert_called_once_with(mock_image, 'Select drop region', unittest.mock.ANY, unittest.mock.ANY)
+        mock_user_ROI.assert_called_once_with(mock_image, 'Select drop region for Image 1', 0.008,
+                                              [1, 1])  # Updated values
 
         # Verify if image_crop was called correctly
         mock_image_crop.assert_called_once_with(mock_image, [(10, 20), (90, 80)])
@@ -121,53 +121,6 @@ class TestCorrectTilt(unittest.TestCase):
 
         # Verify if the return values were handled correctly
         self.assertTrue(np.array_equal(experimental_drop.cropped_image, mock_cropped_image))
-
-
-# class TestUserLine(unittest.TestCase):
-#
-#     @patch('modules.fits.perform_fits')  # Ensure correct function path
-#     @patch('modules.select_regions.cv2.line')
-#     @patch('modules.select_regions.cv2.imshow')
-#     @patch('modules.select_regions.set_screen_position', return_value=(0, 0))  # Simulate screen resolution setting
-#     def test_user_line(self, mock_set_screen_position, mock_imshow, mock_line, mock_perform_fits):
-#         # Simulate input image and contour data
-#         mock_image = np.zeros((100, 100, 3))  # A blank 100x100 image
-#
-#         # Simulate contour data to ensure a valid drop is generated
-#         mock_contour = np.array([[10, 50], [20, 30], [30, 10], [40, 5], [50, 2]])
-#         mock_contact_points = {0: [10, 50], 1: [50, 2]}  # Simulate contact points
-#
-#         # Simulate experimental_drop and experimental_setup objects
-#         experimental_drop = MagicMock()
-#         experimental_drop.cropped_image = mock_image
-#         experimental_drop.contour = mock_contour
-#         experimental_drop.contact_points = mock_contact_points
-#
-#         experimental_setup = MagicMock()
-#         experimental_setup.screen_resolution = (1920, 1080)
-#         experimental_setup.drop_region = np.array([[0, 0], [100, 100]])  # Simulate the region
-#         experimental_setup.tangent_boole = True  # Enable tangent fitting
-#         experimental_setup.second_deg_polynomial_boole = False
-#         experimental_setup.circle_boole = False
-#         experimental_setup.ellipse_boole = False
-#
-#         # Simulate a valid return value for the perform_fits function
-#         mock_perform_fits.return_value = {
-#             'tangent fit': {
-#                 'tangent lines': [
-#                     [[10, 50], [20, 40]],  # First tangent line
-#                     [[40, 30], [50, 20]]  # Second tangent line
-#                 ]
-#             }
-#         }
-#
-#         # Call the function to be tested
-#         user_line(experimental_drop, experimental_setup)
-#
-#         # Check if perform_fits was called correctly
-#         mock_perform_fits.assert_called_once_with(
-#             experimental_drop, tangent=True, polynomial=False, circle=False, ellipse=False
-#         )
 
 
 class TestDrawRectangle(unittest.TestCase):
@@ -268,33 +221,6 @@ class TestOptimizedPath(unittest.TestCase):
         result = optimized_path(coords)
         expected_result = np.array([(0, 0)])
         np.testing.assert_array_equal(result, expected_result)
-
-# Before testing MLPrepareHydrophobic, modify line 518 in select_regions from "if 0" to "if True"
-class TestMLPrepareHydrophobic(unittest.TestCase):
-
-    # @patch('modules.select_regions.plt.plot')  # Mock the behavior of plt.plot
-    # def test_ML_prepare_hydrophobic_plot_called(self, mock_plt_plot):
-    #     # Simulate input data
-    #     coords_in = np.array([
-    #         [1, 2],
-    #         [3, 4],
-    #         [5, 6],
-    #         [7, 8]
-    #     ])
-    #
-    #     # Force execution of the plotting code block, directly call the function, no side_effect used
-    #     result = ML_prepare_hydrophobic(coords_in)
-    #
-    #     # Verify if plt.plot was called correctly in the function
-    #     self.assertTrue(mock_plt_plot.called)
-
-    def test_ML_prepare_hydrophobic_np_delete_called(self):
-        # Test if np.delete was called
-        pass
-
-    def test_ML_prepare_hydrophobic_return_shape(self):
-        # Test if the return result shape is correct
-        pass
 
 if __name__ == '__main__':
     unittest.main()
