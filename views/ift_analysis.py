@@ -10,11 +10,10 @@ class IftAnalysis(CTkFrame):
         super().__init__(parent, **kwargs)
 
         self.user_input_data = user_input_data
-        self.pack(fill="both", expand=True)
 
         # Create tabs
         self.tab_view = CTkTabview(self)
-        self.tab_view.pack(fill="both", expand=True, padx=20, pady=20)
+        self.tab_view.pack(fill="both", expand=True)
 
         # Add "Results" and "Graphs" tabs
         self.tab_view.add("Results")
@@ -86,7 +85,7 @@ class IftAnalysis(CTkFrame):
         # Create the figure and axis
         # width, height = self.image_frame.image_label.image.size
         fig, ax = plt.subplots(
-            figsize=(4, 3))
+            figsize=(4, 2))
         ax.plot([1, 2, 3], [2, 5, 10])  # Example data for the residuals
         ax.set_title('Residuals')
 
@@ -118,3 +117,24 @@ class IftAnalysis(CTkFrame):
         toolbar = NavigationToolbar2Tk(canvas, parent)
         toolbar.update()
         canvas.draw()
+
+    def receive_output(self , extracted_data):
+        self.output.append(extracted_data)
+
+        for method in extracted_data.contact_angles.keys():
+            preformed_method_list = list(self.preformed_methods.keys())
+            
+            if method in preformed_method_list:
+                column_index = preformed_method_list.index(method)+1
+                result = extracted_data.contact_angles[method]
+                self.table_data[len(self.output)-1][column_index].configure(text=f"({result[LEFT_ANGLE]:.2f}, {result[RIGHT_ANGLE]:.2f})")
+            else:
+                print(f"Unknown method. Skipping the method.")
+            
+
+        if len(self.output) < self.user_input_data.number_of_frames:
+            self.table_data[len(self.output)][1].configure(text="PROCESSING...")
+            
+    def destroy(self):
+        plt.close('all')
+        return super().destroy()

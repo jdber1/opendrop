@@ -400,7 +400,7 @@ def prepare_hydrophobic(coords,xi=0.8,cluster=True,display=False):
 
     This code is adapted from the prepare module, but this version differs in that it assumes that the drop
     is hydrophobic."""
-    coords = coords.astype(np.float)
+    coords = coords.astype(float)
 
     # flip contour so that min and max values are correct
     for coord in coords:

@@ -7,6 +7,8 @@ from __future__ import print_function
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import tkinter.messagebox as msgbox
+import tkinter.simpledialog as simpledialog
 # import time
 # import datetime
 # from Tkinter import *
@@ -16,12 +18,14 @@ from scipy import optimize # DS 7/6/21 - for least squares fit
 import tensorflow as tf # DS 9/6/21 - for loading ML model
 
 from .preprocessing import prepare_hydrophobic, tilt_correction
+from .extract_profile import extract_drop_profile
+from utils.config import *
 
 # import os
 
 MAX_IMAGE_TO_SCREEN_RATIO = 0.8
 
-def set_drop_region(experimental_drop, experimental_setup):
+def set_drop_region(experimental_drop, experimental_setup,index):
     # select the drop and needle regions in the image
     screen_size = experimental_setup.screen_resolution
     image_size = experimental_drop.image.shape
@@ -30,20 +34,21 @@ def set_drop_region(experimental_drop, experimental_setup):
     if experimental_setup.drop_ID_method == "Automated":
         from .preprocessing import auto_crop
         experimental_drop.cropped_image, (left,right,top,bottom) = auto_crop(experimental_drop.image)
-
+        print("experimental_drop.cropped_image",experimental_drop.cropped_image is None)
         if 1: #show found drop
-            plt.title('original image')
+        
+            plt.title(f"Original image {index}")
             plt.imshow(experimental_drop.image)
             plt.show()
             plt.close()
 
-            plt.title('cropped image')
+            plt.title(f"Cropped image {index}")
             plt.imshow(experimental_drop.cropped_image)
             plt.show()
             plt.close()
         experimental_setup.drop_region = [(left, top),(right,bottom)]
     elif experimental_setup.drop_ID_method == "User-selected":
-        experimental_setup.drop_region = user_ROI(experimental_drop.image, 'Select drop region', scale, screen_position)
+        experimental_setup.drop_region = user_ROI(experimental_drop.image, f"Select drop region for Image {index}", scale, screen_position)
         experimental_drop.cropped_image = image_crop(experimental_drop.image, experimental_setup.drop_region)
  #   experimental_setup.needle_region = user_line(experimental_drop.image, 'Select needle region', scale, screen_position)
 
@@ -52,6 +57,29 @@ def image_crop(image, points):
     return image[int(points[0][1]):int(points[1][1]), int(points[0][0]):int(points[1][0])]
 
 def set_surface_line(experimental_drop, experimental_setup):
+    # message = []
+
+    # 
+    # if experimental_drop.cropped_image is None:
+    #     if experimental_setup.drop_ID_method == "User-selected":
+    #         msgbox.showwarning("Warning", "Please select the drop region")
+    #         set_drop_region(experimental_drop, experimental_setup)
+    #         return  
+    #     # autuomatic
+    #     else: 
+    #         set_drop_region(experimental_drop, experimental_setup)
+
+    # if experimental_setup.threshold_method == "User-selected":
+    #     if experimental_setup.threshold_val is None:
+    #         threshold = simpledialog.askinteger("Input Required", "Enter the threshold value:")
+    #         if threshold is None:  # User pressed "Cancel"
+    #             msgbox.showwarning("Warning", "Threshold is required to continue.")
+    #             return  
+    #         experimental_setup.threshold_val = threshold
+    
+    
+    # extract_drop_profile(experimental_drop, experimental_setup)
+    
     if experimental_setup.baseline_method == "Automated":
         experimental_drop.drop_contour, experimental_drop.contact_points = prepare_hydrophobic(experimental_drop.contour)
     elif experimental_setup.baseline_method == "User-selected":
@@ -251,22 +279,23 @@ def user_line(experimental_drop, experimental_setup):
         experimental_drop.contact_points = CPs
 
         if DRAW_TANGENT_LINE_WHILE_SETTING_BASELINE:
-            if experimental_setup.tangent_boole == True or experimental_setup.second_deg_polynomial_boole == True or experimental_setup.circle_boole == True or experimental_setup.ellipse_boole == True:
+            methods_boole = experimental_setup.analysis_methods_ca
+            if methods_boole[TANGENT_FIT] or methods_boole[POLYNOMIAL_FIT] or methods_boole[CIRCLE_FIT] or methods_boole[ELLIPSE_FIT]:
                 from .fits import perform_fits
-                perform_fits(experimental_drop, tangent=experimental_setup.tangent_boole, polynomial=experimental_setup.second_deg_polynomial_boole, circle=experimental_setup.circle_boole,ellipse=experimental_setup.ellipse_boole)
-            if experimental_setup.tangent_boole == True:
+                perform_fits(experimental_drop, tangent=methods_boole[TANGENT_FIT], polynomial=methods_boole[POLYNOMIAL_FIT], circle=methods_boole[CIRCLE_FIT],ellipse=methods_boole[ELLIPSE_FIT])
+            if methods_boole[TANGENT_FIT]:
                 tangent_lines = tuple(experimental_drop.contact_angles['tangent fit']['tangent lines'])
                 cv2.line(img, (int(tangent_lines[0][0][0]),int(tangent_lines[0][0][1])),(int(tangent_lines[0][1][0]),int(tangent_lines[0][1][1])), (0, 0, 255), 2)
                 cv2.line(img, (int(tangent_lines[1][0][0]),int(tangent_lines[1][0][1])),(int(tangent_lines[1][1][0]),int(tangent_lines[1][1][1])),(0, 0, 255), 2)
-            if experimental_setup.second_deg_polynomial_boole == True and experimental_setup.tangent_boole == False:
+            if methods_boole[POLYNOMIAL_FIT] == True and not methods_boole[TANGENT_FIT]:
                 tangent_lines = tuple(experimental_drop.contact_angles['polynomial fit']['tangent lines'])
                 cv2.line(img, tangent_lines[0][0],tangent_lines[0][1], (0, 0, 255), 2)
                 cv2.line(img, tangent_lines[1][0],tangent_lines[1][1], (0, 0, 255), 2)
-            if experimental_setup.circle_boole == True:
+            if methods_boole[CIRCLE_FIT]:
                 xc,yc = experimental_drop.contact_angles['circle fit']['circle center']
                 r = experimental_drop.contact_angles['circle fit']['circle radius']
                 cv2.circle(img,(int(xc),int(yc)),int(r),(255,150,0),1)
-            if experimental_setup.ellipse_boole == True:
+            if methods_boole[ELLIPSE_FIT]:
                 center = experimental_drop.contact_angles['ellipse fit']['ellipse center']
                 axes = experimental_drop.contact_angles['ellipse fit']['ellipse a and b']
                 phi = experimental_drop.contact_angles['ellipse fit']['ellipse rotation']

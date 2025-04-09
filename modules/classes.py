@@ -7,6 +7,8 @@ from scipy.integrate import odeint
 
 import numpy as np
 
+from utils.config import *
+
 class Tolerances(object):
     def __init__(self, delta_tol, gradient_tol, maximum_fitting_steps, objective_tol, arclength_tol, maximum_arclength_steps, needle_tol, needle_steps):
         self.DELTA_TOL = delta_tol
@@ -36,17 +38,20 @@ class Tolerances(object):
 class ExperimentalSetup(object):
     def __init__(self):
         self.screen_resolution = None
-        self.drop_ID_method = None
-        self.threshold_method = None
+        self.drop_ID_method = 'Automated'
+        self.threshold_method = 'Automated'
+        self.needle_region_choice = 'Automated'
         self.threshold_val = None
-        self.baseline_method = None
+        self.baseline_method = 'Automated'
         self.edgefinder = None
-        self.continuous_density = None
+        self.density_outer = None # contininous density
         self.needle_diameter_mm = None
+        self.drop_density = None
+        self.pixel_mm = None
         self.residuals_boole = None
         self.profiles_boole = None
         self.interfacial_tension_boole = None
-        self.image_source = None
+        self.image_source = "Local images"
         self.number_of_frames = None
         self.wait_time = None
         self.save_images_boole = None
@@ -56,14 +61,19 @@ class ExperimentalSetup(object):
         self.drop_region = None
         self.needle_region = None
         self.import_files = None
-        self.frame_interval = None
-        self.user_input_fields = {'drop_region_choice': 'Automated', 'needle_region_choice': 'Automated','drop_density': None, 'needle_diameter': None, 'continuous_density': None, 'pixel_mm': None}
-        self.analysis_method_fields = {}
+        self.frame_interval = 0
+        self.analysis_method_fields_cm = {}
+        self.analysis_methods_ca = {TANGENT_FIT: False, POLYNOMIAL_FIT: False, CIRCLE_FIT: False, ELLIPSE_FIT: False, YL_FIT: False, ML_MODEL: False}
+        self.analysis_methods_pd = {INTERFACIAL_TENSION: True}
         self.statistical_output = {}
+        self.statistical_output_cm = {}
         self.ift_drop_region = None
         self.ift_needle_region = None
+        self.ca_drop_region = None
+        self.ca_baseline_region = None
         self.cv2_capture_num = None
         self.genlcam_capture_num = None
+        self.output_directory = None
 
 class ExperimentalDrop(object):
     def __init__(self):
