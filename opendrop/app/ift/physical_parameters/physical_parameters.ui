@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.2 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <template class="IFTPhysicalParametersForm" parent="GtkGrid">
+    <property name="can_focus">False</property>
+    <property name="margin_left">20</property>
+    <property name="margin_right">20</property>
+    <property name="margin_top">20</property>
+    <property name="margin_bottom">20</property>
+    <property name="row_spacing">10</property>
+    <property name="column_spacing">10</property>
+    <signal name="destroy" handler="destroy" swapped="no"/>
+    <child>
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Drop density (kg/m³):</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Continuous density (kg/m³):</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Needle diameter (mm):</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Pixel scale (px/mm):</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">3</property>
+      </packing>
+    </child>
+    <!-- <child> -->
+      <!-- <object class="GtkLabel"> -->
+        <!-- <property name="visible">True</property> -->
+        <!-- <property name="can_focus">False</property> -->
+        <!-- <property name="label" translatable="yes">Gravity (m/s²):</property> -->
+        <!-- <property name="xalign">0</property> -->
+      <!-- </object> -->
+      <!-- <packing> -->
+        <!-- <property name="left_attach">0</property> -->
+        <!-- <property name="top_attach">3</property> -->
+      <!-- </packing> -->
+    <!-- </child> -->
+    <child>
+      <object class="FloatEntry">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="width_chars">10</property>
+        <property name="input_purpose">number</property>
+        <property name="lower">0</property>
+        <property name="value" bind-source="@" bind-property="drop-density" bind-flags="bidirectional|sync-create"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="FloatEntry">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="width_chars">10</property>
+        <property name="input_purpose">number</property>
+        <property name="lower">0</property>
+        <property name="value" bind-source="@" bind-property="continuous-density" bind-flags="bidirectional|sync-create"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="FloatEntry">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="width_chars">10</property>
+        <property name="input_purpose">number</property>
+        <property name="lower">0</property>
+        <property name="value" bind-source="@" bind-property="needle-diameter" bind-flags="bidirectional|sync-create"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="FloatEntry">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="width_chars">10</property>
+        <property name="input_purpose">number</property>
+        <property name="lower">0</property>
+        <property name="value" bind-source="@" bind-property="pixel-scale" bind-flags="bidirectional|sync-create"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">3</property>
+      </packing>
+    </child>
+    <!-- <child> -->
+      <!-- <object class="FloatEntry"> -->
+        <!-- <property name="visible">True</property> -->
+        <!-- <property name="can_focus">True</property> -->
+        <!-- <property name="width_chars">10</property> -->
+        <!-- <property name="input_purpose">number</property> -->
+        <!-- <property name="lower">0</property> -->
+        <!-- <property name="value" bind-source="@" bind-property="gravity" bind-flags="bidirectional|sync-create"/> -->
+      <!-- </object> -->
+      <!-- <packing> -->
+        <!-- <property name="left_attach">1</property> -->
+        <!-- <property name="top_attach">3</property> -->
+      <!-- </packing> -->
+    <!-- </child> -->
+  </template>
+</interface>

@@ -1,0 +1,22 @@
+Import('env')
+
+
+env = env.Clone(
+    tools=['cython'],
+
+    SHLIBPREFIX='',
+    SHLIBSUFFIX='$PYTHON_EXT_SUFFIX',
+)
+
+env.Append(
+    CPPPATH=['$PYTHONINCLUDES'],
+    LIBPATH=['$PYTHONLIBPATH'],
+    LIBS=['$PYTHONLIB', 'sundials_core', 'sundials_arkode', 'sundials_nvecserial'],
+)
+
+env.VariantDir('.checkpoints', '.', duplicate=False)
+
+shape_c = env.Cython('.checkpoints/shape.pyx')
+shape = env.SharedLibrary('shape', shape_c)
+
+Return('shape')
