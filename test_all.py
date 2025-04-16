@@ -3,7 +3,7 @@ import os
 import fnmatch
 import importlib.util
 
-def find_test_files(root_dir, pattern="*.test.py"):
+def find_test_files(root_dir, pattern="*_test.py"):
     matches = []
     for dirpath, _, filenames in os.walk(root_dir):
         for filename in fnmatch.filter(filenames, pattern):
