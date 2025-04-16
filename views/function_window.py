@@ -1,5 +1,5 @@
 from customtkinter import *
-from tkinter import messagebox, TclError
+from tkinter import messagebox
 
 from .navigation import create_navigation
 
@@ -13,11 +13,9 @@ from .ca_analysis import CaAnalysis
 
 from .output_page import OutputPage
 
-from modules.ca_data_processor import CaDataProcessor
-from modules.pd_data_processor import pdDataProcessor
+from modules.contact_angle.ca_data_processor import CaDataProcessor
 from utils.enums import *
-from modules.ExtractData import ExtractedData
-from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
+
 from views.helper.theme import LIGHT_MODE
 
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
@@ -231,3 +229,30 @@ class FunctionWindow(CTk):
 
     def check_import(self, user_input_data):
         return user_input_data.number_of_frames is not None and user_input_data.number_of_frames > 0 and user_input_data.import_files is not None and len(user_input_data.import_files) > 0 and len(user_input_data.import_files) == user_input_data.number_of_frames
+
+    def on_closing(self):
+        """处理窗口关闭事件"""
+        try:
+            # 取消所有待处理的定时器事件
+            for after_id in self.tk.call('after', 'info'):
+                try:
+                    self.after_cancel(after_id)
+                except:
+                    pass
+            
+            # 清理所有子部件
+            for widget in self.winfo_children():
+                try:
+                    widget.destroy()
+                except:
+                    pass
+                    
+            # 停止主循环
+            self.quit()
+            
+            # 销毁窗口
+            self.destroy()
+        except:
+            # 如果出现任何错误，强制退出
+            import sys
+            sys.exit(0)

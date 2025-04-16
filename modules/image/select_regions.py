@@ -17,8 +17,7 @@ import sys
 from scipy import optimize # DS 7/6/21 - for least squares fit
 import tensorflow as tf # DS 9/6/21 - for loading ML model
 
-from .preprocessing import prepare_hydrophobic, tilt_correction
-from .extract_profile import extract_drop_profile
+from modules.preprocessing.preprocessing import prepare_hydrophobic, tilt_correction
 from utils.config import *
 
 # import os

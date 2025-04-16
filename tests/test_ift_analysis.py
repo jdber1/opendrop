@@ -2,7 +2,7 @@ import pytest
 import time
 from customtkinter import CTk, CTkFrame
 from views.ift_analysis import IftAnalysis
-from modules.classes import ExperimentalSetup
+from modules.core.classes import ExperimentalSetup
 
 
 @pytest.fixture
