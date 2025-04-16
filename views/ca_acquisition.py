@@ -30,8 +30,10 @@ class CaAcquisition(CTkFrame):
 
         image_acquisition_frame.grid_columnconfigure(2, weight=1)
 
+        # self.image_source = OptionMenu(self, image_acquisition_frame, "Image source:",
+        #                                     FILE_SOURCE_OPTIONS_CA, self.update_image_source, rw=0)
         self.image_source = OptionMenu(self, image_acquisition_frame, "Image source:",
-                                            FILE_SOURCE_OPTIONS_CA, self.update_image_source, rw=0)
+                                       ["Local images"], self.update_image_source, rw=0)
 
         self.setup_choose_files_frame(image_acquisition_frame)
 

@@ -38,10 +38,15 @@ class IftAcquisition(CTkFrame):
         self.image_source_frame = CTkFrame(self, fg_color="transparent")
         self.image_source_frame.pack(pady=(20, 5))
         self.setup_component_label(self.image_source_frame, "Image Source: ")
+        # self.option_menu = CTkOptionMenu(self.image_source_frame,
+        #                                  variable=self.image_source,
+        #                                  values=FILE_SOURCE_OPTIONS_IFT,
+        #                                  command=self.show_image_source_frame)
         self.option_menu = CTkOptionMenu(self.image_source_frame,
                                          variable=self.image_source,
-                                         values=FILE_SOURCE_OPTIONS_IFT,
+                                         values=["Local images"],
                                          command=self.show_image_source_frame)
+
         self.option_menu.pack(side="left")
 
     def setup_choose_files_frame(self):
