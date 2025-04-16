@@ -5,7 +5,7 @@ import os
 from unittest import mock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from modules.ExtractData import ExtractedData
+from modules.preprocessing.ExtractData import ExtractedData
 
 # 1. Test Object Initialization
 def test_extracted_data_initialization():

@@ -9,8 +9,8 @@ import cv2
 from utils.image_handler import ImageHandler
 from utils.config import *
 from utils.validators import *
-from .helper.theme import get_system_text_color
-from .component.CTkXYFrame import *
+from views.helper.theme import get_system_text_color
+from views.component.CTkXYFrame import *
 
 class CaAnalysis(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):

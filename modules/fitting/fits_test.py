@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from modules.fits import perform_fits
+from modules.fitting.fits import perform_fits
 
 @pytest.fixture
 def experimental_drop():

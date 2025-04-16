@@ -13,32 +13,20 @@ from __future__ import print_function
 # # from modules.user_set_regions
 
 
-from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
+from modules.core.classes import ExperimentalSetup, DropData
 #from modules.PlotManager import PlotManager
-from modules.ExtractData import ExtractedData
 
 from views.main_window import MainWindow
 from views.function_window import call_user_input
-# from modules.read_image import get_image
-from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
-from modules.extract_profile import extract_drop_profile
-from modules.extract_profile import image_crop
-from modules.initialise_parameters import initialise_parameters
 from utils.enums import *
 #from modules.analyse_needle import calculate_needle_diameter
 #from modules.fit_data import fit_experimental_drop
-from modules.fits import perform_fits
 #from modules.generate_data import generate_full_data
 # from modules. import add_data_to_lists
 
-import matplotlib.pyplot as plt
-
 import os
 import numpy as np
-import tkinter as tk
-from tkinter import font as tkFont
 
-import timeit
 import time
 
 np.set_printoptions(suppress=True)
@@ -92,8 +80,6 @@ def pause_wait_time(elapsed_time, requested_time):
 
 def cheeky_pause():
     import Tkinter
-    import tkMessageBox
-    import cv2
     #    cv2.namedWindow("Pause")
     #    while 1:
     #        k = cv2.waitKey(1) & 0xFF

@@ -3,7 +3,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import numpy as np
 import cv2
-from modules.circular_fit import (
+from modules.fitting.circular_fit import (
     circular_fit,
     circular_fit_img,
     extract_edges_CV,

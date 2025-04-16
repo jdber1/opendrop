@@ -7,7 +7,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from modules.initialise_parameters import initialise_parameters, fit_circle, calculate_Bond_number, scaled_radius_at_scaled_height
+from modules.core.initialise_parameters import initialise_parameters, fit_circle, calculate_Bond_number, scaled_radius_at_scaled_height
 
 
 def test_initialise_parameters():

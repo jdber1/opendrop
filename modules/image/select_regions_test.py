@@ -5,16 +5,16 @@ import cv2
 import unittest
 import numpy as np
 from itertools import cycle
-from modules.fits import perform_fits
-from modules.preprocessing import prepare_hydrophobic
-from modules.select_regions import set_drop_region, set_surface_line, correct_tilt, user_line, draw_rectangle, draw_line, optimized_path, intersection, ML_prepare_hydrophobic
+from modules.fitting.fits import perform_fits
+from modules.preprocessing.preprocessing import prepare_hydrophobic
+from modules.image.select_regions import set_drop_region, set_surface_line, correct_tilt, user_line, draw_rectangle, draw_line, optimized_path, intersection, ML_prepare_hydrophobic
 from numpy.testing import assert_array_equal
 from unittest.mock import patch, MagicMock
 
 
 class TestSelectRegions(unittest.TestCase):
 
-    @patch('modules.preprocessing.auto_crop')
+    @patch('modules.preprocessing.preprocessing.auto_crop')
     def test_set_drop_region_auto(self, mock_auto_crop):
         # Create mock return value
         mock_image = np.zeros((100, 100, 3))  # Simulate a blank image of size 100x100
@@ -36,8 +36,8 @@ class TestSelectRegions(unittest.TestCase):
         self.assertTrue(np.array_equal(experimental_drop.cropped_image, mock_image))
         self.assertEqual(experimental_setup.drop_region, [(10, 20), (90, 80)])
 
-    @patch('modules.select_regions.user_ROI')
-    @patch('modules.select_regions.image_crop')
+    @patch('modules.image.select_regions.user_ROI')
+    @patch('modules.image.select_regions.image_crop')
     def test_set_drop_region_user_selected(self, mock_image_crop, mock_user_ROI):
         # Create mock return value
         mock_image = np.zeros((100, 100, 3))  # Simulate a blank image of size 100x100
@@ -70,8 +70,8 @@ class TestSelectRegions(unittest.TestCase):
 
 class TestSurfaceLine(unittest.TestCase):
 
-    @patch('modules.select_regions.prepare_hydrophobic')
-    @patch('modules.preprocessing.optimized_path')
+    @patch('modules.image.select_regions.prepare_hydrophobic')
+    @patch('modules.preprocessing.preprocessing.optimized_path')
     def test_set_surface_line_auto(self, mock_optimized_path, mock_prepare_hydrophobic):
         # Simulate optimized_path return value to ensure enough data points for distance calculation
         mock_optimized_path.return_value = np.array([[0, 0], [1, 2], [2, 4], [3, 6], [4, 8], [5, 10]])
@@ -100,7 +100,7 @@ class TestSurfaceLine(unittest.TestCase):
 
 class TestCorrectTilt(unittest.TestCase):
 
-    @patch('modules.select_regions.tilt_correction')
+    @patch('modules.image.select_regions.tilt_correction')
     def test_correct_tilt_auto(self, mock_tilt_correction):
         # Create mock return value
         mock_cropped_image = np.zeros((100, 100, 3))
@@ -125,8 +125,8 @@ class TestCorrectTilt(unittest.TestCase):
 
 class TestDrawRectangle(unittest.TestCase):
 
-    @patch('modules.select_regions.cv2.rectangle')
-    @patch.dict('modules.select_regions.__dict__', {'image_TEMP': np.zeros((100, 100, 3)), 'img': np.zeros((100, 100, 3))})
+    @patch('modules.image.select_regions.cv2.rectangle')
+    @patch.dict('modules.image.select_regions.__dict__', {'image_TEMP': np.zeros((100, 100, 3)), 'img': np.zeros((100, 100, 3))})
     def test_draw_rectangle(self, mock_rectangle):
         global drawing, ix, iy, fx, fy
         # Initialize local variables
@@ -159,8 +159,8 @@ class TestDrawRectangle(unittest.TestCase):
 
 class TestDrawLine(unittest.TestCase):
 
-    @patch('modules.select_regions.cv2.line')
-    @patch.dict('modules.select_regions.__dict__', {'image_TEMP': np.zeros((100, 100, 3)), 'img': np.zeros((100, 100, 3))})
+    @patch('modules.image.select_regions.cv2.line')
+    @patch.dict('modules.image.select_regions.__dict__', {'image_TEMP': np.zeros((100, 100, 3)), 'img': np.zeros((100, 100, 3))})
     def test_draw_line(self, mock_line):
         global drawing, ix, iy, fx, fy
         # Initialize local variables
@@ -198,7 +198,7 @@ class TestOptimizedPath(unittest.TestCase):
         start = (0, 0)
 
         # Use patch to mock the behavior of distance function
-        with patch('modules.select_regions.distance', side_effect=cycle([1])) as mock_distance:
+        with patch('modules.image.select_regions.distance', side_effect=cycle([1])) as mock_distance:
             result = optimized_path(coords, start)
 
             print("Distance call count:", mock_distance.call_count)  # Add debug output

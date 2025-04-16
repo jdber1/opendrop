@@ -8,7 +8,7 @@ import warnings
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
-from modules.polynomial_fit import *
+from modules.fitting.polynomial_fit import *
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -48,7 +48,7 @@ class TestPolynomialFit(unittest.TestCase):
         for i in range(1, len(path)):
             self.assertLess(distance1(path[i-1], path[i]), 5)
             
-    @patch('modules.polynomial_fit.plt.show')
+    @patch('modules.fitting.polynomial_fit.plt.show')
     def test_prepare_hydrophobic(self, mock_show):
         """Test preprocessing of hydrophobic surface data"""
         profile, CPs = prepare_hydrophobic(self.sample_profile, display=True)
@@ -64,9 +64,9 @@ class TestPolynomialFit(unittest.TestCase):
     #     self.assertIsInstance(contours, list)
     #     self.assertGreater(len(contours), 0)
 
-    @patch('modules.polynomial_fit.cv2.cvtColor')
-    @patch('modules.polynomial_fit.cv2.threshold')
-    @patch('modules.polynomial_fit.cv2.findContours')
+    @patch('modules.fitting.polynomial_fit.cv2.cvtColor')
+    @patch('modules.fitting.polynomial_fit.cv2.threshold')
+    @patch('modules.fitting.polynomial_fit.cv2.findContours')
     def test_extract_edges_CV(self, mock_findContours, mock_threshold, mock_cvtColor):
         """Test CV edge extraction function"""
         mock_cvtColor.return_value = np.zeros((10, 10))
@@ -98,8 +98,8 @@ class TestPolynomialFit(unittest.TestCase):
         self.assertIn('MSE', errors)
         self.assertIn('RMSE', errors)
 
-    @patch('modules.polynomial_fit.extract_edges_CV')
-    @patch('modules.polynomial_fit.prepare_hydrophobic')
+    @patch('modules.fitting.polynomial_fit.extract_edges_CV')
+    @patch('modules.fitting.polynomial_fit.prepare_hydrophobic')
     def test_polynomial_fit_img(self, mock_prepare, mock_extract):
         """Test polynomial fitting for image"""
         mock_extract.return_value = self.sample_data

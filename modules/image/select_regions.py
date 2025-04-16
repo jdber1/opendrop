@@ -17,8 +17,7 @@ import sys
 from scipy import optimize # DS 7/6/21 - for least squares fit
 import tensorflow as tf # DS 9/6/21 - for loading ML model
 
-from .preprocessing import prepare_hydrophobic, tilt_correction
-from .extract_profile import extract_drop_profile
+from modules.preprocessing.preprocessing import prepare_hydrophobic, tilt_correction
 from utils.config import *
 
 # import os
@@ -32,7 +31,7 @@ def set_drop_region(experimental_drop, experimental_setup,index):
     scale = set_scale(image_size, screen_size)
     screen_position = set_screen_position(screen_size)
     if experimental_setup.drop_ID_method == "Automated":
-        from .preprocessing import auto_crop
+        from modules.preprocessing.preprocessing import auto_crop
         experimental_drop.cropped_image, (left,right,top,bottom) = auto_crop(experimental_drop.image)
         print("experimental_drop.cropped_image",experimental_drop.cropped_image is None)
         if 1: #show found drop
@@ -281,7 +280,7 @@ def user_line(experimental_drop, experimental_setup):
         if DRAW_TANGENT_LINE_WHILE_SETTING_BASELINE:
             methods_boole = experimental_setup.analysis_methods_ca
             if methods_boole[TANGENT_FIT] or methods_boole[POLYNOMIAL_FIT] or methods_boole[CIRCLE_FIT] or methods_boole[ELLIPSE_FIT]:
-                from .fits import perform_fits
+                from modules.fitting.fits import perform_fits
                 perform_fits(experimental_drop, tangent=methods_boole[TANGENT_FIT], polynomial=methods_boole[POLYNOMIAL_FIT], circle=methods_boole[CIRCLE_FIT],ellipse=methods_boole[ELLIPSE_FIT])
             if methods_boole[TANGENT_FIT]:
                 tangent_lines = tuple(experimental_drop.contact_angles['tangent fit']['tangent lines'])
