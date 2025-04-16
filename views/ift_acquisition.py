@@ -7,8 +7,8 @@ from customtkinter import *
 from utils.image_handler import ImageHandler
 from utils.validators import *
 from utils.config import *
-from .component.ctk_input_popup import CTkInputPopup
-from .component.ctk_table_popup import CTkTablePopup
+from views.component.ctk_input_popup import CTkInputPopup
+from views.component.ctk_table_popup import CTkTablePopup
 
 class IftAcquisition(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):

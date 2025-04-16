@@ -8,7 +8,7 @@ from unittest.mock import patch,MagicMock
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from modules.read_image import get_image,save_image,import_from_source,image_from_Flea3,image_from_harddrive,get_import_filename,image_from_camera,grabanimage
+from modules.image.read_image import get_image,save_image,import_from_source,image_from_Flea3,image_from_harddrive,get_import_filename,image_from_camera,grabanimage
 
 
 # Fixture to create a mock ExperimentalDrop object
@@ -55,7 +55,7 @@ def test_save_image(mock_experimental_drop, mock_experimental_setup):
         mock_imwrite.assert_called_once()
 
 # Test import_from_source with local images
-@patch("modules.read_image.image_from_harddrive")
+@patch("modules.image.read_image.image_from_harddrive")
 def test_import_from_source_local(mock_image_from_harddrive, mock_experimental_drop, mock_experimental_setup):
     import_from_source(mock_experimental_drop, mock_experimental_setup, 0)
     mock_image_from_harddrive.assert_called_once()
@@ -81,7 +81,7 @@ def test_get_import_filename(mock_experimental_setup):
     assert filename == "test_image.png"
 
 # Test image_from_camera function
-@patch("modules.read_image.grabanimage")
+@patch("modules.image.read_image.grabanimage")
 def test_image_from_camera(mock_grabanimage, mock_experimental_drop):
     with patch("cv2.imread", return_value=np.zeros((100, 100, 3), dtype=np.uint8)) as mock_imread:
         image_from_camera(mock_experimental_drop)

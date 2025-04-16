@@ -1,4 +1,4 @@
-from .preprocessing import (
+from modules.preprocessing.preprocessing import (
     prepare_hydrophobic,
     tilt_correction,
     extract_edges_CV

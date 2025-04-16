@@ -1,7 +1,7 @@
 import customtkinter as ctk
 
-from .component.preparation import create_plotting_checklist_ift, create_analysis_checklist_ift,create_user_input_fields_ift
-from .component.imageProcessing import ImageApp
+from views.component.preparation import create_plotting_checklist_ift, create_analysis_checklist_ift,create_user_input_fields_ift
+from views.component.imageProcessing import ImageApp
 
 class IftPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data,experimental_drop, **kwargs):

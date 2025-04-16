@@ -2,7 +2,7 @@ from customtkinter import CTkImage, CTkFrame, CTkScrollableFrame, CTkTabview, CT
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from .component.imageGallery import ImageGallery
+from views.component.imageGallery import ImageGallery
 
 
 class IftAnalysis(CTkFrame):

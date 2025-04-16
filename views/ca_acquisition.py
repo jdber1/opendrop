@@ -5,8 +5,8 @@ from PIL import Image
 from utils.image_handler import ImageHandler
 from utils.config import *
 from utils.validators import *
-from .component.option_menu import OptionMenu
-from .component.integer_entry import IntegerEntry
+from views.component.option_menu import OptionMenu
+from views.component.integer_entry import IntegerEntry
 
 IMAGE_FRAME_WIDTH = 600
 IMAGE_FRAME_HEIGHT = 400

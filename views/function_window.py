@@ -1,17 +1,17 @@
 from customtkinter import *
 from tkinter import messagebox
 
-from .navigation import create_navigation
+from views.navigation import create_navigation
 
-from .ift_acquisition import IftAcquisition
-from .ift_preparation import IftPreparation
-from .ift_analysis import IftAnalysis
+from views.ift_acquisition import IftAcquisition
+from views.ift_preparation import IftPreparation
+from views.ift_analysis import IftAnalysis
 
-from .ca_acquisition import CaAcquisition
-from .ca_preparation import CaPreparation
-from .ca_analysis import CaAnalysis
+from views.ca_acquisition import CaAcquisition
+from views.ca_preparation import CaPreparation
+from views.ca_analysis import CaAnalysis
 
-from .output_page import OutputPage
+from views.output_page import OutputPage
 
 from modules.contact_angle.ca_data_processor import CaDataProcessor
 from utils.enums import *

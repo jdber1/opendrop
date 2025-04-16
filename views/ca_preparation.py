@@ -1,7 +1,7 @@
 import customtkinter as ctk
 
-from .component.preparation import create_user_inputs_cm,create_plotting_checklist_cm,create_analysis_checklist_cm
-from .component.imageProcessing import ImageApp
+from views.component.preparation import create_user_inputs_cm,create_plotting_checklist_cm,create_analysis_checklist_cm
+from views.component.imageProcessing import ImageApp
 
 class CaPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data,experimental_drop, **kwargs):

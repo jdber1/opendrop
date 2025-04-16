@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import cv2
 from unittest.mock import patch, MagicMock
-from modules.extract_profile import (
+from modules.contact_angle.extract_profile import (
     extract_drop_profile,
     detect_edges,
     prepare_hydrophobic,

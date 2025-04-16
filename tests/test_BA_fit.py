@@ -7,7 +7,7 @@ import warnings
 import cv2
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from modules.BA_fit import *
+from modules.fitting.BA_fit import *
 
 # 定义 OpenCV 版本变量以避免 NameError
 CV2_VERSION = tuple(map(int, cv2.__version__.split(".")))
@@ -39,7 +39,7 @@ class TestBAFit(unittest.TestCase):
         for i in range(1, len(path)):
             self.assertLess(distance1(path[i-1], path[i]), 5)
 
-    @patch('modules.BA_fit.plt.show')
+    @patch('modules.fitting.BA_fit.plt.show')
     def test_prepare_hydrophobic(self, mock_show):
         profile, CPs = prepare_hydrophobic(self.sample_profile, display=True)
         self.assertIsInstance(profile, np.ndarray)
@@ -49,7 +49,7 @@ class TestBAFit(unittest.TestCase):
         result = bashforth_adams(0, [1, 1], 1, 1)
         self.assertEqual(len(result), 2)
 
-    @patch('modules.BA_fit.solve_ivp')
+    @patch('modules.fitting.BA_fit.solve_ivp')
     def test_sim_bashforth_adams(self, mock_solve_ivp):
         mock_solve_ivp.return_value = MagicMock(t=np.array([0, 1]), y=np.array([[1, 1], [2, 2]]))
         angles, pred, Bo = sim_bashforth_adams(1, 1, 1)
@@ -57,7 +57,7 @@ class TestBAFit(unittest.TestCase):
         self.assertIsInstance(pred, np.ndarray)
         self.assertIsInstance(Bo, float)
 
-    @patch('modules.BA_fit.opt.minimize')
+    @patch('modules.fitting.BA_fit.opt.minimize')
     def test_fit_bashforth_adams(self, mock_minimize):
         mock_minimize.return_value = MagicMock(x=[1, 1])
         result = fit_bashforth_adams(self.sample_profile)
@@ -67,7 +67,7 @@ class TestBAFit(unittest.TestCase):
         angle = calculate_angle(np.array([1, 0]), np.array([0, 1]))
         self.assertAlmostEqual(angle, 90.0)
 
-    @patch('modules.BA_fit.opt.minimize')
+    @patch('modules.fitting.BA_fit.opt.minimize')
     def test_fit_circle(self, mock_minimize):
         mock_minimize.return_value = {'x': [0, 0, 1], 'fun': 0.1}
         result = fit_circle(self.sample_profile)
@@ -85,7 +85,7 @@ class TestBAFit(unittest.TestCase):
         self.assertAlmostEqual(x_t, 1.0, places=7)
         self.assertAlmostEqual(y_t, 0.0, places=7)
 
-    # @patch('modules.BA_fit.cv2.findContours')
+    # @patch('modules.fitting.BA_fit.cv2.findContours')
     # def test_find_contours(self, mock_findContours):
     #     mock_findContours.return_value = ([np.array([[[0, 0]], [[1, 1]]])], None)
     #     image = np.ones((10, 10), dtype=np.uint8)
@@ -94,13 +94,13 @@ class TestBAFit(unittest.TestCase):
     #     self.assertEqual(len(contours), 1)
     #     self.assertTrue(np.array_equal(contours[0], np.array([[0, 0], [1, 1]])))
 
-    @patch('modules.BA_fit.plt.show')
-    @patch('modules.BA_fit.fit_circle', return_value={'x': [0, 0, 1], 'fun': 0.1})
-    @patch('modules.BA_fit.find_intersection', return_value=(0.5, 0.5))
-    @patch('modules.BA_fit.generate_circle_vectors', return_value=([1, 0], [0, 1]))
-    @patch('modules.BA_fit.calculate_angle', return_value=90)
-    @patch('modules.BA_fit.fit_bashforth_adams', return_value=MagicMock(x=[1, 1]))
-    @patch('modules.BA_fit.sim_bashforth_adams', return_value=(np.array([0, 90]), np.array([[0, 0], [1, 1]]), 1.0))
+    @patch('modules.fitting.BA_fit.plt.show')
+    @patch('modules.fitting.BA_fit.fit_circle', return_value={'x': [0, 0, 1], 'fun': 0.1})
+    @patch('modules.fitting.BA_fit.find_intersection', return_value=(0.5, 0.5))
+    @patch('modules.fitting.BA_fit.generate_circle_vectors', return_value=([1, 0], [0, 1]))
+    @patch('modules.fitting.BA_fit.calculate_angle', return_value=90)
+    @patch('modules.fitting.BA_fit.fit_bashforth_adams', return_value=MagicMock(x=[1, 1]))
+    @patch('modules.fitting.BA_fit.sim_bashforth_adams', return_value=(np.array([0, 90]), np.array([[0, 0], [1, 1]]), 1.0))
     def test_YL_fit(self, mock_sim, mock_fit, mock_calc, mock_gen, mock_find, mock_circle, mock_show):
         result = YL_fit(self.sample_profile, display=True)
         self.assertIsInstance(result, tuple)
