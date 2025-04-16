@@ -1,12 +1,12 @@
-from modules.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
+from modules.core.classes import ExperimentalSetup, ExperimentalDrop, DropData, Tolerances
 #from modules.PlotManager import PlotManager
-from modules.ExtractData import ExtractedData
-from modules.read_image import get_image
-from modules.select_regions import set_drop_region,set_surface_line, correct_tilt
-from modules.extract_profile import extract_drop_profile
+from modules.preprocessing.ExtractData import ExtractedData
+from modules.image.read_image import get_image
+from modules.image.select_regions import set_drop_region,set_surface_line, correct_tilt
+from modules.contact_angle.extract_profile import extract_drop_profile
 from utils.enums import *
 from utils.config import *
-from modules.fits import perform_fits
+from modules.fitting.fits import perform_fits
 
 import matplotlib.pyplot as plt
 

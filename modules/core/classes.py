@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-from .de_YoungLaplace import ylderiv
-from .de_YoungLaplace import dataderiv
+from modules.fitting.de_YoungLaplace import ylderiv
 #from .interpolation_function import cubic_interpolation_function
 from scipy.integrate import odeint
 

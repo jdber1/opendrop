@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/BA_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/BA_fit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/ExtractData.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/preprocessing/ExtractData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/ca_data_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/contact_angle/ca_data_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/circular_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/circular_fit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/core/classes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/de_YoungLaplace.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/de_YoungLaplace.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/ellipse_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/ellipse_fit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/ellipse_fit_scikit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/ellipse_fit_scikit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/extract_profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/contact_angle/extract_profile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/fits.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/fits.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/initialise_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/core/initialise_parameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/polynomial_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/polynomial_fit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/preprocessing/preprocessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/read_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/image/read_image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/select_regions.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/image/select_regions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_ift_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_ift_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/views/function_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/views/function_window.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="conan_ml/frontend/main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;mikufoxxx&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SamSike/OpenDrop_OP.git&quot;,
+    &quot;accountId&quot;: &quot;13df4356-6b4f-402a-92c1-a1460698cc2f&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2uevtCqkrrNHjbkcq6GamgNMQDy" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "conan__ml/frontend/main-folder-refine",
+    "last_opened_file_path": "D:/PyProject/OpenDrop_OP/modules/core",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\PyProject\OpenDrop_OP\modules\core" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\fitting" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\contact_angle" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\preprocessing" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\image" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\PyProject\OpenDrop_OP\modules\fitting" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\preprocessing" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\image" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\core" />
+      <recent name="D:\PyProject\OpenDrop_OP\modules\contact_angle" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23726.102" />
+        <option value="bundled-python-sdk-5e1850174b45-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23726.102" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="" />
+      <created>1742622066444</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1742622066444</updated>
+      <workItem from="1742622067512" duration="1447000" />
+      <workItem from="1742792454129" duration="1635000" />
+      <workItem from="1742878961943" duration="2106000" />
+      <workItem from="1742967233095" duration="10000" />
+      <workItem from="1743573832635" duration="848000" />
+      <workItem from="1743574690382" duration="3396000" />
+      <workItem from="1743579214729" duration="2139000" />
+      <workItem from="1744709113079" duration="1227000" />
+      <workItem from="1744717575376" duration="2846000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/develop" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/OpenDrop_OP$main.coverage" NAME="main Coverage Results" MODIFIED="1744721541413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

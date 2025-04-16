@@ -1,9 +1,9 @@
 from customtkinter import *
 from utils.config import *
 from views.component.option_menu import OptionMenu
-from .float_entry import FloatEntry
-from .float_combobox import FloatCombobox
-from .check_button import CheckButton
+from views.component.float_entry import FloatEntry
+from views.component.float_combobox import FloatCombobox
+from views.component.check_button import CheckButton
 # Define your options and labels globally or pass them as parameters if preferred
 # AUTO_MANUAL_OPTIONS = ["Automated", "User-selected"]  # Example options
 LABEL_WIDTH = 200  # Adjust as needed
