@@ -1,6 +1,13 @@
 from customtkinter import *
 from tkinter import messagebox
 
+from modules.contact_angle.ca_data_processor import CaDataProcessor
+from modules.ift.pd_data_processor import pdDataProcessor
+from modules.core.classes import ExperimentalSetup, ExperimentalDrop #, DropData, Tolerances
+
+from views.helper.theme import LIGHT_MODE
+from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
+
 from views.navigation import create_navigation
 
 from views.ift_acquisition import IftAcquisition
@@ -10,15 +17,10 @@ from views.ift_analysis import IftAnalysis
 from views.ca_acquisition import CaAcquisition
 from views.ca_preparation import CaPreparation
 from views.ca_analysis import CaAnalysis
-
 from views.output_page import OutputPage
 
-from modules.contact_angle.ca_data_processor import CaDataProcessor
 from utils.enums import *
 
-from views.helper.theme import LIGHT_MODE
-
-from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
 
 def call_user_input(function_type, fitted_drop_data):
     FunctionWindow(function_type, fitted_drop_data)
