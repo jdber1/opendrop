@@ -34,7 +34,7 @@ def set_drop_region(experimental_drop, experimental_setup,index):
         from modules.preprocessing.preprocessing import auto_crop
         experimental_drop.cropped_image, (left,right,top,bottom) = auto_crop(experimental_drop.image)
         print("experimental_drop.cropped_image",experimental_drop.cropped_image is None)
-        if 1: #show found drop
+        if experimental_setup.show_popup == 1: #show found drop
         
             plt.title(f"Original image {index}")
             plt.imshow(experimental_drop.image)

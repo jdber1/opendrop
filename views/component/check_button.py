@@ -38,3 +38,6 @@ class CheckButton():
 
     def grid_forget(self):
         self.check_button.grid_forget()
+        
+    def grid(self, **kwargs):
+        self.check_button.grid(**kwargs)

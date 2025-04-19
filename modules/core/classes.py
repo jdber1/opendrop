@@ -51,6 +51,7 @@ class ExperimentalSetup(object):
         self.profiles_boole = None
         self.interfacial_tension_boole = None
         self.image_source = "Local images"
+        self.show_popup = 0
         self.number_of_frames = None
         self.wait_time = None
         self.save_images_boole = None
