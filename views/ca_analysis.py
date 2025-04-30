@@ -516,7 +516,7 @@ class CaAnalysis(CTkFrame):
             
             # Add angle label text
             try:
-                font = ImageFont.truetype("arial.ttf", 16)
+                font = ImageFont.truetype("views/assets/DejaVuSans.ttf", 16)
             except:
                 try:
                     font = ImageFont.load_default()
