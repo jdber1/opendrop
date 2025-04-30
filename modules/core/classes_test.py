@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
 import pytest
 import numpy as np
 from math import pi
@@ -21,14 +25,16 @@ def test_tolerances():
         needle_tol=1e-6,
         needle_steps=100
     )
-
 @pytest.fixture
 def test_experimental_setup():
     setup = ExperimentalSetup()
     setup.needle_diameter_mm = 1.0
-    setup.user_input_fields['drop_density'] = 1000.0
-    setup.user_input_fields['continuous_density'] = 0.0
-    setup.user_input_fields['pixel_mm'] = 100.0
+    # ✅ 手动添加 user_input_fields 模拟结构
+    setup.user_input_fields = {
+        'drop_density': 1000.0,
+        'continuous_density': 0.0,
+        'pixel_mm': 100.0
+    }
     return setup
 
 @pytest.fixture

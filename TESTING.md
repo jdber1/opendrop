@@ -8,6 +8,10 @@ Make sure all dependencies are installed:
 
 ```bash
 pip install -r requirements.txt
+pip install scikit-learn
+pip install numba
+pip install matplotlib
+
 ```
 
 ## 2. Run All Tests
