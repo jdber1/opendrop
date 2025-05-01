@@ -4,25 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/BA_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/BA_fit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ExtractData.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/preprocessing/ExtractData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ca_data_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/contact_angle/ca_data_processor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/circular_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/circular_fit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/core/classes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/de_YoungLaplace.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/de_YoungLaplace.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ellipse_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/ellipse_fit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ellipse_fit_scikit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/ellipse_fit_scikit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/extract_profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/contact_angle/extract_profile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fits.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/fits.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/initialise_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/core/initialise_parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/polynomial_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/polynomial_fit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/preprocessing/preprocessing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/read_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/image/read_image.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/select_regions.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/image/select_regions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_ift_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_ift_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/views/function_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/views/function_window.py" afterDir="false" />
+    <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="Changes">
+      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/fitting/fits_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/fits_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,21 +45,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "conan__ml/frontend/main-folder-refine",
-    "last_opened_file_path": "D:/PyProject/OpenDrop_OP/modules/core",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python 测试.pytest (ExtractData_test.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.pytest (classes_test.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.pytest (extract_profile_test.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.pytest (test_all.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.pytest in test_all.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;last_opened_file_path&quot;: &quot;F:/opendrop/py38&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\PyProject\OpenDrop_OP\modules\core" />
@@ -94,8 +85,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23726.102" />
-        <option value="bundled-python-sdk-5e1850174b45-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23726.102" />
+        <option value="bundled-js-predefined-1d06a55b98c1-91d5c284f522-JavaScript-PY-241.15989.155" />
+        <option value="bundled-python-sdk-babbdf50b680-7c6932dee5e4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.15989.155" />
       </set>
     </attachedChunks>
   </component>
@@ -116,6 +107,9 @@
       <workItem from="1743579214729" duration="2139000" />
       <workItem from="1744709113079" duration="1227000" />
       <workItem from="1744717575376" duration="2846000" />
+      <workItem from="1744795668098" duration="1857000" />
+      <workItem from="1745929680613" duration="149000" />
+      <workItem from="1745997658153" duration="1577000" />
     </task>
     <servers />
   </component>
@@ -145,7 +139,17 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Limit Image Source to &quot;Local Images&quot; Only" />
+    <option name="LAST_COMMIT_MESSAGE" value="Limit Image Source to &quot;Local Images&quot; Only" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/opendrop$pytest__classes_test_py__.coverage" NAME="pytest (classes_test.py 内) 覆盖结果" MODIFIED="1745998722434" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/core" />
+    <SUITE FILE_PATH="coverage/opendrop$pytest__test_all_py__.coverage" NAME="pytest (test_all.py 内) 覆盖结果" MODIFIED="1745929782521" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/OpenDrop_OP$main.coverage" NAME="main Coverage Results" MODIFIED="1744721541413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/opendrop$pytest__ExtractData_test_py__.coverage" NAME="pytest (ExtractData_test.py 内) 覆盖结果" MODIFIED="1745929765817" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/preprocessing" />
+    <SUITE FILE_PATH="coverage/opendrop$main.coverage" NAME="main 覆盖结果" MODIFIED="1744796749270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/opendrop$pytest__extract_profile_test_py__.coverage" NAME="pytest (extract_profile_test.py 内) 覆盖结果" MODIFIED="1745998826995" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/contact_angle" />
+    <SUITE FILE_PATH="coverage/opendrop$pytest_in_test_all_py.coverage" NAME="pytest in test_all.py 覆盖结果" MODIFIED="1744797071957" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
