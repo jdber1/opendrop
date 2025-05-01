@@ -17,9 +17,9 @@ class CaAnalysis(CTkFrame):
         super().__init__(parent, **kwargs)
         self.user_input_data = user_input_data
 
+        self.grid_columnconfigure(0, weight=1)  # Let table expand
+        self.grid_columnconfigure(1, weight=0)  # Prevent images_frame from expanding
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=2)
-        self.grid_columnconfigure(1, weight=1)
         
         self.image_handler = ImageHandler()
 
@@ -33,7 +33,7 @@ class CaAnalysis(CTkFrame):
         self.create_table(parent=self, rows=user_input_data.number_of_frames, columns=len(self.preformed_methods)+1, headers=['Index'] + list(self.preformed_methods.keys()))
 
         self.images_frame = CTkFrame(self)
-        self.images_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))
+        self.images_frame.grid(row=0, column=1, padx=15, pady=(10, 0), sticky="nsew")
 
         self.current_index = 0
         self.highlight_row(self.current_index)
