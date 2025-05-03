@@ -18,9 +18,9 @@ class CaAnalysis(CTkFrame):
         super().__init__(parent, **kwargs)
         self.user_input_data = user_input_data
 
+        self.grid_columnconfigure(0, weight=1)  # Let table expand
+        self.grid_columnconfigure(1, weight=0)  # Prevent images_frame from expanding
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=2)
-        self.grid_columnconfigure(1, weight=1)
         
         self.image_handler = ImageHandler()
 
