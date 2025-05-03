@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="Changes">
-      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" />
+    <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="fix error: AttributeError: 'CTkXYFrame' object has no attribute '_updating_scrollbar'">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fitting/fits_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/fits_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements-3810.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements-3810.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,7 +16,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="conan_ml/frontend/main" />
+        <entry key="$PROJECT_DIR$" value="conan_ml/tests/conan_unit_test" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -41,6 +40,9 @@
   &quot;associatedIndex&quot;: 7
 }</component>
   <component name="ProjectId" id="2uevtCqkrrNHjbkcq6GamgNMQDy" />
+  <component name="ProjectLevelVcsManager">
+    <OptionsSetting value="false" id="Update" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -55,7 +57,7 @@
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;conan__ml/tests/conan__unit__test&quot;,
     &quot;last_opened_file_path&quot;: &quot;F:/opendrop/py38&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -110,6 +112,9 @@
       <workItem from="1744795668098" duration="1857000" />
       <workItem from="1745929680613" duration="149000" />
       <workItem from="1745997658153" duration="1577000" />
+      <workItem from="1746251257992" duration="224000" />
+      <workItem from="1746252112383" duration="1645000" />
+      <workItem from="1746259835930" duration="180000" />
     </task>
     <servers />
   </component>
@@ -127,7 +132,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/develop" />
+                        <option value="develop" />
                       </list>
                     </value>
                   </entry>
@@ -141,7 +146,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Limit Image Source to &quot;Local Images&quot; Only" />
-    <option name="LAST_COMMIT_MESSAGE" value="Limit Image Source to &quot;Local Images&quot; Only" />
+    <MESSAGE value="fix error: AttributeError: 'CTkXYFrame' object has no attribute '_updating_scrollbar'" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix error: AttributeError: 'CTkXYFrame' object has no attribute '_updating_scrollbar'" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/opendrop$pytest__classes_test_py__.coverage" NAME="pytest (classes_test.py 内) 覆盖结果" MODIFIED="1745998722434" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/core" />
