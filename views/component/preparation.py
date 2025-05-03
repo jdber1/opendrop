@@ -93,18 +93,18 @@ def create_plotting_checklist_ift(self,parent,user_input_data):
     plotting_clist_frame.grid(row=1, column=0, columnspan=2, sticky="wens", padx=15, pady=15)
 
     # Create a label for the dynamic content
-    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto", 16, "bold"))
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting(ignored if method = User-selected)", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all input fields
     input_fields_frame = CTkFrame(plotting_clist_frame,fg_color=get_color("entry"))
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
-    def update_residuals_boole(*args):
-        user_input_data["residuals"] = self.residuals_boole.get_value()      
+    def update_original_boole(*args):
+        user_input_data["residuals"] = self.original_boole.get_value()      
    
-    self.residuals_boole = CheckButton(
-        self, input_fields_frame, "Residuals", update_residuals_boole, rw=0, cl=0, state_specify='normal')
+    self.original_boole = CheckButton(
+        self, input_fields_frame, "Original", update_original_boole, rw=0, cl=0, state_specify='normal')
     
     return plotting_clist_frame
 
@@ -147,7 +147,7 @@ def create_user_inputs_cm(self,parent,user_input_data):
     # Define update functions for each input
     def update_drop_id_method(*args):
         user_input_data.drop_ID_method = self.drop_ID_method.get_value()
-        self.image_app.update_image_processing_button()
+        # self.image_app.update_image_processing_button()
           # Reset baseline dependencies
         # self.image_app.update_button_visibility()
 
@@ -208,7 +208,7 @@ def create_plotting_checklist_cm(self, parent, user_input_data):
     plotting_clist_frame.grid(row=1, column=2, columnspan=1, sticky="wens", padx=15, pady=15)
 
     # Create a label for the checklist
-    label = CTkLabel(plotting_clist_frame, text="To view during fitting", font=("Roboto", 16, "bold"))
+    label = CTkLabel(plotting_clist_frame, text="To view during fitting(ignored if method = User-selected)", font=("Roboto", 16, "bold"))
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")  # Grid for label
 
     # Create a frame to hold all checkbox fields
@@ -216,24 +216,24 @@ def create_plotting_checklist_cm(self, parent, user_input_data):
     input_fields_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="wens")  # Grid for input fields frame
 
     # Define update functions for each checkbox
-    def update_residuals_boole(*args):
-        user_input_data.residuals_boole = self.residuals_boole.get_value()
+    def update_original_boole(*args):
+        user_input_data.original_boole = self.original_boole.get_value()
 
-    def update_profiles_boole(*args):
-        user_input_data.profiles_boole = self.profiles_boole.get_value()
+    def update_cropped_boole(*args):
+        user_input_data.cropped_boole = self.cropped_boole.get_value()
 
-    def update_ift_boole(*args):
-        user_input_data.interfacial_tension_boole = self.IFT_boole.get_value()
+    def update_threshold_boole(*args):
+        user_input_data.threshold_boole = self.threshold_boole.get_value()
 
     # Create check buttons with the associated update methods
-    self.residuals_boole = CheckButton(
-        self, input_fields_frame, "Residuals", update_residuals_boole, rw=0, cl=0, state_specify='normal'
+    self.original_boole = CheckButton(
+        self, input_fields_frame, "Original Image(s)", update_original_boole, rw=0, cl=0, state_specify='normal'
     )
-    self.profiles_boole = CheckButton(
-        self, input_fields_frame, "Profiles", update_profiles_boole, rw=1, cl=0, state_specify='normal'
+    self.cropped_boole = CheckButton(
+        self, input_fields_frame, "Cropped Images(s)", update_cropped_boole, rw=1, cl=0, state_specify='normal'
     )
-    self.IFT_boole = CheckButton(
-        self, input_fields_frame, "Physical quantities", update_ift_boole, rw=2, cl=0, state_specify='normal'
+    self.threshold_boole = CheckButton(
+        self, input_fields_frame, "Threhold Image(s)", update_threshold_boole, rw=2, cl=0, state_specify='normal'
     )
 
     return plotting_clist_frame

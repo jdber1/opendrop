@@ -9,6 +9,7 @@ from utils.validators import *
 from utils.config import *
 from views.component.ctk_input_popup import CTkInputPopup
 from views.component.ctk_table_popup import CTkTablePopup
+from views.helper.style import get_color
 
 class IftAcquisition(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
@@ -122,7 +123,7 @@ class IftAcquisition(CTkFrame):
             else:
                 self.frame_interval_frame.pack_forget()
 
-            self.images_frame = CTkFrame(self)
+            self.images_frame = CTkFrame(self,fg_color=get_color("innerframe"))
             self.images_frame.pack(pady=10)
             self.initialize_image_display(self.images_frame)
         else:
@@ -136,7 +137,7 @@ class IftAcquisition(CTkFrame):
         file_name = os.path.basename(self.user_input_data.import_files[self.current_index])
         self.name_label = CTkLabel(frame, text=file_name, font=("Arial", 10))
         self.name_label.pack()
-        self.image_navigation_frame = CTkFrame(frame)
+        self.image_navigation_frame = CTkFrame(frame,fg_color=get_color("entry"))
         self.image_navigation_frame.pack(pady=20)
         self.prev_button = CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)
         self.prev_button.pack(side="left", padx=5, pady=5)

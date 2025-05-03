@@ -76,7 +76,7 @@ class FunctionWindow(CTk):
             self.ca_acquisition_frame.pack(fill="both", expand=True)
 
         # Frame for navigation buttons
-        self.button_frame = CTkFrame(self)
+        self.button_frame = CTkFrame(self,fg_color=get_color("outerframe"))
         self.button_frame.pack(side="bottom", fill="x", pady=10)
 
         # Add navigation buttons to the button frame
@@ -198,7 +198,9 @@ class FunctionWindow(CTk):
                 self.ca_analysis_frame.pack_forget()
 
             # Initialise Output frame
-            self.output_frame = OutputPage(self, user_input_data)
+            self.output_frame = OutputPage(self, user_input_data,fg_color=self.FG_COLOR)
+    
+            
             # Show the OutputPage
             self.output_frame.pack(fill="both", expand=True)
 

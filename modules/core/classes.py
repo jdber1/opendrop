@@ -47,9 +47,9 @@ class ExperimentalSetup(object):
         self.needle_diameter_mm = None
         self.drop_density = None
         self.pixel_mm = None
-        self.residuals_boole = None
-        self.profiles_boole = None
-        self.interfacial_tension_boole = None
+        self.original_boole = 0
+        self.cropped_boole = 0
+        self.threshold_boole = 0
         self.image_source = "Local images"
         self.show_popup = 0
         self.number_of_frames = None
