@@ -82,22 +82,15 @@ class CTkXYFrame(customtkinter.CTkFrame):
         self.vsb.set(x,y)
         
 
-        self._updating_scrollbar = False
+
 
     def dynamic_scrollbar_hsb(self, x, y):
-        if self._updating_scrollbar:
-            return
+        if float(x) == 0.0 and float(y) == 1.0:
+            self.hsb.grid_forget()
+        else:
+            self.hsb.grid(row=1, column=0, sticky="nwe", padx=(5, 0))
+        self.hsb.set(x, y)
 
-        self._updating_scrollbar = True
-
-        try:
-            if float(x)==0.0 and float(y)==1.0:
-                self.hsb.grid_forget()
-            else:
-                self.hsb.grid(row=1, column=0, sticky="nwe", padx=(5,0))
-            self.hsb.set(x,y)
-        finally:
-            self._updating_scrollbar = False
         
     def onFrameConfigure(self, canvas):
         canvas.configure(scrollregion=canvas.bbox("all"))

@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01fef392-32cb-47da-aec4-2ca63b7da10e" name="Changes" comment="Changes">
-      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fitting/fits_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fitting/fits_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/image/read_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/image/read_image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/views/component/CTkXYFrame/ctk_xyframe.py" beforeDir="false" afterPath="$PROJECT_DIR$/views/component/CTkXYFrame/ctk_xyframe.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,7 +17,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="conan_ml/frontend/main" />
+        <entry key="$PROJECT_DIR$" value="conan_ml/tests/conan_unit_test" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -41,6 +41,9 @@
   &quot;associatedIndex&quot;: 7
 }</component>
   <component name="ProjectId" id="2uevtCqkrrNHjbkcq6GamgNMQDy" />
+  <component name="ProjectLevelVcsManager">
+    <OptionsSetting value="false" id="Update" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -110,6 +113,8 @@
       <workItem from="1744795668098" duration="1857000" />
       <workItem from="1745929680613" duration="149000" />
       <workItem from="1745997658153" duration="1577000" />
+      <workItem from="1746251257992" duration="224000" />
+      <workItem from="1746252112383" duration="1645000" />
     </task>
     <servers />
   </component>
@@ -127,7 +132,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/develop" />
+                        <option value="develop" />
                       </list>
                     </value>
                   </entry>
