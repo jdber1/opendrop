@@ -8,6 +8,7 @@ from modules.core.classes import ExperimentalSetup, ExperimentalDrop #, DropData
 from views.helper.theme import LIGHT_MODE
 from views.helper.validation import validate_user_input_data_ift,validate_user_input_data_cm,validate_frame_interval
 
+from views.helper.style import get_color
 from views.navigation import create_navigation
 
 from views.ift_acquisition import IftAcquisition
@@ -33,7 +34,7 @@ class FunctionWindow(CTk):
         self.minsize(1000, 750) 
 
         if get_appearance_mode() == LIGHT_MODE:
-            self.FG_COLOR = "lightblue"
+            self.FG_COLOR = get_color("background")
         else:
             self.FG_COLOR = self.cget("fg_color")
 

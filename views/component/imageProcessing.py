@@ -7,6 +7,7 @@ from modules.core.classes import ExperimentalSetup, ExperimentalDrop, DropData, 
 from tkinter import messagebox
 from modules.image.read_image import get_image
 from views.component.check_button import CheckButton
+from views.helper.style import get_color
 
 class ImageApp(ctk.CTkFrame):
     def __init__(self, parent, user_input_data, experimental_drop, application):
@@ -24,7 +25,7 @@ class ImageApp(ctk.CTkFrame):
         self.current_index = 0  # To keep track of the currently displayed image
 
         # Create main frame
-        self.main_frame = ctk.CTkFrame(self)
+        self.main_frame = ctk.CTkFrame(self,fg_color="red")
         self.main_frame.grid(padx=20, pady=20, sticky="nsew")  # Use grid instead of pack
 
         # Call the function to initialize the image display area and buttons

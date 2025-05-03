@@ -7,6 +7,7 @@ from utils.config import *
 from utils.validators import *
 from views.component.option_menu import OptionMenu
 from views.component.integer_entry import IntegerEntry
+from views.helper.style import get_color
 
 IMAGE_FRAME_WIDTH = 600
 IMAGE_FRAME_HEIGHT = 400
@@ -21,11 +22,11 @@ class CaAcquisition(CTkFrame):
 
         self.grid_rowconfigure(0, weight=1)
 
-        self.input_fields_frame = CTkFrame(self)
+        self.input_fields_frame = CTkFrame(self,fg_color=get_color("outerframe"))
         self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(
             10, 0))  # Left side for input fields
 
-        image_acquisition_frame = CTkFrame(self.input_fields_frame)
+        image_acquisition_frame = CTkFrame(self.input_fields_frame,fg_color=get_color("entry"))
         image_acquisition_frame.grid(sticky="nw", padx=15, pady=10)
 
         image_acquisition_frame.grid_columnconfigure(2, weight=1)
@@ -116,7 +117,7 @@ class CaAcquisition(CTkFrame):
         self.name_label = CTkLabel(display_frame, text=file_name)
         self.name_label.grid()
 
-        self.image_navigation_frame = CTkFrame(display_frame)
+        self.image_navigation_frame = CTkFrame(display_frame,fg_color=get_color("entry"))
         self.image_navigation_frame.grid(pady=20)
 
         self.prev_button = CTkButton(self.image_navigation_frame, text="<", command=lambda: self.change_image(-1), width=3)

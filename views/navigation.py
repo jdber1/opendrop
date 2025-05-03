@@ -1,8 +1,8 @@
 from customtkinter import *
-
+from views.helper.style import get_color
 def create_navigation(parent):
     # Create a frame for the navigation
-    navigation_frame = CTkFrame(parent)
+    navigation_frame = CTkFrame(parent,fg_color=get_color("OUTERFRAME"))
     navigation_frame.pack(pady=10, padx=10, fill='x')
 
     # Define stage labels for navigation
