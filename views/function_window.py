@@ -2,7 +2,7 @@ from customtkinter import *
 from tkinter import messagebox
 
 from modules.contact_angle.ca_data_processor import CaDataProcessor
-from modules.ift.pd_data_processor import pdDataProcessor
+from modules.IFT.pd_data_processor import pdDataProcessor
 from modules.core.classes import ExperimentalSetup, ExperimentalDrop #, DropData, Tolerances
 
 from views.helper.theme import LIGHT_MODE

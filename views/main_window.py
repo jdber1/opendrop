@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 class MainWindow(ctk.CTk):
     def __init__(self, continue_processing, open_ift_window, open_ca_window):
         super().__init__()
-        self.title("OpenDrop2")
+        self.title("OpenDrop-ML")
         self.geometry("800x400")
 
         self.continue_processing = continue_processing
@@ -29,13 +29,13 @@ class MainWindow(ctk.CTk):
 
         # Display title
         title_label = ctk.CTkLabel(
-            self, text="OpenDrop2", font=("Helvetica", 48))
-        title_label.pack(pady=50)
+            self, text="OpenDrop-ML", font=("Helvetica", 48))
+        title_label.pack(pady=90)
         # self.display_image("views/assets/banner.png")
 
         # Create main functionality buttons
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
-        button_frame.pack(pady=50)
+        button_frame.pack()
 
         # Bind the buttons to the same functions as in the old code
         self.create_button(button_frame, "Interfacial Tension", open_ift_window,"views/assets/opendrop-ift.png",0)
