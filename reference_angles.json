@@ -1,0 +1,83 @@
+{
+  "3.bmp": {
+    "image": "3.bmp",
+    "left_angle": 137.6149065423487,
+    "right_angle": 136.6329220368455,
+    "details": {
+      "tangent fit": {
+        "left angle": 137.6149065423487,
+        "right angle": 136.6329220368455
+      },
+      "polynomial fit": {
+        "left angle": 138.63349434385043,
+        "right angle": 140.68196563527988
+      },
+      "circle fit": {
+        "left angle": 135.54724085170287,
+        "right angle": 135.15719926865134
+      },
+      "ellipse fit": {
+        "left angle": 139.54921412348597,
+        "right angle": 139.4630241803781
+      },
+      "YL fit": {
+        "left angle": 144.7578947368421,
+        "right angle": 144.7578947368421
+      }
+    }
+  },
+  "5.bmp": {
+    "image": "5.bmp",
+    "left_angle": 141.6812340247687,
+    "right_angle": 137.67174522532449,
+    "details": {
+      "tangent fit": {
+        "left angle": 141.6812340247687,
+        "right angle": 137.67174522532449
+      },
+      "polynomial fit": {
+        "left angle": 140.9768901831025,
+        "right angle": 136.68473830240404
+      },
+      "circle fit": {
+        "left angle": 137.0574546361362,
+        "right angle": 137.09363305743847
+      },
+      "ellipse fit": {
+        "left angle": 141.4159650275873,
+        "right angle": 142.12637187321837
+      },
+      "YL fit": {
+        "left angle": 143.62369337979092,
+        "right angle": 143.62369337979092
+      }
+    }
+  },
+  "10.bmp": {
+    "image": "10.bmp",
+    "left_angle": 136.45094516633858,
+    "right_angle": 140.832807840849,
+    "details": {
+      "tangent fit": {
+        "left angle": 136.45094516633858,
+        "right angle": 140.832807840849
+      },
+      "polynomial fit": {
+        "left angle": 126.58684053984685,
+        "right angle": 140.4904050991063
+      },
+      "circle fit": {
+        "left angle": 133.18932109510672,
+        "right angle": 133.08033870169515
+      },
+      "ellipse fit": {
+        "left angle": 140.43223674514468,
+        "right angle": 140.70738150666412
+      },
+      "YL fit": {
+        "left angle": 146.3225806451613,
+        "right angle": 146.3225806451613
+      }
+    }
+  }
+}
