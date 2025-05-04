@@ -30,7 +30,7 @@ def extract_drop_profile(raw_experiment, user_inputs):
         if raw_experiment.ret  == None:
             raw_experiment.contour, raw_experiment.ret = extract_edges_CV(raw_experiment.cropped_image, return_thresholed_value=True)
 
-            if user_inputs.show_popup == 1:
+            if user_inputs.threshold_boole == 1:
                 plt.imshow(raw_experiment.cropped_image)
                 plt.plot(raw_experiment.contour[:,0],raw_experiment.contour[:,1],'r,')
                 plt.title('Extracted drop profile\nTheshold value of : '+str(raw_experiment.ret))

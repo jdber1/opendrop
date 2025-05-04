@@ -34,6 +34,9 @@ def mock_user_inputs():
         threshold_method = "User-selected"
         drop_region = [(10, 10), (90, 90)]
         threshold_val = 127
+        original_boole = 0
+        cropped_boole = 0
+        threshold_boole = 0
         show_popup = 0  # ✅ 添加以避免 AttributeError
     return UserInputs()
 

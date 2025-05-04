@@ -3,22 +3,21 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from views.component.imageGallery import ImageGallery
-
+from views.helper.style import get_color
 
 class IftAnalysis(CTkFrame):
     def __init__(self, parent, user_input_data, **kwargs):
         super().__init__(parent, **kwargs)
-
+        self._fg_color = get_color("outerframe")
         self.user_input_data = user_input_data
 
         # Create tabs
-        self.tab_view = CTkTabview(self)
+        self.tab_view = CTkTabview(self,fg_color=get_color("innerframe"))
         self.tab_view.pack(fill="both", expand=True)
 
         # Add "Results" and "Graphs" tabs
         self.tab_view.add("Results")
         self.tab_view.add("Graphs")
-
         # Initialize content for each tab
         self.create_results_tab(self.tab_view.tab("Results"))
         self.create_graph_tab(self.tab_view.tab("Graphs"))

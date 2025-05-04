@@ -1,7 +1,8 @@
 import customtkinter as ctk
-
+from customtkinter import *
 from views.component.preparation import create_user_inputs_cm,create_plotting_checklist_cm,create_analysis_checklist_cm
 from views.component.imageProcessing import ImageApp
+from views.helper.style import get_color
 
 class CaPreparation(ctk.CTkFrame):
     def __init__(self, parent, user_input_data,experimental_drop, **kwargs):
@@ -15,7 +16,7 @@ class CaPreparation(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=1)  # Right column for ImageApp
 
         # Create the frame for organizing input fields on the left
-        self.input_fields_frame = ctk.CTkFrame(self)
+        self.input_fields_frame = ctk.CTkFrame(self,fg_color=get_color("outerframe"))
         self.input_fields_frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=(10, 0))  # Left side for input fields
 
         # Ensure that the parent frame (input_fields_frame) resizes properly
@@ -23,7 +24,7 @@ class CaPreparation(ctk.CTkFrame):
         self.input_fields_frame.grid_columnconfigure(0, weight=1)  # Ensure column 0 expands
 
         # Create a frame for the right side image processing
-        self.image_app_frame = ctk.CTkFrame(self)
+        self.image_app_frame = CTkFrame(self,fg_color=get_color("background"))
         self.image_app_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=(10, 0))  # Right side for ImageApp
 
         # Instantiate the ImageApp on the right

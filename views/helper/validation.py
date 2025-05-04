@@ -32,7 +32,7 @@ def validate_user_input_data_ift(user_input_data):
             'drop_density': "Drop Density",
             'density_outer': "Continuous Density",
             'needle_diameter_mm': "Needle Diameter",
-            'pixel_mm': "Pixel to mm"
+            # 'pixel_mm': "Pixel to mm"
         }
 
         for field, label in required_fields.items():
@@ -85,8 +85,9 @@ def validate_user_input_data_cm(user_input_data,experimental_drop):
     for field, label in required_fields.items():
         print(field,label)
         value = getattr(user_input_data, field)  # Get the attribute or None if missing
-        if not value:  # Check for both None and empty string
-            messages.append(f"{label} is required")
+        if not 0:
+            if not value:  # Check for both None and empty string
+                messages.append(f"{label} is required")
 
     if not any(user_input_data.analysis_methods_ca.values()):
             messages.append("At least one analysis method must be selected.")
