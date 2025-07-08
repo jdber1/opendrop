@@ -13,6 +13,7 @@ env = Environment(
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         ],
     },
+    CXX='mpic++',
 
     BUILDDIR='./build',
 )
