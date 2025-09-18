@@ -206,7 +206,8 @@ class TestEvent:
             await asyncio.wait_for(coro, timeout=0.1)
 
     @pytest.mark.asyncio
-    async def test_wait_and_cancel_wait_task(self, event_loop):
+    async def test_wait_and_cancel_wait_task(self):
+        event_loop = asyncio.get_running_loop()
         coro = self.event.wait()
         wait_task = event_loop.create_task(coro)
 
