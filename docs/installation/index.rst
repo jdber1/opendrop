@@ -31,8 +31,63 @@ Windows
 Installing OpenDrop as a Python package is possible on Windows using platforms like MSYS2 or Anaconda.  
 The process is not very straightforward so your mileage may vary. We recommend using WSL2 and following the linux installation steps provided below.
 
+Debian
+=================================
 
-Ubuntu (or other Debian-based OS)
+Tested on Debian 13 (Trixie) kernel 6.12.63+deb13
+
+#. Update all packages::
+
+       sudo apt update && sudo apt upgrade -y
+
+#. Install dependancies::
+
+       sudo apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev curl git cmake python3-opencv gobject-introspection libgirepository1.0-dev gir1.2-glib.2.0 pkg-config libsundials_core-7
+
+#. Install pyenv (for python3.10 use without downgrading system python)::
+
+       curl https://pyenv.run | bash
+
+#. Add pyenv to PATH; paste the following in bashrc::
+
+      sudo tee -a ~/.bashrc <<EOF
+      export PYENV_ROOT="$HOME/.pyenv"
+      [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init - bash)"
+      EOF
+
+#. Reload source::
+
+      source ~/.bashrc
+
+#. Install Python3.10.14 into pyenv::
+
+      pyenv install 3.10.14
+
+#. Create venv and source into it::
+
+      pyenv local 3.10.14
+      python -m venv VENV_DIR
+      source VENV_DIR/bin/activate
+
+#. Install more dependencies::
+
+      pip install --no-cache-dir setuptools wheel pycairo PyGObject
+
+#. Install opendrop from the github::
+
+      pip install --no-cache-dir git+https://github.com/jdber1/opendrop.git
+
+#. Return to bashrc source::
+
+      source ~/.bashrc
+
+#. Run app with::
+
+      VENV_DIR/bin/python -m opendrop
+
+
+Ubuntu
 =================================
 
 Tested on Ubuntu22.04 using python3.10
